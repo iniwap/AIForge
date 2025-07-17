@@ -13,6 +13,8 @@
 ---  
   
 ## 🌟 什么是 AiForge？  
+<img width="695" height="210" alt="image" src="https://github.com/user-attachments/assets/d384539d-2326-4b26-91a9-0914337cd786" />
+
 **AIForge** 是一个任务驱动的 AI 编程引擎，通过大语言模型（LLM）将自然语言任务描述转化为可执行的 Python 代码，并在本地执行后返回结果。无需手动编程，即可自动完成数据处理、可视化、API 调用等一系列操作。**AiForge** 是一个革命性的AI代码执行框架，它让大语言模型能够：  
 - 🧠 **智能理解**任务需求  
 - 💻 **自动生成**Python代码  
