@@ -37,6 +37,7 @@
 ### 🌐 多LLM提供商支持  
 - **OpenAI**: GPT-3.5/GPT-4系列  
 - **DeepSeek**: 高性价比的国产模型  
+- **OpenRouter**: 模型聚合平台，多种模型可选  
 - **Ollama**: 本地模型部署  
 - **更多提供商**: 持续扩展中...  
   
@@ -140,14 +141,21 @@ graph TB
   
 ## 🔧 配置选项  
   
-| 配置项 | 说明 | 默认值 |  
+| 基础配置项 | 说明 | 默认值 |  
 |--------|------|--------|  
 | `workdir` | 工作目录 | `"aiforge_work"` |  
 | `max_rounds` | 最大重试轮数 | `5` |  
 | `max_tokens` | 最大token数 | `4096` |  
-| `record` | 是否记录执行过程 | `true` |  
 | `default_llm_provider` | 默认LLM提供商 | `"openai"` |  
-  
+
+| 模型配置项 | 说明 | 默认值 |  
+|--------|------|--------|  
+| `type` | 模型类型 | `"openai"` |  
+| `model` | 模型 | `deepseek/deepseek-chat-v3-0324:free` |  
+| `api_key` | API KEY | `` |  
+| `base_url` | BASE URL | `https://openrouter.ai/api/v1` |    
+
+
 ## 🛣️ 未来发展路线图  
   
 ### 🎯 近期计划 (v1.1 - v1.3)  
@@ -229,12 +237,12 @@ pytest tests/
   
 ## 🙏 致谢  
   
-- 感谢 ChatGPT、Grok、Gemini等AI
+- 感谢 ChatGPT、Grok、Gemini等
 - 感谢所有贡献者和社区支持  
   
 ## 📞 联系我们  
   
-- 📧 Email: iniwaper@example.com  
+- 📧 Email: iniwaper@iniwaper.com  
 - 💬 Discord: [加入我们的社区](https://discord.gg/aiforge)  
 - 🐦 Twitter: [@AiForge](https://twitter.com/aiforge)  
   
