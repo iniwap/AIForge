@@ -1,8 +1,8 @@
-# 🔥 AiForge - 一句话指令，驱动 AI 编程本地执行 
+# 🔥 AIForge - 一句话指令，驱动 AI 编程本地执行 
   
 <div align="center">  
   
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](./LICENSE) [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/) [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/aiforge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#)[![Stars](https://img.shields.io/github/stars/iniwap/aiforge?style=social)](https://github.com/iniwap/aiforge)  
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](./LICENSE) [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/) [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/AIForge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
   
 **让AI直接编写并执行Python代码，释放大语言模型的真正潜能**  
   
@@ -12,13 +12,17 @@
   
 ---  
   
-## 🌟 什么是 AiForge？  
-**AIForge** 是一个任务驱动的 AI 编程引擎，通过大语言模型（LLM）将自然语言任务描述转化为可执行的 Python 代码，并在本地执行后返回结果。无需手动编程，即可自动完成数据处理、可视化、API 调用等一系列操作。**AiForge** 是一个革命性的AI代码执行框架，它让大语言模型能够：  
+## 🌟 什么是 AIForge？  
+<div align="center">  
+<img width="695" height="210" alt="image" src="https://github.com/user-attachments/assets/d384539d-2326-4b26-91a9-0914337cd786" />
+</div>
+
+**AIForge** 是一个任务驱动的 AI 编程引擎，通过大语言模型（LLM）将自然语言任务描述转化为可执行的 Python 代码，并在本地执行后返回结果。无需手动编程，即可自动完成数据处理、可视化、API 调用等一系列操作。**AIForge** 是一个革命性的AI代码执行框架，它让大语言模型能够：  
 - 🧠 **智能理解**任务需求  
 - 💻 **自动生成**Python代码  
 - ⚡ **实时执行**并获取结果  
 - 🔄 **自我修复**代码错误  
-- 📊 **持续优化**执行策略  
+- 📊 **持续优化**执行策略
   
 > **核心理念**: Code is Agent - 让AI通过代码直接与环境交互，无需复杂的工具链  
   
@@ -62,7 +66,6 @@ pip install aiforge
   
 ```toml  
 workdir = "aiforge_work"  
-record = true  
 max_tokens = 4096  
 max_rounds = 5  
 default_llm_provider = "openai"  
@@ -71,8 +74,6 @@ default_llm_provider = "openai"
 type = "openai"  
 model = "gpt-4"  
 api_key = "your-api-key-here"  
-enable = true  
-default = true  
 timeout = 30  
 max_tokens = 8192  
 ```  
@@ -80,10 +81,10 @@ max_tokens = 8192
 ### 基本使用  
   
 ```python  
-from aiforge import AiForgeCore  
+from aiforge import AIForgeCore  
   
-# 初始化AiForge  
-forge = AiForgeCore("aiforge.toml")  
+# 初始化aiforge  
+forge = AIForgeCore("aiforge.toml")  
   
 # 简单任务 - AI会自动生成并执行代码  
 result = forge.generate_and_execute("获取今天的天气信息")  
@@ -127,8 +128,8 @@ result = forge.generate_and_execute("""
   
 ```mermaid  
 graph TB  
-    User[用户指令] --> AiForge[AiForge核心]  
-    AiForge --> LLM[LLM提供商]  
+    User[用户指令] --> AIForge[AIForge核心]  
+    AIForge --> LLM[LLM提供商]  
     LLM --> CodeGen[代码生成]  
     CodeGen --> Executor[执行引擎]  
     Executor --> Result[执行结果]  
@@ -225,8 +226,8 @@ graph TB
   
 ### 开发环境设置  
 ```bash  
-git clone https://github.com/iniwap/aiforge.git  
-cd aiforge  
+git clone https://github.com/iniwap/AIForge.git  
+cd AIForge  
 pip install -e ".[dev]"  
 pytest tests/  
 ```  
@@ -243,8 +244,8 @@ pytest tests/
 ## 📞 联系我们  
   
 - 📧 Email: iniwaper@iniwaper.com  
-- 💬 Discord: [加入我们的社区](https://discord.gg/aiforge)  
-- 🐦 Twitter: [@AiForge](https://twitter.com/aiforge)  
+- 💬 Discord: [加入我们的社区](https://discord.gg/AIForge)  
+- 🐦 Twitter: [@AIForge](https://twitter.com/iafun_tipixel)  
   
 ---  
   
@@ -252,6 +253,6 @@ pytest tests/
   
 **⭐ 如果这个项目对你有帮助，请给我们一个星标！**  
   
-[立即开始使用 AiForge](https://github.com/iniwap/aiforge) | [查看更多示例](https://github.com/iniwap/aiforge/tree/main/examples)  
+[立即开始使用 AIForge](https://github.com/iniwap/AIForge) | [查看更多示例](https://github.com/iniwap/AIForge/tree/main/examples)  
   
 </div>
