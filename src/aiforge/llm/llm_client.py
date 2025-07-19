@@ -1,6 +1,5 @@
 import requests
 import re
-from typing import Optional
 from rich.console import Console
 
 
@@ -11,7 +10,7 @@ class AIForgeLLMClient:
         self,
         name: str,
         api_key: str,
-        base_url: str = None,
+        base_url: str | None = None,
         model: str = "gpt-3.5-turbo",
         timeout: int = 30,
         max_tokens: int = 8192,
@@ -36,7 +35,7 @@ class AIForgeLLMClient:
             return bool(self.model and self.base_url)
         return bool(self.api_key and self.model)
 
-    def generate_code(self, instruction: str, system_prompt: str = None) -> Optional[str]:
+    def generate_code(self, instruction: str, system_prompt: str | None = None) -> str | None:
         """生成代码的核心方法"""
         try:
             headers = {
@@ -82,8 +81,8 @@ class AIForgeLLMClient:
             return None
 
     def generate_code_with_history(
-        self, instruction: str, system_prompt: str = None
-    ) -> Optional[str]:
+        self, instruction: str, system_prompt: str | None = None
+    ) -> str | None:
         """带历史上下文的代码生成"""
         try:
             headers = {
@@ -210,7 +209,7 @@ class AIForgeOllamaClient(AIForgeLLMClient):
         """Ollama不需要API key"""
         return bool(self.model and self.base_url)
 
-    def generate_code(self, instruction: str, system_prompt: str = None) -> Optional[str]:
+    def generate_code(self, instruction: str, system_prompt: str | None = None) -> str | None:
         """Ollama特定的实现"""
         try:
             messages = []

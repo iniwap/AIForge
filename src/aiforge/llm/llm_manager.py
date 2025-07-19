@@ -8,16 +8,31 @@ class AIForgeLLMManager:
     """LLM客户端管理器 - 懒加载策略"""
 
     def __init__(self, config: AIForgeConfig):
-        self.config = config
+        self._config = config
         self.console = Console()
         self.clients = {}  # 缓存已创建的客户端
         self.current_client = None
         self._init_default_client()
 
+    @property
+    def config(self) -> AIForgeConfig:
+        """获取配置"""
+        return self._config
+
+    @config.setter
+    def config(self, value: AIForgeConfig):
+        """设置配置"""
+        if not isinstance(value, AIForgeConfig):
+            raise TypeError("config must be an instance of AIForgeConfig")
+        self._config = value
+        self.console.print("[green]配置已更新[/green]")
+        # 重新初始化默认客户端
+        self._init_default_client()
+
     def _init_default_client(self):
         """只初始化默认LLM客户端"""
-        llm_configs = self.config.config.get("llm", {})
-        default_provider_name = self.config.config.get("default_llm_provider")
+        llm_configs = self._config.config.get("llm", {})
+        default_provider_name = self._config.config.get("default_llm_provider")
 
         # 首先尝试创建指定的默认客户端
         if default_provider_name and default_provider_name in llm_configs:
@@ -75,7 +90,7 @@ class AIForgeLLMManager:
             self.console.print(f"[yellow]不支持的LLM类型: {client_type}[/yellow]")
             return None
 
-    def get_client(self, name: str = None) -> Optional[AIForgeLLMClient]:
+    def get_client(self, name: str | None = None) -> Optional[AIForgeLLMClient]:
         """获取客户端 - 懒加载实现"""
         # 如果没有指定名称，返回当前客户端
         if not name:
@@ -86,7 +101,7 @@ class AIForgeLLMManager:
             return self.clients[name]
 
         # 懒加载：按需创建客户端
-        llm_configs = self.config.config.get("llm", {})
+        llm_configs = self._config.config.get("llm", {})
         if name in llm_configs:
             llm_config = llm_configs[name]
             if llm_config.get("enable", True):
@@ -116,7 +131,7 @@ class AIForgeLLMManager:
 
     def list_available_providers(self) -> Dict[str, str]:
         """列出所有配置的提供商（不创建客户端）"""
-        llm_configs = self.config.config.get("llm", {})
+        llm_configs = self._config.config.get("llm", {})
         providers = {}
         for name, config in llm_configs.items():
             if config.get("enable", True):
@@ -127,11 +142,11 @@ class AIForgeLLMManager:
         """列出已创建的客户端"""
         return {name: client.model for name, client in self.clients.items()}
 
-    def preload_clients(self, client_names: list = None):
+    def preload_clients(self, client_names: list | None = None):
         """预加载指定的客户端"""
         if client_names is None:
             # 预加载所有可用的客户端
-            llm_configs = self.config.config.get("llm", {})
+            llm_configs = self._config.config.get("llm", {})
             client_names = [
                 name for name, config in llm_configs.items() if config.get("enable", True)
             ]

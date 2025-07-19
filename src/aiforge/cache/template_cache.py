@@ -2,14 +2,14 @@ import time
 import json
 import re
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any, Dict, List
 from .enhanced_cache import EnhancedAiForgeCodeCache
 
 
 class TemplateBasedCodeCache(EnhancedAiForgeCodeCache):
     """基于模板的代码缓存管理器 - 继承增强缓存功能"""
 
-    def __init__(self, cache_dir: Path, config: dict = None):
+    def __init__(self, cache_dir: Path, config: dict | None = None):
         super().__init__(cache_dir, config)
 
         # 预定义的任务模板模式（扩展父类的任务类型）
@@ -34,8 +34,8 @@ class TemplateBasedCodeCache(EnhancedAiForgeCodeCache):
     def _generate_cache_key(
         self,
         instruction: str,
-        executor_type: str = None,
-        task_category: str = None,
+        executor_type: str | None = None,
+        task_category: str | None = None,
         use_semantic: bool = True,
     ) -> str:
         """重写缓存键生成，优先使用模板匹配"""
@@ -138,8 +138,8 @@ class TemplateBasedCodeCache(EnhancedAiForgeCodeCache):
         return metadata.get("template_id") == template_info.get("template_id")
 
     def save_template_module(
-        self, instruction: str, code: str, metadata: dict = None
-    ) -> Optional[str]:
+        self, instruction: str, code: str, metadata: dict | None = None
+    ) -> str | None:
         """保存模板化代码模块 - 结合增强缓存的保存策略"""
         if not self._validate_code(code):
             return None

@@ -2,6 +2,7 @@ import json
 from rich.console import Console
 import re
 
+from ..llm.llm_manager import AIForgeLLMManager
 from ..llm.llm_client import AIForgeLLMClient
 from ..execution.executor import AIForgeExecutor
 from ..optimization.feedback_optimizer import FeedbackOptimizer
@@ -192,9 +193,10 @@ def get_aiforge_system_prompt(user_prompt=None, optimize_tokens=True):
 你是 AIForge，一个专业的 Python 代码生成和执行助手。
 
 # 代码生成规则
+- **你的所有回答必须是 Python 代码块（用```python ...```包裹），不要输出任何解释性文字**
 - 生成极简代码，无注释，无空行
 - 使用最短变量名(a,b,c,d等)
-- 使用预装库：requests,bs4,pandas,numpy
+- 使用预装库：requests,bs4,pandas,numpy等常用库
 - 结果赋值给__result__
 - 必须包含错误处理
 
@@ -207,8 +209,9 @@ Python解释器，预装常用库，支持网络和文件操作
 你是 AIForge，一个专业的 Python 代码生成和执行助手。
 
 # 代码生成规则
+- **你的所有回答必须是 Python 代码块（用```python ...```包裹），不要输出任何解释性文字**
 - 生成的代码必须能在标准 Python 环境中直接执行
-- 使用已预装的库：requests, BeautifulSoup, pandas, numpy 等
+- 使用已预装的库：requests, BeautifulSoup, pandas, numpy 等常用库
 - 将最终结果赋值给 __result__ 变量
 - 确保代码具有适当的错误处理
 
@@ -229,15 +232,17 @@ Python解释器，预装常用库，支持网络和文件操作
 
 
 class AIForgeTask:
-    def __init__(self, llm_client: AIForgeLLMClient, max_rounds, optimize_tokens=True):
+    def __init__(self, llm_client: AIForgeLLMClient, max_rounds, optimization):
         self.client = llm_client
         self.executor = AIForgeExecutor()
         self.console = Console()
         self.instruction = None
         self.system_prompt = None
         self.max_rounds = max_rounds
-        self.optimize_tokens = optimize_tokens
-        self.feedback_optimizer = FeedbackOptimizer() if optimize_tokens else None
+        self.optimization = optimization
+        self.feedback_optimizer = (
+            FeedbackOptimizer() if optimization.get("optimize_tokens", True) else None
+        )
 
     def _compress_error(self, error_msg: str, max_length: int = 200) -> str:
         """压缩错误信息以减少token消耗"""
@@ -278,7 +283,7 @@ class AIForgeTask:
 
         return compressed
 
-    def run(self, instruction: str = None, system_prompt: str = None):
+    def run(self, instruction: str | None = None, system_prompt: str | None = None):
         """执行AI代码生成任务"""
         if instruction:
             self.instruction = instruction
@@ -287,8 +292,8 @@ class AIForgeTask:
 
         # 动态构建 system prompt
         if not system_prompt:
-            system_prompt = get_aiforge_system_prompt(
-                self.instruction, optimize_tokens=self.optimize_tokens
+            self.system_prompt = get_aiforge_system_prompt(
+                self.instruction, optimize_tokens=self.optimization.get("optimize_tokens", True)
             )
 
         if not self.instruction:
@@ -304,6 +309,7 @@ class AIForgeTask:
         )
 
         rounds = 1
+        success = False
         while rounds <= max_rounds:
             self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
@@ -366,9 +372,7 @@ class AIForgeTask:
                         )
                         compressed_error = self._compress_error(
                             result.get("error", "未知错误"),
-                            max_length=self.config.get("optimization", {}).get(
-                                "max_feedback_length", 200
-                            ),
+                            max_length=self.optimization.get("max_feedback_length", 200),
                         )
                         # 发送压缩后的错误信息给LLM进行下一轮尝试
                         feedback_prompt = (
@@ -406,17 +410,24 @@ class AIForgeTask:
 class AIForgeManager:
     """AIForge任务管理器"""
 
-    def __init__(self, llm_manager, max_rounds):
+    def __init__(self, llm_manager: AIForgeLLMManager):
         self.llm_manager = llm_manager
         self.tasks = []
-        self.max_rounds = max_rounds
 
-    def new_task(self, instruction: str = None, client: AIForgeLLMClient = None) -> AIForgeTask:
+    def new_task(
+        self,
+        instruction: str | None = None,
+        client: AIForgeLLMClient = None,
+    ) -> AIForgeTask:
         """创建新任务"""
         if not client:
             client = self.llm_manager.get_client()
 
-        task = AIForgeTask(client, self.max_rounds)
+        task = AIForgeTask(
+            client,
+            self.llm_manager.config.get_max_rounds(),
+            self.llm_manager.config.get_optimization_config(),
+        )
         if instruction:
             task.instruction = instruction
         self.tasks.append(task)

@@ -1,14 +1,14 @@
 import tomlkit
 from pathlib import Path
 from rich.console import Console
-from typing import Optional, Dict
+from typing import Dict
 import importlib.resources
 
 
 class AIForgeConfig:
     """AIForge配置管理器 - 支持多种初始化方式"""
 
-    def __init__(self, config_file: Optional[str] = None):
+    def __init__(self, config_file: str | None = None):
         self.console = Console()
 
         if config_file:
@@ -61,7 +61,7 @@ class AIForgeConfig:
         """获取内置默认配置"""
         try:
             # 尝试从包内资源加载默认配置
-            with importlib.resources.open_text("aiforge.config", "default.toml") as f:
+            with importlib.resources.files("aiforge.config", "default.toml") as f:
 
                 return tomlkit.load(f)
         except Exception:
@@ -119,7 +119,7 @@ class AIForgeConfig:
             }
 
     # 保留原有方法
-    def get_llm_config(self, provider_name: str = None):
+    def get_llm_config(self, provider_name: str | None = None):
         """获取LLM配置"""
         llm_configs = self.config.get("llm", {})
 
@@ -159,6 +159,10 @@ class AIForgeConfig:
     def get_default_llm_provider(self) -> str:
         """获取默认LLM提供商"""
         return self.config.get("default_llm_provider", "")
+
+    def get_optimization_config(self) -> Dict:
+        """获取优化配置"""
+        return self.config.get("optimization", {})
 
     def get(self, key: str, default=None):
         """获取配置值"""

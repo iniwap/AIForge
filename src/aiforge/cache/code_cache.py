@@ -3,7 +3,7 @@ import json
 import hashlib
 import threading
 from pathlib import Path
-from typing import Any, Optional, Dict, List
+from typing import Any, Dict, List
 from peewee import CharField, DoubleField, IntegerField, Model, TextField, Case
 from playhouse.sqlite_ext import SqliteExtDatabase
 
@@ -11,7 +11,7 @@ from playhouse.sqlite_ext import SqliteExtDatabase
 class AiForgeCodeCache:
     """基于Peewee ORM的AiForge代码缓存管理器"""
 
-    def __init__(self, cache_dir: Path, config: dict = None):
+    def __init__(self, cache_dir: Path, config: dict | None = None):
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -117,7 +117,9 @@ class AiForgeCodeCache:
             except Exception:
                 return []
 
-    def save_code_module(self, instruction: str, code: str, metadata: dict = None) -> Optional[str]:
+    def save_code_module(
+        self, instruction: str, code: str, metadata: dict | None = None
+    ) -> str | None:
         """保存代码模块到缓存"""
         if not self._validate_code(code):
             return None

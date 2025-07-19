@@ -22,8 +22,8 @@ class AIForgeCore:
 
     def __init__(
         self,
-        config_file: Optional[str] = None,
-        api_key: Optional[str] = None,
+        config_file: str | None = None,
+        api_key: str | None = None,
         provider: str = "openrouter",
         **kwargs,
     ):
@@ -41,8 +41,8 @@ class AIForgeCore:
 
         # 初始化核心组件
         self.llm_manager = AIForgeLLMManager(self.config)
-        self.task_manager = AIForgeManager(self.llm_manager, self.config.get_max_rounds())
-        self.runner = AIForgeRunner(self.config.get_workdir())
+        self.task_manager = AIForgeManager(self.llm_manager)
+        self.runner = AIForgeRunner(str(self.config.get_workdir()))
 
         # 初始化缓存（如果启用）
         self._init_cache()
@@ -148,7 +148,7 @@ class AIForgeCore:
 
     # 其他方法保持不变...
     def _init_config(
-        self, config_file: Optional[str], api_key: Optional[str], provider: str, **kwargs
+        self, config_file: str | None, api_key: str | None, provider: str, **kwargs
     ) -> AIForgeConfig:
         """初始化配置"""
         if api_key:
@@ -185,7 +185,7 @@ class AIForgeCore:
     def _get_default_config(self) -> Dict:
         """获取内置默认配置"""
         try:
-            with importlib.resources.open_text("aiforge.config", "default.toml") as f:
+            with importlib.resources.files("aiforge.config").joinpath("default.toml").open() as f:
                 import tomlkit
 
                 return tomlkit.load(f)
@@ -231,7 +231,7 @@ class AIForgeCore:
         ]
 
     def run(
-        self, instruction: str, system_prompt: Optional[str] = None, provider: Optional[str] = None
+        self, instruction: str, system_prompt: str | None = None, provider: str | None = None
     ) -> Optional[Dict[str, Any]]:
         """执行任务 - 统一入口"""
         return self.run_task(instruction, system_prompt, provider)
@@ -241,7 +241,7 @@ class AIForgeCore:
         return self.run(instruction, **kwargs)
 
     def run_task(
-        self, instruction: str, system_prompt: str = None, provider: str = None
+        self, instruction: str, system_prompt: str | None = None, provider: str | None = None
     ) -> Optional[Dict[str, Any]]:
         """任务执行入口"""
         if self.code_cache:
@@ -253,8 +253,8 @@ class AIForgeCore:
         return result
 
     def generate_and_execute_with_code(
-        self, instruction: str, system_prompt: str = None, provider: str = None
-    ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+        self, instruction: str, system_prompt: str | None = None, provider: str | None = None
+    ) -> Tuple[Optional[Dict[str, Any]], str | None]:
         """生成并执行代码，同时返回结果和代码"""
         client = self.llm_manager.get_client(provider)
         if not client:

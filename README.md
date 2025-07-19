@@ -2,7 +2,7 @@
   
 <div align="center">  
   
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](./LICENSE) [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-%20-green)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-%20-blue)](https://fastapi.tiangolo.com/) [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/AIForge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-green)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-blue)](https://fastapi.tiangolo.com/) [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/AIForge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
   
 **让AI直接编写并执行Python代码，释放大语言模型的真正潜能**  
   
@@ -127,8 +127,8 @@ max_feedback_length = 200
 ```python  
 class AIForgeCore:  
     def __init__(self,   
-                 config_file: Optional[str] = None,  
-                 api_key: Optional[str] = None,  
+                 config_file: str | None = None,  
+                 api_key: str | None = None,  
                  provider: str = "openrouter",  
                  **kwargs):  
         """  
@@ -142,8 +142,8 @@ class AIForgeCore:
         """  
       
     def run(self, instruction: str,   
-            system_prompt: Optional[str] = None,   
-            provider: Optional[str] = None) -> Optional[Dict[str, Any]]:  
+            system_prompt: str | None = None,   
+            provider: str | None = None) -> Optional[Dict[str, Any]]:  
         """执行任务 - 统一入口"""  
       
     def __call__(self, instruction: str, **kwargs) -> Optional[Dict[str, Any]]:  

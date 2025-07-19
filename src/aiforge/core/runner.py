@@ -36,7 +36,7 @@ class AIForgeRunner:
 
         return globals_dict
 
-    def execute_code(self, code: str, globals_dict: Optional[Dict] = None) -> Dict[str, Any]:
+    def execute_code(self, code: str, globals_dict: Dict | None = None) -> Dict[str, Any]:
         """执行生成的代码"""
         if globals_dict is None:
             globals_dict = self.prepare_environment()

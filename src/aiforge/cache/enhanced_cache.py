@@ -2,7 +2,7 @@ import hashlib
 import time
 import json
 from pathlib import Path
-from typing import Any, Optional, List
+from typing import Any, List
 from peewee import Case
 from .code_cache import AiForgeCodeCache
 
@@ -10,7 +10,7 @@ from .code_cache import AiForgeCodeCache
 class EnhancedAiForgeCodeCache(AiForgeCodeCache):
     """增强的AIForge代码缓存管理器 - 支持多种缓存策略"""
 
-    def __init__(self, cache_dir: Path, config: dict = None):
+    def __init__(self, cache_dir: Path, config: dict | None = None):
         super().__init__(cache_dir, config)
 
         # 任务类型关键词映射
@@ -25,8 +25,8 @@ class EnhancedAiForgeCodeCache(AiForgeCodeCache):
     def _generate_cache_key(
         self,
         instruction: str,
-        executor_type: str = None,
-        task_category: str = None,
+        executor_type: str | None = None,
+        task_category: str | None = None,
         use_semantic: bool = True,
     ) -> str:
         """生成基于执行器类型和任务分类的缓存键"""
@@ -81,7 +81,9 @@ class EnhancedAiForgeCodeCache(AiForgeCodeCache):
         }
         return executor_mapping.get(executor_type, "general")
 
-    def get_cached_modules_enhanced(self, instruction: str, executor_type: str = None) -> List[Any]:
+    def get_cached_modules_enhanced(
+        self, instruction: str, executor_type: str | None = None
+    ) -> List[Any]:
         """获取缓存模块 - 支持多种匹配策略"""
 
         results = []
@@ -161,8 +163,12 @@ class EnhancedAiForgeCodeCache(AiForgeCodeCache):
         return [(m[0], m[1], m[2], m[3]) for m in ranked_results]
 
     def save_enhanced_module(
-        self, instruction: str, code: str, executor_type: str = None, metadata: dict = None
-    ) -> Optional[str]:
+        self,
+        instruction: str,
+        code: str,
+        executor_type: str | None = None,
+        metadata: dict | None = None,
+    ) -> str | None:
         """保存增强代码模块"""
 
         if not self._validate_code(code):
