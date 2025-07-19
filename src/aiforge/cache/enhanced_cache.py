@@ -15,11 +15,63 @@ class EnhancedAiForgeCodeCache(AiForgeCodeCache):
 
         # 任务类型关键词映射
         self.task_keywords = {
-            "web_search": ["搜索", "search", "查找", "爬取", "crawl", "scrape", "抓取"],
+            # 数据获取类
+            "web_search": [
+                "搜索",
+                "search",
+                "查找",
+                "爬取",
+                "crawl",
+                "scrape",
+                "抓取",
+                "新闻",
+                "news",
+            ],
+            "web_scraping": ["爬虫", "spider", "抓取网页", "提取数据", "网页内容", "页面解析"],
+            "api_data_fetch": ["api", "接口", "获取数据", "fetch", "调用接口", "rest", "graphql"],
+            "database_query": ["数据库", "database", "查询", "query", "sql", "mysql", "postgresql"],
+            # 数据处理类
             "data_processing": ["分析", "analyze", "处理", "process", "计算", "calculate", "统计"],
+            "data_analysis": ["分析报告", "数据分析", "统计分析", "趋势分析", "correlation"],
+            "data_visualization": [
+                "可视化",
+                "visualization",
+                "图表",
+                "chart",
+                "绘图",
+                "plot",
+                "matplotlib",
+            ],
+            "data_transformation": ["转换", "transform", "清洗", "clean", "格式化", "format"],
+            # 文件操作类
             "file_operation": ["文件", "file", "读取", "read", "写入", "write", "保存", "save"],
-            "api_call": ["api", "接口", "request", "请求", "http", "get", "post"],
-            "web_request": ["网页", "webpage", "url", "html", "http", "requests"],
+            "file_batch_processing": ["批量", "batch", "批处理", "多个文件", "文件夹", "directory"],
+            "document_parsing": [
+                "解析",
+                "parse",
+                "提取",
+                "extract",
+                "文档",
+                "document",
+                "pdf",
+                "word",
+            ],
+            "file_conversion": ["转换", "convert", "格式转换", "文件转换"],
+            # 网络通信类
+            "web_request": ["网页", "webpage", "url", "html", "http", "requests", "get", "post"],
+            "webhook_handler": ["webhook", "回调", "callback", "事件", "event", "trigger"],
+            "api_integration": ["api集成", "接口集成", "第三方服务", "service integration"],
+            # 自动化任务类
+            "automation": ["自动化", "automation", "定时", "schedule", "任务", "task", "workflow"],
+            "monitoring": ["监控", "monitor", "告警", "alert", "检查", "check", "health"],
+            "scheduled_task": ["定时任务", "cron", "scheduler", "定期执行"],
+            # 内容生成类
+            "content_generation": ["生成", "generate", "创建", "create", "写作", "writing"],
+            "code_generation": ["代码生成", "code generation", "编程", "programming", "代码"],
+            "report_generation": ["报告生成", "report", "文档生成", "documentation"],
+            # 系统集成类
+            "integration": ["集成", "integration", "同步", "sync", "连接", "connect"],
+            "data_synchronization": ["数据同步", "sync data", "同步更新", "实时同步"],
         }
 
     def _generate_cache_key(
@@ -146,7 +198,20 @@ class EnhancedAiForgeCodeCache(AiForgeCodeCache):
         seen_modules = set()
         ranked_results = []
 
-        for (module_id, file_path, success_count, failure_count), strategy in results:
+        for result_tuple in results:
+            # 处理不同长度的元组格式
+            if len(result_tuple) == 2:
+                # 格式: (module_data, strategy)
+                module_data, strategy = result_tuple
+                if len(module_data) == 4:
+                    module_id, file_path, success_count, failure_count = module_data
+                elif len(module_data) == 5:
+                    module_id, file_path, success_count, failure_count, _ = module_data
+                else:
+                    continue
+            else:
+                continue
+
             if module_id not in seen_modules:
                 seen_modules.add(module_id)
                 # 计算综合分数：策略优先级 + 成功率

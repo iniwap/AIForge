@@ -9,7 +9,7 @@ from aiforge import AIForgeCore
 def test_quick_start():
     """方式1：快速启动"""
     forge = AIForgeCore(api_key=os.environ["OPENROUTER_API_KEY"])
-    result = forge("获取上海今天的天气信息")
+    result = forge("杭州今天的天气怎么")
     print("quick_start result:", result)
     assert result is not None
 

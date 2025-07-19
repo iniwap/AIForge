@@ -1,6 +1,6 @@
 workdir = "aiforge_work"
 max_tokens = 4096
-max_rounds = 5
+max_rounds = 2
 default_llm_provider = "openrouter"
 
 [llm.openrouter]
@@ -65,3 +65,15 @@ aggressive_minify = true
 max_feedback_length = 200
 compress_strings = true
 obfuscate_variables = true
+
+
+# 在配置文件中添加扩展部分  
+[extensions]
+enabled = true
+auto_load = true
+extension_dir = "extensions"
+
+[[extensions.registered]]
+name = "custom_executor"
+type = "executor"
+config = {}

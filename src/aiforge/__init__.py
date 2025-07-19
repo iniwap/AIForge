@@ -12,6 +12,10 @@ from .execution.executor import AIForgeExecutor
 # 配置管理导入
 from .config.config import AIForgeConfig
 
+from .formatting.result_formatter import AIForgeResultFormatter
+from .execution.code_blocks import CodeBlockManager, CodeBlock
+from .prompts.enhanced_prompts import get_enhanced_aiforge_prompt
+
 __all__ = [
     "AIForgeCore",
     "AIForgeLLMClient",
@@ -23,6 +27,10 @@ __all__ = [
     "AIForgeLLMManager",
     "TemplateBasedCodeCache",
     "create_config_wizard",
+    "AIForgeResultFormatter",
+    "CodeBlockManager",
+    "CodeBlock",
+    "get_enhanced_aiforge_prompt",
 ]
 
 __version__ = "1.0.0"
