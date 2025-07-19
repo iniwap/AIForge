@@ -1,0 +1,6 @@
+{
+    "workbench.colorTheme": "Atom One Dark",
+    "flake8.args": ["--max-line-length=100"],
+    "editor.formatOnSave": true,
+    "black-formatter.args": ["--line-length","100"],
+}

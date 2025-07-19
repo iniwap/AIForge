@@ -1,3 +1,12 @@
+[project]
+name = "aiforge"
+version = "0.1.0"
+description = "AIForge 核心 + 可选 GUI/Web 界面支持"
+
+[project.optional-dependencies]
+gui = ["textual"]
+web = ["fastapi", "uvicorn"]
+
 [build-system]
-requires = ["setuptools>=42"]
-build-backend = "setuptools.build_meta"
+requires = ["uv", "setuptools"]
+build-backend = "uv.build"
