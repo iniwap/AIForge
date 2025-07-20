@@ -12,7 +12,7 @@ from ..execution.executor import AIForgeExecutor
 from ..optimization.feedback_optimizer import FeedbackOptimizer
 from ..formatting.result_formatter import AIForgeResultFormatter
 from ..execution.code_blocks import CodeBlockManager, CodeBlock
-from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt, detect_task_type
+from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
 
 
 class AIForgeTask:
@@ -42,10 +42,10 @@ class AIForgeTask:
         # 提取关键错误信息的正则模式
         key_patterns = [
             r"(NameError|TypeError|ValueError|AttributeError|ImportError|SyntaxError): (.+)",
-            r"line (\\d+)",
+            r"line (\d+)",
             r'File "([^"]+)"',
             r"in (.+)",
-            r"(\\w+Exception): (.+)",
+            r"(\w+Exception): (.+)",
         ]
 
         compressed_parts = []
@@ -73,8 +73,26 @@ class AIForgeTask:
 
         return compressed
 
+    def _is_execution_truly_successful(self, result):
+        """判断执行是否真正成功（包括业务逻辑）"""
+        # 首先检查代码执行是否成功
+        if not result.get("success", False):
+            return False
+
+        # 然后检查业务逻辑是否成功
+        result_content = result.get("result")
+        if isinstance(result_content, dict):
+            status = result_content.get("status")
+            if status == "error":
+                return False
+            elif status == "success":
+                return True
+
+        # 如果没有明确的状态，但有数据且无错误，认为成功
+        return result_content is not None
+
     def process_code_execution(self, code_blocks: List[str]) -> Optional[str]:
-        """处理代码块执行并格式化结果 - 参考aipyapp的处理流程"""
+        """处理代码块执行并格式化结果"""
 
         results = []
 
@@ -110,7 +128,7 @@ class AIForgeTask:
                 "block_name": block.name,
                 "timestamp": time.time(),
                 "execution_time": execution_time,
-                "success": result.get("success", False),
+                "success": self._is_execution_truly_successful(result),
             }
             self.execution_history.append(execution_record)
             results.append(result)
@@ -126,25 +144,40 @@ class AIForgeTask:
             feedback_json = json.dumps(feedback_msg, ensure_ascii=False, default=str)
             self.client.send_feedback(feedback_json)
 
-    def _process_execution_result(self, result_content, instruction):
-        """后处理执行结果，确保格式一致性"""
-        # 检测任务类型
-        task_type = detect_task_type(instruction)
+    def _process_execution_result(self, result_content, instruction, task_type=None):
+        """后处理执行结果，强制标准化格式"""
+        from datetime import datetime
 
-        # 应用任务类型特定的格式化
-        processed_result = self.formatter.format_task_type_result(result_content, task_type)
+        # 使用传入的task_type，如果没有则使用general
+        task_type = task_type or "general"
 
-        # 添加通用元数据
-        if isinstance(processed_result, dict):
-            processed_result.setdefault("metadata", {})
-            processed_result["metadata"].update(
-                {
+        # 强制标准化结果格式
+        if not isinstance(result_content, dict):
+            result_content = {
+                "data": result_content,
+                "status": "success" if result_content else "error",
+                "summary": "执行完成" if result_content else "执行失败",
+                "metadata": {
+                    "timestamp": datetime.now().isoformat(),
                     "task_type": task_type,
-                    "timestamp": time.time(),
+                    "auto_wrapped": True,
+                },
+            }
+        else:
+            # 确保必要字段存在
+            result_content.setdefault("status", "success")
+            result_content.setdefault("summary", "操作完成")
+            result_content.setdefault("metadata", {})
+            result_content["metadata"].update(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "task_type": task_type,
                     "instruction_hash": hashlib.md5(instruction.encode()).hexdigest(),
                 }
             )
 
+        # 应用任务类型特定的格式化
+        processed_result = self.formatter.format_task_type_result(result_content, task_type)
         return processed_result
 
     def _is_task_successful(self, result_content):
@@ -169,33 +202,55 @@ class AIForgeTask:
 
         return False
 
-    def run(self, instruction: str | None = None, system_prompt: str | None = None):
-        """修改后的执行方法"""
+    def run(
+        self,
+        instruction: str | None = None,
+        system_prompt: str | None = None,
+        task_type: str | None = None,
+    ):
+        """执行方法"""
         if instruction:
             self.instruction = instruction
         if system_prompt:
             self.system_prompt = system_prompt
 
-        # 动态构建 system prompt - 使用增强版本
+        # 动态构建 system prompt - 确保包含基础要求
         if not system_prompt:
+            # 没有system_prompt时，使用完整的增强提示词
             self.system_prompt = get_enhanced_aiforge_prompt(
-                self.instruction, optimize_tokens=self.optimization.get("optimize_tokens", True)
+                self.instruction,
+                optimize_tokens=self.optimization.get("optimize_tokens", True),
+                task_type=task_type,
             )
+        else:
+            # 有system_prompt时，确保它包含基础的代码生成要求
+            self.system_prompt = system_prompt
+            base_requirements = get_enhanced_aiforge_prompt(
+                user_prompt=None,
+                optimize_tokens=self.optimization.get("optimize_tokens", True),
+                task_type=None,
+            )
+
+            # 检查system_prompt是否已包含基础要求
+            if "🚨 CRITICAL" not in system_prompt and "__result__" not in system_prompt:
+                self.system_prompt = f"{base_requirements}\n\n# 任务特定增强\n{system_prompt}"
+
+        # 存储task_type供后续使用
+        self.task_type = task_type
 
         if not self.instruction:
             self.console.print("[red]没有提供指令[/red]")
             return None
 
-        max_rounds = getattr(self, "max_rounds", 5)
         self.console.print(
-            f"[yellow]开始处理任务指令，最大尝试轮数{max_rounds}[/yellow]",
+            f"[yellow]开始处理任务指令，最大尝试轮数{self.max_rounds}[/yellow]",
             style="bold",
         )
 
         rounds = 1
         success = False
 
-        while rounds <= max_rounds:
+        while rounds <= self.max_rounds:
             self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
             # 生成代码
@@ -225,12 +280,25 @@ class AIForgeTask:
                     "result"
                 ):
                     processed_result = self._process_execution_result(
-                        last_execution["result"].get("result"), self.instruction
+                        last_execution["result"].get("result"),
+                        self.instruction,
+                        getattr(self, "task_type", None),
                     )
                     last_execution["result"]["result"] = processed_result
 
                     if self._is_task_successful(last_execution["result"].get("result")):
-                        last_execution["success"] = True  # 明确标记为成功
+                        # 只有业务逻辑也成功时才标记为成功
+                        last_execution["success"] = True
+                        # 同时需要更新 executor.history
+                        if hasattr(self, "executor") and self.executor.history:
+                            for history_entry in reversed(self.executor.history):
+                                if history_entry.get("code") == last_execution["code"]:
+                                    # 这里也需要检查业务逻辑成功
+                                    if self._is_task_successful(
+                                        history_entry.get("result", {}).get("__result__")
+                                    ):
+                                        history_entry["success"] = True
+                                    break
                         success = True
                         self.console.print(
                             f"🎉 第 {rounds} 轮执行成功，任务完成！", style="bold green"
@@ -241,7 +309,10 @@ class AIForgeTask:
 
         # 使用格式化器显示总结
         self.formatter.format_execution_summary(
-            rounds, max_rounds, len(self.execution_history), success
+            rounds - 1 if rounds > 1 else rounds,
+            self.max_rounds,
+            len(self.execution_history),
+            success,
         )
 
         return self.execution_history

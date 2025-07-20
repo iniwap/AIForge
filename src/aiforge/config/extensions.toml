@@ -1,0 +1,45 @@
+# extensions.toml - 扩展配置示例  
+[extensions]
+enabled = true
+auto_load = true
+
+[[extensions.templates]]
+domain = "financial"
+class = "aiforge.extensions.financial.FinancialTemplateExtension"
+priority = 100
+config = { data_source = "yahoo_finance", cache_ttl = 3600 }
+
+[[extensions.templates]]
+domain = "medical"
+module = "aiforge.extensions.medical"
+class = "MedicalTemplateExtension"
+priority = 90
+
+[extensions.domain_templates.scientific]
+keywords = ["科学计算", "scientific", "数值分析"]
+priority = 80
+
+[extensions.domain_templates.scientific.templates.numerical_analysis]
+pattern = "数值.*分析|numerical.*analysis"
+parameters = ["method", "precision", "iterations"]
+cache_key_template = "scientific_numerical_{method}"
+template_code = """  
+import numpy as np  
+from scipy import optimize  
+  
+def numerical_analysis(data, method="{{ method }}", precision={{ precision }}):  
+    # 数值分析实现  
+    if method == "least_squares":  
+        result = optimize.least_squares(lambda x: x**2 - data, [1.0])  
+    else:  
+        result = {"method": method, "data": data}  
+      
+    __result__ = {  
+        "method": method,  
+        "precision": precision,  
+        "result": result,  
+        "status": "success"  
+    }  
+  
+numerical_analysis({{ data }}, "{{ method }}", {{ precision }})  
+"""

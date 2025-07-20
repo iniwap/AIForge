@@ -20,7 +20,7 @@ class CodeBlock:
 
 
 class CodeBlockManager:
-    """代码块管理器 - 参考aipyapp的代码块解析"""
+    """代码块管理器"""
 
     def __init__(self):
         self.blocks: Dict[str, CodeBlock] = {}
@@ -31,12 +31,12 @@ class CodeBlockManager:
         blocks = []
 
         # 匹配 ```python...``` 格式
-        pattern = r"```python\\s*\\n(.*?)\\n```"
+        pattern = r"```python\s*\n(.*?)\n```"
         matches = re.findall(pattern, text, re.DOTALL)
 
         if not matches:
             # 尝试 ```...``` 格式
-            pattern = r"```\\s*\\n(.*?)\\n```"
+            pattern = r"```\s*\n(.*?)\n```"
             matches = re.findall(pattern, text, re.DOTALL)
 
         for i, match in enumerate(matches):

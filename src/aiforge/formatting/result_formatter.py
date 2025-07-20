@@ -62,20 +62,60 @@ class AIForgeResultFormatter:
         self.console.print(table)
 
     def format_task_type_result(self, result: Dict[str, Any], task_type: str) -> Dict[str, Any]:
-        """根据任务类型格式化结果"""
+        """根据任务类型格式化结果 - 强制标准化"""
         if not isinstance(result, dict):
-            return {"data": result, "task_type": task_type, "timestamp": time.time()}
+            # 强制转换为标准格式
+            result = {
+                "data": result,
+                "status": "success",
+                "summary": "结果已自动格式化",
+                "metadata": {
+                    "timestamp": time.time(),
+                    "task_type": task_type,
+                    "auto_formatted": True,
+                },
+            }
 
-        # 确保包含任务类型和时间戳
-        result.setdefault("task_type", task_type)
-        result.setdefault("timestamp", time.time())
+        # 确保标准字段存在
+        result.setdefault("status", "success")
+        result.setdefault("summary", "操作完成")
+        result.setdefault("metadata", {})
+        result["metadata"].setdefault("task_type", task_type)
+        result["metadata"].setdefault("timestamp", time.time())
 
-        # 根据任务类型添加标准字段
-        if task_type == "web_search" and "results" not in result:
-            result = {"results": result.get("data", result), **result}
-        elif task_type == "data_analysis" and "analysis" not in result:
-            result = {"analysis": result.get("data", result), **result}
-        elif task_type == "file_processing" and "processed_files" not in result:
-            result = {"processed_files": result.get("data", result), **result}
+        # 根据任务类型添加特定字段
+        if task_type == "data_fetch":
+            if "data" in result and not isinstance(result["data"], dict):
+                result["data"] = {"content": result["data"], "source": "api_call"}
+        elif task_type == "web_search":
+            if "results" not in result.get("data", {}):
+                if "data" in result:
+                    result["data"] = {
+                        "results": result["data"],
+                        "total_count": (
+                            len(result["data"]) if isinstance(result["data"], list) else 1
+                        ),
+                    }
+        elif task_type == "data_analysis":
+            if "analysis" not in result.get("data", {}):
+                if "data" in result:
+                    result["data"] = {"analysis": result["data"], "summary": {"processed": True}}
+        elif task_type == "file_processing":
+            if "processed_files" not in result.get("data", {}):
+                if "data" in result:
+                    result["data"] = {
+                        "processed_files": (
+                            result["data"] if isinstance(result["data"], list) else [result["data"]]
+                        ),
+                        "summary": {"total_files": 1, "success_count": 1, "error_count": 0},
+                    }
+        elif task_type == "api_call":
+            if "response_data" not in result.get("data", {}):
+                if "data" in result:
+                    result["data"] = {
+                        "response_data": result["data"],
+                        "status_code": 200,
+                        "summary": {"success": True},
+                    }
 
         return result

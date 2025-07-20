@@ -28,7 +28,7 @@ class AIForgeConfig:
     @classmethod
     def from_api_key(cls, api_key: str, provider: str = "openrouter", **kwargs) -> "AIForgeConfig":
         """从API key快速创建配置"""
-        default_config = cls._get_builtin_default_config()
+        default_config = cls.get_builtin_default_config()
 
         # 设置API key
         if provider in default_config.get("llm", {}):
@@ -57,66 +57,68 @@ class AIForgeConfig:
             return {}
 
     @staticmethod
-    def _get_builtin_default_config() -> Dict:
+    def get_builtin_default_config() -> Dict:
         """获取内置默认配置"""
-        try:
-            # 尝试从包内资源加载默认配置
-            with importlib.resources.files("aiforge.config", "default.toml") as f:
+        if not hasattr(AIForgeConfig, "_cached_default_config"):
+            try:
+                with importlib.resources.files("aiforge.config").joinpath(
+                    "default.toml"
+                ).open() as f:
+                    AIForgeConfig._cached_default_config = tomlkit.load(f)
+            except Exception:
+                AIForgeConfig._cached_default_config = {
+                    "workdir": "aiforge_work",
+                    "max_tokens": 4096,
+                    "max_rounds": 5,
+                    "default_llm_provider": "openrouter",
+                    "llm": {
+                        "openrouter": {
+                            "type": "openai",
+                            "model": "deepseek/deepseek-chat-v3-0324:free",
+                            "api_key": "",
+                            "base_url": "https://openrouter.ai/api/v1",
+                            "timeout": 30,
+                            "max_tokens": 8192,
+                            "enable": True,
+                        },
+                        "deepseek": {
+                            "type": "deepseek",
+                            "model": "deepseek-chat",
+                            "api_key": "",
+                            "base_url": "https://api.deepseek.com",
+                            "timeout": 30,
+                            "max_tokens": 8192,
+                            "enable": True,
+                        },
+                        "ollama": {
+                            "type": "ollama",
+                            "model": "llama3",
+                            "api_key": "",
+                            "base_url": "http://localhost:11434",
+                            "timeout": 30,
+                            "max_tokens": 8192,
+                            "enable": True,
+                        },
+                    },
+                    "cache": {
+                        "code": {
+                            "enabled": True,
+                            "max_modules": 20,
+                            "failure_threshold": 0.8,
+                            "max_age_days": 30,
+                            "cleanup_interval": 10,
+                        }
+                    },
+                    "optimization": {
+                        "enabled": False,
+                        "aggressive_minify": False,
+                        "max_feedback_length": 200,
+                        "compress_strings": True,
+                        "obfuscate_variables": True,
+                    },
+                }
 
-                return tomlkit.load(f)
-        except Exception:
-            # 如果无法加载，返回硬编码的最小配置
-            return {
-                "workdir": "aiforge_work",
-                "max_tokens": 4096,
-                "max_rounds": 5,
-                "default_llm_provider": "openrouter",
-                "llm": {
-                    "openrouter": {
-                        "type": "openai",
-                        "model": "deepseek/deepseek-chat-v3-0324:free",
-                        "api_key": "",
-                        "base_url": "https://openrouter.ai/api/v1",
-                        "timeout": 30,
-                        "max_tokens": 8192,
-                        "enable": True,
-                    },
-                    "deepseek": {
-                        "type": "deepseek",
-                        "model": "deepseek-chat",
-                        "api_key": "",
-                        "base_url": "https://api.deepseek.com",
-                        "timeout": 30,
-                        "max_tokens": 8192,
-                        "enable": True,
-                    },
-                    "ollama": {
-                        "type": "ollama",
-                        "model": "llama3",
-                        "api_key": "",
-                        "base_url": "http://localhost:11434",
-                        "timeout": 30,
-                        "max_tokens": 8192,
-                        "enable": True,
-                    },
-                },
-                "cache": {
-                    "code": {
-                        "enabled": True,
-                        "max_modules": 20,
-                        "failure_threshold": 0.8,
-                        "max_age_days": 30,
-                        "cleanup_interval": 10,
-                    }
-                },
-                "optimization": {
-                    "enabled": False,
-                    "aggressive_minify": False,
-                    "max_feedback_length": 200,
-                    "compress_strings": True,
-                    "obfuscate_variables": True,
-                },
-            }
+        return AIForgeConfig._cached_default_config.copy()  # 返回副本避免修改
 
     # 保留原有方法
     def get_llm_config(self, provider_name: str | None = None):

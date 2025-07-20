@@ -51,14 +51,27 @@ class AIForgeRunner:
             # 查找结果
             if "__result__" in locals_dict:
                 result["result"] = locals_dict["__result__"]
+                # 检查业务逻辑是否成功
+                if isinstance(locals_dict["__result__"], dict):
+                    business_status = locals_dict["__result__"].get("status")
+                    if business_status == "error":
+                        result["success"] = False
+                    else:
+                        result["success"] = True
+                else:
+                    result["success"] = True
             elif "result" in locals_dict:
                 result["result"] = locals_dict["result"]
+                result["success"] = True
             else:
                 # 尝试获取最后一个非下划线开头的变量
                 for key, value in locals_dict.items():
                     if not key.startswith("_"):
                         result["result"] = value
+                        result["success"] = True
                         break
+                else:
+                    result["success"] = False  # 没有找到任何结果
 
             result["success"] = True
             result["locals"] = locals_dict

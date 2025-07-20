@@ -2,10 +2,26 @@ import time
 import json
 import hashlib
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
-from peewee import CharField, DoubleField, IntegerField, Model, TextField, Case
+from peewee import CharField, DoubleField, IntegerField, Model, TextField
 from playhouse.sqlite_ext import SqliteExtDatabase
+
+
+@dataclass
+class CacheModuleInfo:
+    module_id: str
+    file_path: str
+    success_count: int
+    failure_count: int
+    metadata: Dict[str, Any] = None
+    strategy: str = "default"
+
+    @property
+    def success_rate(self) -> float:
+        total = self.success_count + self.failure_count
+        return self.success_count / total if total > 0 else 0.5
 
 
 class AiForgeCodeCache:
@@ -86,7 +102,7 @@ class AiForgeCodeCache:
         """生成指令哈希"""
         return hashlib.md5(instruction.encode()).hexdigest()
 
-    def get_cached_modules(self, instruction: str) -> List[Any]:
+    def get_cached_modules(self, instruction: str) -> List[CacheModuleInfo]:
         """获取缓存的模块，按成功率排序"""
         instruction_hash = self._generate_instruction_hash(instruction)
 
@@ -95,24 +111,19 @@ class AiForgeCodeCache:
                 modules = (
                     self.CodeModule.select()
                     .where(self.CodeModule.instruction_hash == instruction_hash)
-                    .order_by(
-                        Case(
-                            None,
-                            [
-                                (
-                                    (self.CodeModule.success_count + self.CodeModule.failure_count)
-                                    == 0,
-                                    0.5,
-                                )
-                            ],
-                            self.CodeModule.success_count
-                            / (self.CodeModule.success_count + self.CodeModule.failure_count),
-                        ).desc()
-                    )
+                    .order_by(...)
                 )
 
                 return [
-                    (m.module_id, m.file_path, m.success_count, m.failure_count) for m in modules
+                    CacheModuleInfo(
+                        module_id=m.module_id,
+                        file_path=m.file_path,
+                        success_count=m.success_count,
+                        failure_count=m.failure_count,
+                        metadata={},
+                        strategy="exact",
+                    )
+                    for m in modules
                 ]
             except Exception:
                 return []
@@ -320,7 +331,7 @@ class AiForgeCodeCache:
             return False
 
         # 拒绝只是简单数据赋值的代码
-        lines = [line.strip() for line in code.strip().split("\\n") if line.strip()]
+        lines = [line.strip() for line in code.strip().split("\n") if line.strip()]
 
         # 如果只有1-3行且都是简单赋值，认为不是有用的代码
         if len(lines) <= 3:

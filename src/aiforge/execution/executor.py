@@ -71,7 +71,17 @@ class AIForgeExecutor:
             }
 
             # 记录执行历史
-            self.history.append({"code": code, "result": {"__result__": result}, "success": True})
+            business_success = True
+            if isinstance(result, dict) and result.get("status") == "error":
+                business_success = False
+
+            self.history.append(
+                {
+                    "code": code,
+                    "result": {"__result__": result},
+                    "success": business_success,  # 基于业务逻辑判断成功
+                }
+            )
 
             return execution_result
 

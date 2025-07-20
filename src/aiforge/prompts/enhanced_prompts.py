@@ -1,31 +1,4 @@
-import re
 from typing import Optional
-
-
-def detect_task_type(instruction: str) -> str:
-    """检测任务类型"""
-    if not instruction:
-        return "general"
-
-    instruction_lower = instruction.lower()
-
-    # 搜索相关任务
-    if re.search(r"搜索|search|爬虫|crawler|抓取|scrape", instruction_lower):
-        return "web_search"
-
-    # 数据分析任务
-    if re.search(r"分析|analysis|统计|statistics|可视化|visualization", instruction_lower):
-        return "data_analysis"
-
-    # 文件处理任务
-    if re.search(r"处理.*文件|file.*processing|批量.*操作", instruction_lower):
-        return "file_processing"
-
-    # API调用任务
-    if re.search(r"api|接口|调用|请求|request", instruction_lower):
-        return "api_call"
-
-    return "general"
 
 
 def get_task_specific_format(task_type: str) -> str:
@@ -34,37 +7,100 @@ def get_task_specific_format(task_type: str) -> str:
         "web_search": """
 # 搜索任务输出格式
 __result__ = {
-    "results": [{"title": "...", "url": "...", "content": "..."}],
-    "total_count": int,
-    "query": "原始查询",
-    "source": "搜索引擎名称",
-    "metadata": {"timestamp": "...", "status": "success"}
+    "data": {
+        "results": [{"title": "...", "url": "...", "content": "..."}],
+        "total_count": int,
+        "query": "原始查询"
+    },
+    "status": "success",
+    "summary": "搜索完成描述",
+    "metadata": {"timestamp": "...", "source": "搜索引擎名称"}
 }""",
         "data_analysis": """
 # 数据分析任务输出格式
 __result__ = {
-    "analysis": {"key_findings": "...", "trends": "..."},
-    "data": processed_data,
-    "summary": {"total_records": int, "key_metrics": {}},
-    "visualizations": ["chart1.png", "chart2.png"],
+    "data": {
+        "analysis": {"key_findings": "...", "trends": "..."},
+        "processed_data": processed_data,
+        "summary": {"total_records": int, "key_metrics": {}}
+    },
+    "status": "success",
+    "summary": "分析完成描述",
     "metadata": {"timestamp": "...", "data_source": "..."}
 }""",
         "file_processing": """
 # 文件处理任务输出格式
 __result__ = {
-    "processed_files": [{"file": "...", "status": "success", "size": int}],
-    "summary": {"total_files": int, "success_count": int, "error_count": int},
-    "errors": [{"file": "...", "error": "..."}],
+    "data": {
+        "processed_files": [{"file": "...", "status": "success", "size": int}],
+        "summary": {"total_files": int, "success_count": int, "error_count": int},
+        "errors": [{"file": "...", "error": "..."}]
+    },
+    "status": "success",
+    "summary": "文件处理完成描述",
     "metadata": {"timestamp": "...", "operation": "..."}
 }""",
         "api_call": """
 # API调用任务输出格式
 __result__ = {
-    "response_data": api_response,
-    "status_code": int,
-    "headers": response_headers,
-    "summary": {"success": bool, "response_time": float},
+    "data": {
+        "response_data": api_response,
+        "status_code": int,
+        "headers": response_headers,
+        "summary": {"success": bool, "response_time": float}
+    },
+    "status": "success",
+    "summary": "API调用完成描述",
     "metadata": {"endpoint": "...", "timestamp": "..."}
+}""",
+        "data_fetch": """
+# 数据获取任务输出格式
+__result__ = {
+    "data": {
+        "content": "获取的数据内容",
+        "source": "数据来源",
+        "additional_info": {}
+    },
+    "status": "success",
+    "summary": "数据获取完成描述",
+    "metadata": {"timestamp": "...", "task_type": "data_fetch"}
+}""",
+        "web_request": """
+# 网页请求任务输出格式
+__result__ = {
+    "data": {
+        "content": "网页内容",
+        "url": "请求的URL",
+        "status_code": int,
+        "headers": {}
+    },
+    "status": "success",
+    "summary": "网页请求完成描述",
+    "metadata": {"timestamp": "...", "method": "GET/POST"}
+}""",
+        "automation": """
+# 自动化任务输出格式
+__result__ = {
+    "data": {
+        "executed_steps": ["步骤1", "步骤2"],
+        "results": {},
+        "summary": {"total_steps": int, "success_steps": int}
+    },
+    "status": "success",
+    "summary": "自动化任务完成描述",
+    "metadata": {"timestamp": "...", "workflow": "..."}
+}""",
+        "content_generation": """
+# 内容生成任务输出格式
+__result__ = {
+    "data": {
+        "generated_content": "生成的内容",
+        "content_type": "text/html/markdown",
+        "word_count": int
+    },
+    "status": "success",
+    "summary": "内容生成完成描述",
+    "metadata": {"timestamp": "...", "template": "..."}
 }""",
     }
 
@@ -260,12 +296,11 @@ def should_use_detailed_prompt(instruction: str) -> bool:
 
 
 def get_enhanced_aiforge_prompt(
-    user_prompt: Optional[str] = None, optimize_tokens: bool = True
+    user_prompt: Optional[str] = None,
+    optimize_tokens: bool = True,
+    task_type: Optional[str] = None,
 ) -> str:
     """生成增强的系统提示，包含输出格式规范"""
-
-    # 检测任务类型
-    task_type = detect_task_type(user_prompt or "")
 
     if optimize_tokens:
         code_rule = """
@@ -275,7 +310,6 @@ def get_enhanced_aiforge_prompt(
 - 使用最短变量名(a,b,c,d等)
 - 使用预装库：requests, BeautifulSoup, pandas, numpy 等
 - 实现完整的错误处理和异常捕获
-- 输出清晰的状态信息和进度提示"
 """
     else:
         code_rule = """
@@ -283,7 +317,24 @@ def get_enhanced_aiforge_prompt(
 - 生成的代码必须能在标准 Python 环境中直接执行
 - 使用预装库：requests, BeautifulSoup, pandas, numpy 等
 - 实现完整的错误处理和异常捕获
-- 输出清晰的状态信息和进度提示"
+"""
+
+    # 将格式要求提前并加强
+    critical_format_rules = """
+🚨 CRITICAL: 必须严格遵守的格式要求 🚨
+
+1. __result__ 变量必须是字典格式，绝不能是字符串
+2. 字典必须包含以下字段：
+   - "data": 实际数据（成功时）或 null（失败时）
+   - "status": "success" 或 "error"
+   - "summary": 简短描述
+   - "metadata": 包含timestamp等信息
+
+3. 示例格式：
+   成功时：__result__ = {"data": 实际数据, "status": "success", "summary": "操作成功", "metadata": {...}}
+   失败时：__result__ = {"data": null, "status": "error", "summary": "错误描述", "metadata": {...}}
+
+4. 严禁使用：__result__ = "字符串内容"
 """
 
     base_prompt = f"""
@@ -294,34 +345,36 @@ def get_enhanced_aiforge_prompt(
 你的回答必须严格遵循以下格式：
 
 ## 代码块格式
-- 使用标准 Markdown 代码块格式：```python ... ```，不要输出任何解释性文字
-- 每个代码块应该是完整可执行的
+- 使用标准 Markdown 代码块格式：```python ... ```
 - 将最终结果赋值给 __result__ 变量
-- 包含适当的错误处理
 
-## 结果处理规范
-- 确保 __result__ 包含结构化数据
-- 所有结果必须可以被 JSON 序列化
-- 包含必要的元数据信息（时间戳、状态等）
+{critical_format_rules}
 
 {code_rule}
 
-# 执行环境
-- Python 解释器已预装常用数据处理和网络库
-- 支持文件读写和网络访问
-- 具有完整的异常处理机制
 """
-    result_quality_rules = """
-# 结果质量要求
-- 确保返回的数据是真实、准确的
-- 如果无法获取真实数据，应返回错误状态，严禁返回虚假、模拟数据
-- 使用标准的结果格式：{"data": 实际数据, "status": "success/error", "summary": "描述"}
+
+    # 强化的质量要求
+    enhanced_quality_rules = """
+# 🔥 强制执行的结果质量要求 🔥
+
+- 如果数据获取成功：status="success", data=实际数据
+- 如果数据获取失败：status="error", data=null, summary包含错误原因
+- data字段在成功时不能为空、null或错误信息
+- 错误信息只能放在summary字段中
+- 绝对禁止返回字符串格式的__result__
+
+违反格式要求的代码将被拒绝执行！
 """
-    # 添加任务特定的格式要求、添加通用规则
-    task_format = get_task_specific_format(task_type)
-    enhanced_prompt = f"{base_prompt}\\n{task_format}\\n{result_quality_rules}"
+
+    # 只有在提供了task_type时才添加任务特定格式
+    if task_type:
+        task_format = get_task_specific_format(task_type)
+        enhanced_prompt = f"{base_prompt}\n{task_format}\n{enhanced_quality_rules}"
+    else:
+        enhanced_prompt = f"{base_prompt}\n{enhanced_quality_rules}"
 
     if user_prompt and should_use_detailed_prompt(user_prompt):
-        return f"{enhanced_prompt}\\n\\n# 用户详细指令\\n请严格按照以下指令执行：\\n{user_prompt}"
+        return f"{enhanced_prompt}\n\n# 用户详细指令\n请严格按照以上格式要求执行：\n{user_prompt}"
     else:
-        return f"{enhanced_prompt}\\n\\n# 任务要求\\n{user_prompt or '请根据用户指令生成相应的 Python 代码'}"
+        return f"{enhanced_prompt}\n\n# 任务要求\n{user_prompt or '请根据用户指令生成相应的 Python 代码'}"

@@ -1,94 +1,87 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import argparse
-import sys
+import os
+import click
 from rich.console import Console
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.styles import Style
+from rich.panel import Panel
+from rich.table import Table
+import json
+from typing import Dict, Any
 
-from ..core.core import AIForgeCore
+from aiforge import AIForgeCore
 
 
-class AIForgeCLI:
-    """AIForge命令行接口"""
+def display_terminal_result(ui_result: Dict[str, Any]):
+    """在终端显示UI适配后的结果"""
+    console = Console()
 
-    def __init__(self):
-        self.console = Console(record=True)
-        self.history = FileHistory(".aiforge_history")
-        self.style = Style.from_dict(
-            {
-                "completion-menu.completion": "bg:#000000 #ffffff",
-                "completion-menu.completion.current": "bg:#444444 #ffffff",
-                "prompt": "green",
-            }
-        )
+    display_items = ui_result.get("display_items", [])
+    summary_text = ui_result.get("summary_text", "执行完成")
 
-    def create_parser(self):
-        """创建命令行参数解析器"""
-        parser = argparse.ArgumentParser(
-            description="AIForge - AI驱动的代码生成执行引擎",
-            formatter_class=argparse.RawTextHelpFormatter,
-        )
-        parser.add_argument("-c", "--config", default="aiforge.toml", help="配置文件路径")
-        parser.add_argument("--debug", action="store_true", help="启用调试模式")
-        parser.add_argument("instruction", nargs="?", help="要执行的任务指令")
-        return parser
+    for item in display_items:
+        item_type = item.get("type", "text")
+        title = item.get("title", "结果")
+        content = item.get("content", "")
 
-    def run_interactive(self, forge):
-        """运行交互式模式"""
-        self.console.print("[bold cyan]🔥 AIForge - AI驱动编程引擎[/bold cyan]")
-        self.console.print("输入指令或 'exit' 退出", style="green")
+        if item_type == "table":
+            # 显示表格
+            table = Table(title=title)
+            columns = content.get("columns", [])
+            rows = content.get("rows", [])
 
-        session = PromptSession(history=self.history, style=self.style)
+            for col in columns:
+                table.add_column(col)
 
-        while True:
-            try:
-                instruction = session.prompt(">> ").strip()
-                if instruction.lower() in ["exit", "quit"]:
-                    break
-                if len(instruction) < 2:
-                    continue
+            for row in rows:
+                table.add_row(*[str(row.get(col, "")) for col in columns])
 
-                result = forge.run_task(instruction)
-                if result:
-                    self.console.print(f"[green]执行成功:[/green] {result}")
-                else:
-                    self.console.print("[red]执行失败[/red]")
+            console.print(table)
 
-            except (EOFError, KeyboardInterrupt):
-                break
+        elif item_type == "card":
+            # 显示卡片
+            card_content = f"主要内容: {content.get('primary', '')}\n"
+            for key, value in content.get("secondary", {}).items():
+                card_content += f"{key}: {value}\n"
 
-        self.console.print("[yellow]再见![/yellow]")
+            panel = Panel(card_content, title=title)
+            console.print(panel)
 
-    def main(self):
-        """主入口函数"""
-        parser = self.create_parser()
-        args = parser.parse_args()
-
-        try:
-            forge = AIForgeCore(args.config)
-        except Exception as e:
-            self.console.print(f"[red]初始化失败: {e}[/red]")
-            sys.exit(1)
-
-        if args.instruction:
-            # 单次执行模式
-            result = forge.run_task(args.instruction)
-            if result:
-                self.console.print(result)
-            else:
-                sys.exit(1)
         else:
-            # 交互式模式
-            self.run_interactive(forge)
+            # 默认文本显示
+            if isinstance(content, dict):
+                content = json.dumps(content, ensure_ascii=False, indent=2)
+
+            panel = Panel(str(content), title=title)
+            console.print(panel)
+
+    # 显示摘要
+    console.print(f"\n[green]{summary_text}[/green]")
 
 
-def main():
-    """CLI入口点"""
-    cli = AIForgeCLI()
-    cli.main()
+@click.command()
+@click.argument("instruction", required=False)
+@click.option("--config", help="配置文件路径")
+@click.option("--api-key", help="API密钥")
+def main(instruction, config, api_key):
+    """AIForge CLI工具"""
+    # 初始化核心
+    forge = AIForgeCore(config_file=config, api_key=api_key)
 
+    if not instruction:
+        instruction = click.prompt("请输入指令")
 
-if __name__ == "__main__":
-    main()
+    # 准备CLI上下文
+    context_data = {
+        "device_info": {
+            "terminal_width": click.get_terminal_size().columns,
+            "supports_color": True,
+            "shell": os.environ.get("SHELL", "bash"),
+        }
+    }
+
+    # 使用输入适配运行
+    result = forge.run_with_input_adaptation(instruction, "cli", context_data)
+
+    # 适配输出结果
+    ui_result = forge.adapt_result_for_ui(result, "terminal_text", "cli")
+
+    # 显示结果
+    display_terminal_result(ui_result)

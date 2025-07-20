@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, Any
+from typing import Dict, Any, List
 from ..llm.llm_client import AIForgeLLMClient
 
 
@@ -10,155 +10,256 @@ class InstructionAnalyzer:
     def __init__(self, llm_client: AIForgeLLMClient):
         self.llm_client = llm_client
 
-        # 任务类型映射
-        self.task_type_patterns = {
-            # 数据获取类
-            "web_search": [
-                "搜索",
-                "search",
-                "查找",
-                "爬取",
-                "crawl",
-                "scrape",
-                "抓取",
-                "新闻",
-                "news",
-            ],
-            "web_scraping": ["爬虫", "spider", "抓取网页", "提取数据", "网页内容"],
-            "api_data_fetch": ["api", "接口", "获取数据", "fetch", "调用接口"],
-            "database_query": ["数据库", "database", "查询", "query", "sql"],
-            # 数据处理类
-            "data_analysis": ["分析", "analyze", "统计", "statistics", "报告", "report"],
-            "data_processing": ["处理", "process", "转换", "transform", "清洗", "clean"],
-            "data_visualization": ["可视化", "visualization", "图表", "chart", "绘图", "plot"],
-            # 文件操作类
-            "file_operation": ["文件", "file", "读取", "read", "写入", "write", "保存", "save"],
-            "file_batch_processing": ["批量", "batch", "批处理", "多个文件"],
-            "document_parsing": ["解析", "parse", "提取", "extract", "文档", "document"],
-            # 网络通信类
-            "web_request": ["网页", "webpage", "url", "html", "http", "requests"],
-            "webhook_handler": ["webhook", "回调", "callback", "事件", "event"],
-            # 自动化任务类
-            "automation": ["自动化", "automation", "定时", "schedule", "任务", "task"],
-            "monitoring": ["监控", "monitor", "告警", "alert", "检查", "check"],
-            # 内容生成类
-            "content_generation": ["生成", "generate", "创建", "create", "写作", "writing"],
-            "code_generation": ["代码生成", "code generation", "编程", "programming"],
-            # 系统集成类
-            "integration": ["集成", "integration", "同步", "sync", "连接", "connect"],
+        # 标准化的任务类型定义 - 完整覆盖常见场景
+        self.standardized_patterns = {
+            "data_fetch": {
+                "keywords": [
+                    "搜索",
+                    "search",
+                    "获取",
+                    "fetch",
+                    "查找",
+                    "天气",
+                    "weather",
+                    "新闻",
+                    "news",
+                    "api",
+                    "接口",
+                    "爬取",
+                    "crawl",
+                ],
+                "actions": ["search", "fetch", "get", "crawl"],
+                "output_formats": ["json", "list", "dict"],
+                "common_params": ["query", "url", "max_results", "city", "topic"],
+            },
+            "data_process": {
+                "keywords": [
+                    "分析",
+                    "analyze",
+                    "处理",
+                    "process",
+                    "计算",
+                    "统计",
+                    "转换",
+                    "transform",
+                ],
+                "actions": ["analyze", "process", "calculate", "transform"],
+                "output_formats": ["json", "table", "report"],
+                "common_params": ["data_source", "method", "format"],
+            },
+            "file_operation": {
+                "keywords": [
+                    "文件",
+                    "file",
+                    "读取",
+                    "read",
+                    "写入",
+                    "write",
+                    "保存",
+                    "save",
+                    "批量",
+                    "batch",
+                ],
+                "actions": ["read", "write", "save", "process"],
+                "output_formats": ["file", "json", "text"],
+                "common_params": ["file_path", "format", "encoding"],
+            },
+            "automation": {
+                "keywords": [
+                    "自动化",
+                    "automation",
+                    "定时",
+                    "schedule",
+                    "监控",
+                    "monitor",
+                    "任务",
+                    "task",
+                ],
+                "actions": ["automate", "schedule", "monitor", "execute"],
+                "output_formats": ["status", "log", "report"],
+                "common_params": ["interval", "condition", "action"],
+            },
+            "content_generation": {
+                "keywords": [
+                    "生成",
+                    "generate",
+                    "创建",
+                    "create",
+                    "写作",
+                    "writing",
+                    "报告",
+                    "report",
+                ],
+                "actions": ["generate", "create", "write", "compose"],
+                "output_formats": ["text", "document", "html"],
+                "common_params": ["template", "content", "style"],
+            },
         }
 
     def analyze_instruction(self, user_input: str) -> Dict[str, Any]:
-        """分析用户指令，返回标准化的指令结构"""
-        # 首先尝试本地分析
+        """分析用户指令，优先本地分析"""
+        # 本地分析
         local_analysis = self._local_analyze(user_input)
-        if local_analysis["confidence"] > 0.7:
+
+        # 降低AI调用阈值 - 本地分析置信度 > 0.5 就直接使用
+        if local_analysis["confidence"] > 0.5:
             return local_analysis
 
-        # 如果本地分析置信度不高，使用AI分析
-        analysis_prompt = self._get_analysis_prompt()
-        full_prompt = f"{analysis_prompt}\\n\\n用户指令: {user_input}"
-
+        # 置信度不够才使用AI分析
         try:
-            response = self.llm_client.generate_code(full_prompt, "")
+            analysis_prompt = self._get_analysis_prompt()
+            response = self.llm_client.generate_code(
+                f"{analysis_prompt}\n\n用户指令: {user_input}", ""
+            )
             ai_analysis = self._parse_standardized_instruction(response)
 
-            # 合并本地分析和AI分析结果
+            # 合并本地和AI分析结果
             return self._merge_analysis(local_analysis, ai_analysis)
         except Exception:
-            # AI分析失败时回退到本地分析
             return local_analysis
 
     def _local_analyze(self, instruction: str) -> Dict[str, Any]:
-        """本地指令分析"""
+        """增强的本地指令分析 - 提供完整的标准化输出"""
         instruction_lower = instruction.lower()
 
         # 计算每种任务类型的匹配分数
         type_scores = {}
-        for task_type, keywords in self.task_type_patterns.items():
-            score = sum(1 for keyword in keywords if keyword in instruction_lower)
+        best_match_details = {}
+
+        for task_type, pattern_data in self.standardized_patterns.items():
+            score = sum(1 for keyword in pattern_data["keywords"] if keyword in instruction_lower)
             if score > 0:
                 type_scores[task_type] = score
+                best_match_details[task_type] = pattern_data
 
         if not type_scores:
             return self._get_default_analysis(instruction)
 
         # 获取最高分的任务类型
         best_task_type = max(type_scores.items(), key=lambda x: x[1])[0]
-        confidence = min(type_scores[best_task_type] / 3.0, 1.0)  # 标准化置信度
+        best_pattern = best_match_details[best_task_type]
 
-        return {
+        # 提高置信度计算的准确性
+        max_possible_score = len(best_pattern["keywords"])
+        confidence = min(type_scores[best_task_type] / max_possible_score * 2, 1.0)
+
+        # 生成完整的标准化指令
+        standardized = {
             "task_type": best_task_type,
-            "action": self._infer_action(instruction, best_task_type),
+            "action": self._smart_infer_action(instruction, best_pattern["actions"]),
             "target": self._extract_target(instruction),
-            "parameters": self._extract_parameters(instruction, best_task_type),
-            "output_format": self._infer_output_format(instruction),
-            "cache_key": f"{best_task_type}_{hash(instruction) % 10000}",
+            "parameters": self._smart_extract_parameters(
+                instruction, best_pattern["common_params"]
+            ),
+            "output_format": self._smart_infer_output_format(
+                instruction, best_pattern["output_formats"]
+            ),
+            "cache_key": self._generate_semantic_cache_key(best_task_type, instruction),
             "confidence": confidence,
+            "source": "local_analysis",
         }
 
-    def _infer_action(self, instruction: str, task_type: str) -> str:
-        """推断具体动作"""
-        action_patterns = {
-            "web_search": "search",
-            "web_scraping": "extract",
-            "api_data_fetch": "fetch",
-            "database_query": "query",
-            "data_analysis": "analyze",
-            "data_processing": "process",
-            "data_visualization": "plot",
-            "file_operation": "process",
-            "file_batch_processing": "batch_process",
-            "document_parsing": "parse",
-            "web_request": "request",
-            "webhook_handler": "handle",
-            "automation": "automate",
-            "monitoring": "monitor",
-            "content_generation": "generate",
-            "code_generation": "generate",
-            "integration": "integrate",
+        return standardized
+
+    def _smart_infer_action(self, instruction: str, possible_actions: List[str]) -> str:
+        """智能推断动作"""
+        instruction_lower = instruction.lower()
+
+        # 动作关键词映射
+        action_keywords = {
+            "search": ["搜索", "查找", "search", "find"],
+            "fetch": ["获取", "fetch", "get", "retrieve"],
+            "analyze": ["分析", "analyze", "统计", "calculate"],
+            "process": ["处理", "process", "转换", "transform"],
+            "generate": ["生成", "generate", "创建", "create"],
+            "save": ["保存", "save", "写入", "write"],
         }
-        return action_patterns.get(task_type, "process")
+
+        for action in possible_actions:
+            if action in action_keywords:
+                if any(keyword in instruction_lower for keyword in action_keywords[action]):
+                    return action
+
+        return possible_actions[0] if possible_actions else "process"
 
     def _extract_target(self, instruction: str) -> str:
         """提取操作目标"""
-        # 简单的目标提取逻辑
         return instruction[:100]  # 取前100个字符作为目标描述
 
-    def _extract_parameters(self, instruction: str, task_type: str) -> Dict[str, Any]:
-        """提取参数"""
+    def _smart_extract_parameters(
+        self, instruction: str, common_params: List[str]
+    ) -> Dict[str, Any]:
+        """智能提取参数"""
         params = {}
 
-        # 根据任务类型提取特定参数
-        if task_type in ["web_search", "web_scraping"]:
-            # 提取查询关键词
-            query_match = re.search(r'["""]([^"""]+)["""]', instruction)
-            if query_match:
-                params["query"] = query_match.group(1)
+        # 通用参数提取规则
+        param_patterns = {
+            "query": [
+                r'["""]([^"""]+)["""]',
+                r"搜索(.+?)(?:的|，|。|$)",
+                r"查找(.+?)(?:的|，|。|$)",
+            ],
+            "city": [r"(.+?)(?:天气|weather)", r"(.+?)市", r"(.+?)(?:的天气|weather)"],
+            "max_results": [r"(\d+)(?:条|个|项)", r"最多(\d+)", r"前(\d+)"],
+            "file_path": [r"([^\s]+\.[a-zA-Z]+)", r"文件(.+?)(?:的|，|。|$)"],
+            "url": [r"(https?://[^\s]+)"],
+        }
 
-            # 提取数量限制
-            num_match = re.search(r"(\\d+)", instruction)
-            if num_match:
-                params["max_results"] = int(num_match.group(1))
-
-        elif task_type == "file_operation":
-            # 提取文件路径
-            file_match = re.search(r"([^\\s]+\\.[a-zA-Z]+)", instruction)
-            if file_match:
-                params["file_path"] = file_match.group(1)
+        for param in common_params:
+            if param in param_patterns:
+                for pattern in param_patterns[param]:
+                    match = re.search(pattern, instruction)
+                    if match:
+                        value = match.group(1).strip()
+                        if param == "max_results":
+                            params[param] = int(value)
+                        else:
+                            params[param] = value
+                        break
 
         return params
 
-    def _infer_output_format(self, instruction: str) -> str:
-        """推断输出格式"""
-        if any(word in instruction.lower() for word in ["json", "字典", "dict"]):
-            return "json"
-        elif any(word in instruction.lower() for word in ["列表", "list", "数组"]):
-            return "list"
-        elif any(word in instruction.lower() for word in ["表格", "table", "csv"]):
-            return "table"
-        else:
-            return "general"
+    def _smart_infer_output_format(self, instruction: str, possible_formats: List[str]) -> str:
+        """智能推断输出格式"""
+        instruction_lower = instruction.lower()
+
+        format_keywords = {
+            "json": ["json", "字典", "dict"],
+            "list": ["列表", "list", "数组"],
+            "table": ["表格", "table", "csv"],
+            "text": ["文本", "text", "字符串"],
+            "file": ["文件", "file"],
+            "report": ["报告", "report"],
+        }
+
+        for fmt in possible_formats:
+            if fmt in format_keywords:
+                if any(keyword in instruction_lower for keyword in format_keywords[fmt]):
+                    return fmt
+
+        return "json"  # 默认返回json格式
+
+    def _generate_semantic_cache_key(self, task_type: str, instruction: str) -> str:
+        """生成语义化的缓存键"""
+        # 提取关键词生成更稳定的缓存键
+        key_words = []
+
+        # 根据任务类型提取关键词
+        if task_type == "data_fetch":
+            # 提取查询主题
+            for pattern in [
+                r'["""]([^"""]+)["""]',
+                r"搜索(.+?)(?:的|，|。|$)",
+                r"获取(.+?)(?:的|，|。|$)",
+            ]:
+                match = re.search(pattern, instruction)
+                if match:
+                    key_words.append(match.group(1).strip())
+                    break
+
+        # 生成稳定的哈希
+        content = f"{task_type}_{' '.join(key_words)}" if key_words else instruction[:50]
+        return f"{task_type}_{hash(content) % 100000}"
 
     def _get_default_analysis(self, instruction: str) -> Dict[str, Any]:
         """获取默认分析结果"""
@@ -167,9 +268,10 @@ class InstructionAnalyzer:
             "action": "process",
             "target": instruction[:100],
             "parameters": {},
-            "output_format": "general",
+            "output_format": "json",
             "cache_key": f"general_{hash(instruction) % 10000}",
             "confidence": 0.3,
+            "source": "default",
         }
 
     def _get_analysis_prompt(self) -> str:
@@ -194,26 +296,27 @@ class InstructionAnalyzer:
 }
 
 # 任务类型包括
-- web_search: 网络搜索
-- web_scraping: 网页爬取
-- api_data_fetch: API数据获取
-- database_query: 数据库查询
-- data_analysis: 数据分析
-- data_processing: 数据处理
-- data_visualization: 数据可视化
-- file_operation: 文件操作
-- web_request: 网页请求
-- automation: 自动化任务
-- content_generation: 内容生成
-- integration: 系统集成
+- data_fetch: 数据获取（搜索、天气、新闻、API等）
+- data_process: 数据处理（分析、转换、计算等）
+- file_operation: 文件操作（读取、写入、批量处理等）
+- automation: 自动化任务（定时、监控等）
+- content_generation: 内容生成（写作、报告等）
 
 请严格按照JSON格式返回，不要包含其他解释文字。
 """
 
     def _parse_standardized_instruction(self, response: str) -> Dict[str, Any]:
         """解析AI返回的标准化指令"""
-        # 提取JSON内容
-        json_match = re.search(r"\\{.*\\}", response, re.DOTALL)
+        # 先尝试提取```json代码块
+        code_block_match = re.search(r"```json\s*(\{.*?\})\s*```", response, re.DOTALL)
+        if code_block_match:
+            try:
+                return json.loads(code_block_match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        # 回退到直接提取JSON
+        json_match = re.search(r"\{.*\}", response, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(0))
@@ -225,7 +328,35 @@ class InstructionAnalyzer:
 
     def _merge_analysis(self, local: Dict[str, Any], ai: Dict[str, Any]) -> Dict[str, Any]:
         """合并本地分析和AI分析结果"""
-        # 如果AI分析结果更完整，优先使用AI结果
-        if len(ai.get("parameters", {})) > len(local.get("parameters", {})):
+
+        # 检查AI分析是否有效
+        if self._is_ai_analysis_valid(ai):
+            ai["source"] = "ai_analysis"
+            ai["confidence"] = 0.9
             return ai
+
+        local["source"] = "local_analysis"
         return local
+
+    def _is_ai_analysis_valid(self, ai_analysis: Dict[str, Any]) -> bool:
+        """验证AI分析结果的有效性"""
+        # 1. 检查必要字段是否存在
+        required_fields = ["task_type", "action", "target"]
+        if not all(field in ai_analysis for field in required_fields):
+            return False
+
+        # 2. 检查task_type是否在已知类型中
+        known_task_types = set(self.standardized_patterns.keys()) | {"general"}  # 修复这里
+        if ai_analysis.get("task_type") not in known_task_types:
+            return False
+
+        # 3. 检查参数是否合理（非空且有意义）
+        parameters = ai_analysis.get("parameters", {})
+        if parameters:
+            # 检查参数值是否有意义（非空字符串等）
+            for key, value in parameters.items():
+                if isinstance(value, str) and not value.strip():
+                    return False
+
+        # 4. 检查是否比本地分析更准确（可选的额外验证）
+        return True
