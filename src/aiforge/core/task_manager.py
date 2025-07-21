@@ -211,29 +211,14 @@ class AIForgeTask:
         """执行方法"""
         if instruction:
             self.instruction = instruction
-        if system_prompt:
-            self.system_prompt = system_prompt
 
-        # 动态构建 system prompt - 确保包含基础要求
-        if not system_prompt:
-            # 没有system_prompt时，使用完整的增强提示词
-            self.system_prompt = get_enhanced_aiforge_prompt(
-                self.instruction,
-                optimize_tokens=self.optimization.get("optimize_tokens", True),
-                task_type=task_type,
-            )
-        else:
-            # 有system_prompt时，确保它包含基础的代码生成要求
-            self.system_prompt = system_prompt
-            base_requirements = get_enhanced_aiforge_prompt(
-                user_prompt=None,
-                optimize_tokens=self.optimization.get("optimize_tokens", True),
-                task_type=None,
-            )
-
-            # 检查system_prompt是否已包含基础要求
-            if "🚨 CRITICAL" not in system_prompt and "__result__" not in system_prompt:
-                self.system_prompt = f"{base_requirements}\n\n# 任务特定增强\n{system_prompt}"
+        self.system_prompt = get_enhanced_aiforge_prompt(
+            user_prompt=self.instruction,  # 用户指令作为 user_prompt
+            optimize_tokens=self.optimization.get("optimize_tokens", True),
+            task_type=task_type,
+            parameters=None,
+            original_prompt=system_prompt,  # 将外部传入的 system_prompt 作为补充
+        )
 
         # 存储task_type供后续使用
         self.task_type = task_type
@@ -251,6 +236,9 @@ class AIForgeTask:
         success = False
 
         while rounds <= self.max_rounds:
+            if rounds > 1:
+                time.sleep(0.1)  # 100ms 延迟
+
             self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
             # 生成代码

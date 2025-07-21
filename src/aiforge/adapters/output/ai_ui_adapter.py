@@ -81,7 +81,7 @@ class AIUIAdapter:
         # 提取JSON内容
         import re
 
-        json_match = re.search(r"\\{.*\\}", response, re.DOTALL)
+        json_match = re.search(r"\{.*\}", response, re.DOTALL)
         if json_match:
             try:
                 return json.loads(json_match.group(0))

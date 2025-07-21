@@ -6,21 +6,13 @@ from ..config.config import AIForgeConfig
 from ..llm.llm_manager import AIForgeLLMManager
 from .task_manager import AIForgeManager
 from ..cache.standardized_cache import StandardizedCodeCache
-from ..execution.executor_interface import (
-    DefaultModuleExecutor,
-    FunctionBasedExecutor,
-    CachedModuleExecutor,
-    DataProcessingExecutor,
-    WebRequestExecutor,
-    FileOperationExecutor,
-    APICallExecutor,
-)
 from .runner import AIForgeRunner
 from ..instruction.analyzer import InstructionAnalyzer
 from ..extensions.template_extension import DomainTemplateExtension
 from ..adapters.output.enhanced_hybrid_adapter import EnhancedHybridUIAdapter
 from ..adapters.input.input_adapter_manager import InputAdapterManager, InputSource
-from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt, get_task_specific_format
+from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
+from ..execution.unified_executor import UnifiedParameterizedExecutor, CachedModuleExecutor
 
 
 class AIForgeCore:
@@ -327,38 +319,23 @@ class AIForgeCore:
     def _build_enhanced_system_prompt(
         self, standardized_instruction: Dict[str, Any], original_prompt: str = None
     ) -> str:
-        """基于标准化指令构建增强的系统提示词 - 在基础提示词上增强"""
-        # 获取基础的代码生成提示词（不包含任务特定格式）
-        base_enhanced_prompt = get_enhanced_aiforge_prompt(
-            user_prompt=None, optimize_tokens=True, task_type=None  # 不传入task_type，避免重复
-        )
-
-        # 构建标准化指令增强部分
+        """基于标准化指令构建增强的系统提示词"""
         task_type = standardized_instruction.get("task_type", "general")
-        action = standardized_instruction.get("action", "process")
-        target = standardized_instruction.get("target", "")
+        parameters = standardized_instruction.get("parameters", {})
 
-        # 使用标准化指令的任务类型获取格式
-        task_format = get_task_specific_format(task_type)
+        # 确保始终有参数信息
+        if not parameters:
+            parameters = {
+                "instruction": {
+                    "value": standardized_instruction.get("target", ""),
+                    "type": "str",
+                    "description": "用户输入的指令内容",
+                }
+            }
 
-        standardized_enhancement = f"""
-
-    # 🎯 标准化指令增强
-    基于指令分析，本次任务的具体要求：
-    - 任务类型: {task_type}
-    - 操作动作: {action}
-    - 目标对象: {target}
-    - 输出格式: {standardized_instruction.get("output_format", "json")}
-
-    {task_format}
-
-    # 任务特定优化指导
-    - 生成针对 {task_type} 任务的专用代码
-    - 重点处理 {action} 操作的相关逻辑
-    - 确保结果数据结构符合 {task_type} 任务标准
-    """
-
-        enhanced_prompt = f"{base_enhanced_prompt}{standardized_enhancement}"
+        enhanced_prompt = get_enhanced_aiforge_prompt(
+            user_prompt=None, optimize_tokens=True, task_type=task_type, parameters=parameters
+        )
 
         if original_prompt:
             enhanced_prompt += f"\n\n# 原始指令补充\n{original_prompt}"
@@ -368,7 +345,7 @@ class AIForgeCore:
     def _init_config(
         self, config_file: str | None, api_key: str | None, provider: str, **kwargs
     ) -> AIForgeConfig:
-        """初始化配置 - 严格按照三种情况处理"""
+        """初始化配置"""
 
         # 情况3：传入配置文件，以此文件为准（忽略key和provider）
         if config_file:
@@ -393,14 +370,7 @@ class AIForgeCore:
     def _init_executors(self):
         """初始化内置执行器"""
         self.module_executors = [
-            DefaultModuleExecutor(),
-            FunctionBasedExecutor("search_web"),
-            DataProcessingExecutor(),
-            WebRequestExecutor(),
-            FileOperationExecutor(),
-            APICallExecutor(),
-            FunctionBasedExecutor("main"),
-            FunctionBasedExecutor("run"),
+            UnifiedParameterizedExecutor(),  # 唯一的统一执行器
         ]
 
     def run(self, instruction: str, system_prompt: str | None = None) -> Optional[Dict[str, Any]]:
@@ -414,7 +384,7 @@ class AIForgeCore:
     def run_task(
         self, instruction: str, system_prompt: str | None = None
     ) -> Optional[Dict[str, Any]]:
-        """任务执行入口 - 使用统一缓存策略"""
+        """任务执行入口"""
         if self.code_cache:
             result, _ = self.generate_and_execute_with_cache(
                 instruction, system_prompt=system_prompt
@@ -488,7 +458,7 @@ class AIForgeCore:
         return max(successful_entries, key=code_quality_score)
 
     def _execute_cached_module(self, module, instruction: str, **kwargs):
-        """执行缓存的模块 - 使用策略模式"""
+        """执行缓存的模块"""
         for executor in self.module_executors:
             if executor.can_handle(module):
                 result = executor.execute(module, instruction, **kwargs)
@@ -545,10 +515,28 @@ class AIForgeCore:
 
         return False
 
-    def _register_executor_extension(self, config: Dict) -> bool:
-        """注册执行器扩展"""
-        # 基于配置动态创建执行器
-        pass
+    def _register_executor_extension(self, executor_config: Dict[str, Any]) -> bool:
+        """注册自定义执行器"""
+        try:
+            # 支持多种注册方式
+            if "class" in executor_config:
+                # 直接注册执行器类
+                executor_instance = executor_config["class"]()
+                self.add_module_executor(executor_instance)
+                return True
+            elif "module_path" in executor_config:
+                # 从模块路径动态加载
+                import importlib
+
+                module = importlib.import_module(executor_config["module_path"])
+                executor_class = getattr(module, executor_config["class_name"])
+                executor_instance = executor_class()
+                self.add_module_executor(executor_instance)
+                return True
+
+            return False
+        except Exception:
+            return False
 
     def _register_template_extension(self, config: Dict) -> bool:
         """注册模板扩展"""

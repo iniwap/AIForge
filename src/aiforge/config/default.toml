@@ -77,3 +77,17 @@ extension_dir = "extensions"
 name = "custom_executor"
 type = "executor"
 config = {}
+
+
+# 示例
+[[extensions.registered]]
+name = "custom_data_processor"
+type = "executor"
+module_path = "my_plugins.data_processor"
+class_name = "CustomDataProcessor"
+priority = 1
+
+[[extensions.registered]]
+name = "domain_specific_executor"
+type = "executor"
+config_file = "plugins/domain_executor.toml"

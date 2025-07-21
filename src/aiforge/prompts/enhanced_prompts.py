@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 def get_task_specific_format(task_type: str) -> str:
@@ -299,82 +299,80 @@ def get_enhanced_aiforge_prompt(
     user_prompt: Optional[str] = None,
     optimize_tokens: bool = True,
     task_type: Optional[str] = None,
+    parameters: Optional[Dict[str, Any]] = None,
+    original_prompt: str | None = None,
 ) -> str:
-    """生成增强的系统提示，包含输出格式规范"""
+    """生成增强的系统提示"""
+
+    # 基础代码生成规则
+    code_rule = """
+## 代码生成规则
+- 生成的代码必须能在标准 Python 环境中直接执行
+- 使用预装库：requests, BeautifulSoup, pandas, numpy 等
+- 实现完整的错误处理和异常捕获"""
 
     if optimize_tokens:
-        code_rule = """
-# 代码生成规则
-- 生成的代码必须能在标准 Python 环境中直接执行
-- 生成极简代码，无注释，无空行
-- 使用最短变量名(a,b,c,d等)
-- 使用预装库：requests, BeautifulSoup, pandas, numpy 等
-- 实现完整的错误处理和异常捕获
-"""
-    else:
-        code_rule = """
-# 代码生成规则
-- 生成的代码必须能在标准 Python 环境中直接执行
-- 使用预装库：requests, BeautifulSoup, pandas, numpy 等
-- 实现完整的错误处理和异常捕获
-"""
+        code_rule += "\n- 生成极简代码，无注释，无空行\n- 使用最短变量名(a,b,c,d等)"
 
-    # 将格式要求提前并加强
-    critical_format_rules = """
-🚨 CRITICAL: 必须严格遵守的格式要求 🚨
+    # 输出格式要求
+    format_rules = """
+## 🚨 CRITICAL: 输出格式要求 🚨
+__result__ 必须是字典格式，包含：
+- "data": 实际数据（成功时）或 null（失败时）
+- "status": "success" 或 "error"
+- "summary": 简短描述
+- "metadata": 包含timestamp等信息"""
 
-1. __result__ 变量必须是字典格式，绝不能是字符串
-2. 字典必须包含以下字段：
-   - "data": 实际数据（成功时）或 null（失败时）
-   - "status": "success" 或 "error"
-   - "summary": 简短描述
-   - "metadata": 包含timestamp等信息
+    # 参数化和执行模式指导
+    execution_guidance = ""
+    if parameters:
+        param_names = list(parameters.keys())
+        param_descriptions = []
+        for k, v in parameters.items():
+            if isinstance(v, dict) and "description" in v:
+                param_descriptions.append(
+                    f"- {k}: {v['description']} (类型: {v.get('type', 'str')})"
+                )
+            else:
+                param_descriptions.append(f"- {k}: {v}")
 
-3. 示例格式：
-   成功时：__result__ = {"data": 实际数据, "status": "success", "summary": "操作成功", "metadata": {...}}
-   失败时：__result__ = {"data": null, "status": "error", "summary": "错误描述", "metadata": {...}}
+        execution_guidance = f"""
+## 🔧 参数化执行指导
+请生成以下参数化函数形式的代码：
 
-4. 严禁使用：__result__ = "字符串内容"
-"""
+def execute_task({', '.join(param_names)}):
+    # 执行具体逻辑
+    # 从kwargs提取参数
+    # 例如: location = kwargs.get('location', '杭州')
+    return result_data
 
+参数说明：
+{chr(10).join(param_descriptions)}
+
+🚨 必须定义函数后立即调用并赋值：__result__ = execute_task(参数...)"""
+
+    # 构建基础 prompt
     base_prompt = f"""
-# 角色定义
-你是 AIForge，一个专业的 Python 代码生成和执行助手。
+# AIForge：Python 代码生成和执行助手
 
-# 输出格式规范
-你的回答必须严格遵循以下格式：
-
-## 代码块格式
-- 使用标准 Markdown 代码块格式：```python ... ```
-- 将最终结果赋值给 __result__ 变量
-
-{critical_format_rules}
-
+# 代码生成规范
 {code_rule}
 
+{format_rules}
+
+{execution_guidance}
 """
 
-    # 强化的质量要求
-    enhanced_quality_rules = """
-# 🔥 强制执行的结果质量要求 🔥
+    # 任务特定格式（仅在需要时添加）
+    if task_type and task_type != "general":
+        base_prompt += f"\n\n{get_task_specific_format(task_type)}"
 
-- 如果数据获取成功：status="success", data=实际数据
-- 如果数据获取失败：status="error", data=null, summary包含错误原因
-- data字段在成功时不能为空、null或错误信息
-- 错误信息只能放在summary字段中
-- 绝对禁止返回字符串格式的__result__
-
-违反格式要求的代码将被拒绝执行！
-"""
-
-    # 只有在提供了task_type时才添加任务特定格式
-    if task_type:
-        task_format = get_task_specific_format(task_type)
-        enhanced_prompt = f"{base_prompt}\n{task_format}\n{enhanced_quality_rules}"
+    # 用户指令处理
+    if user_prompt:
+        prompt_header = "# 详细指令" if should_use_detailed_prompt(user_prompt) else "# 任务要求"
+        enhanced_prompt = f"{base_prompt}\n\n{prompt_header}\n{user_prompt}"
     else:
-        enhanced_prompt = f"{base_prompt}\n{enhanced_quality_rules}"
+        enhanced_prompt = f"{base_prompt}\n\n# 任务要求\n请根据用户指令生成相应的 Python 代码"
 
-    if user_prompt and should_use_detailed_prompt(user_prompt):
-        return f"{enhanced_prompt}\n\n# 用户详细指令\n请严格按照以上格式要求执行：\n{user_prompt}"
-    else:
-        return f"{enhanced_prompt}\n\n# 任务要求\n{user_prompt or '请根据用户指令生成相应的 Python 代码'}"
+    if original_prompt:
+        enhanced_prompt = f"{enhanced_prompt}\n\n额外要求：{original_prompt}"

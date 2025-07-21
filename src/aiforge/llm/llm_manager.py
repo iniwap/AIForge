@@ -34,34 +34,23 @@ class AIForgeLLMManager:
         llm_configs = self._config.config.get("llm", {})
         default_provider_name = self._config.config.get("default_llm_provider")
 
-        # 首先尝试创建指定的默认客户端
+        # 尝试创建指定的默认客户端
         if default_provider_name and default_provider_name in llm_configs:
             default_config = llm_configs[default_provider_name]
-            if default_config.get("enable", True):
-                client = self._create_client(default_provider_name, default_config)
-                if client and client.is_usable():
-                    self.clients[default_provider_name] = client
-                    self.current_client = client
-                    return
-                else:
-                    self.console.print(
-                        f"[yellow]默认LLM客户端 '{default_provider_name}' 不可用[/yellow]"
-                    )
-
-        # 如果默认客户端不可用，尝试第一个可用的客户端
-        for name, llm_config in llm_configs.items():
-            if not llm_config.get("enable", True):
-                continue
-
-            try:
-                client = self._create_client(name, llm_config)
-                if client and client.is_usable():
-                    self.clients[name] = client
-                    self.current_client = client
-                    self.console.print(f"[green]使用第一个可用的LLM客户端: {name}[/green]")
-                    return
-            except Exception as e:
-                self.console.print(f"[red]初始化LLM客户端 {name} 失败: {e}[/red]")
+            client = self._create_client(default_provider_name, default_config)
+            if client and client.is_usable():
+                self.clients[default_provider_name] = client
+                self.current_client = client
+                self.console.print(f"[green]已初始化默认LLM客户端: {default_provider_name}[/green]")
+                return
+            else:
+                self.console.print(
+                    f"[red]默认LLM客户端 '{default_provider_name}' 不可用或创建失败[/red]"
+                )
+        else:
+            self.console.print(
+                f"[yellow]配置文件中未指定默认LLM客户端或配置不存在: {default_provider_name}[/yellow]"
+            )
 
         self.console.print("[red]没有找到可用的LLM客户端[/red]")
 
@@ -77,6 +66,7 @@ class AIForgeLLMManager:
                 model=config.get("model"),
                 timeout=config.get("timeout", 30),
                 max_tokens=config.get("max_tokens", 8192),
+                client_type=client_type,  # 确保client_type被传递
             )
         elif client_type == "ollama":
             return AIForgeOllamaClient(
@@ -91,7 +81,7 @@ class AIForgeLLMManager:
             return None
 
     def get_client(self, name: str | None = None) -> Optional[AIForgeLLMClient]:
-        """获取客户端 - 懒加载实现"""
+        """获取客户端"""
         # 如果没有指定名称，返回当前客户端
         if not name:
             return self.current_client
@@ -104,17 +94,17 @@ class AIForgeLLMManager:
         llm_configs = self._config.config.get("llm", {})
         if name in llm_configs:
             llm_config = llm_configs[name]
-            if llm_config.get("enable", True):
-                try:
-                    client = self._create_client(name, llm_config)
-                    if client and client.is_usable():
-                        self.clients[name] = client
-                        self.console.print(f"[green]懒加载创建LLM客户端: {name}[/green]")
-                        return client
-                    else:
-                        self.console.print(f"[yellow]LLM客户端 '{name}' 不可用[/yellow]")
-                except Exception as e:
-                    self.console.print(f"[red]创建LLM客户端 {name} 失败: {e}[/red]")
+            # 移除对 'enable' 参数的检查
+            try:
+                client = self._create_client(name, llm_config)
+                if client and client.is_usable():
+                    self.clients[name] = client
+                    self.console.print(f"[green]懒加载创建LLM客户端: {name}[/green]")
+                    return client
+                else:
+                    self.console.print(f"[yellow]LLM客户端 '{name}' 不可用[/yellow]")
+            except Exception as e:
+                self.console.print(f"[red]创建LLM客户端 {name} 失败: {e}[/red]")
 
         return None
 
@@ -134,8 +124,7 @@ class AIForgeLLMManager:
         llm_configs = self._config.config.get("llm", {})
         providers = {}
         for name, config in llm_configs.items():
-            if config.get("enable", True):
-                providers[name] = config.get("model", "unknown")
+            providers[name] = config.get("model", "unknown")
         return providers
 
     def list_active_clients(self) -> Dict[str, str]:
@@ -147,9 +136,7 @@ class AIForgeLLMManager:
         if client_names is None:
             # 预加载所有可用的客户端
             llm_configs = self._config.config.get("llm", {})
-            client_names = [
-                name for name, config in llm_configs.items() if config.get("enable", True)
-            ]
+            client_names = [name for name, config in llm_configs.items()]
 
         for name in client_names:
             if name not in self.clients:

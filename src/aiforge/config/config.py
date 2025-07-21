@@ -61,9 +61,9 @@ class AIForgeConfig:
         """获取内置默认配置"""
         if not hasattr(AIForgeConfig, "_cached_default_config"):
             try:
-                with importlib.resources.files("aiforge.config").joinpath(
-                    "default.toml"
-                ).open() as f:
+                with importlib.resources.files("aiforge.config").joinpath("default.toml").open(
+                    mode="r", encoding="utf-8"
+                ) as f:
                     AIForgeConfig._cached_default_config = tomlkit.load(f)
             except Exception:
                 AIForgeConfig._cached_default_config = {

@@ -10,7 +10,7 @@ class InstructionAnalyzer:
     def __init__(self, llm_client: AIForgeLLMClient):
         self.llm_client = llm_client
 
-        # 标准化的任务类型定义 - 完整覆盖常见场景
+        # 标准化的任务类型定义
         self.standardized_patterns = {
             "data_fetch": {
                 "keywords": [
@@ -19,8 +19,6 @@ class InstructionAnalyzer:
                     "获取",
                     "fetch",
                     "查找",
-                    "天气",
-                    "weather",
                     "新闻",
                     "news",
                     "api",
@@ -30,7 +28,7 @@ class InstructionAnalyzer:
                 ],
                 "actions": ["search", "fetch", "get", "crawl"],
                 "output_formats": ["json", "list", "dict"],
-                "common_params": ["query", "url", "max_results", "city", "topic"],
+                "common_params": ["query", "url", "max_results", "topic"],
             },
             "data_process": {
                 "keywords": [
@@ -189,32 +187,48 @@ class InstructionAnalyzer:
     def _smart_extract_parameters(
         self, instruction: str, common_params: List[str]
     ) -> Dict[str, Any]:
-        """智能提取参数"""
+        """智能提取参数，移除天气特殊处理"""
         params = {}
 
-        # 通用参数提取规则
+        # 通用参数提取规则 - 移除city特殊处理
         param_patterns = {
-            "query": [
-                r'["""]([^"""]+)["""]',
-                r"搜索(.+?)(?:的|，|。|$)",
-                r"查找(.+?)(?:的|，|。|$)",
-            ],
-            "city": [r"(.+?)(?:天气|weather)", r"(.+?)市", r"(.+?)(?:的天气|weather)"],
-            "max_results": [r"(\d+)(?:条|个|项)", r"最多(\d+)", r"前(\d+)"],
-            "file_path": [r"([^\s]+\.[a-zA-Z]+)", r"文件(.+?)(?:的|，|。|$)"],
-            "url": [r"(https?://[^\s]+)"],
+            "query": {
+                "patterns": [
+                    r'["""]([^"""]+)["""]',
+                    r"搜索(.+?)(?:的|，|。|$)",
+                    r"查找(.+?)(?:的|，|。|$)",
+                ],
+                "type": "str",
+                "description": "搜索查询内容",
+            },
+            "max_results": {
+                "patterns": [r"(\d+)(?:条|个|项)", r"最多(\d+)", r"前(\d+)"],
+                "type": "int",
+                "description": "最大结果数量",
+            },
+            "file_path": {
+                "patterns": [r"([^\s]+\.[a-zA-Z]+)", r"文件(.+?)(?:的|，|。|$)"],
+                "type": "str",
+                "description": "文件路径",
+            },
+            "url": {"patterns": [r"(https?://[^\s]+)"], "type": "str", "description": "URL地址"},
         }
 
         for param in common_params:
             if param in param_patterns:
-                for pattern in param_patterns[param]:
+                param_config = param_patterns[param]
+                for pattern in param_config["patterns"]:
                     match = re.search(pattern, instruction)
                     if match:
                         value = match.group(1).strip()
-                        if param == "max_results":
-                            params[param] = int(value)
-                        else:
-                            params[param] = value
+                        if param_config["type"] == "int":
+                            value = int(value)
+
+                        params[param] = {
+                            "value": value,
+                            "type": param_config["type"],
+                            "description": param_config["description"],
+                        }
                         break
 
         return params

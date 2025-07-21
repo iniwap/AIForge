@@ -1,5 +1,6 @@
 import requests
 import re
+import time
 from rich.console import Console
 
 
@@ -25,7 +26,6 @@ class AIForgeLLMClient:
         self.console = Console()
         self.client_type = client_type
 
-        # 新增：对话历史和使用统计
         self.conversation_history = []
         self.usage_stats = {"total_tokens": 0, "rounds": 0}
 
@@ -35,55 +35,72 @@ class AIForgeLLMClient:
             return bool(self.model and self.base_url)
         return bool(self.api_key and self.model)
 
-    def generate_code(self, instruction: str, system_prompt: str | None = None) -> str | None:
-        """生成代码的核心方法"""
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            }
+    def generate_code(
+        self, instruction: str, system_prompt: str | None = None, max_retries: int = 3
+    ) -> str | None:
+        """生成代码的核心方法 - 增加统一重试机制"""
+        for attempt in range(max_retries):
+            try:
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                }
 
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": instruction})
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                messages.append({"role": "user", "content": instruction})
 
-            payload = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": 0.7,
-                "max_tokens": self.max_tokens,
-            }
+                payload = {
+                    "model": self.model,
+                    "messages": messages,
+                    "temperature": 0.7,
+                    "max_tokens": self.max_tokens,
+                }
 
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=self.timeout,
-            )
+                response = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=self.timeout,
+                )
 
-            if response.status_code == 200:
-                result = response.json()
+                if response.status_code == 200:
+                    result = response.json()
 
-                # 更新使用统计
-                if "usage" in result:
-                    usage = result["usage"]
-                    self.usage_stats["total_tokens"] += usage.get("total_tokens", 0)
-                self.usage_stats["rounds"] += 1
+                    # 更新使用统计
+                    if "usage" in result:
+                        usage = result["usage"]
+                        self.usage_stats["total_tokens"] += usage.get("total_tokens", 0)
+                    self.usage_stats["rounds"] += 1
 
-                return result["choices"][0]["message"]["content"]
-            else:
-                self.console.print(f"[red]{self.name} API错误: {response.status_code}[/red]")
-                return None
+                    return result["choices"][0]["message"]["content"]
+                else:
+                    # 对于所有非200状态码都进行重试
+                    wait_time = (2**attempt) * 1  # 指数退避
+                    self.console.print(
+                        f"[yellow]{self.name} API错误: {response.status_code}, 第 {attempt + 1} 次尝试，等待 {wait_time} 秒...[/yellow]"  # noqa 501
+                    )
+                    time.sleep(wait_time)
+                    if attempt == max_retries - 1:  # 最后一次尝试失败
+                        self.console.print(
+                            f"[red]{self.name} API错误: {response.status_code}, 所有重试均失败[/red]"
+                        )
+                        return None
+                    continue  # 继续下一次尝试
 
-        except Exception as e:
-            self.console.print(f"[red]{self.name} 请求失败: {e}[/red]")
-            return None
+            except Exception as e:
+                self.console.print(f"[red]{self.name} 请求失败: {e}[/red]")
+                if attempt == max_retries - 1:  # 最后一次尝试失败
+                    return None
+                time.sleep(1)  # 等待1秒后重试
+                continue
+        return None  # 所有重试都失败
 
     def generate_code_with_history(
         self, instruction: str, system_prompt: str | None = None
     ) -> str | None:
-        """带历史上下文的代码生成"""
+        """带历史上下文的代码生成 - 限制历史长度"""
         try:
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
@@ -94,8 +111,15 @@ class AIForgeLLMClient:
             if system_prompt:
                 messages.append({"role": "system", "content": system_prompt})
 
-            # 添加历史对话
-            messages.extend(self.conversation_history)
+            # 限制历史消息数量，避免超出 token 限制
+            max_history_messages = 10
+            limited_history = (
+                self.conversation_history[-max_history_messages:]
+                if len(self.conversation_history) > max_history_messages
+                else self.conversation_history
+            )
+
+            messages.extend(limited_history)
 
             # 添加当前指令（如果不是重复的）
             if not messages or messages[-1]["content"] != instruction:
@@ -209,34 +233,50 @@ class AIForgeOllamaClient(AIForgeLLMClient):
         """Ollama不需要API key"""
         return bool(self.model and self.base_url)
 
-    def generate_code(self, instruction: str, system_prompt: str | None = None) -> str | None:
-        """Ollama特定的实现"""
-        try:
-            messages = []
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
-            messages.append({"role": "user", "content": instruction})
+    def generate_code(
+        self, instruction: str, system_prompt: str | None = None, max_retries: int = 3
+    ) -> str | None:
+        """Ollama特定的实现 - 增加统一重试机制"""
+        for attempt in range(max_retries):
+            try:
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                messages.append({"role": "user", "content": instruction})
 
-            payload = {"model": self.model, "messages": messages, "stream": False}
+                payload = {"model": self.model, "messages": messages, "stream": False}
 
-            response = requests.post(
-                f"{self.base_url}/api/chat", json=payload, timeout=self.timeout
-            )
+                response = requests.post(
+                    f"{self.base_url}/api/chat", json=payload, timeout=self.timeout
+                )
 
-            if response.status_code == 200:
-                result = response.json()
-                return result["message"]["content"]
-            else:
-                self.console.print(f"[red]{self.name} API错误: {response.status_code}[/red]")
-                return None
+                if response.status_code == 200:
+                    result = response.json()
+                    return result["message"]["content"]
+                else:
+                    # 对于所有非200状态码都进行重试
+                    wait_time = (2**attempt) * 1
+                    self.console.print(
+                        f"[yellow]{self.name} API错误: {response.status_code}, 第 {attempt + 1} 次尝试，等待 {wait_time} 秒...[/yellow]"  # noqa 501
+                    )
+                    time.sleep(wait_time)
+                    if attempt == max_retries - 1:
+                        self.console.print(
+                            f"[red]{self.name} API错误: {response.status_code}, 所有重试均失败[/red]"
+                        )
+                        return None
+                    continue
 
-        except Exception as e:
-            self.console.print(f"[red]{self.name} 请求失败: {e}[/red]")
-            return None
+            except Exception as e:
+                self.console.print(f"[red]{self.name} 请求失败: {e}[/red]")
+                if attempt == max_retries - 1:
+                    return None
+                time.sleep(1)
+                continue
+        return None
 
     def send_feedback(self, feedback: str):
         """发送反馈信息给LLM"""
-        # 将反馈作为下一轮对话的上下文
         self.conversation_history.append({"role": "user", "content": feedback})
 
         # 或者直接发送给LLM获取响应

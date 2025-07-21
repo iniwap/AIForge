@@ -33,4 +33,4 @@ __all__ = [
     "get_enhanced_aiforge_prompt",
 ]
 
-__version__ = "1.0.0"
+__version__ = "0.1.0"
