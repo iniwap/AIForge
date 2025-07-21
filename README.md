@@ -184,30 +184,6 @@ if forge.code_cache:
     print(f"缓存模块数: {len(forge.code_cache.get_all_modules())}")
 ```
 
-### 自定义执行器  
-```python  
-from aiforge.execution.executor_interface import CachedModuleExecutor  
-  
-class CustomExecutor(CachedModuleExecutor):  
-    def can_handle(self, module):  
-        return hasattr(module, 'custom_function')  
-      
-    def execute(self, module, instruction, **kwargs):  
-        return module.custom_function(instruction)  
-  
-forge.add_module_executor(CustomExecutor())  
-```  
-  
-### 提供商切换  
-```python  
-# 运行时切换提供商 
-forge.switch_provider("deepseek")  
-  
-# 查看可用提供商 
-providers = forge.list_providers()  
-print(providers)  
-```  
-
 ### 多端输入适配
 ```python
 # 支持多种输入源的适配 
@@ -227,26 +203,6 @@ from aiforge.cli.wizard import create_config_wizard
   
 forge = create_config_wizard()  
 ```    
-  
-## 🏗️ 架构设计  
-  
-```mermaid    
-graph TB    
-    User[用户指令] --> InputAdapter[输入适配器]  
-    InputAdapter --> InstructionAnalyzer[指令分析器]  
-    InstructionAnalyzer --> CacheSystem[智能缓存系统]  
-    CacheSystem --> |缓存命中| CachedExecutor[缓存执行器]  
-    CacheSystem --> |缓存未命中| AIForgeCore[AIForge核心]  
-    AIForgeCore --> LLMManager[LLM管理器]  
-    LLMManager --> TaskManager[任务管理器]  
-    TaskManager --> CodeGenerator[代码生成器]  
-    CodeGenerator --> ExecutionEngine[执行引擎]  
-    ExecutionEngine --> ResultFormatter[结果格式化器]  
-    ResultFormatter --> OutputAdapter[输出适配器]  
-    CachedExecutor --> OutputAdapter  
-    OutputAdapter --> User  
-    ExecutionEngine --> |成功代码| CacheSystem
-```  
   
 ## 🔧 配置选项  
   

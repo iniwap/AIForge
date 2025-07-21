@@ -12,7 +12,7 @@ from ..execution.executor import AIForgeExecutor
 from ..optimization.feedback_optimizer import FeedbackOptimizer
 from ..formatting.result_formatter import AIForgeResultFormatter
 from ..execution.code_blocks import CodeBlockManager, CodeBlock
-from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
+from ..prompts.enhanced_prompts import get_base_aiforge_prompt
 
 
 class AIForgeTask:
@@ -35,7 +35,7 @@ class AIForgeTask:
         )
 
     def _compress_error(self, error_msg: str, max_length: int = 200) -> str:
-        """压缩错误信息以减少token消耗 - 保留现有逻辑"""
+        """压缩错误信息以减少token消耗"""
         if not error_msg or len(error_msg) <= max_length:
             return error_msg
 
@@ -139,9 +139,22 @@ class AIForgeTask:
 
         # 生成结构化反馈
         if not result.get("success"):
-            feedback_msg = self.formatter.format_structured_feedback([result])
-            self.console.print("📤 发送执行结果反馈...", style="dim white")
-            feedback_json = json.dumps(feedback_msg, ensure_ascii=False, default=str)
+            # 提取并压缩错误信息
+            error_info = result.get("error", "")
+            traceback_info = result.get("traceback", "")
+
+            compressed_error = self._compress_error(error_info)
+            compressed_traceback = self._compress_error(traceback_info)
+
+            # 只发送必要的错误信息，不包含代码
+            minimal_feedback = {
+                "message": "代码执行失败，请根据错误信息修复",
+                "error": compressed_error,
+                "traceback": compressed_traceback,
+                "success": False,
+            }
+
+            feedback_json = json.dumps(minimal_feedback, ensure_ascii=False)
             self.client.send_feedback(feedback_json)
 
     def _process_execution_result(self, result_content, instruction, task_type=None):
@@ -209,23 +222,24 @@ class AIForgeTask:
         task_type: str | None = None,
     ):
         """执行方法"""
-        if instruction:
+        if instruction and system_prompt:
+            # 只有直接生成代码一种情况
             self.instruction = instruction
-
-        self.system_prompt = get_enhanced_aiforge_prompt(
-            user_prompt=self.instruction,  # 用户指令作为 user_prompt
-            optimize_tokens=self.optimization.get("optimize_tokens", True),
-            task_type=task_type,
-            parameters=None,
-            original_prompt=system_prompt,  # 将外部传入的 system_prompt 作为补充
-        )
+            self.system_prompt = system_prompt
+        elif instruction and not system_prompt:
+            # 可能是直接生成代码，也可能是标准化指令失败的情况
+            self.instruction = instruction
+            self.system_prompt = get_base_aiforge_prompt(
+                optimize_tokens=self.optimization.get("optimize_tokens", True)
+            )
+        elif not instruction and system_prompt:
+            self.instruction = "请根据系统提示生成代码"
+            self.system_prompt = system_prompt
+        elif not instruction and not system_prompt:
+            return []
 
         # 存储task_type供后续使用
         self.task_type = task_type
-
-        if not self.instruction:
-            self.console.print("[red]没有提供指令[/red]")
-            return None
 
         self.console.print(
             f"[yellow]开始处理任务指令，最大尝试轮数{self.max_rounds}[/yellow]",

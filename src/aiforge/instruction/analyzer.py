@@ -95,26 +95,16 @@ class InstructionAnalyzer:
         }
 
     def analyze_instruction(self, user_input: str) -> Dict[str, Any]:
-        """分析用户指令，优先本地分析"""
+        """分析用户指令，严格遵循本地优先原则"""
         # 本地分析
         local_analysis = self._local_analyze(user_input)
 
-        # 降低AI调用阈值 - 本地分析置信度 > 0.5 就直接使用
-        if local_analysis["confidence"] > 0.5:
+        # 提高阈值 - 只有置信度 > 0.6 才直接使用本地分析
+        if local_analysis["confidence"] > 0.6:
             return local_analysis
 
-        # 置信度不够才使用AI分析
-        try:
-            analysis_prompt = self._get_analysis_prompt()
-            response = self.llm_client.generate_code(
-                f"{analysis_prompt}\n\n用户指令: {user_input}", ""
-            )
-            ai_analysis = self._parse_standardized_instruction(response)
-
-            # 合并本地和AI分析结果
-            return self._merge_analysis(local_analysis, ai_analysis)
-        except Exception:
-            return local_analysis
+        # 置信度不够时返回本地分析，AI分析由 AIForgeCore 在执行失败后调用
+        return local_analysis
 
     def _local_analyze(self, instruction: str) -> Dict[str, Any]:
         """增强的本地指令分析 - 提供完整的标准化输出"""
