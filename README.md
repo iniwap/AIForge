@@ -374,7 +374,7 @@ pytest tests/
 ## 📞 联系我们  
   
 - 📧 Email: iniwaper@iniwaper.com  
-- 💬 Discord: [加入我们的社区](https://discord.gg/AIForge)  
+- 💬 Discord: [加入我们的社区](https://discord.gg/ksPhVyWz)  
 - 🐦 Twitter: [@AIForge](https://twitter.com/iafun_tipixel)  
 - 📚 文档: [查看完整文档](https://aiforge.readthedocs.io)  
     
