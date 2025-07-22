@@ -4,7 +4,7 @@ from .extension_manager import ExtensionManager
 
 # 预留插件市场接口
 class PluginMarketplace:
-    """插件市场接口 - 预留未来扩展"""
+    """插件市场接口"""
 
     def __init__(self, extension_manager: ExtensionManager):
         self.extension_manager = extension_manager

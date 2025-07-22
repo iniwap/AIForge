@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 
 
 class TaskTypeDetector:
-    """任务类型检测器 - 基于数据结构和内容特征"""
+    """任务类型检测器"""
 
     def __init__(self):
         self.detection_rules = {

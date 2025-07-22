@@ -62,7 +62,7 @@ class AIForgeResultFormatter:
         self.console.print(table)
 
     def format_task_type_result(self, result: Dict[str, Any], task_type: str) -> Dict[str, Any]:
-        """根据任务类型格式化结果 - 强制标准化"""
+        """根据任务类型格式化结果"""
         if not isinstance(result, dict):
             # 强制转换为标准格式
             result = {

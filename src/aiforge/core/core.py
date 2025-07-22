@@ -6,7 +6,7 @@ from pathlib import Path
 from ..config.config import AIForgeConfig
 from ..llm.llm_manager import AIForgeLLMManager
 from .task_manager import AIForgeManager
-from ..cache.standardized_cache import StandardizedCodeCache
+from ..cache.enhanced_cache import EnhancedStandardizedCache
 from .runner import AIForgeRunner
 from ..instruction.analyzer import InstructionAnalyzer
 from ..extensions.template_extension import DomainTemplateExtension
@@ -15,12 +15,11 @@ from ..adapters.input.input_adapter_manager import InputAdapterManager, InputSou
 from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
 from ..execution.unified_executor import UnifiedParameterizedExecutor
 from ..execution.executor_interface import CachedModuleExecutor
-from ..execution.similarity_parameter_executor import SimilarityParameterExecutor
 from .dynamic_task_type_manager import DynamicTaskTypeManager
 
 
 class AIForgeCore:
-    """AIForge核心接口 - 完全基于标准化指令的架构"""
+    """AIForge核心接口"""
 
     def __init__(
         self,
@@ -62,7 +61,7 @@ class AIForgeCore:
         cache_config = self.config.get_cache_config("code")
         if cache_config.get("enabled", True):
             cache_dir = Path(self.config.get_workdir()) / "cache"
-            self.code_cache = StandardizedCodeCache(cache_dir, cache_config)
+            self.code_cache = EnhancedStandardizedCache(cache_dir, cache_config)
 
             # 初始化动态任务类型管理器
             self.task_type_manager = DynamicTaskTypeManager(cache_dir)
@@ -147,7 +146,7 @@ class AIForgeCore:
         return self.run(instruction)
 
     def _validate_code_quality(self, code: str) -> bool:
-        """验证代码质量 - 确保是真正的功能代码而非数据赋值"""
+        """验证代码质量"""
         if not code or not isinstance(code, str):
             return False
 
@@ -313,7 +312,7 @@ class AIForgeCore:
     def _init_executors(self):
         """初始化内置执行器"""
         self.module_executors = [
-            SimilarityParameterExecutor(),  # 唯一的统一执行器
+            UnifiedParameterizedExecutor(),  # 唯一的统一执行器
         ]
 
     def generate_and_execute(
@@ -486,7 +485,7 @@ class AIForgeCore:
                 module = self.code_cache.load_module(module_id)
                 if module:
                     print(f"[DEBUG] 模块加载成功，开始执行")
-                    # 正确传递标准化指令
+                    # 只通过 kwargs 传递 standardized_instruction
                     result = self._execute_cached_module(
                         module,
                         standardized_instruction.get("target", ""),
@@ -578,18 +577,17 @@ class AIForgeCore:
         # 返回质量得分最高的代码
         return max(successful_entries, key=code_quality_score)
 
-    def _execute_cached_module(self, module, instruction: str, **kwargs):
-        """执行缓存的模块 - 支持参数化执行"""
-        standardized_instruction = kwargs.get("standardized_instruction", {})
-
+    def _execute_cached_module(self, module, instruction: str, **kwargs) -> Any:
+        """执行缓存模块"""
         for executor in self.module_executors:
             if executor.can_handle(module):
-                # 传递完整的标准化指令和参数信息
-                result = executor.execute(
-                    module, instruction, standardized_instruction=standardized_instruction, **kwargs
-                )
-                if result is not None:
-                    return result
+                try:
+                    result = executor.execute(module, instruction, **kwargs)
+                    if result is not None:
+                        return result
+                except Exception as e:
+                    print(f"[DEBUG] 执行器执行失败: {e}")
+                    continue
         return None
 
     def _get_module_code(self, file_path: str) -> str:

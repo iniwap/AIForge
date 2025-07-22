@@ -2,7 +2,7 @@ from typing import Dict, Any, List, Tuple
 
 
 class UITypeRecommender:
-    """UI类型推荐器 - 基于数据特征推荐最适合的UI类型"""
+    """UI类型推荐器"""
 
     def __init__(self):
         self.recommendation_rules = {

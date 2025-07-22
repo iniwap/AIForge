@@ -297,7 +297,7 @@ class RuleBasedAdapter:
 
     # 保留原有的适配方法，但增强功能
     def _adapt_to_table(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
-        """适配为表格格式 - 增强版"""
+        """适配为表格格式"""
         columns = template.get("columns", [])
         max_content_length = template.get("max_content_length", 200)
 
@@ -351,7 +351,7 @@ class RuleBasedAdapter:
         }
 
     def _adapt_to_card(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
-        """适配为卡片格式 - 增强版"""
+        """适配为卡片格式"""
         # primary_field = template.get("primary_field", "content")
         # secondary_fields = template.get("secondary_fields", [])
         display_format = template.get("display_format", "default")

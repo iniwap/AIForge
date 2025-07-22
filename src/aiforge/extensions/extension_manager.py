@@ -3,7 +3,7 @@ from .template_extension import DomainTemplateExtension
 
 
 class ExtensionManager:
-    """扩展管理器 - 管理所有领域模板扩展"""
+    """扩展管理器"""
 
     def __init__(self):
         self.template_extensions: List[DomainTemplateExtension] = []

@@ -5,7 +5,7 @@ from rich.console import Console
 
 
 class AIForgeLLMManager:
-    """LLM客户端管理器 - 懒加载策略"""
+    """LLM客户端管理器"""
 
     def __init__(self, config: AIForgeConfig):
         self._config = config

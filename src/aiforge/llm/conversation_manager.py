@@ -43,7 +43,7 @@ class ConversationManager:
                 self.error_patterns.extend([str(m) for m in matches])
 
     def _manage_history(self):
-        """智能历史管理 - 保留关键信息"""
+        """智能历史管理"""
         if len(self.conversation_history) <= self.max_history:
             return
 

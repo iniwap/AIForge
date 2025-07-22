@@ -6,7 +6,7 @@ import importlib.resources
 
 
 class AIForgeConfig:
-    """AIForge配置管理器 - 支持多种初始化方式"""
+    """AIForge配置管理器"""
 
     def __init__(self, config_file: str | None = None):
         self.console = Console()

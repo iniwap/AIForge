@@ -25,7 +25,7 @@ __all__ = [
     "AIForgeTask",
     "AIForgeConfig",
     "AIForgeLLMManager",
-    "StandardizedCodeCache",
+    "EnhancedStandardizedCache",
     "create_config_wizard",
     "AIForgeResultFormatter",
     "CodeBlockManager",

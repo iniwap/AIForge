@@ -2,7 +2,7 @@ from .config import AIForgeConfig
 
 
 class RemoteConfigManager:
-    """远程配置管理器 - 预留云端配置同步"""
+    """远程配置管理器"""
 
     def __init__(self, base_config: AIForgeConfig):
         self.base_config = base_config

@@ -5,7 +5,7 @@ from ..llm.llm_client import AIForgeLLMClient
 
 
 class InstructionAnalyzer:
-    """指令分析器 - 将自然语言转换为标准化指令"""
+    """指令分析器"""
 
     def __init__(self, llm_client: AIForgeLLMClient):
         self.llm_client = llm_client
@@ -169,10 +169,10 @@ class InstructionAnalyzer:
     def _smart_extract_parameters(
         self, instruction: str, common_params: List[str]
     ) -> Dict[str, Any]:
-        """智能提取参数，移除天气特殊处理"""
+        """智能提取参数"""
         params = {}
 
-        # 通用参数提取规则 - 移除city特殊处理
+        # 通用参数提取规则
         param_patterns = {
             "query": {
                 "patterns": [
@@ -363,7 +363,7 @@ class InstructionAnalyzer:
         return local
 
     def _is_ai_analysis_valid(self, ai_analysis: Dict[str, Any]) -> bool:
-        """验证AI分析结果的有效性 - 支持动态任务类型"""
+        """验证AI分析结果的有效性"""
         # 1. 检查必要字段
         required_fields = ["task_type", "action", "target"]
         if not all(field in ai_analysis for field in required_fields):
