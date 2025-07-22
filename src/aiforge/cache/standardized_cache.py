@@ -2,7 +2,7 @@ import hashlib
 import time
 import json
 from pathlib import Path
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Tuple
 from peewee import Case
 from .code_cache import AiForgeCodeCache
 from ..extensions.extension_manager import ExtensionManager
@@ -36,48 +36,166 @@ class StandardizedCodeCache(AiForgeCodeCache):
     def get_cached_modules_by_standardized_instruction(
         self, standardized_instruction: Dict[str, Any]
     ) -> List[Any]:
-        """基于标准化指令获取缓存模块 - 支持模板扩展优先匹配"""
-        # 1. 优先检查模板扩展
-        template_match = self.extension_manager.find_template_match(standardized_instruction)
-        if template_match:
-            template_results = self._get_template_cached_modules(
-                template_match, standardized_instruction
-            )
-            if template_results:
-                return template_results
-
-        # 2. 回退到标准化指令匹配
-        cache_key = standardized_instruction.get("cache_key")
+        """基于标准化指令获取缓存模块"""
         task_type = standardized_instruction.get("task_type")
         action = standardized_instruction.get("action", "process")
+        cache_key = standardized_instruction.get("cache_key")
+
+        print(f"[DEBUG] 缓存查找: task_type={task_type}, action={action}, cache_key={cache_key}")
 
         results = []
 
-        # 策略1: 精确匹配cache_key (已经是MD5哈希)
+        # 策略1: 精确匹配
         if cache_key:
             exact_matches = self._get_modules_by_key(cache_key)
+            print(f"[DEBUG] 精确匹配结果: {len(exact_matches)} 个模块")
             results.extend([(m, "exact") for m in exact_matches])
 
-        # 策略1.5: 任务类型+查询动作匹配
-        if task_type == "data_fetch" and action == "search":
-            query_action_key = f"{task_type}_查询"
-            query_action_hash = hashlib.md5(query_action_key.encode()).hexdigest()
-            query_matches = self._get_modules_by_key(query_action_hash)
-            results.extend([(m, "query_action") for m in query_matches])
-
-        # 策略2: 任务类型+动作匹配
+        # 策略2: 任务类型匹配
         type_action_key = f"{task_type}_{action}"
         type_action_hash = hashlib.md5(type_action_key.encode()).hexdigest()
+        print(f"[DEBUG] 任务类型匹配键: {type_action_key} -> {type_action_hash}")
         type_matches = self._get_modules_by_key(type_action_hash)
+        print(f"[DEBUG] 任务类型匹配结果: {len(type_matches)} 个模块")
         results.extend([(m, "type_action") for m in type_matches])
 
-        # 策略3: 通用任务类型匹配
-        general_key = f"{task_type}_general"
-        general_hash = hashlib.md5(general_key.encode()).hexdigest()
-        general_matches = self._get_modules_by_key(general_hash)
-        results.extend([(m, "general") for m in general_matches])
+        final_results = self._rank_and_deduplicate_results(results)
+        print(f"[DEBUG] 最终缓存查找结果: {len(final_results)} 个模块")
 
-        return self._rank_and_deduplicate_results(results)
+        return final_results
+
+    def _calculate_pattern_similarity(self, patterns1: List[str], patterns2: List[str]) -> float:
+        """计算模式相似度"""
+        if not patterns1 or not patterns2:
+            return 0.0
+
+        # 使用简单的词汇重叠度计算相似度
+        set1 = set()
+        set2 = set()
+
+        # 将模式分词
+        for pattern in patterns1:
+            words = pattern.lower().split()
+            set1.update(words)
+
+        for pattern in patterns2:
+            words = pattern.lower().split()
+            set2.update(words)
+
+        if not set1 or not set2:
+            return 0.0
+
+        # 计算 Jaccard 相似度
+        intersection = len(set1 & set2)
+        union = len(set1 | set2)
+
+        return intersection / union if union > 0 else 0.0
+
+    def _find_similar_task_types(self, task_type: str) -> List[str]:
+        """查找相似的任务类型"""
+        similar_types = []
+
+        # 基于模式匹配查找相似类型
+        if task_type in self.task_type_manager.dynamic_types:
+            current_patterns = self.task_type_manager.dynamic_types[task_type]["patterns"]
+
+            for other_type, info in self.task_type_manager.dynamic_types.items():
+                if other_type != task_type:
+                    # 计算模式相似度
+                    similarity = self._calculate_pattern_similarity(
+                        current_patterns, info["patterns"]
+                    )
+                    if similarity > 0.3:  # 相似度阈值
+                        similar_types.append(other_type)
+
+        return similar_types[:3]  # 最多返回3个相似类型
+
+    def _generate_parameter_signature(self, required_params: Dict[str, Any]) -> str:
+        """生成参数签名用于缓存匹配"""
+        if not required_params:
+            return ""
+
+        param_types = []
+        for param_name, param_info in sorted(required_params.items()):
+            if isinstance(param_info, dict):
+                param_type = param_info.get("type", "str")
+                required = param_info.get("required", True)
+                param_types.append(f"{param_name}:{param_type}{'!' if required else '?'}")
+            else:
+                param_types.append(f"{param_name}:str!")
+
+        return ",".join(param_types)
+
+    def _find_exact_parameter_matches(
+        self, cache_key: str, task_type: str, required_params: Dict[str, Any]
+    ) -> List[Tuple[str, str, int, int]]:
+        """查找参数完全匹配的模块"""
+        param_signature = self._generate_parameter_signature(required_params)
+
+        # 构建查询条件
+        conditions = []
+
+        # 如果有缓存键，优先使用缓存键匹配
+        if cache_key:
+            conditions.append(self.CodeModule.cache_key == cache_key)
+
+        # 如果有参数签名，使用任务类型+参数签名匹配
+        if param_signature:
+            conditions.append(
+                (self.CodeModule.task_type == task_type)
+                & (self.CodeModule.parameter_signature == param_signature)
+            )
+        else:
+            # 无参数情况，匹配同类型的非参数化模块
+            conditions.append(
+                (self.CodeModule.task_type == task_type)
+                & (self.CodeModule.is_parameterized is False)
+            )
+
+        if not conditions:
+            return []
+
+        modules = (
+            self.CodeModule.select()
+            .where(conditions[0] if len(conditions) == 1 else conditions[0] | conditions[1])
+            .order_by(
+                (
+                    self.CodeModule.success_count
+                    / (self.CodeModule.success_count + self.CodeModule.failure_count + 1)
+                ).desc(),
+                self.CodeModule.last_used.desc(),
+            )
+        )
+
+        return [(m.module_id, m.file_path, m.success_count, m.failure_count) for m in modules]
+
+    def _find_compatible_parameter_matches(
+        self, task_type: str, required_params: Dict[str, Any]
+    ) -> List[Tuple[str, str, int, int]]:
+        """查找参数兼容的模块"""
+        if not required_params:
+            return []
+
+        # 查找相同任务类型且参数数量相近的模块
+        param_count = len(required_params)
+
+        modules = (
+            self.CodeModule.select()
+            .where(
+                (self.CodeModule.task_type == task_type)
+                & (self.CodeModule.parameter_count.between(param_count - 1, param_count + 1))
+                & (self.CodeModule.is_parameterized is True)
+            )
+            .order_by(
+                (
+                    self.CodeModule.success_count
+                    / (self.CodeModule.success_count + self.CodeModule.failure_count + 1)
+                ).desc()
+            )
+            .limit(3)  # 限制兼容匹配数量
+        )
+
+        return [(m.module_id, m.file_path, m.success_count, m.failure_count) for m in modules]
 
     def _get_template_cached_modules(
         self, template_match: Dict, standardized_instruction: Dict
@@ -238,19 +356,22 @@ class StandardizedCodeCache(AiForgeCodeCache):
         code: str,
         metadata: dict | None = None,
     ) -> str | None:
-        """保存基于标准化指令的增强模块"""
+        """保存基于参数化标准化指令的模块"""
         if not self._validate_code(code):
             return None
 
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
 
-        # 修改：使用与查询一致的缓存键生成策略
-        # 不再使用复杂的 _generate_standardized_cache_key 方法
-        # 而是直接使用 task_type_action 格式并进行MD5哈希
+        # 生成缓存键
         cache_key = hashlib.md5(f"{task_type}_{action}".encode()).hexdigest()
 
+        print(f"[DEBUG] 保存模块: task_type={task_type}, action={action}")
+        print(f"[DEBUG] 保存缓存键: {task_type}_{action} -> {cache_key}")
+
         module_id = f"std_{task_type}_{action}_{int(time.time())}"
+        print(f"[DEBUG] 生成模块ID: {module_id}")
+
         file_path = self.modules_dir / f"{module_id}.py"
 
         try:
@@ -274,16 +395,18 @@ class StandardizedCodeCache(AiForgeCodeCache):
             with self._lock:
                 self.CodeModule.create(
                     module_id=module_id,
-                    instruction_hash=cache_key,  # 使用新的简化缓存键
+                    instruction_hash=cache_key,
                     file_path=str(file_path),
                     created_at=current_time,
                     last_used=current_time,
                     metadata=json.dumps(extended_metadata),
                 )
 
+            print(f"[DEBUG] 模块保存成功: {module_id}, 缓存键: {cache_key}")
             return module_id
 
-        except Exception:
+        except Exception as e:
+            print(f"[DEBUG] 模块保存失败: {e}")
             if file_path.exists():
                 file_path.unlink()
             return None
@@ -384,8 +507,8 @@ class StandardizedCodeCache(AiForgeCodeCache):
                         # 删除数据库记录
                         module.delete_instance()
 
-            except Exception as e:
-                print(f"清理任务类型 {task_type} 的模块失败: {e}")
+            except Exception:
+                pass
 
     def find_similar_modules(
         self, standardized_instruction: Dict[str, Any], limit: int = 5

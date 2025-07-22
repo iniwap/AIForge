@@ -5,7 +5,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
-from peewee import CharField, DoubleField, IntegerField, Model, TextField
+from peewee import CharField, DoubleField, IntegerField, Model, TextField, BooleanField
 from playhouse.sqlite_ext import SqliteExtDatabase
 
 
@@ -79,6 +79,12 @@ class AiForgeCodeCache:
             failure_count = IntegerField(default=0)
             metadata = TextField(default="{}")
 
+            # 添加参数化相关字段
+            task_type = CharField(default="general", index=True)
+            parameter_signature = CharField(default="", index=True)
+            parameter_count = IntegerField(default=0)
+            is_parameterized = BooleanField(default=False, index=True)
+
             @property
             def success_rate(self):
                 total = self.success_count + self.failure_count
@@ -90,7 +96,10 @@ class AiForgeCodeCache:
 
             class Meta:
                 table_name = "code_modules"
-                indexes = ((("success_count", "failure_count"), False),)
+                indexes = (
+                    (("success_count", "failure_count"), False),
+                    (("task_type", "parameter_signature"), False),
+                )
 
         self.CodeModule = CodeModule
 

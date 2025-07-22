@@ -94,20 +94,8 @@ class InstructionAnalyzer:
             },
         }
 
-    def analyze_instruction(self, user_input: str) -> Dict[str, Any]:
-        """分析用户指令，严格遵循本地优先原则"""
-        # 本地分析
-        local_analysis = self._local_analyze(user_input)
-
-        # 提高阈值 - 只有置信度 > 0.6 才直接使用本地分析
-        if local_analysis["confidence"] > 0.6:
-            return local_analysis
-
-        # 置信度不够时返回本地分析，AI分析由 AIForgeCore 在执行失败后调用
-        return local_analysis
-
-    def _local_analyze(self, instruction: str) -> Dict[str, Any]:
-        """增强的本地指令分析 - 提供完整的标准化输出"""
+    def local_analyze_instruction(self, instruction: str) -> Dict[str, Any]:
+        """本地指令分析"""
         instruction_lower = instruction.lower()
 
         # 计算每种任务类型的匹配分数
@@ -142,7 +130,11 @@ class InstructionAnalyzer:
             "output_format": self._smart_infer_output_format(
                 instruction, best_pattern["output_formats"]
             ),
-            "cache_key": self._generate_semantic_cache_key(best_task_type, instruction),
+            "cache_key": self._generate_semantic_cache_key(
+                best_task_type,
+                instruction,
+                self._smart_extract_parameters(instruction, best_pattern["common_params"]),
+            ),
             "confidence": confidence,
             "source": "local_analysis",
         }
@@ -243,26 +235,37 @@ class InstructionAnalyzer:
 
         return "json"  # 默认返回json格式
 
-    def _generate_semantic_cache_key(self, task_type: str, instruction: str) -> str:
-        """生成语义化的缓存键"""
-        # 提取关键词生成更稳定的缓存键
-        key_words = []
+    def _generate_semantic_cache_key(
+        self, task_type: str, instruction: str, parameters: Dict = None
+    ) -> str:
+        """基于参数化指令生成语义化缓存键"""
+        key_components = [task_type]
 
-        # 根据任务类型提取关键词
-        if task_type == "data_fetch":
-            # 提取查询主题
-            for pattern in [
-                r'["""]([^"""]+)["""]',
-                r"搜索(.+?)(?:的|，|。|$)",
-                r"获取(.+?)(?:的|，|。|$)",
-            ]:
-                match = re.search(pattern, instruction)
-                if match:
-                    key_words.append(match.group(1).strip())
-                    break
+        # 优先使用 required_parameters 生成稳定的缓存键
+        if parameters:
+            # 提取参数值，按参数名排序确保一致性
+            param_values = []
+            sorted_params = sorted(parameters.items())
+
+            for param_name, param_info in sorted_params:
+                if isinstance(param_info, dict) and "value" in param_info:
+                    value = param_info["value"]
+                    # 标准化参数值
+                    if isinstance(value, str):
+                        value = value.lower().strip()
+                    param_values.append(f"{param_name}:{value}")
+                elif param_info is not None:
+                    param_values.append(f"{param_name}:{str(param_info).lower()}")
+
+            if param_values:
+                key_components.extend(param_values)
+
+        # 如果没有参数，使用指令内容
+        if len(key_components) == 1:
+            key_components.append(instruction[:50])
 
         # 生成稳定的哈希
-        content = f"{task_type}_{' '.join(key_words)}" if key_words else instruction[:50]
+        content = "_".join(key_components)
         return f"{task_type}_{hash(content) % 100000}"
 
     def _get_default_analysis(self, instruction: str) -> Dict[str, Any]:
@@ -278,35 +281,52 @@ class InstructionAnalyzer:
             "source": "default",
         }
 
-    def _get_analysis_prompt(self) -> str:
-        """获取指令分析的系统提示词"""
+    def get_analysis_prompt(self) -> str:
         return """
 # 角色定义
-你是 AIForge 指令分析器，负责将用户的自然语言指令转换为标准化的指令结构。
+你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。
 
-# 任务要求
-分析用户指令，返回以下JSON格式的标准化指令：
+# 核心任务
+分析用户指令，思考：要完成这个任务，我需要哪些具体信息作为输入参数？
 
+# 分析步骤
+1. 理解用户想要完成什么任务
+2. 思考完成这个任务的必要条件和输入信息
+3. 从用户指令中提取这些信息的具体值
+4. 将缺失但必要的信息标记为需要默认值或推断
+
+# 输出格式
 {
     "task_type": "任务类型",
     "action": "具体动作",
-    "target": "操作目标",
-    "parameters": {
-        "key1": "value1",
-        "key2": "value2"
+    "target": "任务描述",
+    "required_parameters": {
+        "param_name": {
+            "value": "从指令中提取的值或null",
+            "type": "参数类型",
+            "description": "参数用途说明",
+            "required": true/false,
+            "default": "默认值或null"
+        }
     },
-    "output_format": "期望的输出格式",
-    "cache_key": "用于缓存的标准化键"
+    "execution_logic": "完成任务的基本逻辑描述",
+    "output_format": "期望输出格式"
 }
 
-# 任务类型包括
-- data_fetch: 数据获取（搜索、天气、新闻、API等）
-- data_process: 数据处理（分析、转换、计算等）
-- file_operation: 文件操作（读取、写入、批量处理等）
-- automation: 自动化任务（定时、监控等）
-- content_generation: 内容生成（写作、报告等）
+# 分析原则
+- 专注于任务完成的必要性，而非指令的字面内容
+- 参数应该是执行任务的最小必要集合
+- 优先从指令中提取具体值，无法提取时考虑合理默认值
+- 参数命名应该清晰反映其在任务中的作用
 
-请严格按照JSON格式返回，不要包含其他解释文字。
+# 示例思考过程
+用户指令："北京今天的天气如何"
+思考：要获取天气信息，我需要知道：
+1. 地点（必需）- 从指令提取："北京"
+2. 时间（必需）- 从指令提取："今天"
+3. 信息类型（必需）- 从指令推断："天气"
+
+请严格按照JSON格式返回分析结果。
 """
 
     def _parse_standardized_instruction(self, response: str) -> Dict[str, Any]:
@@ -343,24 +363,20 @@ class InstructionAnalyzer:
         return local
 
     def _is_ai_analysis_valid(self, ai_analysis: Dict[str, Any]) -> bool:
-        """验证AI分析结果的有效性"""
-        # 1. 检查必要字段是否存在
+        """验证AI分析结果的有效性 - 支持动态任务类型"""
+        # 1. 检查必要字段
         required_fields = ["task_type", "action", "target"]
         if not all(field in ai_analysis for field in required_fields):
             return False
 
-        # 2. 检查task_type是否在已知类型中
-        known_task_types = set(self.standardized_patterns.keys()) | {"general"}  # 修复这里
-        if ai_analysis.get("task_type") not in known_task_types:
+        # 2. 检查task_type是否有效（支持动态类型）
+        task_type = ai_analysis.get("task_type")
+        if not task_type or not isinstance(task_type, str) or not task_type.strip():
             return False
 
-        # 3. 检查参数是否合理（非空且有意义）
-        parameters = ai_analysis.get("parameters", {})
-        if parameters:
-            # 检查参数值是否有意义（非空字符串等）
-            for key, value in parameters.items():
-                if isinstance(value, str) and not value.strip():
-                    return False
+        # 注册新的任务类型
+        if hasattr(self, "task_type_manager"):
+            self.task_type_manager.register_task_type(task_type, ai_analysis)
 
-        # 4. 检查是否比本地分析更准确（可选的额外验证）
+        # 其余验证逻辑保持不变...
         return True

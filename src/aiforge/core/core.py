@@ -2,6 +2,7 @@ import re
 from typing import Optional, Dict, Any, Tuple, List
 from pathlib import Path
 
+
 from ..config.config import AIForgeConfig
 from ..llm.llm_manager import AIForgeLLMManager
 from .task_manager import AIForgeManager
@@ -12,7 +13,10 @@ from ..extensions.template_extension import DomainTemplateExtension
 from ..adapters.output.enhanced_hybrid_adapter import EnhancedHybridUIAdapter
 from ..adapters.input.input_adapter_manager import InputAdapterManager, InputSource
 from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
-from ..execution.unified_executor import UnifiedParameterizedExecutor, CachedModuleExecutor
+from ..execution.unified_executor import UnifiedParameterizedExecutor
+from ..execution.executor_interface import CachedModuleExecutor
+from ..execution.similarity_parameter_executor import SimilarityParameterExecutor
+from .dynamic_task_type_manager import DynamicTaskTypeManager
 
 
 class AIForgeCore:
@@ -41,26 +45,32 @@ class AIForgeCore:
         self.task_manager = AIForgeManager(self.llm_manager)
         self.runner = AIForgeRunner(str(self.config.get_workdir()))
 
-        # 初始化缓存（如果启用）
-        self._init_cache()
-
-        # 初始化执行器
-        self._init_executors()
-
+        # 初始化指令分析器
         default_client = self.llm_manager.get_client()
         self.instruction_analyzer = InstructionAnalyzer(default_client) if default_client else None
-
+        # 初始化缓存（如果启用）
+        self._init_cache()
+        # 初始化执行器
+        self._init_executors()
         # 初始化增强的UI适配器
         self.ui_adapter = None
         # 初始化输入适配管理器
         self.input_adapter_manager = InputAdapterManager()
 
     def _init_cache(self):
-        """初始化缓存 - 使用基础缓存类，完全基于标准化指令"""
+        """初始化缓存"""
         cache_config = self.config.get_cache_config("code")
         if cache_config.get("enabled", True):
             cache_dir = Path(self.config.get_workdir()) / "cache"
             self.code_cache = StandardizedCodeCache(cache_dir, cache_config)
+
+            # 初始化动态任务类型管理器
+            self.task_type_manager = DynamicTaskTypeManager(cache_dir)
+            self.code_cache.task_type_manager = self.task_type_manager
+
+            # 将管理器传递给指令分析器
+            if self.instruction_analyzer:
+                self.instruction_analyzer.task_type_manager = self.task_type_manager
         else:
             self.code_cache = None
 
@@ -210,18 +220,31 @@ class AIForgeCore:
     def _save_standardized_module(
         self, standardized_instruction: Dict[str, Any], code: str
     ) -> str | None:
-        """保存基于标准化指令的模块"""
+        """保存基于参数化标准化指令的模块"""
         if not self.code_cache:
             return None
 
+        # 如果有动态任务类型管理器，注册新的任务类型
+        task_type = standardized_instruction.get("task_type", "general")
+        if hasattr(self, "task_type_manager"):
+            self.task_type_manager.register_task_type(task_type, standardized_instruction)
+
         try:
+            # 提取参数化信息用于元数据
+            required_params = standardized_instruction.get("required_parameters", {})
+            execution_logic = standardized_instruction.get("execution_logic", "")
+
+            metadata = {
+                "task_type": task_type,
+                "is_standardized": True,
+                "is_parameterized": bool(required_params),
+                "parameter_count": len(required_params),
+                "execution_logic": execution_logic,
+            }
+
+            # 直接调用缓存的保存方法
             result = self.code_cache.save_standardized_module(
-                standardized_instruction,
-                code,
-                {
-                    "task_type": standardized_instruction.get("task_type"),
-                    "is_standardized": True,
-                },
+                standardized_instruction, code, metadata
             )
             return result
         except Exception:
@@ -232,15 +255,22 @@ class AIForgeCore:
     ) -> str:
         """基于标准化指令构建增强的系统提示词"""
         task_type = standardized_instruction.get("task_type", "general")
-        parameters = standardized_instruction.get("parameters", {})
 
-        # 确保始终有参数信息
+        # 使用AI分析的参数（如果存在）
+        parameters = standardized_instruction.get("required_parameters", {})
+
+        # 如果没有智能分析的参数，回退到基础参数
+        if not parameters:
+            parameters = standardized_instruction.get("parameters", {})
+
+        # 最后的回退：确保有基本的指令参数
         if not parameters:
             parameters = {
                 "instruction": {
                     "value": standardized_instruction.get("target", ""),
                     "type": "str",
                     "description": "用户输入的指令内容",
+                    "required": True,
                 }
             }
 
@@ -283,7 +313,7 @@ class AIForgeCore:
     def _init_executors(self):
         """初始化内置执行器"""
         self.module_executors = [
-            UnifiedParameterizedExecutor(),  # 唯一的统一执行器
+            SimilarityParameterExecutor(),  # 唯一的统一执行器
         ]
 
     def generate_and_execute(
@@ -310,13 +340,41 @@ class AIForgeCore:
             result, _ = self._generate_and_execute_with_code(instruction, None, None)
             return result
 
-        standardized_instruction = self.instruction_analyzer.analyze_instruction(instruction)
+        # 使用统一的指令分析入口
+        standardized_instruction = self._get_final_standardized_instruction(instruction)
 
-        # 第二步：根据缓存配置决定执行路径
+        # 根据缓存配置决定执行路径
         if self.code_cache:
             return self._execute_with_cache_first(standardized_instruction, instruction)
         else:
             return self._execute_with_ai_enhanced(standardized_instruction, instruction)
+
+    def _get_final_standardized_instruction(self, instruction: str) -> Dict[str, Any]:
+        """获取最终的标准化指令，确保一致性"""
+        print(f"[DEBUG] 输入指令: {instruction}")
+        # 第一步：本地分析
+        local_analysis = self.instruction_analyzer.local_analyze_instruction(instruction)
+        print(
+            f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}, cache_key={local_analysis.get('cache_key')}"
+        )
+
+        # 第二步：如果置信度低，尝试AI分析
+        confidence = local_analysis.get("confidence", 0)
+        if confidence < 0.6:
+            print(f"[DEBUG] 置信度低({confidence})，尝试AI分析...")
+            ai_analysis = self._try_ai_standardization(instruction)
+            if ai_analysis and ai_analysis.get("confidence", 0) > confidence:
+                # AI分析成功，使用AI结果
+                print(
+                    f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}, confidence={ai_analysis.get('confidence')}, cache_key={ai_analysis.get('cache_key')}"
+                )
+
+                return ai_analysis
+            else:
+                print(f"[DEBUG] AI分析失败或置信度不够，使用本地分析结果")
+
+        # 返回本地分析结果
+        return local_analysis
 
     def _execute_with_cache_first(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
@@ -326,19 +384,29 @@ class AIForgeCore:
         if self.code_cache.should_cleanup():
             self.code_cache.cleanup()
 
-        # 尝试从缓存获取模块
+        print(f"[DEBUG] 进入缓存优先执行策略")
+        # 使用统一分析结果查找缓存
         cached_modules = self.code_cache.get_cached_modules_by_standardized_instruction(
             standardized_instruction
         )
 
         if cached_modules:
+            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，尝试执行")
+
             cache_result = self._try_execute_cached_modules(
                 cached_modules, standardized_instruction
             )
             if cache_result is not None:
+                print(f"[DEBUG] 缓存执行成功")
+
                 return cache_result
+            else:
+                print(f"[DEBUG] 缓存执行失败")
+        else:
+            print(f"[DEBUG] 未找到缓存模块")
 
         # 缓存失败，走AI生成路径
+        print(f"[DEBUG] 缓存未命中，走AI生成路径")
         return self._execute_with_ai_and_cache(standardized_instruction, original_instruction)
 
     def _execute_with_ai_enhanced(
@@ -347,14 +415,8 @@ class AIForgeCore:
         """AI增强执行（无缓存模式）"""
         confidence = standardized_instruction.get("confidence", 0)
 
-        if confidence < 0.3:
-            # 本地标准化置信度低，尝试AI重新标准化
-            ai_standardized = self._try_ai_standardization(original_instruction)
-            if ai_standardized and ai_standardized.get("confidence", 0) > confidence:
-                standardized_instruction = ai_standardized
-
         # 使用标准化指令生成代码
-        if standardized_instruction.get("confidence", 0) < 0.3:
+        if confidence < 0.6:
             result, _ = self._generate_and_execute_with_code(original_instruction, None, None)
         else:
             enhanced_prompt = self._build_enhanced_system_prompt(standardized_instruction)
@@ -370,14 +432,8 @@ class AIForgeCore:
         """AI生成并缓存结果"""
         confidence = standardized_instruction.get("confidence", 0)
 
-        # 检查是否需要AI重新标准化
-        if confidence < 0.3:
-            ai_standardized = self._try_ai_standardization(original_instruction)
-            if ai_standardized and ai_standardized.get("confidence", 0) > confidence:
-                standardized_instruction = ai_standardized
-
         # 使用最终的标准化指令生成代码
-        if standardized_instruction.get("confidence", 0) < 0.3:
+        if confidence < 0.6:
             result, code = self._generate_and_execute_with_code(original_instruction, None, None)
         else:
             enhanced_prompt = self._build_enhanced_system_prompt(standardized_instruction)
@@ -396,18 +452,26 @@ class AIForgeCore:
         if not self.instruction_analyzer:
             return None
 
+        print(f"[DEBUG] 开始AI标准化分析: {instruction}")
+
         try:
-            analysis_prompt = self.instruction_analyzer._get_analysis_prompt()
+            analysis_prompt = self.instruction_analyzer.get_analysis_prompt()
             response = self.instruction_analyzer.llm_client.generate_code(
-                f"{analysis_prompt}\\n\\n用户指令: {instruction}", ""
+                f"{analysis_prompt}\n\n用户指令: {instruction}", ""
             )
             ai_analysis = self.instruction_analyzer._parse_standardized_instruction(response)
+            print(f"[DEBUG] AI分析原始结果: {ai_analysis}")
 
             if self.instruction_analyzer._is_ai_analysis_valid(ai_analysis):
                 ai_analysis["source"] = "ai_analysis"
                 ai_analysis["confidence"] = 0.9
+                print(f"[DEBUG] AI分析验证通过: {ai_analysis}")
+
                 return ai_analysis
-        except Exception:
+            else:
+                print(f"[DEBUG] AI分析验证失败")
+        except Exception as e:
+            print(f"[DEBUG] AI分析异常: {e}")
             pass
 
         return None
@@ -418,17 +482,27 @@ class AIForgeCore:
         """尝试执行缓存模块"""
         for module_id, file_path, success_count, failure_count in cached_modules:
             try:
+                print(f"[DEBUG] 尝试加载模块: {module_id}")
                 module = self.code_cache.load_module(module_id)
                 if module:
+                    print(f"[DEBUG] 模块加载成功，开始执行")
+                    # 正确传递标准化指令
                     result = self._execute_cached_module(
-                        module, standardized_instruction.get("target", "")
+                        module,
+                        standardized_instruction.get("target", ""),
+                        standardized_instruction=standardized_instruction,
                     )
                     if result:
+                        print(f"[DEBUG] 模块执行成功")
                         self.code_cache.update_module_stats(module_id, True)
                         return result
                     else:
+                        print(f"[DEBUG] 模块执行返回None")
                         self.code_cache.update_module_stats(module_id, False)
-            except Exception:
+                else:
+                    print(f"[DEBUG] 模块加载失败")
+            except Exception as e:
+                print(f"[DEBUG] 模块执行异常: {e}")
                 self.code_cache.update_module_stats(module_id, False)
 
         return None
@@ -505,10 +579,15 @@ class AIForgeCore:
         return max(successful_entries, key=code_quality_score)
 
     def _execute_cached_module(self, module, instruction: str, **kwargs):
-        """执行缓存的模块"""
+        """执行缓存的模块 - 支持参数化执行"""
+        standardized_instruction = kwargs.get("standardized_instruction", {})
+
         for executor in self.module_executors:
             if executor.can_handle(module):
-                result = executor.execute(module, instruction, **kwargs)
+                # 传递完整的标准化指令和参数信息
+                result = executor.execute(
+                    module, instruction, standardized_instruction=standardized_instruction, **kwargs
+                )
                 if result is not None:
                     return result
         return None

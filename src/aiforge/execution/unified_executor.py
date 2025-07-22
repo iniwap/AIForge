@@ -42,58 +42,108 @@ class UnifiedParameterizedExecutor(CachedModuleExecutor):
 
         return candidates
 
-    def execute(self, module, instruction: str, **kwargs) -> Any:
-        """统一执行入口 - 按优先级尝试执行"""
-        standardized_instruction = kwargs.get("standardized_instruction", {})
-        parameters = standardized_instruction.get("parameters", {})
-
-        candidates = self._find_execution_candidates(module)
-
-        for exec_type, name, target in candidates:
-            try:
-                result = self._execute_by_type(exec_type, name, target, parameters, instruction)
-                if result is not None:
-                    return result
-            except Exception:
-                continue  # 尝试下一个候选
-
-        return None
-
     def _execute_by_type(
-        self, exec_type: str, name: str, target: Any, parameters: Dict[str, Any], instruction: str
+        self,
+        exec_type: str,
+        name: str,
+        target: Any,
+        parameters: Dict[str, Any],
+        instruction: str,
+        standardized_instruction: Dict[str, Any],
     ) -> Any:
         """根据类型执行"""
         if exec_type == "parameterized":
-            return self._execute_parameterized_function(target, parameters)
+            return self._execute_parameterized_function(
+                target, parameters, standardized_instruction
+            )
         elif exec_type == "function":
             return self._execute_standard_function(target, parameters, instruction)
         elif exec_type == "class":
-            return self._execute_class_method(target, parameters, instruction)
+            return self._execute_class_method(
+                target, parameters, instruction, standardized_instruction
+            )
         elif exec_type == "variable":
             return target
 
         return None
 
-    def _execute_parameterized_function(self, func: callable, parameters: Dict[str, Any]) -> Any:
-        """执行参数化函数"""
-        # 提取参数值
+    def _execute_parameterized_function(
+        self,
+        func: callable,
+        parameters: Dict[str, Any],
+        standardized_instruction: Dict[str, Any] = None,
+    ) -> Any:
+        """执行参数化函数 - 智能参数映射"""
+        import inspect
+
+        # 获取函数签名
+        sig = inspect.signature(func)
+        func_params = list(sig.parameters.keys())
+
+        # 优先使用 standardized_instruction 中的 required_parameters
+        effective_parameters = parameters
+        if standardized_instruction:
+            required_params = standardized_instruction.get("required_parameters", {})
+            if required_params:
+                effective_parameters = required_params
+
+        # 智能参数值提取和映射
         param_values = {}
-        for key, param_info in parameters.items():
-            if isinstance(param_info, dict) and "value" in param_info:
-                param_values[key] = param_info["value"]
+
+        for param_name in func_params:
+            if param_name in effective_parameters:
+                param_info = effective_parameters[param_name]
+                if isinstance(param_info, dict) and "value" in param_info:
+                    param_values[param_name] = param_info["value"]
+                else:
+                    param_values[param_name] = param_info
             else:
-                param_values[key] = param_info
+                # 尝试从函数参数默认值获取
+                param_obj = sig.parameters[param_name]
+                if param_obj.default != inspect.Parameter.empty:
+                    param_values[param_name] = param_obj.default
 
         # 检查是否为异步函数
         if asyncio.iscoroutinefunction(func):
             return asyncio.run(func(**param_values))
 
-        # 尝试带参数调用
+        # 执行函数
         try:
             return func(**param_values)
-        except TypeError:
-            # 参数不匹配，尝试无参数调用
-            return func()
+        except TypeError as e:
+            # 参数不匹配时的智能处理
+            if "unexpected keyword argument" in str(e) or "missing" in str(e):
+                # 只传递函数需要且我们有的参数
+                filtered_params = {k: v for k, v in param_values.items() if k in func_params}
+                try:
+                    return func(**filtered_params)
+                except TypeError:
+                    # 最后回退：无参数调用
+                    return func()
+            raise e
+
+    def execute(self, module, instruction: str, **kwargs) -> Any:
+        """统一执行入口"""
+        standardized_instruction = kwargs.get("standardized_instruction", {})
+
+        # 优先使用 required_parameters，回退到 parameters
+        parameters = standardized_instruction.get(
+            "required_parameters", {}
+        ) or standardized_instruction.get("parameters", {})
+
+        candidates = self._find_execution_candidates(module)
+
+        for exec_type, name, target in candidates:
+            try:
+                result = self._execute_by_type(
+                    exec_type, name, target, parameters, instruction, standardized_instruction
+                )
+                if result is not None:
+                    return result
+            except Exception:
+                continue
+
+        return None
 
     def _execute_standard_function(
         self, func: callable, parameters: Dict[str, Any], instruction: str
@@ -113,7 +163,13 @@ class UnifiedParameterizedExecutor(CachedModuleExecutor):
             except Exception:
                 return None
 
-    def _execute_class_method(self, cls: type, parameters: Dict[str, Any], instruction: str) -> Any:
+    def _execute_class_method(
+        self,
+        cls: type,
+        parameters: Dict[str, Any],
+        instruction: str,
+        standardized_instruction: Dict[str, Any] = None,
+    ) -> Any:
         """执行类方法"""
         try:
             # 实例化类
@@ -121,7 +177,9 @@ class UnifiedParameterizedExecutor(CachedModuleExecutor):
 
             # 调用execute_task方法
             if hasattr(instance, "execute_task"):
-                return self._execute_parameterized_function(instance.execute_task, parameters)
+                return self._execute_parameterized_function(
+                    instance.execute_task, parameters, standardized_instruction
+                )
 
             return None
         except Exception:

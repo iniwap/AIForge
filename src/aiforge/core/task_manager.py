@@ -2,8 +2,7 @@ import json
 import time
 import hashlib
 from rich.console import Console
-import re
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 
 from ..llm.llm_manager import AIForgeLLMManager
@@ -13,17 +12,20 @@ from ..optimization.feedback_optimizer import FeedbackOptimizer
 from ..formatting.result_formatter import AIForgeResultFormatter
 from ..execution.code_blocks import CodeBlockManager, CodeBlock
 from ..prompts.enhanced_prompts import get_base_aiforge_prompt
+from .enhanced_error_analyzer import EnhancedErrorAnalyzer
 
 
 class AIForgeTask:
+    """AIForge 任务执行器"""
+
     def __init__(self, llm_client: AIForgeLLMClient, max_rounds, optimization):
         self.client = llm_client
         self.executor = AIForgeExecutor()
         self.console = Console()
 
-        # 新增组件
         self.formatter = AIForgeResultFormatter(self.console)
         self.code_block_manager = CodeBlockManager()
+        self.error_analyzer = EnhancedErrorAnalyzer()
 
         self.instruction = None
         self.system_prompt = None
@@ -33,45 +35,6 @@ class AIForgeTask:
         self.feedback_optimizer = (
             FeedbackOptimizer() if optimization.get("optimize_tokens", True) else None
         )
-
-    def _compress_error(self, error_msg: str, max_length: int = 200) -> str:
-        """压缩错误信息以减少token消耗"""
-        if not error_msg or len(error_msg) <= max_length:
-            return error_msg
-
-        # 提取关键错误信息的正则模式
-        key_patterns = [
-            r"(NameError|TypeError|ValueError|AttributeError|ImportError|SyntaxError): (.+)",
-            r"line (\d+)",
-            r'File "([^"]+)"',
-            r"in (.+)",
-            r"(\w+Exception): (.+)",
-        ]
-
-        compressed_parts = []
-
-        # 按优先级提取关键信息
-        for pattern in key_patterns:
-            matches = re.findall(pattern, error_msg)
-            if matches:
-                for match in matches[:2]:  # 最多保留2个匹配项
-                    if isinstance(match, tuple):
-                        compressed_parts.extend([str(m) for m in match])
-                    else:
-                        compressed_parts.append(str(match))
-
-        # 如果没有匹配到关键模式，截取开头部分
-        if not compressed_parts:
-            return error_msg[:max_length] + "..." if len(error_msg) > max_length else error_msg
-
-        # 组合压缩后的信息
-        compressed = " | ".join(compressed_parts[:5])  # 最多保留5个关键信息
-
-        # 确保不超过最大长度
-        if len(compressed) > max_length:
-            compressed = compressed[: max_length - 3] + "..."
-
-        return compressed
 
     def _is_execution_truly_successful(self, result):
         """判断执行是否真正成功（包括业务逻辑）"""
@@ -93,7 +56,6 @@ class AIForgeTask:
 
     def process_code_execution(self, code_blocks: List[str]) -> Optional[str]:
         """处理代码块执行并格式化结果"""
-
         results = []
 
         for i, code_text in enumerate(code_blocks):
@@ -137,25 +99,32 @@ class AIForgeTask:
             self.code_block_manager.add_block(block)
             self.code_block_manager.update_block_result(block.name, result, execution_time)
 
-        # 生成结构化反馈
+        # 使用 EnhancedErrorAnalyzer 生成智能反馈
         if not result.get("success"):
-            # 提取并压缩错误信息
-            error_info = result.get("error", "")
-            traceback_info = result.get("traceback", "")
+            self._send_intelligent_feedback(result)
 
-            compressed_error = self._compress_error(error_info)
-            compressed_traceback = self._compress_error(traceback_info)
+    def _send_intelligent_feedback(self, result: Dict[str, Any]):
+        """使用 EnhancedErrorAnalyzer 发送智能反馈"""
+        error_info = result.get("error", "")
+        traceback_info = result.get("traceback", "")
 
-            # 只发送必要的错误信息，不包含代码
-            minimal_feedback = {
-                "message": "代码执行失败，请根据错误信息修复",
-                "error": compressed_error,
-                "traceback": compressed_traceback,
-                "success": False,
-            }
+        # 使用增强的错误分析器
+        error_analysis = self.error_analyzer.analyze_error(error_info, traceback_info)
 
-            feedback_json = json.dumps(minimal_feedback, ensure_ascii=False)
-            self.client.send_feedback(feedback_json)
+        # 构建智能反馈
+        feedback = {
+            "message": "代码执行失败，已分析错误原因",
+            "error_analysis": {
+                "type": error_analysis["error_type"],
+                "severity": error_analysis["severity"],
+                "compressed_info": error_analysis["compressed_info"],
+                "fix_suggestions": error_analysis["fix_suggestions"][:2],  # 只发送前2个建议
+            },
+            "success": False,
+        }
+
+        feedback_json = json.dumps(feedback, ensure_ascii=False)
+        self.client.send_feedback(feedback_json)
 
     def _process_execution_result(self, result_content, instruction, task_type=None):
         """后处理执行结果，强制标准化格式"""
@@ -255,9 +224,15 @@ class AIForgeTask:
 
             self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
-            # 生成代码
             self.console.print("🤖 正在生成代码...", style="dim white")
-            response = self.client.generate_code(self.instruction, self.system_prompt)
+            # 第一轮不使用历史，后续轮次使用历史上下文
+            if rounds == 1:
+                response = self.client.generate_code(self.instruction, self.system_prompt)
+            else:
+                # 后续轮次使用带历史的生成方法
+                response = self.client.generate_code(
+                    self.instruction, self.system_prompt, use_history=True
+                )
 
             if not response:
                 self.console.print(f"[red]第 {rounds} 轮：LLM 未返回响应[/red]")

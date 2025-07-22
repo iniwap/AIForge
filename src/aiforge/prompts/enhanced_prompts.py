@@ -107,7 +107,7 @@ __result__ = {
     return formats.get(
         task_type,
         """
-# 通用任务输出格式
+# 输出格式要求：
 __result__ = {
     "data": main_result,
     "status": "success/error",
@@ -151,54 +151,87 @@ def get_enhanced_aiforge_prompt(
 ) -> str:
     """生成增强的系统提示"""
 
-    # 输出格式要求
-    format_rules = """
-## 🚨 CRITICAL: 输出格式要求 🚨
-__result__ 必须是字典格式，包含：
-- "data": 实际数据（成功时）或 null（失败时）
-- "status": "success" 或 "error"
-- "summary": 简短描述
-- "metadata": 包含timestamp等信息"""
+    base_prompt = get_base_aiforge_prompt(optimize_tokens)
 
-    # 参数化和执行模式指导
+    # 智能参数化执行指导
     execution_guidance = ""
     if parameters:
-        param_names = list(parameters.keys())
-        param_descriptions = []
-        for k, v in parameters.items():
-            if isinstance(v, dict) and "description" in v:
-                param_descriptions.append(
-                    f"- {k}: {v['description']} (类型: {v.get('type', 'str')})"
-                )
-            else:
-                param_descriptions.append(f"- {k}: {v}")
+        # 分析参数结构，生成智能的函数定义
+        param_analysis = _analyze_parameters_for_execution(parameters)
 
         execution_guidance = f"""
-## 🔧 参数化执行指导
-请生成以下参数化函数形式的代码：
+## 🔧 智能参数化执行指导
 
-def execute_task({', '.join(param_names)}):
-    # 执行具体逻辑
-    # 从kwargs提取参数
-    # 例如: location = kwargs.get('location', '杭州')
+基于任务分析，生成以下参数化函数：
+
+def execute_task({param_analysis['signature']}):
+    '''
+    {param_analysis['docstring']}
+    '''
+    # 使用传入的参数完成任务
+    # 实现逻辑应该基于参数的实际含义和任务需求
     return result_data
 
-参数说明：
-{chr(10).join(param_descriptions)}
+# 参数说明：
+{param_analysis['param_docs']}
 
-🚨 必须定义函数后立即调用并赋值：__result__ = execute_task(参数...)"""
+🚨 必须在函数定义后立即调用：
+__result__ = execute_task({param_analysis['call_args']})
 
-    # 构建基础 prompt
+重要：函数实现应该真正使用这些参数来完成任务，而不是忽略参数。
+"""
+
     enhanced_prompt = f"""
-{get_base_aiforge_prompt(optimize_tokens)}
-
-{format_rules}
+{base_prompt}
 
 {execution_guidance}
 """
 
-    # 任务特定格式（仅在需要时添加）
-    if task_type and task_type != "general":
-        enhanced_prompt += f"\n\n{get_task_specific_format(task_type)}"
+    enhanced_prompt += f"\n\n{get_task_specific_format(task_type)}"
 
     return enhanced_prompt
+
+
+def _analyze_parameters_for_execution(parameters: Dict[str, Any]) -> Dict[str, str]:
+    """分析参数结构，生成执行指导"""
+    param_names = []
+    param_docs = []
+    call_args = []
+
+    for param_name, param_info in parameters.items():
+        if isinstance(param_info, dict):
+            value = param_info.get("value")
+            param_type = param_info.get("type", "str")
+            description = param_info.get("description", "")
+            required = param_info.get("required", True)
+
+            # 构建函数签名
+            if required and value is not None:
+                param_names.append(param_name)
+                call_args.append(f'"{value}"' if param_type == "str" else str(value))
+            elif not required:
+                default_val = param_info.get("default", "None")
+                param_names.append(f"{param_name}={default_val}")
+                if value is not None:
+                    call_args.append(f'"{value}"' if param_type == "str" else str(value))
+                else:
+                    call_args.append(default_val)
+
+            # 构建参数文档
+            param_docs.append(f"- {param_name} ({param_type}): {description}")
+        else:
+            # 简单参数处理
+            param_names.append(param_name)
+            call_args.append(f'"{param_info}"' if isinstance(param_info, str) else str(param_info))
+            param_docs.append(f"- {param_name}: {param_info}")
+
+    signature = ", ".join(param_names)
+    call_signature = ", ".join(call_args)
+    docstring = f"执行任务，使用提供的参数: {', '.join(param_names)}"
+
+    return {
+        "signature": signature,
+        "call_args": call_signature,
+        "param_docs": "\n".join(param_docs),
+        "docstring": docstring,
+    }
