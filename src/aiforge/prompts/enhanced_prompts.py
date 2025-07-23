@@ -215,7 +215,10 @@ def _analyze_parameters_for_execution(parameters: Dict[str, Any]) -> Dict[str, s
                 if value is not None:
                     call_args.append(f'"{value}"' if param_type == "str" else str(value))
                 else:
-                    call_args.append(default_val)
+                    if default_val is None:
+                        call_args.append("None")
+                    else:
+                        call_args.append(str(default_val))
 
             # 构建参数文档
             param_docs.append(f"- {param_name} ({param_type}): {description}")

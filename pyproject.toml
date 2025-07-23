@@ -10,3 +10,8 @@ web = ["fastapi", "uvicorn"]
 [build-system]
 requires = ["uv", "setuptools"]
 build-backend = "uv.build"
+
+[tool.setuptools.package-data]  
+"aiforge.models" = [  
+    "sentence_transformers/paraphrase-MiniLM-L6-v2/*",  
+]

@@ -209,3 +209,4 @@ __marimo__/
 .DS_Store
 .git-backup/
 aiforge_work/
+model.safetensors

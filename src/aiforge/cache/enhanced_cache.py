@@ -11,6 +11,7 @@ from peewee import Case
 from ..extensions.extension_manager import ExtensionManager
 from .code_cache import AiForgeCodeCache
 from ..utils.code_validator import CodeValidator
+from .semantic_action_matcher import SemanticActionMatcher
 
 
 class EnhancedStandardizedCache(AiForgeCodeCache):
@@ -86,24 +87,30 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
     @property
     def semantic_model(self):
-        """延迟加载语义模型 - 指定缓存目录"""
+        """延迟加载语义模型 - 优先使用内置模型"""
         if self._semantic_model is None:
             try:
                 print("[DEBUG] 正在加载语义模型...")
                 from sentence_transformers import SentenceTransformer
-                import os
+                from ..models.model_manager import ModelManager
 
-                # 指定缓存目录
-                cache_folder = os.path.expanduser("~/.aiforge_cache/sentence_transformers")
-                os.makedirs(cache_folder, exist_ok=True)
+                # 使用模型管理器获取模型路径
+                model_manager = ModelManager()
+                model_path = model_manager.get_model_path("paraphrase-MiniLM-L6-v2")
 
-                self._semantic_model = SentenceTransformer(
-                    "paraphrase-MiniLM-L6-v2", cache_folder=cache_folder
-                )
+                # 加载模型
+                self._semantic_model = SentenceTransformer(model_path)
                 print("[DEBUG] 语义模型加载完成")
+
             except ImportError:
+                print("[DEBUG] sentence_transformers 未安装，禁用语义匹配")
                 self.semantic_enabled = False
                 return None
+            except Exception as e:
+                print(f"[DEBUG] 语义模型加载失败: {e}")
+                self.semantic_enabled = False
+                return None
+
         return self._semantic_model
 
     @property
@@ -189,61 +196,169 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def get_cached_modules_by_standardized_instruction(
         self, standardized_instruction: Dict[str, Any]
     ) -> List[Any]:
-        """增强的缓存模块查找"""
-        # 1. 优先检查模板扩展（保留原有功能）
-        template_match = self.extension_manager.find_template_match(standardized_instruction)
-        if template_match:
-            template_results = self._get_template_cached_modules(
-                template_match, standardized_instruction
-            )
-            if template_results:
-                return template_results
+        """基于语义聚类的缓存模块查找"""
 
-        # 2. 标准化指令匹配
-        cache_key = standardized_instruction.get("cache_key")
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
-        # target = standardized_instruction.get("target", "")
 
-        print(f"[DEBUG] 增强缓存查找: task_type={task_type}, action={action}")
+        # 使用语义动作匹配器
+        if not hasattr(self, "action_matcher"):
+            self.action_matcher = SemanticActionMatcher(self)
+
+        # 获取动作的语义聚类
+        action_cluster = self.action_matcher.get_action_cluster(action)
+
+        print(f"[DEBUG] 语义缓存查找: task_type={task_type}, action_cluster={action_cluster}")
 
         results = []
 
-        # 策略1: 精确匹配cache_key
-        if cache_key:
-            exact_matches = self._get_modules_by_key(cache_key)
-            results.extend([(m, "exact") for m in exact_matches])
+        # 策略1: 精确任务类型 + 语义聚类匹配
+        cluster_key = f"{task_type}_{action_cluster}"
+        cluster_hash = hashlib.md5(cluster_key.encode()).hexdigest()
+        cluster_matches = self._get_modules_by_key(cluster_hash)
 
-        # 策略2: 任务类型+查询动作匹配（保留原有逻辑）
-        if task_type == "data_fetch" and action == "search":
-            query_action_key = f"{task_type}_查询"
-            query_action_hash = hashlib.md5(query_action_key.encode()).hexdigest()
-            query_matches = self._get_modules_by_key(query_action_hash)
-            results.extend([(m, "query_action") for m in query_matches])
+        # 对聚类匹配进行二次验证
+        validated_matches = self._validate_cluster_matches(
+            cluster_matches, action, standardized_instruction
+        )
+        results.extend([(m, "semantic_cluster") for m in validated_matches])
 
-        # 策略3: 任务类型+动作匹配
-        type_action_key = f"{task_type}_{action}"
-        type_action_hash = hashlib.md5(type_action_key.encode()).hexdigest()
-        type_matches = self._get_modules_by_key(type_action_hash)
-        results.extend([(m, "type_action") for m in type_matches])
-
-        # 策略4: 通用任务类型匹配
-        general_key = f"{task_type}_general"
-        general_hash = hashlib.md5(general_key.encode()).hexdigest()
-        general_matches = self._get_modules_by_key(general_hash)
-        results.extend([(m, "general") for m in general_matches])
-
-        # 策略5: 语义相似度匹配（新增）
-        if self.semantic_enabled and not results:
+        # 策略2: 如果聚类匹配失败，尝试语义相似度匹配
+        if not results and self.semantic_enabled:
             semantic_matches = self._get_semantic_matches(standardized_instruction)
-            results.extend([(m, "semantic") for m, score in semantic_matches])
-
-        # 策略6: 参数结构匹配（新增）
-        if not results:
-            param_matches = self._get_parameter_matches(standardized_instruction)
-            results.extend([(m, "parameter") for m, score in param_matches])
+            results.extend([(m, "semantic_similarity") for m, score in semantic_matches])
 
         return self._rank_and_deduplicate_results(results)
+
+    def _validate_cluster_matches(
+        self, matches: List[Any], query_action: str, standardized_instruction: Dict[str, Any]
+    ) -> List[Any]:
+        """验证聚类匹配的准确性"""
+        validated = []
+
+        for match in matches:
+            module_id, file_path, success_count, failure_count = match
+
+            try:
+                # 加载模块元数据
+                with self._lock:
+                    module_record = self.CodeModule.get(self.CodeModule.module_id == module_id)
+                    metadata = json.loads(module_record.metadata)
+
+                cached_instruction = metadata.get("standardized_instruction", {})
+                cached_action = cached_instruction.get("action", "")
+
+                # 计算动作相似度
+                action_similarity = self._compute_action_similarity(query_action, cached_action)
+
+                # 只有相似度足够高才认为匹配
+                if action_similarity > 0.7:  # 可调节阈值
+                    validated.append(match)
+                    print(
+                        f"[DEBUG] 聚类验证通过: {query_action} <-> {cached_action} (相似度: {action_similarity:.3f})"
+                    )
+                else:
+                    print(
+                        f"[DEBUG] 聚类验证失败: {query_action} <-> {cached_action} (相似度: {action_similarity:.3f})"
+                    )
+
+            except Exception as e:
+                print(f"[DEBUG] 验证模块 {module_id} 时出错: {e}")
+                continue
+
+        return validated
+
+    def _compute_action_similarity(self, action1: str, action2: str) -> float:
+        """计算两个动作的语义相似度"""
+        if not hasattr(self, "action_matcher"):
+            self.action_matcher = SemanticActionMatcher(self)
+
+        vector1 = self.action_matcher._get_action_vector(action1)
+        vector2 = self.action_matcher._get_action_vector(action2)
+
+        return self.action_matcher._compute_vector_similarity(vector1, vector2)
+
+    def _validate_semantic_relevance(
+        self, modules: List[Any], query_target: str, query_action: str
+    ) -> List[Any]:
+        """验证模块与查询的语义相关性"""
+        validated_modules = []
+
+        for module_data in modules:
+            module_id, file_path, success_count, failure_count = module_data
+
+            try:
+                # 加载模块元数据
+                with self._lock:
+                    module_record = self.CodeModule.get(self.CodeModule.module_id == module_id)
+                    metadata = json.loads(module_record.metadata)
+
+                cached_instruction = metadata.get("standardized_instruction", {})
+                cached_target = cached_instruction.get("target", "")
+                cached_action = cached_instruction.get("action", "")
+
+                # 严格的动作匹配
+                if not self._actions_are_compatible(query_action, cached_action):
+                    print(f"[DEBUG] 动作不兼容: {query_action} vs {cached_action}")
+                    continue
+
+                # 语义相关性检查
+                if not self._targets_are_semantically_related(query_target, cached_target):
+                    print(f"[DEBUG] 语义不相关: {query_target} vs {cached_target}")
+                    continue
+
+                validated_modules.append(module_data)
+
+            except Exception as e:
+                print(f"[DEBUG] 验证模块 {module_id} 失败: {e}")
+                continue
+
+        return validated_modules
+
+    def _actions_are_compatible(self, query_action: str, cached_action: str) -> bool:
+        """检查动作是否兼容"""
+        # 定义动作兼容性映射
+        action_groups = {
+            "weather": ["获取天气信息", "fetch_weather", "天气查询"],
+            "news": ["获取新闻", "获取实时新闻", "新闻查询", "fetch_news"],
+            "data": ["数据获取", "数据查询", "fetch_data"],
+        }
+
+        query_group = None
+        cached_group = None
+
+        for group, actions in action_groups.items():
+            if any(action in query_action for action in actions):
+                query_group = group
+            if any(action in cached_action for action in actions):
+                cached_group = group
+
+        # 只有同组动作才兼容
+        return query_group == cached_group and query_group is not None
+
+    def _targets_are_semantically_related(self, query_target: str, cached_target: str) -> bool:
+        """检查目标是否语义相关"""
+        # 关键词分组
+        keyword_groups = {
+            "weather": ["天气", "温度", "气温", "weather", "temperature"],
+            "news": ["新闻", "消息", "资讯", "news", "information"],
+            "finance": ["股票", "股价", "金融", "stock", "finance"],
+        }
+
+        query_keywords = set()
+        cached_keywords = set()
+
+        query_lower = query_target.lower()
+        cached_lower = cached_target.lower()
+
+        for group, keywords in keyword_groups.items():
+            if any(keyword in query_lower for keyword in keywords):
+                query_keywords.add(group)
+            if any(keyword in cached_lower for keyword in keywords):
+                cached_keywords.add(group)
+
+        # 必须有共同的关键词组
+        return bool(query_keywords & cached_keywords)
 
     def _get_template_cached_modules(
         self, template_match: Dict, standardized_instruction: Dict
@@ -565,6 +680,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             # 更新向量存储
             if self.semantic_enabled:
                 self._update_vector_storage(module_id, target, intent_category, params)
+                # 在向量存储更新完成后，检查是否需要重新聚类
+                if hasattr(self, "action_matcher") and len(self.command_vectors) % 10 == 0:
+                    self.action_matcher.update_action_clusters_from_usage()
 
             print(f"[DEBUG] 增强模块保存成功: {module_id}")
             return module_id
@@ -701,7 +819,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def _update_vector_storage(
         self, module_id: str, target: str, intent_category: str, params: Dict
     ):
-        """更新向量存储 - 支持轻量级模式"""
+        """更新向量存储"""
         if not self.semantic_enabled:
             return
 
@@ -721,12 +839,16 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
             # 更新意图聚类
             if intent_category:
+                if intent_category not in self.intent_clusters:
+                    self.intent_clusters[intent_category] = []
                 self.intent_clusters[intent_category].append(module_id)
                 print(f"[DEBUG] 意图聚类更新成功: {intent_category}")
 
             # 更新参数模板
             param_signature = self._generate_param_signature(params)
             print(f"[DEBUG] 生成参数签名: {param_signature}")
+            if param_signature not in self.param_templates:
+                self.param_templates[param_signature] = []
             self.param_templates[param_signature].append(module_id)
             print("[DEBUG] 参数模板更新成功")
 
@@ -751,24 +873,57 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 "param_templates": dict(self.param_templates),
                 "usage_stats": self.usage_stats,
             }
+
+            # 如果有动作匹配器，也保存聚类信息
+            if hasattr(self, "action_matcher"):
+                vector_data["action_clusters"] = self.action_matcher.action_clusters
+                vector_data["action_vectors"] = self.action_matcher.action_vectors
+
             with open(self.vector_store_path, "wb") as f:
                 pickle.dump(vector_data, f)
+
+            # 定期优化聚类
+            if hasattr(self, "action_matcher") and len(self.command_vectors) % 20 == 0:
+                self.action_matcher.update_action_clusters_from_usage()
+
         except Exception as e:
             print(f"[DEBUG] 保存向量存储失败: {e}")
 
     def _compute_lightweight_similarity(self, text1: str, text2: str) -> float:
-        """轻量级文本相似度计算 - 基于词汇重叠和编辑距离"""
+        """轻量级文本相似度计算 - 增强语义理解"""
         if not text1 or not text2:
             return 0.0
 
-        # 文本预处理
+        # 1. 关键词匹配相似度（权重最高）
+        def extract_domain_keywords(text):
+            domain_keywords = {
+                "weather": ["天气", "温度", "气温", "weather", "temperature", "wttr"],
+                "news": ["新闻", "消息", "资讯", "news", "information", "报道"],
+                "finance": ["股票", "股价", "金融", "stock", "finance", "价格"],
+            }
+
+            text_lower = text.lower()
+            found_domains = set()
+
+            for domain, keywords in domain_keywords.items():
+                if any(keyword in text_lower for keyword in keywords):
+                    found_domains.add(domain)
+
+            return found_domains
+
+        domains1 = extract_domain_keywords(text1)
+        domains2 = extract_domain_keywords(text2)
+
+        # 如果领域不匹配，直接返回低相似度
+        if domains1 and domains2 and not (domains1 & domains2):
+            return 0.1  # 给一个很低的分数，基本不匹配
+
+        # 2. 词汇重叠相似度
         def preprocess_text(text):
             import re
 
-            # 转小写，提取中英文词汇
             text = text.lower()
-            # 分离中文字符和英文单词
-            chinese_chars = re.findall(r"[\u4e00-\u9fff]", text)
+            chinese_chars = re.findall(r"[\\u4e00-\\u9fff]", text)
             english_words = re.findall(r"[a-zA-Z]+", text)
             return chinese_chars + english_words
 
@@ -778,61 +933,232 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         if not words1 or not words2:
             return 0.0
 
-        # 1. 词汇重叠相似度（Jaccard相似度）
         intersection = len(words1 & words2)
         union = len(words1 | words2)
         jaccard_similarity = intersection / union if union > 0 else 0.0
 
-        # 2. 编辑距离相似度
-        def levenshtein_distance(s1, s2):
-            if len(s1) < len(s2):
-                return levenshtein_distance(s2, s1)
-            if len(s2) == 0:
-                return len(s1)
+        # 3. 综合评分（领域匹配权重更高）
+        domain_similarity = 1.0 if (domains1 & domains2) else 0.0
 
-            previous_row = list(range(len(s2) + 1))
-            for i, c1 in enumerate(s1):
-                current_row = [i + 1]
-                for j, c2 in enumerate(s2):
-                    insertions = previous_row[j + 1] + 1
-                    deletions = current_row[j] + 1
-                    substitutions = previous_row[j] + (c1 != c2)
-                    current_row.append(min(insertions, deletions, substitutions))
-                previous_row = current_row
-            return previous_row[-1]
-
-        max_len = max(len(text1), len(text2))
-        if max_len == 0:
-            edit_similarity = 1.0
-        else:
-            distance = levenshtein_distance(text1, text2)
-            edit_similarity = 1 - (distance / max_len)
-
-        # 3. 关键词匹配相似度
-        def extract_keywords(text):
-            import re
-
-            # 提取关键动词和名词
-            keywords = re.findall(r"(查询|获取|计算|处理|分析|天气|温度|数据|文件|网页)", text)
-            return set(keywords)
-
-        keywords1 = extract_keywords(text1)
-        keywords2 = extract_keywords(text2)
-
-        if keywords1 or keywords2:
-            keyword_intersection = len(keywords1 & keywords2)
-            keyword_union = len(keywords1 | keywords2)
-            keyword_similarity = keyword_intersection / keyword_union if keyword_union > 0 else 0.0
-        else:
-            keyword_similarity = 0.0
-
-        # 综合相似度：加权平均
-        final_similarity = (
-            0.4 * jaccard_similarity + 0.3 * edit_similarity + 0.3 * keyword_similarity
-        )
+        final_similarity = 0.7 * domain_similarity + 0.3 * jaccard_similarity
 
         return min(final_similarity, 1.0)
 
     def _compute_semantic_similarity_lightweight(self, text1: str, text2: str) -> float:
         """轻量级语义相似度计算的统一接口"""
         return self._compute_lightweight_similarity(text1, text2)
+
+    def update_action_clusters_from_usage(self):
+        """基于使用统计动态优化动作聚类"""
+
+        print("[DEBUG] 开始基于使用统计优化动作聚类")
+
+        # 收集所有已缓存的动作及其统计信息
+        all_actions = []
+        with self._lock:
+            try:
+                modules = self.cache.CodeModule.select()
+                for module in modules:
+                    try:
+                        metadata = json.loads(module.metadata)
+                        standardized_instruction = metadata.get("standardized_instruction", {})
+                        action = standardized_instruction.get("action", "")
+
+                        if action:
+                            success_rate = module.success_count / max(
+                                1, module.success_count + module.failure_count
+                            )
+                            all_actions.append(
+                                {
+                                    "action": action,
+                                    "module_id": module.module_id,
+                                    "success_count": module.success_count,
+                                    "failure_count": module.failure_count,
+                                    "success_rate": success_rate,
+                                    "total_usage": module.success_count + module.failure_count,
+                                }
+                            )
+                    except Exception as e:
+                        print(f"[DEBUG] 解析模块元数据失败: {e}")
+                        continue
+            except Exception as e:
+                print(f"[DEBUG] 查询缓存模块失败: {e}")
+                return
+
+        if len(all_actions) < 2:
+            print("[DEBUG] 动作数量不足，跳过聚类优化")
+            return
+
+        print(f"[DEBUG] 收集到 {len(all_actions)} 个动作，开始重新聚类")
+
+        # 基于成功率和使用频率重新计算聚类
+        self._recompute_clusters_with_weights(all_actions)
+
+        # 清理低质量聚类
+        self._cleanup_poor_clusters()
+
+        print(f"[DEBUG] 聚类优化完成，当前聚类数: {len(self.action_clusters)}")
+
+    def _recompute_clusters_with_weights(self, actions_with_stats: List[Dict]):
+        """基于统计数据重新计算聚类"""
+
+        # 备份当前聚类
+        # old_clusters = self.action_clusters.copy()
+
+        # 重置聚类
+        self.action_clusters = {}
+        cluster_counter = 0
+
+        # 按成功率和使用频率排序，优先处理高质量动作
+        sorted_actions = sorted(
+            actions_with_stats, key=lambda x: (x["success_rate"], x["total_usage"]), reverse=True
+        )
+
+        for action_data in sorted_actions:
+            action = action_data["action"]
+            success_rate = action_data["success_rate"]
+            total_usage = action_data["total_usage"]
+
+            # 计算权重：成功率高且使用频繁的动作权重更大
+            weight = success_rate * (1 + min(total_usage / 10, 2))  # 最大权重为3
+
+            # 获取动作向量
+            action_vector = self._get_action_vector(action)
+
+            # 寻找最佳聚类
+            best_cluster = None
+            best_similarity = 0.0
+
+            for cluster_id, cluster_actions in self.action_clusters.items():
+                # 计算加权相似度
+                weighted_similarity = self._compute_weighted_cluster_similarity(
+                    action_vector, cluster_actions, weight
+                )
+
+                if (
+                    weighted_similarity > best_similarity
+                    and weighted_similarity > self.cluster_threshold
+                ):
+                    best_similarity = weighted_similarity
+                    best_cluster = cluster_id
+
+            # 决定是否加入现有聚类或创建新聚类
+            if best_cluster is not None:
+                self.action_clusters[best_cluster].append(action)
+                print(
+                    f"[DEBUG] 动作 '{action}' 加入聚类 {best_cluster} (相似度: {best_similarity:.3f})"
+                )
+            else:
+                # 创建新聚类
+                new_cluster_id = f"cluster_{cluster_counter}"
+                self.action_clusters[new_cluster_id] = [action]
+                cluster_counter += 1
+                print(f"[DEBUG] 为动作 '{action}' 创建新聚类 {new_cluster_id}")
+
+        # 合并相似的聚类
+        self._merge_similar_clusters()
+
+    def _get_action_vector(self, action: str):
+        """获取动作向量"""
+        if not hasattr(self, "action_matcher"):
+            self.action_matcher = SemanticActionMatcher(self)
+        return self.action_matcher._get_action_vector(action)
+
+    def _compute_weighted_cluster_similarity(
+        self, action_vector, cluster_actions: List[str], weight: float
+    ) -> float:
+        """计算加权聚类相似度"""
+        if not cluster_actions:
+            return 0.0
+
+        similarities = []
+        for cluster_action in cluster_actions:
+            cluster_vector = self._get_action_vector(cluster_action)
+            similarity = self._compute_vector_similarity(action_vector, cluster_vector)
+            similarities.append(similarity)
+
+        # 计算加权平均相似度
+        avg_similarity = sum(similarities) / len(similarities)
+
+        # 应用权重：高权重的动作更容易形成聚类
+        weighted_similarity = avg_similarity * (0.7 + 0.3 * min(weight, 2))
+
+        return weighted_similarity
+
+    def _merge_similar_clusters(self):
+        """合并相似的聚类"""
+        merge_threshold = 0.85  # 聚类间相似度阈值
+
+        cluster_ids = list(self.action_clusters.keys())
+        merged = set()
+
+        for i, cluster_id1 in enumerate(cluster_ids):
+            if cluster_id1 in merged:
+                continue
+
+            for j, cluster_id2 in enumerate(cluster_ids[i + 1 :], i + 1):  # noqa 203
+                if cluster_id2 in merged:
+                    continue
+
+                # 计算两个聚类的相似度
+                similarity = self._compute_inter_cluster_similarity(
+                    self.action_clusters[cluster_id1], self.action_clusters[cluster_id2]
+                )
+
+                if similarity > merge_threshold:
+                    # 合并聚类
+                    self.action_clusters[cluster_id1].extend(self.action_clusters[cluster_id2])
+                    del self.action_clusters[cluster_id2]
+                    merged.add(cluster_id2)
+                    print(
+                        f"[DEBUG] 合并聚类 {cluster_id2} 到 {cluster_id1} (相似度: {similarity:.3f})"
+                    )
+
+    def _compute_inter_cluster_similarity(self, cluster1: List[str], cluster2: List[str]) -> float:
+        """计算两个聚类间的相似度"""
+        if not cluster1 or not cluster2:
+            return 0.0
+
+        similarities = []
+        for action1 in cluster1:
+            for action2 in cluster2:
+                vector1 = self._get_action_vector(action1)
+                vector2 = self._get_action_vector(action2)
+                similarity = self._compute_vector_similarity(vector1, vector2)
+                similarities.append(similarity)
+
+        return sum(similarities) / len(similarities)
+
+    def _cleanup_poor_clusters(self):
+        """清理质量差的聚类"""
+        min_cluster_size = 1  # 最小聚类大小
+
+        clusters_to_remove = []
+        for cluster_id, actions in self.action_clusters.items():
+            if len(actions) < min_cluster_size:
+                clusters_to_remove.append(cluster_id)
+
+        for cluster_id in clusters_to_remove:
+            print(f"[DEBUG] 移除小聚类: {cluster_id}")
+            del self.action_clusters[cluster_id]
+
+    def _compute_vector_similarity(self, vector1, vector2) -> float:
+        """计算向量相似度"""
+        if not hasattr(self, "action_matcher"):
+            self.action_matcher = SemanticActionMatcher(self)
+        return self.action_matcher._compute_vector_similarity(vector1, vector2)
+
+    def _compute_feature_similarity(self, features1: Dict, features2: Dict) -> float:
+        """计算特征向量相似度"""
+        all_keys = set(features1.keys()) | set(features2.keys())
+        if not all_keys:
+            return 0.0
+
+        dot_product = sum(features1.get(key, 0) * features2.get(key, 0) for key in all_keys)
+        norm1 = sum(v**2 for v in features1.values()) ** 0.5
+        norm2 = sum(v**2 for v in features2.values()) ** 0.5
+
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+
+        return dot_product / (norm1 * norm2)

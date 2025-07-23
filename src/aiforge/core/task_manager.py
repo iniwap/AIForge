@@ -292,7 +292,7 @@ class AIForgeTask:
 
         # 使用格式化器显示总结
         self.formatter.format_execution_summary(
-            rounds - 1 if rounds > 1 else rounds,
+            rounds - 1 if not success else rounds,
             self.max_rounds,
             len(self.execution_history),
             success,

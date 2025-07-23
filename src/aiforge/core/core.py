@@ -312,6 +312,11 @@ class AIForgeCore:
 
         # 使用统一的指令分析入口
         standardized_instruction = self._get_final_standardized_instruction(instruction)
+        execution_mode = standardized_instruction.get("execution_mode", "code_generation")
+        confidence = standardized_instruction.get("confidence", 0)
+        # 检查直接响应模式
+        if execution_mode == "direct_ai_response" and confidence >= 0.6:
+            return self._handle_direct_response(standardized_instruction, instruction)
 
         # 根据缓存配置决定执行路径
         if self.code_cache:
@@ -351,38 +356,30 @@ class AIForgeCore:
     ) -> Optional[Dict[str, Any]]:
         """缓存优先执行策略"""
 
-        # 新增：优先检查是否为本地分析出的直接响应类型
-        task_type = standardized_instruction.get("task_type")
-        execution_mode = standardized_instruction.get("execution_mode", "code_generation")
-        confidence = standardized_instruction.get("confidence", 0)
-
-        # 检查本地分析的直接响应或AI分析的直接响应
-        if (task_type == "direct_response" and confidence >= 0.6) or (
-            execution_mode == "direct_ai_response" and confidence >= 0.6
-        ):
-            return self._handle_direct_response(standardized_instruction, original_instruction)
-
-        # 自动清理检查
-        if self.code_cache.should_cleanup():
-            self.code_cache.cleanup()
-
         print(f"[DEBUG] 进入缓存优先执行策略")
-        # 使用统一分析结果查找缓存
+
+        # 使用严格的缓存查找
         cached_modules = self.code_cache.get_cached_modules_by_standardized_instruction(
             standardized_instruction
         )
 
         if cached_modules:
-            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，尝试执行")
+            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，进行严格验证")
 
-            cache_result = self._try_execute_cached_modules(
+            # 添加最终验证步骤
+            validated_modules = self._final_validation_before_execution(
                 cached_modules, standardized_instruction
             )
-            if cache_result is not None:
-                print(f"[DEBUG] 缓存执行成功")
-                return cache_result
+
+            if validated_modules:
+                cache_result = self._try_execute_cached_modules(
+                    validated_modules, standardized_instruction
+                )
+                if cache_result is not None:
+                    print(f"[DEBUG] 缓存执行成功")
+                    return cache_result
             else:
-                print(f"[DEBUG] 缓存执行失败")
+                print(f"[DEBUG] 所有缓存模块验证失败，走AI生成路径")
         else:
             print(f"[DEBUG] 未找到缓存模块")
 
@@ -390,16 +387,68 @@ class AIForgeCore:
         print(f"[DEBUG] 缓存未命中，走AI生成路径")
         return self._execute_with_ai_and_cache(standardized_instruction, original_instruction)
 
+    def _final_validation_before_execution(
+        self, cached_modules: List[Any], standardized_instruction: Dict[str, Any]
+    ) -> List[Any]:
+        """执行前的最终验证"""
+        query_action = standardized_instruction.get("action", "")
+        query_target = standardized_instruction.get("target", "")
+
+        validated_modules = []
+
+        for module_data in cached_modules:
+            module_id = module_data[0]
+
+            # 检查模块代码内容
+            try:
+                module_code = self._get_module_code(module_data[1])
+
+                # 基于代码内容的验证
+                if self._code_matches_intent(module_code, query_action, query_target):
+                    validated_modules.append(module_data)
+                    print(f"[DEBUG] 模块 {module_id} 通过最终验证")
+                else:
+                    print(f"[DEBUG] 模块 {module_id} 未通过最终验证")
+
+            except Exception as e:
+                print(f"[DEBUG] 验证模块 {module_id} 时出错: {e}")
+
+        return validated_modules
+
+    def _code_matches_intent(self, code: str, query_action: str, query_target: str) -> bool:
+        """基于代码内容验证意图匹配"""
+        code_lower = code.lower()
+
+        # 检查代码中的关键API调用
+        weather_indicators = ["wttr.in", "weather", "temperature", "天气"]
+        news_indicators = ["news", "新闻", "rss", "article"]
+
+        has_weather_code = any(indicator in code_lower for indicator in weather_indicators)
+        has_news_code = any(indicator in code_lower for indicator in news_indicators)
+
+        # 检查查询意图
+        is_weather_query = any(
+            indicator in query_target.lower() for indicator in weather_indicators
+        )
+        is_news_query = any(indicator in query_target.lower() for indicator in news_indicators)
+
+        # 意图必须匹配
+        if is_weather_query and not has_weather_code:
+            return False
+        if is_news_query and not has_news_code:
+            return False
+        if has_weather_code and is_news_query:
+            return False
+        if has_news_code and is_weather_query:
+            return False
+
+        return True
+
     def _execute_with_ai_enhanced(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """AI增强执行（无缓存模式）"""
-        execution_mode = standardized_instruction.get("execution_mode", "code_generation")
         confidence = standardized_instruction.get("confidence", 0)
-
-        # 检查直接响应模式
-        if execution_mode == "direct_ai_response" and confidence >= 0.6:
-            return self._handle_direct_response(standardized_instruction, original_instruction)
 
         # 使用标准化指令生成代码
         if confidence < 0.6:
@@ -446,12 +495,11 @@ class AIForgeCore:
             response = self.instruction_analyzer.llm_client.generate_code(
                 f"{analysis_prompt}\n\n用户指令: {instruction}", ""
             )
-            # 修改这里：使用私有方法名
-            ai_analysis = self.instruction_analyzer._parse_standardized_instruction(response)
+
+            ai_analysis = self.instruction_analyzer.parse_standardized_instruction(response)
             print(f"[DEBUG] AI分析原始结果: {ai_analysis}")
 
-            # 修改这里：使用私有方法名
-            if self.instruction_analyzer._is_ai_analysis_valid(ai_analysis):
+            if self.instruction_analyzer.is_ai_analysis_valid(ai_analysis):
                 ai_analysis["source"] = "ai_analysis"
                 ai_analysis["confidence"] = 0.9
                 print(f"[DEBUG] AI分析验证通过: {ai_analysis}")
