@@ -16,6 +16,7 @@ from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
 from ..execution.unified_executor import UnifiedParameterizedExecutor
 from ..execution.executor_interface import CachedModuleExecutor
 from .dynamic_task_type_manager import DynamicTaskTypeManager
+from ..utils.code_validator import CodeValidator
 
 
 class AIForgeCore:
@@ -145,36 +146,6 @@ class AIForgeCore:
         # 执行任务
         return self.run(instruction)
 
-    def _validate_code_quality(self, code: str) -> bool:
-        """验证代码质量"""
-        if not code or not isinstance(code, str):
-            return False
-
-        # 检查语法
-        try:
-            compile(code, "<string>", "exec")
-        except SyntaxError:
-            return False
-
-        # 拒绝只是简单数据赋值的代码
-        lines = [line.strip() for line in code.strip().split("\n") if line.strip()]
-
-        # 如果只有1-3行且都是简单赋值，认为不是有用的代码
-        if len(lines) <= 3:
-            assignment_lines = sum(
-                1 for line in lines if "=" in line and not line.startswith("def ")
-            )
-            if assignment_lines == len(lines):
-                return False
-
-        # 必须包含一些实际的编程结构
-        has_structure = any(
-            keyword in code
-            for keyword in ["def ", "class ", "import ", "from ", "if ", "for ", "while ", "try:"]
-        )
-
-        return has_structure
-
     def _validate_result_format(self, result: Any) -> bool:
         """验证结果是否符合标准格式"""
         if not isinstance(result, dict):
@@ -199,7 +170,7 @@ class AIForgeCore:
     def _is_code_worth_caching(self, code: str, result: Any) -> bool:
         """判断代码是否值得缓存"""
         # 代码必须通过质量验证
-        if not self._validate_code_quality(code):
+        if not CodeValidator.validate_code(code):
             return False
 
         # 结果必须是标准化格式
@@ -379,6 +350,18 @@ class AIForgeCore:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """缓存优先执行策略"""
+
+        # 新增：优先检查是否为本地分析出的直接响应类型
+        task_type = standardized_instruction.get("task_type")
+        execution_mode = standardized_instruction.get("execution_mode", "code_generation")
+        confidence = standardized_instruction.get("confidence", 0)
+
+        # 检查本地分析的直接响应或AI分析的直接响应
+        if (task_type == "direct_response" and confidence >= 0.6) or (
+            execution_mode == "direct_ai_response" and confidence >= 0.6
+        ):
+            return self._handle_direct_response(standardized_instruction, original_instruction)
+
         # 自动清理检查
         if self.code_cache.should_cleanup():
             self.code_cache.cleanup()
@@ -397,7 +380,6 @@ class AIForgeCore:
             )
             if cache_result is not None:
                 print(f"[DEBUG] 缓存执行成功")
-
                 return cache_result
             else:
                 print(f"[DEBUG] 缓存执行失败")
@@ -412,7 +394,12 @@ class AIForgeCore:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """AI增强执行（无缓存模式）"""
+        execution_mode = standardized_instruction.get("execution_mode", "code_generation")
         confidence = standardized_instruction.get("confidence", 0)
+
+        # 检查直接响应模式
+        if execution_mode == "direct_ai_response" and confidence >= 0.6:
+            return self._handle_direct_response(standardized_instruction, original_instruction)
 
         # 使用标准化指令生成代码
         if confidence < 0.6:
@@ -454,13 +441,16 @@ class AIForgeCore:
         print(f"[DEBUG] 开始AI标准化分析: {instruction}")
 
         try:
-            analysis_prompt = self.instruction_analyzer.get_analysis_prompt()
+            # 使用自适应分析提示词
+            analysis_prompt = self.instruction_analyzer.get_adaptive_analysis_prompt()
             response = self.instruction_analyzer.llm_client.generate_code(
                 f"{analysis_prompt}\n\n用户指令: {instruction}", ""
             )
+            # 修改这里：使用私有方法名
             ai_analysis = self.instruction_analyzer._parse_standardized_instruction(response)
             print(f"[DEBUG] AI分析原始结果: {ai_analysis}")
 
+            # 修改这里：使用私有方法名
             if self.instruction_analyzer._is_ai_analysis_valid(ai_analysis):
                 ai_analysis["source"] = "ai_analysis"
                 ai_analysis["confidence"] = 0.9
@@ -468,7 +458,7 @@ class AIForgeCore:
 
                 return ai_analysis
             else:
-                print(f"[DEBUG] AI分析验证失败")
+                print("[DEBUG] AI分析验证失败")
         except Exception as e:
             print(f"[DEBUG] AI分析异常: {e}")
             pass
@@ -537,6 +527,126 @@ class AIForgeCore:
         finally:
             if task:
                 task.done()
+
+    def _handle_direct_response(
+        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    ) -> Optional[Dict[str, Any]]:
+        """处理直接响应任务"""
+        client = self.llm_manager.get_client()
+        if not client:
+            return None
+
+        action = standardized_instruction.get("action", "respond")
+
+        # 构建直接响应提示词
+        system_prompt = self._build_direct_response_prompt(action, standardized_instruction)
+
+        try:
+            response = client.generate_code(original_instruction, system_prompt, use_history=False)
+
+            # 添加时间戳以符合标准格式
+            import time
+
+            return {
+                "data": {"content": response, "response_type": action, "direct_response": True},
+                "status": "success",
+                "summary": f"直接响应: {action} - {original_instruction[:50]}...",
+                "metadata": {
+                    "timestamp": time.time(),
+                    "task_type": "direct_response",
+                    "execution_type": "direct_ai_response",
+                    "action": action,
+                    "no_code_generation": True,
+                },
+            }
+        except Exception as e:
+            import time
+
+            return {
+                "data": None,
+                "status": "error",
+                "summary": f"直接响应失败: {str(e)}",
+                "metadata": {
+                    "timestamp": time.time(),
+                    "task_type": "direct_response",
+                    "error": str(e),
+                },
+            }
+
+    def _build_direct_response_prompt(
+        self, action: str, standardized_instruction: Dict[str, Any]
+    ) -> str:
+        """构建直接响应专用提示词"""
+        # 基础提示词映射
+        prompts = {
+            "answer": "你是一个知识助手，请直接回答用户的问题。要求准确、简洁、有用。",
+            "respond": "你是一个知识助手，请直接回答用户的问题。要求准确、简洁、有用。",
+            "create": "你是一个内容创作助手，请根据用户要求创作内容。注意风格和格式要求。",
+            "translate": "你是一个翻译助手，请准确翻译用户提供的内容。保持原意和语言风格。",
+            "summarize": "你是一个文本分析助手，请总结和分析用户提供的文本内容。",
+            "suggest": "你是一个咨询顾问，请根据用户需求提供建议和意见。",
+        }
+
+        base_prompt = prompts.get(action, "你是一个AI助手，请直接响应用户的需求。")
+
+        # 从 standardized_instruction 中提取增强信息
+        target = standardized_instruction.get("target", "")
+        output_format = standardized_instruction.get("output_format", "text")
+        parameters = standardized_instruction.get("parameters", {})
+        task_type = standardized_instruction.get("task_type", "")
+
+        # 构建增强的提示词
+        enhanced_sections = []
+
+        # 1. 任务上下文增强
+        if target:
+            enhanced_sections.append(f"任务目标: {target}")
+
+        # 2. 输出格式指导
+        format_guidance = {
+            "text": "以纯文本形式回答",
+            "markdown": "使用Markdown格式，包含适当的标题、列表和强调",
+            "structured_text": "使用结构化的文本格式，包含清晰的段落和要点",
+        }
+
+        if output_format in format_guidance:
+            enhanced_sections.append(f"输出要求: {format_guidance[output_format]}")
+
+        # 3. 参数上下文增强
+        if parameters:
+            param_context = []
+            for param_name, param_value in parameters.items():
+                if param_value:
+                    param_context.append(f"- {param_name}: {param_value}")
+
+            if param_context:
+                enhanced_sections.append("相关参数:\n" + "\n".join(param_context))
+
+        # 4. 任务类型特定指导
+        task_specific_guidance = {
+            "direct_response": "专注于直接回答，避免冗余信息",
+            "content_generation": "注重创意和原创性",
+            "data_process": "提供清晰的分析思路",
+        }
+
+        if task_type in task_specific_guidance:
+            enhanced_sections.append(f"特殊要求: {task_specific_guidance[task_type]}")
+
+        # 组装最终提示词
+        enhanced_prompt = base_prompt
+
+        if enhanced_sections:
+            enhanced_prompt += "\n\n## 任务详情\n" + "\n\n".join(enhanced_sections)
+
+        enhanced_prompt += """
+
+    ## 重要限制
+    - 直接提供最终答案，不要生成代码
+    - 如果任务需要实时数据或文件操作，请说明无法完成
+    - 保持回答的专业性和准确性
+    """
+
+        return enhanced_prompt
 
     def _find_best_successful_code(self, history: List[Dict]) -> Optional[Dict]:
         """找到最有价值的成功执行代码"""
@@ -619,6 +729,16 @@ class AIForgeCore:
     def execute_with_runner(self, code: str) -> Dict[str, Any]:
         """使用runner执行代码"""
         return self.runner.execute_code(code)
+
+    def get_system_info(self) -> Dict[str, Any]:
+        """获取系统信息"""
+        if self.instruction_analyzer:
+            return {
+                "task_types": self.instruction_analyzer._get_task_type_recommendations(),
+                "usage_stats": self.instruction_analyzer.get_task_type_usage_stats(),
+                "optimizations": self.instruction_analyzer.recommend_task_type_optimizations(),
+            }
+        return {}
 
     # -- 扩展注册接口 - 支持动态加载和配置
     # 目前仅提供接口，后续将完善具体的扩展加载和管理

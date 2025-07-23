@@ -44,15 +44,21 @@ class AIForgeTask:
 
         # 然后检查业务逻辑是否成功
         result_content = result.get("result")
+        if result_content is None:
+            return False
+
         if isinstance(result_content, dict):
             status = result_content.get("status")
             if status == "error":
                 return False
             elif status == "success":
                 return True
+            # 检查是否包含错误信息
+            if "error" in result_content or "exception" in result_content:
+                return False
 
         # 如果没有明确的状态，但有数据且无错误，认为成功
-        return result_content is not None
+        return True
 
     def process_code_execution(self, code_blocks: List[str]) -> Optional[str]:
         """处理代码块执行并格式化结果"""

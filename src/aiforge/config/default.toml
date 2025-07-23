@@ -57,6 +57,9 @@ max_modules = 20
 failure_threshold = 0.8
 max_age_days = 30
 cleanup_interval = 10
+semantic_threshold = 0.6
+enable_semantic_matching = true
+use_lightweight_semantic = false
 
 
 [optimization]

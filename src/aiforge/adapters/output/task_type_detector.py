@@ -4,6 +4,8 @@ from typing import Dict, Any, List
 class TaskTypeDetector:
     """任务类型检测器"""
 
+    MAX_SINGLE_ITEM_KEYS = 5
+
     def __init__(self):
         self.detection_rules = {
             "data_fetch": {
@@ -78,7 +80,9 @@ class TaskTypeDetector:
     def _has_structure_pattern(self, data: Dict[str, Any], pattern: str) -> bool:
         """检查是否符合特定结构模式"""
         if pattern == "single_item":
-            return len(data) <= 5 and not any(isinstance(v, list) for v in data.values())
+            return len(data) <= self.MAX_SINGLE_ITEM_KEYS and not any(
+                isinstance(v, list) for v in data.values()
+            )
         elif pattern == "result_list":
             return "results" in data and isinstance(data["results"], list)
         elif pattern == "search_metadata":

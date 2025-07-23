@@ -10,6 +10,7 @@ from peewee import Case
 
 from ..extensions.extension_manager import ExtensionManager
 from .code_cache import AiForgeCodeCache
+from ..utils.code_validator import CodeValidator
 
 
 class EnhancedStandardizedCache(AiForgeCodeCache):
@@ -22,6 +23,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             {
                 "semantic_threshold": enhanced_config.get("semantic_threshold", 0.6),
                 "enable_semantic_matching": enhanced_config.get("enable_semantic_matching", True),
+                "use_lightweight_semantic": enhanced_config.get("use_lightweight_semantic", False),
             }
         )
 
@@ -59,17 +61,28 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             return False
 
     def _init_semantic_components(self):
-        """初始化语义分析组件"""
+        """初始化语义分析组件 - 支持轻量级模式"""
         if not self.config.get("enable_semantic_matching", True):
             self.semantic_enabled = False
             return
 
-        # 标记为延迟加载模式
-        self.semantic_enabled = True
-        self._semantic_model = None
-        self._tfidf = None
-        self.fitted_tfidf = False
-        print("[DEBUG] 语义匹配组件已启用（延迟加载模式）")
+        # 检查是否启用轻量级模式
+        self.use_lightweight_mode = self.config.get("use_lightweight_semantic", False)
+
+        if self.use_lightweight_mode:
+            # 轻量级模式：不需要外部依赖
+            self.semantic_enabled = True
+            self._semantic_model = None
+            self._tfidf = None
+            self.fitted_tfidf = False
+            print("[DEBUG] 轻量级语义匹配组件已启用")
+        else:
+            # 标准模式：延迟加载重型模型
+            self.semantic_enabled = True
+            self._semantic_model = None
+            self._tfidf = None
+            self.fitted_tfidf = False
+            print("[DEBUG] 语义匹配组件已启用（延迟加载模式）")
 
     @property
     def semantic_model(self):
@@ -304,19 +317,12 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 return []
 
     def _get_semantic_matches(self, standardized_instruction: Dict[str, Any]) -> List[tuple]:
-        """获取语义相似的模块"""
+        """获取语义相似的模块 - 支持轻量级模式"""
         if not self.semantic_enabled:
             return []
 
         target = standardized_instruction.get("target", "")
         task_type = standardized_instruction.get("task_type", "")
-
-        # 生成查询向量
-        try:
-            query_vector = self.semantic_model.encode(target)
-        except Exception as e:
-            print(f"[DEBUG] 生成查询向量失败: {e}")
-            return []
 
         semantic_matches = []
 
@@ -326,34 +332,48 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
                 for module in all_modules:
                     try:
-                        # 获取缓存的向量
-                        if module.module_id in self.command_vectors:
-                            cached_vector = self.command_vectors[module.module_id]
-                        else:
-                            # 重新生成向量
-                            metadata = json.loads(module.metadata)
-                            cached_target = metadata.get("standardized_instruction", {}).get(
-                                "target", ""
+                        metadata = json.loads(module.metadata)
+                        cached_target = metadata.get("standardized_instruction", {}).get(
+                            "target", ""
+                        )
+                        if not cached_target:
+                            continue
+
+                        # 根据模式选择相似度计算方法
+                        if self.use_lightweight_mode:
+                            # 轻量级模式：直接文本相似度计算
+                            similarity = self._compute_semantic_similarity_lightweight(
+                                target, cached_target
                             )
-                            if not cached_target:
-                                continue
+                        else:
+                            # 标准模式：使用向量相似度
+                            if module.module_id in self.command_vectors:
+                                cached_vector = self.command_vectors[module.module_id]
+                            else:
+                                try:
+                                    query_vector = self.semantic_model.encode(target)
+                                    cached_vector = self.semantic_model.encode(cached_target)
+                                    self.command_vectors[module.module_id] = cached_vector
+                                except Exception:
+                                    continue
 
-                            try:
-                                cached_vector = self.semantic_model.encode(cached_target)
-                                # 缓存向量以备后用
-                                self.command_vectors[module.module_id] = cached_vector
-                            except Exception:
-                                continue
-
-                        # 计算语义相似度
-                        similarity = self._compute_semantic_similarity(query_vector, cached_vector)
+                            similarity = self._compute_semantic_similarity(
+                                query_vector, cached_vector
+                            )
 
                         # 任务类型匹配加分
-                        cached_task_type = json.loads(module.metadata).get("task_type", "")
+                        cached_task_type = metadata.get("task_type", "")
                         if task_type == cached_task_type:
-                            similarity += 0.1  # 任务类型匹配加分
+                            similarity += 0.1
 
-                        if similarity > self.config.get("semantic_threshold", 0.6):
+                        # 调整阈值：轻量级模式使用较低阈值
+                        threshold = (
+                            0.4
+                            if self.use_lightweight_mode
+                            else self.config.get("semantic_threshold", 0.6)
+                        )
+
+                        if similarity > threshold:
                             semantic_matches.append(
                                 (
                                     (
@@ -374,7 +394,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         # 按相似度排序
         semantic_matches.sort(key=lambda x: x[1], reverse=True)
-        return semantic_matches[:5]  # 返回前5个最相似的
+        return semantic_matches[:5]
 
     def _get_parameter_matches(self, standardized_instruction: Dict[str, Any]) -> List[tuple]:
         """获取参数结构相似的模块"""
@@ -477,7 +497,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         self, standardized_instruction: Dict[str, Any], code: str, metadata: dict | None = None
     ) -> str | None:
         """保存标准化模块"""
-        if not self._validate_code(code):
+        if not CodeValidator.validate_code(code):
             return None
 
         task_type = standardized_instruction.get("task_type", "general")
@@ -681,17 +701,23 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def _update_vector_storage(
         self, module_id: str, target: str, intent_category: str, params: Dict
     ):
-        """更新向量存储"""
+        """更新向量存储 - 支持轻量级模式"""
         if not self.semantic_enabled:
             return
 
         try:
             print(f"[DEBUG] 开始更新向量存储: module_id={module_id}")
 
-            # 生成并存储向量
-            vector = self.semantic_model.encode(target)
-            self.command_vectors[module_id] = vector
-            print(f"[DEBUG] 向量生成成功")
+            if not self.use_lightweight_mode:
+                # 标准模式：生成并存储向量
+                vector = self.semantic_model.encode(target)
+                self.command_vectors[module_id] = vector
+                print("[DEBUG] 向量生成成功")
+            else:
+                # 轻量级模式：只存储文本特征
+                features = self._extract_semantic_features(target)
+                self.command_vectors[module_id] = {"text": target, "features": features}
+                print("[DEBUG] 轻量级特征提取成功")
 
             # 更新意图聚类
             if intent_category:
@@ -702,7 +728,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             param_signature = self._generate_param_signature(params)
             print(f"[DEBUG] 生成参数签名: {param_signature}")
             self.param_templates[param_signature].append(module_id)
-            print(f"[DEBUG] 参数模板更新成功")
+            print("[DEBUG] 参数模板更新成功")
 
             # 初始化使用统计
             self.usage_stats[module_id] = {"hits": 0, "misses": 0, "last_used": time.time()}
@@ -712,6 +738,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         except Exception as e:
             print(f"[DEBUG] 更新向量存储失败: {e}")
+            import traceback
+
+            traceback.print_exc()
 
     def _save_vector_storage(self):
         """保存向量存储到文件"""
@@ -727,13 +756,83 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         except Exception as e:
             print(f"[DEBUG] 保存向量存储失败: {e}")
 
-    def _validate_code(self, code: str) -> bool:
-        """验证代码有效性"""
-        if not code or len(code.strip()) < 10:
-            return False
+    def _compute_lightweight_similarity(self, text1: str, text2: str) -> float:
+        """轻量级文本相似度计算 - 基于词汇重叠和编辑距离"""
+        if not text1 or not text2:
+            return 0.0
 
-        try:
-            compile(code, "<string>", "exec")
-            return True
-        except SyntaxError:
-            return False
+        # 文本预处理
+        def preprocess_text(text):
+            import re
+
+            # 转小写，提取中英文词汇
+            text = text.lower()
+            # 分离中文字符和英文单词
+            chinese_chars = re.findall(r"[\u4e00-\u9fff]", text)
+            english_words = re.findall(r"[a-zA-Z]+", text)
+            return chinese_chars + english_words
+
+        words1 = set(preprocess_text(text1))
+        words2 = set(preprocess_text(text2))
+
+        if not words1 or not words2:
+            return 0.0
+
+        # 1. 词汇重叠相似度（Jaccard相似度）
+        intersection = len(words1 & words2)
+        union = len(words1 | words2)
+        jaccard_similarity = intersection / union if union > 0 else 0.0
+
+        # 2. 编辑距离相似度
+        def levenshtein_distance(s1, s2):
+            if len(s1) < len(s2):
+                return levenshtein_distance(s2, s1)
+            if len(s2) == 0:
+                return len(s1)
+
+            previous_row = list(range(len(s2) + 1))
+            for i, c1 in enumerate(s1):
+                current_row = [i + 1]
+                for j, c2 in enumerate(s2):
+                    insertions = previous_row[j + 1] + 1
+                    deletions = current_row[j] + 1
+                    substitutions = previous_row[j] + (c1 != c2)
+                    current_row.append(min(insertions, deletions, substitutions))
+                previous_row = current_row
+            return previous_row[-1]
+
+        max_len = max(len(text1), len(text2))
+        if max_len == 0:
+            edit_similarity = 1.0
+        else:
+            distance = levenshtein_distance(text1, text2)
+            edit_similarity = 1 - (distance / max_len)
+
+        # 3. 关键词匹配相似度
+        def extract_keywords(text):
+            import re
+
+            # 提取关键动词和名词
+            keywords = re.findall(r"(查询|获取|计算|处理|分析|天气|温度|数据|文件|网页)", text)
+            return set(keywords)
+
+        keywords1 = extract_keywords(text1)
+        keywords2 = extract_keywords(text2)
+
+        if keywords1 or keywords2:
+            keyword_intersection = len(keywords1 & keywords2)
+            keyword_union = len(keywords1 | keywords2)
+            keyword_similarity = keyword_intersection / keyword_union if keyword_union > 0 else 0.0
+        else:
+            keyword_similarity = 0.0
+
+        # 综合相似度：加权平均
+        final_similarity = (
+            0.4 * jaccard_similarity + 0.3 * edit_similarity + 0.3 * keyword_similarity
+        )
+
+        return min(final_similarity, 1.0)
+
+    def _compute_semantic_similarity_lightweight(self, text1: str, text2: str) -> float:
+        """轻量级语义相似度计算的统一接口"""
+        return self._compute_lightweight_similarity(text1, text2)
