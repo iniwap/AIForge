@@ -115,6 +115,8 @@ class AiForgeCodeCache:
     def get_cached_modules(self, instruction: str) -> List[CacheModuleInfo]:
         """获取缓存的模块，按成功率排序"""
         instruction_hash = self._generate_instruction_hash(instruction)
+        if self.should_cleanup():
+            self.cleanup()
 
         with self._lock:
             try:
@@ -353,8 +355,12 @@ class AiForgeCodeCache:
 
     def close(self):
         """关闭数据库连接"""
-        if hasattr(self, "db"):
-            self.db.close()
+        try:
+            if hasattr(self, "db") and self.db:
+                if not self.db.is_closed():
+                    self.db.close()
+        except Exception:
+            pass
 
     def __enter__(self):
         return self

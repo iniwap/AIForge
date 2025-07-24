@@ -8,7 +8,9 @@ class CodeValidator:
         # 检查语法
         try:
             compile(code, "<string>", "exec")
-        except SyntaxError:
+        except (SyntaxError, TypeError, ValueError):
+            return False
+        except Exception:
             return False
 
         # 拒绝只是简单数据赋值的代码

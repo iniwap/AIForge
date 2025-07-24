@@ -99,15 +99,16 @@ class AIForgeTask:
                 "success": self._is_execution_truly_successful(result),
             }
             self.execution_history.append(execution_record)
+            # 使用 EnhancedErrorAnalyzer 生成智能反馈
+            if not result.get("success"):
+                self._send_intelligent_feedback(result)
+
             results.append(result)
 
             # 更新代码块管理器
             self.code_block_manager.add_block(block)
             self.code_block_manager.update_block_result(block.name, result, execution_time)
-
-        # 使用 EnhancedErrorAnalyzer 生成智能反馈
-        if not result.get("success"):
-            self._send_intelligent_feedback(result)
+        return results
 
     def _send_intelligent_feedback(self, result: Dict[str, Any]):
         """使用 EnhancedErrorAnalyzer 发送智能反馈"""

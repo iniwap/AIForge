@@ -198,6 +198,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     ) -> List[Any]:
         """基于语义聚类的缓存模块查找"""
 
+        if self.should_cleanup():
+            self.cleanup()
+
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
 
@@ -561,14 +564,13 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
     def _rank_and_deduplicate_results(self, results: List[tuple]) -> List[Any]:
         """对结果进行排序和去重"""
-        # 按策略优先级排序: exact > query_action > type_action > semantic > parameter > general
         strategy_priority = {
-            "exact": 6,
-            "query_action": 5,
-            "type_action": 4,
-            "semantic": 3,
-            "parameter": 2,
-            "general": 1,
+            "exact": 10,  # 精确匹配最高优先级
+            "query_action": 8,  # 查询动作匹配
+            "type_action": 6,  # 类型动作匹配
+            "semantic": 4,  # 语义匹配
+            "parameter": 2,  # 参数匹配
+            "general": 1,  # 通用匹配最低优先级
         }
 
         # 去重（基于module_id）
@@ -607,7 +609,6 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         # 返回原格式
         return [(m[0], m[1], m[2], m[3]) for m in ranked_results]
 
-    # 继续添加其他必要的方法...
     def save_standardized_module(
         self, standardized_instruction: Dict[str, Any], code: str, metadata: dict | None = None
     ) -> str | None:
@@ -677,12 +678,12 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     param_signature=param_signature,
                 )
 
-            # 更新向量存储
-            if self.semantic_enabled:
-                self._update_vector_storage(module_id, target, intent_category, params)
-                # 在向量存储更新完成后，检查是否需要重新聚类
-                if hasattr(self, "action_matcher") and len(self.command_vectors) % 10 == 0:
-                    self.action_matcher.update_action_clusters_from_usage()
+                # 更新向量存储
+                if self.semantic_enabled:
+                    self._update_vector_storage(module_id, target, intent_category, params)
+                    # 在向量存储更新完成后，检查是否需要重新聚类
+                    if hasattr(self, "action_matcher") and len(self.command_vectors) % 10 == 0:
+                        self.action_matcher.update_action_clusters_from_usage()
 
             print(f"[DEBUG] 增强模块保存成功: {module_id}")
             return module_id

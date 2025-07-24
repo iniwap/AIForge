@@ -1,17 +1,23 @@
 [project]
 name = "aiforge"
 version = "0.1.0"
+requires-python = ">=3.10"
 description = "AIForge 核心 + 可选 GUI/Web 界面支持"
+
 
 [project.optional-dependencies]
 gui = ["textual"]
 web = ["fastapi", "uvicorn"]
 
 [build-system]
-requires = ["uv", "setuptools"]
-build-backend = "uv.build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.package-data]  
-"aiforge.models" = [  
-    "sentence_transformers/paraphrase-MiniLM-L6-v2/*",  
-]
+[tool.setuptools.package-data]
+"aiforge.models" = ["sentence_transformers/paraphrase-MiniLM-L6-v2/*"]
+
+[dependency-groups]
+dev = ["python-dotenv>=1.1.1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
