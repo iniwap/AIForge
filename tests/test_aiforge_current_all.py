@@ -352,7 +352,7 @@ if __name__ == "__main__":
         ]
     )
 
-"""
+r"""
 # 运行所有测试  
 pytest tests/test_comprehensive_architecture.py -v  
   
@@ -372,10 +372,10 @@ pip install pytest-cov
 pytest tests/test_comprehensive_architecture.py --cov=src/aiforge --cov-report=html --cov-report=term  
   
 # 生成详细的覆盖率报告  
-pytest tests/test_comprehensive_architecture.py \\  
-    --cov=src/aiforge \\  
-    --cov-report=html:htmlcov \\  
-    --cov-report=term-missing \\  
+pytest tests/test_comprehensive_architecture.py \  
+    --cov=src/aiforge \  
+    --cov-report=html:htmlcov 
+    --cov-report=term-missing \  
     --cov-report=xml  
   
 # 只显示未覆盖的行  
@@ -412,9 +412,9 @@ directory = htmlcov
 # GitHub Actions 示例  
 - name: Run tests with coverage  
   run: |  
-    pytest tests/test_comprehensive_architecture.py \\  
-      --cov=src/aiforge \\  
-      --cov-report=xml \\  
+    pytest tests/test_comprehensive_architecture.py \  
+      --cov=src/aiforge \  
+      --cov-report=xml \  
       --cov-report=term  
   
 - name: Upload coverage to Codecov  
