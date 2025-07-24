@@ -399,7 +399,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         text = text.lower()
 
         # 移除标点符号，保留中英文字符和数字
-        text = re.sub(r"[^\\w\\s\\u4e00-\\u9fff]", " ", text)
+        text = re.sub(r"[^\w\s\u4e00-\u9fff]", " ", text)
 
         # 移除多余空格
         text = " ".join(text.split())

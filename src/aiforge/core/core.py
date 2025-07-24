@@ -1,6 +1,7 @@
 import re
 from typing import Optional, Dict, Any, Tuple, List
 from pathlib import Path
+import ast
 
 
 from ..config.config import AIForgeConfig
@@ -12,11 +13,15 @@ from ..instruction.analyzer import InstructionAnalyzer
 from ..extensions.template_extension import DomainTemplateExtension
 from ..adapters.output.enhanced_hybrid_adapter import EnhancedHybridUIAdapter
 from ..adapters.input.input_adapter_manager import InputAdapterManager, InputSource
-from ..prompts.enhanced_prompts import get_enhanced_aiforge_prompt
+from ..prompts.enhanced_prompts import (
+    get_enhanced_system_prompt_universal,
+    get_direct_response_prompt,
+)
 from ..execution.unified_executor import UnifiedParameterizedExecutor
 from ..execution.executor_interface import CachedModuleExecutor
 from .dynamic_task_type_manager import DynamicTaskTypeManager
 from ..utils.code_validator import CodeValidator
+from .data_flow_analyzer import DataFlowAnalyzer
 
 
 class AIForgeCore:
@@ -167,22 +172,181 @@ class AIForgeCore:
 
         return True
 
-    def _is_code_worth_caching(self, code: str, result: Any) -> bool:
-        """判断代码是否值得缓存"""
-        # 代码必须通过质量验证
+    def _is_code_worth_caching_universal(
+        self, code: str, result: Any, standardized_instruction: Dict[str, Any] = None
+    ) -> bool:
+        """通用版代码缓存价值判断（使用数据流分析）"""
+        # 基础验证保持不变
         if not CodeValidator.validate_code(code):
             return False
 
-        # 结果必须是标准化格式
         if not self._validate_result_format(result):
             return False
 
-        # 结果必须表示成功状态
         if isinstance(result, dict):
             status = result.get("status")
             if status == "error":
                 return False
             if status is not None and status != "success":
+                return False
+
+        # 替换为数据流分析
+        if standardized_instruction:
+            if not self._validate_universal_parameter_usage_with_dataflow(
+                code, standardized_instruction
+            ):
+                print("[DEBUG] 代码未通过数据流参数使用验证，不予缓存")
+                return False
+
+        return True
+
+    def _validate_universal_parameter_usage_with_dataflow(
+        self, code: str, standardized_instruction: Dict[str, Any]
+    ) -> bool:
+        """使用数据流分析的通用参数使用验证"""
+        try:
+            # 解析代码获取AST
+            tree = ast.parse(code)
+
+            # 查找execute_task函数
+            function_def = None
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef) and node.name == "execute_task":
+                    function_def = node
+                    break
+
+            if not function_def:
+                print("[DEBUG] 未找到execute_task函数")
+                return False
+
+            # 获取函数参数
+            func_params = [arg.arg for arg in function_def.args.args]
+            required_params = standardized_instruction.get("required_parameters", {})
+
+            print(f"[DEBUG] 数据流分析: 函数参数 {func_params}")
+            print(f"[DEBUG] 数据流分析: 必需参数 {list(required_params.keys())}")
+
+            # 创建数据流分析器
+            analyzer = DataFlowAnalyzer(func_params)
+
+            # 分析函数体
+            analyzer.visit(function_def)
+
+            # 检查每个必需参数是否被有意义使用
+            meaningful_param_count = 0
+            for param_name in func_params:
+                if param_name in required_params:
+                    if param_name in analyzer.meaningful_uses:
+                        meaningful_param_count += 1
+                        usage_contexts = analyzer.usages.get(param_name, [])
+                        print(f"[DEBUG] 参数 {param_name} 有意义使用: {usage_contexts}")
+                    else:
+                        print(f"[DEBUG] 参数 {param_name} 未被有意义使用")
+
+            # 计算有意义使用的比例
+            total_required = len([p for p in func_params if p in required_params])
+            if total_required == 0:
+                return True
+
+            usage_ratio = meaningful_param_count / total_required
+            print(
+                f"[DEBUG] 参数有意义使用比例: {usage_ratio:.2f} ({meaningful_param_count}/{total_required})"
+            )
+
+            # 至少60%的参数需要被有意义使用
+            return usage_ratio >= 0.6
+
+        except Exception as e:
+            print(f"[DEBUG] 数据流分析失败: {e}")
+            return False
+
+    def _code_matches_intent_universal(
+        self, code: str, standardized_instruction: Dict[str, Any]
+    ) -> bool:
+        """通用版代码意图匹配验证"""
+        required_params = standardized_instruction.get("required_parameters", {})
+
+        # 通用参数化程度检查
+        if not self._validate_universal_parameterization_level(code, required_params):
+            print("[DEBUG] 代码参数化程度不足")
+            return False
+
+        # 通用功能一致性检查
+        if not self._validate_universal_functionality_consistency(code, standardized_instruction):
+            print("[DEBUG] 代码功能一致性验证失败")
+            return False
+
+        return True
+
+    def _validate_universal_parameterization_level(
+        self, code: str, required_params: Dict[str, Any]
+    ) -> bool:
+        """通用参数化程度验证"""
+        if not required_params:
+            return True
+
+        import re
+
+        # 检查函数定义
+        func_match = re.search(r"def\s+execute_task\s*\(([^)]*)\)", code)
+        if not func_match:
+            return False
+
+        # 解析函数参数
+        func_params_str = func_match.group(1)
+        func_params = [
+            p.strip().split("=")[0].strip() for p in func_params_str.split(",") if p.strip()
+        ]
+
+        # 参数覆盖率检查：至少要有60%的必需参数被定义
+        expected_param_count = len(required_params)
+        actual_param_count = len(func_params)
+        coverage_ratio = (
+            actual_param_count / expected_param_count if expected_param_count > 0 else 1
+        )
+
+        return coverage_ratio >= 0.6
+
+    def _validate_universal_functionality_consistency(
+        self, code: str, standardized_instruction: Dict[str, Any]
+    ) -> bool:
+        """通用功能一致性验证"""
+        action = standardized_instruction.get("action", "")
+
+        # 基于动作类型的通用验证
+        action_lower = action.lower()
+        code_lower = code.lower()
+
+        # 获取类动作验证
+        if any(word in action_lower for word in ["get", "fetch", "retrieve", "获取", "查询"]):
+            # 应该包含数据获取相关的代码
+            if not any(
+                pattern in code_lower
+                for pattern in ["requests", "urllib", "http", "api", "get", "fetch"]
+            ):
+                return False
+
+        # 处理类动作验证
+        elif any(
+            word in action_lower
+            for word in ["process", "analyze", "calculate", "处理", "分析", "计算"]
+        ):
+            # 应该包含数据处理相关的代码
+            if not any(
+                pattern in code_lower
+                for pattern in ["for", "while", "if", "process", "analyze", "calculate"]
+            ):
+                return False
+
+        # 生成类动作验证
+        elif any(
+            word in action_lower for word in ["generate", "create", "make", "生成", "创建", "制作"]
+        ):
+            # 应该包含生成或创建相关的代码
+            if not any(
+                pattern in code_lower
+                for pattern in ["generate", "create", "make", "write", "build"]
+            ):
                 return False
 
         return True
@@ -210,6 +374,8 @@ class AIForgeCore:
                 "is_parameterized": bool(required_params),
                 "parameter_count": len(required_params),
                 "execution_logic": execution_logic,
+                "validation_level": "universal",  # 标记使用了通用验证
+                "parameter_usage_validated": True,  # 标记参数使用已验证
             }
 
             # 直接调用缓存的保存方法
@@ -219,41 +385,6 @@ class AIForgeCore:
             return result
         except Exception:
             return None
-
-    def _build_enhanced_system_prompt(
-        self, standardized_instruction: Dict[str, Any], original_prompt: str = None
-    ) -> str:
-        """基于标准化指令构建增强的系统提示词"""
-        task_type = standardized_instruction.get("task_type", "general")
-
-        # 使用AI分析的参数（如果存在）
-        parameters = standardized_instruction.get("required_parameters", {})
-
-        # 如果没有智能分析的参数，回退到基础参数
-        if not parameters:
-            parameters = standardized_instruction.get("parameters", {})
-
-        # 最后的回退：确保有基本的指令参数
-        if not parameters:
-            parameters = {
-                "instruction": {
-                    "value": standardized_instruction.get("target", ""),
-                    "type": "str",
-                    "description": "用户输入的指令内容",
-                    "required": True,
-                }
-            }
-
-        enhanced_prompt = get_enhanced_aiforge_prompt(
-            optimize_tokens=self.config.get_optimization_config().get("optimize_tokens", True),
-            task_type=task_type,
-            parameters=parameters,
-        )
-
-        if original_prompt:
-            enhanced_prompt += f"\n\n# 原始指令补充\n{original_prompt}"
-
-        return enhanced_prompt
 
     def _init_config(
         self, config_file: str | None, api_key: str | None, provider: str, **kwargs
@@ -320,9 +451,123 @@ class AIForgeCore:
 
         # 根据缓存配置决定执行路径
         if self.code_cache:
-            return self._execute_with_cache_first(standardized_instruction, instruction)
+            return self._execute_with_cache_first_universal(standardized_instruction, instruction)
         else:
-            return self._execute_with_ai_enhanced(standardized_instruction, instruction)
+            return self._execute_with_ai_enhanced_universal(standardized_instruction, instruction)
+
+    def _execute_with_cache_first_universal(
+        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    ) -> Optional[Dict[str, Any]]:
+        """使用通用验证的缓存优先执行策略"""
+
+        print("[DEBUG] 进入通用验证缓存优先执行策略")
+
+        # 使用严格的缓存查找
+        cached_modules = self.code_cache.get_cached_modules_by_standardized_instruction(
+            standardized_instruction
+        )
+
+        if cached_modules:
+            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，进行通用验证")
+
+            # 使用通用验证进行最终验证
+            validated_modules = self._final_validation_before_execution_universal(
+                cached_modules, standardized_instruction
+            )
+
+            if validated_modules:
+                cache_result = self._try_execute_cached_modules(
+                    validated_modules, standardized_instruction
+                )
+                if cache_result is not None:
+                    print("[DEBUG] 缓存执行成功")
+                    return cache_result
+            else:
+                print("[DEBUG] 所有缓存模块通用验证失败，走AI生成路径")
+        else:
+            print("[DEBUG] 未找到缓存模块")
+
+        # 缓存失败，走AI生成路径
+        print("[DEBUG] 缓存未命中，走AI生成路径")
+        return self._execute_with_ai_and_cache_universal(
+            standardized_instruction, original_instruction
+        )
+
+    def _final_validation_before_execution_universal(
+        self, cached_modules: List[Any], standardized_instruction: Dict[str, Any]
+    ) -> List[Any]:
+        """执行前的通用最终验证"""
+        validated_modules = []
+
+        for module_data in cached_modules:
+            module_id = module_data[0]
+
+            # 检查模块代码内容
+            try:
+                module_code = self._get_module_code(module_data[1])
+
+                # 通用意图匹配验证
+                if self._code_matches_intent_universal(module_code, standardized_instruction):
+                    # 通用参数使用验证
+                    if self._validate_universal_parameter_usage_with_dataflow(
+                        module_code, standardized_instruction
+                    ):
+                        validated_modules.append(module_data)
+                        print(f"[DEBUG] 模块 {module_id} 通过通用验证")
+                    else:
+                        print(f"[DEBUG] 模块 {module_id} 参数使用验证失败")
+                else:
+                    print(f"[DEBUG] 模块 {module_id} 意图匹配验证失败")
+
+            except Exception as e:
+                print(f"[DEBUG] 验证模块 {module_id} 时出错: {e}")
+
+        return validated_modules
+
+    def _execute_with_ai_enhanced_universal(
+        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    ) -> Optional[Dict[str, Any]]:
+        """AI增强执行（无缓存模式）使用通用验证"""
+        confidence = standardized_instruction.get("confidence", 0)
+
+        # 使用通用增强的标准化指令生成代码
+        if confidence < 0.6:
+            result, _ = self._generate_and_execute_with_code(original_instruction, None, None)
+        else:
+            enhanced_prompt = get_enhanced_system_prompt_universal(
+                standardized_instruction,
+                self.config.get_optimization_config().get("optimize_tokens", True),
+            )
+            result, _ = self._generate_and_execute_with_code(
+                None, enhanced_prompt, standardized_instruction.get("task_type")
+            )
+
+        return result
+
+    def _execute_with_ai_and_cache_universal(
+        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    ) -> Optional[Dict[str, Any]]:
+        """使用通用验证的AI生成并缓存结果"""
+        confidence = standardized_instruction.get("confidence", 0)
+
+        # 使用通用增强的标准化指令生成代码
+        if confidence < 0.6:
+            result, code = self._generate_and_execute_with_code(original_instruction, None, None)
+        else:
+            enhanced_prompt = get_enhanced_system_prompt_universal(
+                standardized_instruction,
+                self.config.get_optimization_config().get("optimize_tokens", True),
+            )
+            result, code = self._generate_and_execute_with_code(
+                None, enhanced_prompt, standardized_instruction.get("task_type")
+            )
+
+        # 使用通用验证保存成功的代码到缓存
+        if result and code:
+            if self._is_code_worth_caching_universal(code, result, standardized_instruction):
+                self._save_standardized_module(standardized_instruction, code)
+
+            return result
 
     def _get_final_standardized_instruction(self, instruction: str) -> Dict[str, Any]:
         """获取最终的标准化指令，确保一致性"""
@@ -346,141 +591,10 @@ class AIForgeCore:
 
                 return ai_analysis
             else:
-                print(f"[DEBUG] AI分析失败或置信度不够，使用本地分析结果")
+                print("[DEBUG] AI分析失败或置信度不够，使用本地分析结果")
 
         # 返回本地分析结果
         return local_analysis
-
-    def _execute_with_cache_first(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
-    ) -> Optional[Dict[str, Any]]:
-        """缓存优先执行策略"""
-
-        print(f"[DEBUG] 进入缓存优先执行策略")
-
-        # 使用严格的缓存查找
-        cached_modules = self.code_cache.get_cached_modules_by_standardized_instruction(
-            standardized_instruction
-        )
-
-        if cached_modules:
-            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，进行严格验证")
-
-            # 添加最终验证步骤
-            validated_modules = self._final_validation_before_execution(
-                cached_modules, standardized_instruction
-            )
-
-            if validated_modules:
-                cache_result = self._try_execute_cached_modules(
-                    validated_modules, standardized_instruction
-                )
-                if cache_result is not None:
-                    print(f"[DEBUG] 缓存执行成功")
-                    return cache_result
-            else:
-                print(f"[DEBUG] 所有缓存模块验证失败，走AI生成路径")
-        else:
-            print(f"[DEBUG] 未找到缓存模块")
-
-        # 缓存失败，走AI生成路径
-        print(f"[DEBUG] 缓存未命中，走AI生成路径")
-        return self._execute_with_ai_and_cache(standardized_instruction, original_instruction)
-
-    def _final_validation_before_execution(
-        self, cached_modules: List[Any], standardized_instruction: Dict[str, Any]
-    ) -> List[Any]:
-        """执行前的最终验证"""
-        query_action = standardized_instruction.get("action", "")
-        query_target = standardized_instruction.get("target", "")
-
-        validated_modules = []
-
-        for module_data in cached_modules:
-            module_id = module_data[0]
-
-            # 检查模块代码内容
-            try:
-                module_code = self._get_module_code(module_data[1])
-
-                # 基于代码内容的验证
-                if self._code_matches_intent(module_code, query_action, query_target):
-                    validated_modules.append(module_data)
-                    print(f"[DEBUG] 模块 {module_id} 通过最终验证")
-                else:
-                    print(f"[DEBUG] 模块 {module_id} 未通过最终验证")
-
-            except Exception as e:
-                print(f"[DEBUG] 验证模块 {module_id} 时出错: {e}")
-
-        return validated_modules
-
-    def _code_matches_intent(self, code: str, query_action: str, query_target: str) -> bool:
-        """基于代码内容验证意图匹配"""
-        code_lower = code.lower()
-
-        # 检查代码中的关键API调用
-        weather_indicators = ["wttr.in", "weather", "temperature", "天气"]
-        news_indicators = ["news", "新闻", "rss", "article"]
-
-        has_weather_code = any(indicator in code_lower for indicator in weather_indicators)
-        has_news_code = any(indicator in code_lower for indicator in news_indicators)
-
-        # 检查查询意图
-        is_weather_query = any(
-            indicator in query_target.lower() for indicator in weather_indicators
-        )
-        is_news_query = any(indicator in query_target.lower() for indicator in news_indicators)
-
-        # 意图必须匹配
-        if is_weather_query and not has_weather_code:
-            return False
-        if is_news_query and not has_news_code:
-            return False
-        if has_weather_code and is_news_query:
-            return False
-        if has_news_code and is_weather_query:
-            return False
-
-        return True
-
-    def _execute_with_ai_enhanced(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
-    ) -> Optional[Dict[str, Any]]:
-        """AI增强执行（无缓存模式）"""
-        confidence = standardized_instruction.get("confidence", 0)
-
-        # 使用标准化指令生成代码
-        if confidence < 0.6:
-            result, _ = self._generate_and_execute_with_code(original_instruction, None, None)
-        else:
-            enhanced_prompt = self._build_enhanced_system_prompt(standardized_instruction)
-            result, _ = self._generate_and_execute_with_code(
-                None, enhanced_prompt, standardized_instruction.get("task_type")
-            )
-
-        return result
-
-    def _execute_with_ai_and_cache(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
-    ) -> Optional[Dict[str, Any]]:
-        """AI生成并缓存结果"""
-        confidence = standardized_instruction.get("confidence", 0)
-
-        # 使用最终的标准化指令生成代码
-        if confidence < 0.6:
-            result, code = self._generate_and_execute_with_code(original_instruction, None, None)
-        else:
-            enhanced_prompt = self._build_enhanced_system_prompt(standardized_instruction)
-            result, code = self._generate_and_execute_with_code(
-                None, enhanced_prompt, standardized_instruction.get("task_type")
-            )
-
-        # 保存成功的代码到缓存
-        if result and code and self._is_code_worth_caching(code, result):
-            self._save_standardized_module(standardized_instruction, code)
-
-        return result
 
     def _try_ai_standardization(self, instruction: str) -> Optional[Dict[str, Any]]:
         """尝试AI标准化指令"""
@@ -522,7 +636,7 @@ class AIForgeCore:
                 print(f"[DEBUG] 尝试加载模块: {module_id}")
                 module = self.code_cache.load_module(module_id)
                 if module:
-                    print(f"[DEBUG] 模块加载成功，开始执行")
+                    print("[DEBUG] 模块加载成功，开始执行")
                     # 只通过 kwargs 传递 standardized_instruction
                     result = self._execute_cached_module(
                         module,
@@ -530,14 +644,14 @@ class AIForgeCore:
                         standardized_instruction=standardized_instruction,
                     )
                     if result:
-                        print(f"[DEBUG] 模块执行成功")
+                        print("[DEBUG] 模块执行成功")
                         self.code_cache.update_module_stats(module_id, True)
                         return result
                     else:
-                        print(f"[DEBUG] 模块执行返回None")
+                        print("[DEBUG] 模块执行返回None")
                         self.code_cache.update_module_stats(module_id, False)
                 else:
-                    print(f"[DEBUG] 模块加载失败")
+                    print("[DEBUG] 模块加载失败")
             except Exception as e:
                 print(f"[DEBUG] 模块执行异常: {e}")
                 self.code_cache.update_module_stats(module_id, False)
@@ -587,7 +701,7 @@ class AIForgeCore:
         action = standardized_instruction.get("action", "respond")
 
         # 构建直接响应提示词
-        system_prompt = self._build_direct_response_prompt(action, standardized_instruction)
+        system_prompt = get_direct_response_prompt(action, standardized_instruction)
 
         try:
             response = client.generate_code(original_instruction, system_prompt, use_history=False)
@@ -620,81 +734,6 @@ class AIForgeCore:
                     "error": str(e),
                 },
             }
-
-    def _build_direct_response_prompt(
-        self, action: str, standardized_instruction: Dict[str, Any]
-    ) -> str:
-        """构建直接响应专用提示词"""
-        # 基础提示词映射
-        prompts = {
-            "answer": "你是一个知识助手，请直接回答用户的问题。要求准确、简洁、有用。",
-            "respond": "你是一个知识助手，请直接回答用户的问题。要求准确、简洁、有用。",
-            "create": "你是一个内容创作助手，请根据用户要求创作内容。注意风格和格式要求。",
-            "translate": "你是一个翻译助手，请准确翻译用户提供的内容。保持原意和语言风格。",
-            "summarize": "你是一个文本分析助手，请总结和分析用户提供的文本内容。",
-            "suggest": "你是一个咨询顾问，请根据用户需求提供建议和意见。",
-        }
-
-        base_prompt = prompts.get(action, "你是一个AI助手，请直接响应用户的需求。")
-
-        # 从 standardized_instruction 中提取增强信息
-        target = standardized_instruction.get("target", "")
-        output_format = standardized_instruction.get("output_format", "text")
-        parameters = standardized_instruction.get("parameters", {})
-        task_type = standardized_instruction.get("task_type", "")
-
-        # 构建增强的提示词
-        enhanced_sections = []
-
-        # 1. 任务上下文增强
-        if target:
-            enhanced_sections.append(f"任务目标: {target}")
-
-        # 2. 输出格式指导
-        format_guidance = {
-            "text": "以纯文本形式回答",
-            "markdown": "使用Markdown格式，包含适当的标题、列表和强调",
-            "structured_text": "使用结构化的文本格式，包含清晰的段落和要点",
-        }
-
-        if output_format in format_guidance:
-            enhanced_sections.append(f"输出要求: {format_guidance[output_format]}")
-
-        # 3. 参数上下文增强
-        if parameters:
-            param_context = []
-            for param_name, param_value in parameters.items():
-                if param_value:
-                    param_context.append(f"- {param_name}: {param_value}")
-
-            if param_context:
-                enhanced_sections.append("相关参数:\n" + "\n".join(param_context))
-
-        # 4. 任务类型特定指导
-        task_specific_guidance = {
-            "direct_response": "专注于直接回答，避免冗余信息",
-            "content_generation": "注重创意和原创性",
-            "data_process": "提供清晰的分析思路",
-        }
-
-        if task_type in task_specific_guidance:
-            enhanced_sections.append(f"特殊要求: {task_specific_guidance[task_type]}")
-
-        # 组装最终提示词
-        enhanced_prompt = base_prompt
-
-        if enhanced_sections:
-            enhanced_prompt += "\n\n## 任务详情\n" + "\n\n".join(enhanced_sections)
-
-        enhanced_prompt += """
-
-    ## 重要限制
-    - 直接提供最终答案，不要生成代码
-    - 如果任务需要实时数据或文件操作，请说明无法完成
-    - 保持回答的专业性和准确性
-    """
-
-        return enhanced_prompt
 
     def _find_best_successful_code(self, history: List[Dict]) -> Optional[Dict]:
         """找到最有价值的成功执行代码"""
