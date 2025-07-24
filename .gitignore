@@ -209,4 +209,6 @@ __marimo__/
 .DS_Store
 .git-backup/
 aiforge_work/
-model.safetensors
+
+#不再上传，因为model.safetensors太大了，不方便传上去，需要用户手动预下载
+**/sentence_transformers/paraphrase-MiniLM-L6-v2/*
