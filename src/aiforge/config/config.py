@@ -61,9 +61,11 @@ class AIForgeConfig:
         """获取内置默认配置"""
         if not hasattr(AIForgeConfig, "_cached_default_config"):
             try:
-                with importlib.resources.files("aiforge.config").joinpath("default.toml").open(
-                    mode="r", encoding="utf-8"
-                ) as f:
+                with (
+                    importlib.resources.files("aiforge.config")
+                    .joinpath("default.toml")
+                    .open(mode="r", encoding="utf-8") as f
+                ):
                     AIForgeConfig._cached_default_config = tomlkit.load(f)
             except Exception:
                 AIForgeConfig._cached_default_config = {
@@ -165,6 +167,10 @@ class AIForgeConfig:
     def get_optimization_config(self) -> Dict:
         """获取优化配置"""
         return self.config.get("optimization", {})
+
+    def get_max_optimization_attempts(self):
+        """获取单轮最大优化次数"""
+        return self.config.get("max_optimization_attempts", 3)
 
     def get(self, key: str, default=None):
         """获取配置值"""

@@ -431,7 +431,7 @@ class AIForgeCore:
             return None, None
 
         # 直接调用AI生成代码，不经过标准化指令和缓存
-        return self._generate_and_execute_with_code(instruction, system_prompt, None)
+        return self._generate_and_execute_with_code(instruction, system_prompt, None, None)
 
     def run(self, instruction: str) -> Optional[Dict[str, Any]]:
         """入口2: 基于标准化指令的统一执行入口"""
@@ -474,19 +474,17 @@ class AIForgeCore:
     def _execute_with_cache_first_universal(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
-        """使用通用验证的缓存优先执行策略"""
+        """使用通用验证的缓存优先执行策略，包含结果验证"""
 
         print("[DEBUG] 进入通用验证缓存优先执行策略")
 
-        # 使用严格的缓存查找
         cached_modules = self.code_cache.get_cached_modules_by_standardized_instruction(
             standardized_instruction
         )
 
         if cached_modules:
-            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，进行通用验证")
+            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，进行验证和执行")
 
-            # 使用通用验证进行最终验证
             validated_modules = self._final_validation_before_execution_universal(
                 cached_modules, standardized_instruction
             )
@@ -496,15 +494,17 @@ class AIForgeCore:
                     validated_modules, standardized_instruction
                 )
                 if cache_result is not None:
-                    print("[DEBUG] 缓存执行成功")
+                    print("[DEBUG] 缓存执行成功且验证通过")
                     return cache_result
+                else:
+                    print("[DEBUG] 缓存执行失败或验证不通过，回退到AI生成")
             else:
-                print("[DEBUG] 所有缓存模块通用验证失败，走AI生成路径")
+                print("[DEBUG] 所有缓存模块验证失败，走AI生成路径")
         else:
             print("[DEBUG] 未找到缓存模块")
 
-        # 缓存失败，走AI生成路径
-        print("[DEBUG] 缓存未命中，走AI生成路径")
+        # 缓存失败或验证不通过，走AI生成路径
+        print("[DEBUG] 回退到AI生成路径")
         return self._execute_with_ai_and_cache_universal(
             standardized_instruction, original_instruction
         )
@@ -548,7 +548,25 @@ class AIForgeCore:
 
         # 使用通用增强的标准化指令生成代码
         if confidence < 0.6:
-            result, _ = self._generate_and_execute_with_code(original_instruction, None, None)
+            # 即使置信度低，也要传递基础的预期输出规则
+            basic_expected_output = {
+                "expected_data_type": "dict",
+                "required_fields": ["result"],
+                "validation_rules": {"non_empty_fields": ["result"]},
+            }
+            # 临时构建标准化指令
+            temp_instruction = {
+                "task_type": "general",
+                "expected_output": basic_expected_output,
+                "required_parameters": {
+                    "instruction": {"value": original_instruction, "type": "str", "required": True}
+                },
+            }
+            enhanced_prompt = get_enhanced_system_prompt_universal(
+                temp_instruction,
+                self.config.get_optimization_config().get("optimize_tokens", True),
+            )
+            result, _ = self._generate_and_execute_with_code(None, enhanced_prompt, "general")
         else:
             enhanced_prompt = get_enhanced_system_prompt_universal(
                 standardized_instruction,
@@ -568,7 +586,24 @@ class AIForgeCore:
 
         # 使用通用增强的标准化指令生成代码
         if confidence < 0.6:
-            result, code = self._generate_and_execute_with_code(original_instruction, None, None)
+            # 处理低置信度情况，同上
+            basic_expected_output = {
+                "expected_data_type": "dict",
+                "required_fields": ["result"],
+                "validation_rules": {"non_empty_fields": ["result"]},
+            }
+            temp_instruction = {
+                "task_type": "general",
+                "expected_output": basic_expected_output,
+                "required_parameters": {
+                    "instruction": {"value": original_instruction, "type": "str", "required": True}
+                },
+            }
+            enhanced_prompt = get_enhanced_system_prompt_universal(
+                temp_instruction,
+                self.config.get_optimization_config().get("optimize_tokens", True),
+            )
+            result, code = self._generate_and_execute_with_code(None, enhanced_prompt, "general")
         else:
             enhanced_prompt = get_enhanced_system_prompt_universal(
                 standardized_instruction,
@@ -586,31 +621,39 @@ class AIForgeCore:
             return result
 
     def _get_final_standardized_instruction(self, instruction: str) -> Dict[str, Any]:
-        """获取最终的标准化指令，确保一致性"""
+        """获取最终的标准化指令，包含预期输出分析"""
         print(f"[DEBUG] 输入指令: {instruction}")
+
         # 第一步：本地分析
         local_analysis = self.instruction_analyzer.local_analyze_instruction(instruction)
         print(
-            f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}, cache_key={local_analysis.get('cache_key')}"  # noqa 501
+            f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}"  # noqa 501
         )
 
         # 第二步：如果置信度低，尝试AI分析
         confidence = local_analysis.get("confidence", 0)
+        final_analysis = local_analysis
+
         if confidence < 0.6:
             print(f"[DEBUG] 置信度低({confidence})，尝试AI分析...")
             ai_analysis = self._try_ai_standardization(instruction)
             if ai_analysis and ai_analysis.get("confidence", 0) > confidence:
-                # AI分析成功，使用AI结果
-                print(
-                    f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}, confidence={ai_analysis.get('confidence')}, cache_key={ai_analysis.get('cache_key')}"  # noqa 501
-                )
+                final_analysis = ai_analysis
+                print(f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}")
 
-                return ai_analysis
-            else:
-                print("[DEBUG] AI分析失败或置信度不够，使用本地分析结果")
+        # 第三步：生成预期输出规则 - 这是关键的新增部分
+        if self.instruction_analyzer and final_analysis.get("confidence", 0) >= 0.6:
+            task_type = final_analysis.get("task_type", "general")
+            required_params = final_analysis.get("required_parameters", {})
 
-        # 返回本地分析结果
-        return local_analysis
+            # 调用 analyze_expected_output 方法
+            expected_output = self.instruction_analyzer.analyze_expected_output(
+                instruction, task_type, required_params
+            )
+            final_analysis["expected_output"] = expected_output
+            print(f"[DEBUG] 生成预期输出规则: {expected_output}")
+
+        return final_analysis
 
     def _try_ai_standardization(self, instruction: str) -> Optional[Dict[str, Any]]:
         """尝试AI标准化指令"""
@@ -646,23 +689,28 @@ class AIForgeCore:
     def _try_execute_cached_modules(
         self, cached_modules: List[Any], standardized_instruction: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        """尝试执行缓存模块"""
+        """尝试执行缓存模块，包含结果验证"""
         for module_id, file_path, success_count, failure_count in cached_modules:
             try:
                 print(f"[DEBUG] 尝试加载模块: {module_id}")
                 module = self.code_cache.load_module(module_id)
                 if module:
                     print("[DEBUG] 模块加载成功，开始执行")
-                    # 只通过 kwargs 传递 standardized_instruction
                     result = self._execute_cached_module(
                         module,
                         standardized_instruction.get("target", ""),
                         standardized_instruction=standardized_instruction,
                     )
                     if result:
-                        print("[DEBUG] 模块执行成功")
-                        self.code_cache.update_module_stats(module_id, True)
-                        return result
+                        # 对缓存执行结果进行严格验证
+                        is_valid = self._validate_cached_result(result, standardized_instruction)
+                        if is_valid:
+                            print("[DEBUG] 缓存模块执行成功且验证通过")
+                            self.code_cache.update_module_stats(module_id, True)
+                            return result
+                        else:
+                            print("[DEBUG] 缓存模块执行结果验证失败")
+                            self.code_cache.update_module_stats(module_id, False)
                     else:
                         print("[DEBUG] 模块执行返回None")
                         self.code_cache.update_module_stats(module_id, False)
@@ -674,6 +722,110 @@ class AIForgeCore:
 
         return None
 
+    def _validate_cached_result(
+        self, result: Dict[str, Any], standardized_instruction: Dict[str, Any]
+    ) -> bool:
+        """严格的缓存结果验证 - 宁可误杀不可放过"""
+
+        # 严格的格式验证
+        if not self._validate_result_format(result):
+            print("[DEBUG] 缓存结果格式验证失败")
+            return False
+
+        # 严格的状态检查
+        if isinstance(result, dict):
+            status = result.get("status")
+            # 只有明确的 success 状态才通过
+            if status != "success":
+                print(f"[DEBUG] 缓存结果状态不是success: {status}")
+                return False
+
+            # 检查是否有任何错误指示
+            result_data = result.get("result", {})
+            if isinstance(result_data, dict):
+                if (
+                    "error" in result_data
+                    or "exception" in result_data
+                    or "failed" in str(result_data).lower()
+                ):
+                    print("[DEBUG] 缓存结果包含错误信息")
+                    return False
+
+        # 严格的预期输出验证
+        expected_output = standardized_instruction.get("expected_output")
+        if expected_output:
+            return self._strict_expected_output_validation(result, expected_output)
+
+        # 严格的数据完整性检查
+        if not self._strict_data_integrity_check(result):
+            print("[DEBUG] 缓存结果数据完整性检查失败")
+            return False
+
+        return True
+
+    def _strict_expected_output_validation(
+        self, result: Dict[str, Any], expected_output: Dict[str, Any]
+    ) -> bool:
+        """严格的预期输出验证"""
+        result_data = result.get("result", {})
+        if not isinstance(result_data, dict):
+            result_data = result.get("data", {})
+
+        # 严格验证所有必需字段
+        required_fields = expected_output.get("required_fields", [])
+        for field in required_fields:
+            if field not in result_data:
+                print(f"[DEBUG] 严格验证失败：缺少必需字段 {field}")
+                return False
+
+        # 严格验证非空字段
+        validation_rules = expected_output.get("validation_rules", {})
+        non_empty_fields = validation_rules.get("non_empty_fields", [])
+        for field in non_empty_fields:
+            if field in result_data:
+                value = result_data[field]
+                if (
+                    value is None
+                    or value == ""
+                    or (isinstance(value, (list, dict)) and len(value) == 0)
+                ):
+                    print(f"[DEBUG] 严格验证失败：字段 {field} 为空")
+                    return False
+
+        # 严格验证数据类型
+        expected_data_type = expected_output.get("expected_data_type", "dict")
+        if expected_data_type == "list" and not isinstance(result_data, list):
+            print("[DEBUG] 严格验证失败：数据类型不匹配")
+            return False
+        elif expected_data_type == "dict" and not isinstance(result_data, dict):
+            print("[DEBUG] 严格验证失败：数据类型不匹配")
+            return False
+
+        return True
+
+    def _strict_data_integrity_check(self, result: Dict[str, Any]) -> bool:
+        """严格的数据完整性检查"""
+        # 检查结果是否有实际内容
+        result_data = result.get("result")
+        if result_data is None:
+            return False
+
+        # 如果是字典，检查是否为空
+        if isinstance(result_data, dict) and len(result_data) == 0:
+            return False
+
+        # 如果是列表，检查是否为空
+        if isinstance(result_data, list) and len(result_data) == 0:
+            return False
+
+        # 检查是否包含明显的错误标识
+        result_str = str(result_data).lower()
+        error_indicators = ["error", "failed", "exception", "traceback", "none", "null"]
+        if any(indicator in result_str for indicator in error_indicators):
+            return False
+
+        return True
+
     def __call__(self, instruction: str) -> Optional[Dict[str, Any]]:
         """支持直接调用"""
         return self.run(instruction)
@@ -683,6 +835,7 @@ class AIForgeCore:
         instruction: str,
         system_prompt: str | None = None,
         task_type: str = None,
+        expected_output: Dict[str, Any] = None,
     ) -> Tuple[Optional[Dict[str, Any]], str | None]:
         """生成并执行代码，同时返回结果和代码"""
         client = self.llm_manager.get_client()
@@ -692,6 +845,11 @@ class AIForgeCore:
         task = None
         try:
             task = self.task_manager.new_task(instruction, client)
+
+            # 设置预期输出规则
+            if expected_output:
+                task.set_expected_output(expected_output)
+
             task.run(instruction, system_prompt, task_type)
 
             # 查找最有价值的成功执行代码

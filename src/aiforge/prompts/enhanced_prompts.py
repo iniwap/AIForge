@@ -1,120 +1,46 @@
 from typing import Optional, Dict, Any
 
 
-def get_task_specific_format(task_type: str) -> str:
-    """获取任务特定的输出格式要求"""
-    formats = {
-        "web_search": """
-# 搜索任务输出格式
-__result__ = {
-    "data": {
-        "results": [{"title": "...", "url": "...", "content": "..."}],
-        "total_count": int,
-        "query": "原始查询"
-    },
-    "status": "success",
-    "summary": "搜索完成描述",
-    "metadata": {"timestamp": "...", "source": "搜索引擎名称"}
-}""",
-        "data_analysis": """
-# 数据分析任务输出格式
-__result__ = {
-    "data": {
-        "analysis": {"key_findings": "...", "trends": "..."},
-        "processed_data": processed_data,
-        "summary": {"total_records": int, "key_metrics": {}}
-    },
-    "status": "success",
-    "summary": "分析完成描述",
-    "metadata": {"timestamp": "...", "data_source": "..."}
-}""",
-        "file_processing": """
-# 文件处理任务输出格式
-__result__ = {
-    "data": {
-        "processed_files": [{"file": "...", "status": "success", "size": int}],
-        "summary": {"total_files": int, "success_count": int, "error_count": int},
-        "errors": [{"file": "...", "error": "..."}]
-    },
-    "status": "success",
-    "summary": "文件处理完成描述",
-    "metadata": {"timestamp": "...", "operation": "..."}
-}""",
-        "api_call": """
-# API调用任务输出格式
-__result__ = {
-    "data": {
-        "response_data": api_response,
-        "status_code": int,
-        "headers": response_headers,
-        "summary": {"success": bool, "response_time": float}
-    },
-    "status": "success",
-    "summary": "API调用完成描述",
-    "metadata": {"endpoint": "...", "timestamp": "..."}
-}""",
-        "data_fetch": """
-# 数据获取任务输出格式
-__result__ = {
-    "data": {
-        "content": "获取的数据内容",
-        "source": "数据来源",
-        "additional_info": {}
-    },
-    "status": "success",
-    "summary": "数据获取完成描述",
-    "metadata": {"timestamp": "...", "task_type": "data_fetch"}
-}""",
-        "web_request": """
-# 网页请求任务输出格式
-__result__ = {
-    "data": {
-        "content": "网页内容",
-        "url": "请求的URL",
-        "status_code": int,
-        "headers": {}
-    },
-    "status": "success",
-    "summary": "网页请求完成描述",
-    "metadata": {"timestamp": "...", "method": "GET/POST"}
-}""",
-        "automation": """
-# 自动化任务输出格式
-__result__ = {
-    "data": {
-        "executed_steps": ["步骤1", "步骤2"],
-        "results": {},
-        "summary": {"total_steps": int, "success_steps": int}
-    },
-    "status": "success",
-    "summary": "自动化任务完成描述",
-    "metadata": {"timestamp": "...", "workflow": "..."}
-}""",
-        "content_generation": """
-# 内容生成任务输出格式
-__result__ = {
-    "data": {
-        "generated_content": "生成的内容",
-        "content_type": "text/html/markdown",
-        "word_count": int
-    },
-    "status": "success",
-    "summary": "内容生成完成描述",
-    "metadata": {"timestamp": "...", "template": "..."}
-}""",
-    }
-
-    return formats.get(
-        task_type,
-        """
+def get_task_specific_format(task_type: str, expected_output: Dict[str, Any] = None) -> str:
+    """基于AI分析结果动态生成输出格式要求"""
+    if not expected_output:
+        # 回退到基础格式
+        return """
 # 输出格式要求：
 __result__ = {
     "data": main_result,
     "status": "success/error",
     "summary": "结果摘要",
     "metadata": {"timestamp": "...", "task_type": "..."}
-}""",
-    )
+}"""
+
+    # 基于AI分析的预期输出规则生成格式
+    required_fields = expected_output.get("required_fields", [])
+    expected_data_type = expected_output.get("expected_data_type", "dict")
+
+    # 构建data字段示例
+    data_example = {}
+    for field in required_fields:
+        data_example[field] = f"{field}_value"
+
+    # 添加验证规则中的非空字段说明
+    validation_rules = expected_output.get("validation_rules", {})
+    non_empty_fields = validation_rules.get("non_empty_fields", [])
+
+    format_str = f"""
+# 基于AI分析的输出格式要求：
+__result__ = {{
+    "data": {data_example},
+    "status": "success",
+    "summary": "任务完成描述",
+    "metadata": {{"timestamp": "...", "task_type": "{task_type}"}}
+}}
+
+# 必需字段：{', '.join(required_fields)}
+# 非空字段：{', '.join(non_empty_fields)}
+# 数据类型：{expected_data_type}
+"""
+    return format_str
 
 
 def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
@@ -144,58 +70,11 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
     return base_prompt
 
 
-def get_enhanced_aiforge_prompt(
+def _get_enhanced_aiforge_prompt_with_universal_validation(
     optimize_tokens: bool = True,
     task_type: Optional[str] = None,
     parameters: Optional[Dict[str, Any]] = None,
-) -> str:
-    """生成增强的系统提示"""
-
-    base_prompt = get_base_aiforge_prompt(optimize_tokens)
-
-    # 智能参数化执行指导
-    execution_guidance = ""
-    if parameters:
-        # 分析参数结构，生成智能的函数定义
-        param_analysis = _analyze_parameters_for_execution(parameters)
-
-        execution_guidance = f"""
-## 🔧 智能参数化执行指导
-
-基于任务分析，生成以下参数化函数：
-
-def execute_task({param_analysis['signature']}):
-    '''
-    {param_analysis['docstring']}
-    '''
-    # 使用传入的参数完成任务
-    # 实现逻辑应该基于参数的实际含义和任务需求
-    return result_data
-
-# 参数说明：
-{param_analysis['param_docs']}
-
-🚨 必须在函数定义后立即调用：
-__result__ = execute_task({param_analysis['call_args']})
-
-重要：函数实现应该真正使用这些参数来完成任务，而不是忽略参数。
-"""
-
-    enhanced_prompt = f"""
-{base_prompt}
-
-{execution_guidance}
-"""
-
-    enhanced_prompt += f"\n\n{get_task_specific_format(task_type)}"
-
-    return enhanced_prompt
-
-
-def get_enhanced_aiforge_prompt_with_universal_validation(
-    optimize_tokens: bool = True,
-    task_type: Optional[str] = None,
-    parameters: Optional[Dict[str, Any]] = None,
+    expected_output: Optional[Dict[str, Any]] = None,  # 新增参数
 ) -> str:
     """生成带通用参数验证约束的增强系统提示"""
 
@@ -252,7 +131,8 @@ __result__ = execute_task({param_analysis['call_args']})
 {execution_guidance}
 """
 
-    enhanced_prompt += f"\n\n{get_task_specific_format(task_type)}"
+    # 使用AI分析结果生成格式要求，而不是内置格式
+    enhanced_prompt += f"\n\n{get_task_specific_format(task_type, expected_output)}"
 
     return enhanced_prompt
 
@@ -390,6 +270,9 @@ def get_enhanced_system_prompt_universal(
     if not parameters:
         parameters = standardized_instruction.get("parameters", {})
 
+    # 获取AI分析的预期输出规则
+    expected_output = standardized_instruction.get("expected_output")
+
     # 最后的回退：确保有基本的指令参数
     if not parameters:
         parameters = {
@@ -401,11 +284,12 @@ def get_enhanced_system_prompt_universal(
             }
         }
 
-    # 使用通用增强版提示词生成
-    enhanced_prompt = get_enhanced_aiforge_prompt_with_universal_validation(
+    # 使用通用增强版提示词生成，传递预期输出规则
+    enhanced_prompt = _get_enhanced_aiforge_prompt_with_universal_validation(
         optimize_tokens=optimize_tokens,
         task_type=task_type,
         parameters=parameters,
+        expected_output=expected_output,  # 传递AI分析结果
     )
 
     if original_prompt:
@@ -497,6 +381,8 @@ def get_base_prompt_sections() -> Dict[str, str]:
         "principles": """
 - 专注于任务完成的必要性，而非指令的字面内容
 - 参数应该是执行任务的最小必要集合
+- **预期输出应采用最低限度满足用户需求的策略**
+- **避免过度详细的验证规则，优先保证任务成功执行**
 - 优先从指令中提取具体值，无法提取时考虑合理默认值
 - 参数命名应该清晰反映其在任务中的作用
 """,

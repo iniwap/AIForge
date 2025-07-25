@@ -812,3 +812,123 @@ class InstructionAnalyzer:
             "direct_response": ["知识问答", "文本创作", "翻译总结"],
         }
         return use_cases.get(task_type, [])
+
+    def analyze_expected_output(
+        self, instruction: str, task_type: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """分析任务的预期输出结果，用于后续验证"""
+        expected_output_prompt = f"""
+分析以下任务的预期输出结果：
+任务类型：{task_type}
+用户指令：{instruction}
+参数：{parameters}
+
+请分析并返回JSON格式的预期结果验证规则：
+{{
+    "expected_data_type": "dict/list/str/int/float",
+    "required_fields": ["field1", "field2"],
+    "validation_rules": {{
+        "min_items": 1,
+        "non_empty_fields": ["title", "content"],
+        "status_field": "status",
+        "success_indicators": ["data存在", "results非空", "error字段不存在"]
+    }},
+    "failure_indicators": ["error", "exception", "failed", "timeout"],
+    "business_logic_checks": [
+        "数据量应大于0",
+        "必须包含有效内容",
+        "时间戳应为最新"
+    ]
+}}
+"""
+
+        try:
+            response = self.llm_client.generate_code(expected_output_prompt, "")
+            return self.parse_standardized_instruction(response)
+        except Exception:
+            return self._get_default_expected_output(task_type)
+
+    def _get_default_expected_output(self, task_type: str) -> Dict[str, Any]:
+        """获取默认的预期输出规则"""
+        defaults = {
+            "web_search": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "status"],
+                "validation_rules": {
+                    "min_items": 1,
+                    "non_empty_fields": ["results"],
+                    "status_field": "status",
+                    "success_indicators": ["data存在", "results非空"],
+                },
+                "failure_indicators": ["error", "exception", "failed", "timeout"],
+                "business_logic_checks": ["搜索结果数量应大于0", "结果应包含有效链接"],
+            },
+            "data_analysis": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "analysis"],
+                "validation_rules": {
+                    "non_empty_fields": ["key_findings"],
+                    "success_indicators": ["分析结果存在", "关键发现非空"],
+                },
+                "failure_indicators": ["error", "exception", "analysis_failed"],
+                "business_logic_checks": ["分析结果应包含具体数据", "关键发现应有实际内容"],
+            },
+            "data_fetch": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "status"],
+                "validation_rules": {
+                    "min_items": 1,
+                    "non_empty_fields": ["data"],
+                    "status_field": "status",
+                },
+                "failure_indicators": ["error", "exception", "fetch_failed"],
+                "business_logic_checks": ["获取的数据应非空", "数据格式应正确"],
+            },
+            "data_process": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "processed_data"],
+                "validation_rules": {
+                    "non_empty_fields": ["processed_data"],
+                    "success_indicators": ["处理完成", "数据已转换"],
+                },
+                "failure_indicators": ["error", "exception", "process_failed"],
+                "business_logic_checks": ["处理后数据应与原数据不同", "处理结果应有意义"],
+            },
+            "file_operation": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "status"],
+                "validation_rules": {
+                    "status_field": "status",
+                    "success_indicators": ["操作成功", "文件已处理"],
+                },
+                "failure_indicators": ["error", "exception", "file_not_found", "permission_denied"],
+                "business_logic_checks": ["文件操作应成功完成", "结果应反映实际操作"],
+            },
+            "automation": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "status", "summary"],
+                "validation_rules": {"non_empty_fields": ["summary"], "status_field": "status"},
+                "failure_indicators": ["error", "exception", "automation_failed"],
+                "business_logic_checks": ["自动化任务应完整执行", "执行摘要应详细"],
+            },
+            "content_generation": {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "generated_content"],
+                "validation_rules": {
+                    "non_empty_fields": ["generated_content"],
+                    "success_indicators": ["内容已生成", "生成完成"],
+                },
+                "failure_indicators": ["error", "exception", "generation_failed"],
+                "business_logic_checks": ["生成的内容应符合要求", "内容长度应合理"],
+            },
+        }
+        return defaults.get(
+            task_type,
+            {
+                "expected_data_type": "dict",
+                "required_fields": ["data", "status"],
+                "validation_rules": {"status_field": "status"},
+                "failure_indicators": ["error", "exception"],
+                "business_logic_checks": ["执行结果应符合基本要求"],
+            },
+        )

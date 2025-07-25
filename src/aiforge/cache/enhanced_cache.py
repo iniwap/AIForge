@@ -145,7 +145,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 model_path = model_manager.get_model_path("paraphrase-MiniLM-L6-v2")
 
                 # 加载模型
-                self._semantic_model = SentenceTransformer(model_path)
+                self._semantic_model = SentenceTransformer(
+                    model_path, tokenizer_kwargs={"clean_up_tokenization_spaces": True}
+                )
                 print("[DEBUG] 语义模型加载完成")
 
             except ImportError:
