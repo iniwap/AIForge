@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIForge - 突破性认知计算引擎</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- 动态粒子背景 -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- 导航栏 -->
+    <nav class="cyber-nav">
+        <div class="nav-container">
+            <div class="logo-section">
+                <div class="logo-glow">⚡</div>
+                <span class="brand-name">AIForge</span>
+                <span class="brand-tagline">认知计算引擎</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#capabilities" class="nav-item">核心能力</a>
+                <a href="#architecture" class="nav-item">技术架构</a>
+                <a href="#scenarios" class="nav-item">应用场景</a>
+                <a href="https://github.com/iniwap/AIForge" class="nav-item github-link">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主英雄区域 -->
+    <section class="hero-matrix">
+        <div class="hero-grid">
+            <div class="hero-content">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">SYSTEM ONLINE</span>
+                </div>
+
+                <h1 class="hero-title">
+                    <span class="title-line-1">重新定义</span>
+                    <span class="title-line-2 gradient-text">人机交互边界</span>
+                    <span class="title-line-3">让思维直接驱动现实</span>
+                </h1>
+
+                <div class="hero-description">
+                    <p>突破性的认知计算引擎，消除自然语言与代码执行之间的壁垒</p>
+                    <p class="philosophy">核心哲学: <span class="highlight">Thought → Code → Reality</span></p>
+                </div>
+
+                <div class="action-matrix">
+                    <button class="btn-primary" onclick="initializeDemo()">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">启动引擎</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                    <button class="btn-secondary" onclick="exploreCapabilities()">
+                        <span class="btn-icon">🧠</span>
+                        <span class="btn-text">探索能力</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 实时代码演示终端 -->
+            <div class="terminal-matrix">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-controls">
+                            <span class="control-dot red"></span>
+                            <span class="control-dot yellow"></span>
+                            <span class="control-dot green"></span>
+                        </div>
+                        <div class="terminal-title">AIForge 认知引擎 v1.0</div>
+                        <div class="terminal-status">ACTIVE</div>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="code-stream">
+                            <div class="prompt-line">
+                                <span class="prompt">forge@quantum:~$</span>
+                                <span class="typing-cursor" id="demo-cursor">|</span>
+                                <span class="command-text" id="demo-command"></span>
+                            </div>
+                            <div class="output-area" id="demo-output"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心能力矩阵 -->
+    <section id="capabilities" class="capabilities-matrix">
+        <div class="section-header">
+            <h2 class="section-title">🧬 认知能力矩阵</h2>
+            <p class="section-subtitle">超越传统计算边界的智能系统</p>
+        </div>
+
+        <div class="capabilities-grid">
+            <div class="capability-node" data-capability="understanding">
+                <div class="node-header">
+                    <div class="node-icon">🧠</div>
+                    <div class="node-status">ACTIVE</div>
+                </div>
+                <h3 class="node-title">深度理解</h3>
+                <p class="node-description">多维度解析复杂指令，精准捕获用户意图</p>
+                <div class="tech-indicators">
+                    <span class="tech-tag">语义分析</span>
+                    <span class="tech-tag">意图识别</span>
+                    <span class="tech-tag">上下文理解</span>
+                </div>
+                <div class="node-metrics">
+                    <div class="metric">
+                        <span class="metric-label">准确率</span>
+                        <span class="metric-value">99.7%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="capability-node" data-capability="execution">
+                <div class="node-header">
+                    <div class="node-icon">⚡</div>
+                    <div class="node-status">ACTIVE</div>
+                </div>
+                <h3 class="node-title">即时执行</h3>
+                <p class="node-description">快速代码生成，实时环境交互</p>
+                <div class="tech-indicators">
+                    <span class="tech-tag">代码生成</span>
+                    <span class="tech-tag">沙盒执行</span>
+                    <span class="tech-tag">实时反馈</span>
+                </div>
+                <div class="node-metrics">
+                    <div class="metric">
+                        <span class="metric-label">响应时间</span>
+                        <span class="metric-value">&lt;100ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="capability-node" data-capability="prediction">
+                <div class="node-header">
+                    <div class="node-icon">🔮</div>
+                    <div class="node-status">ACTIVE</div>
+                </div>
+                <h3 class="node-title">智能预测</h3>
+                <p class="node-description">基于语义模式的预测性缓存机制</p>
+                <div class="tech-indicators">
+                    <span class="tech-tag">语义缓存</span>
+                    <span class="tech-tag">模式识别</span>
+                    <span class="tech-tag">预测算法</span>
+                </div>
+                <div class="node-metrics">
+                    <div class="metric">
+                        <span class="metric-label">缓存命中率</span>
+                        <span class="metric-value">94.3%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="capability-node" data-capability="evolution">
+                <div class="node-header">
+                    <div class="node-icon">🌊</div>
+                    <div class="node-status">ACTIVE</div>
+                </div>
+                <h3 class="node-title">自我进化</h3>
+                <p class="node-description">持续学习优化，错误自愈能力</p>
+                <div class="tech-indicators">
+                    <span class="tech-tag">机器学习</span>
+                    <span class="tech-tag">自动优化</span>
+                    <span class="tech-tag">错误修复</span>
+                </div>
+                <div class="node-metrics">
+                    <div class="metric">
+                        <span class="metric-label">学习效率</span>
+                        <span class="metric-value">+15.2%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构可视化 -->
+    <section id="architecture" class="architecture-matrix">
+        <div class="section-header">
+            <h2 class="section-title">🔬 量子架构透视</h2>
+            <p class="section-subtitle">多层智能系统的协同运作</p>
+        </div>
+
+        <div class="architecture-visualization">
+            <div class="arch-layer" data-layer="interface">
+                <div class="layer-header">
+                    <h4 class="layer-title">接口层</h4>
+                    <div class="layer-status">ONLINE</div>
+                </div>
+                <div class="layer-components">
+                    <div class="component-node">Web API</div>
+                    <div class="component-node">CLI</div>
+                    <div class="component-node">GUI</div>
+                </div>
+                <div class="layer-connections"></div>
+            </div>
+
+            <div class="arch-layer" data-layer="cognitive">
+                <div class="layer-header">
+                    <h4 class="layer-title">认知核心</h4>
+                    <div class="layer-status">PROCESSING</div>
+                </div>
+                <div class="layer-components">
+                    <div class="component-node primary">AIForgeCore</div>
+                    <div class="component-node">指令分析器</div>
+                    <div class="component-node">语义引擎</div>
+                </div>
+                <div class="layer-connections"></div>
+            </div>
+
+            <div class="arch-layer" data-layer="execution">
+                <div class="layer-header">
+                    <h4 class="layer-title">执行引擎</h4>
+                    <div class="layer-status">ACTIVE</div>
+                </div>
+                <div class="layer-components">
+                    <div class="component-node">代码生成</div>
+                    <div class="component-node">安全执行</div>
+                    <div class="component-node">结果验证</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 应用场景展示 -->
+    <section id="scenarios" class="scenarios-matrix">
+        <div class="section-header">
+            <h2 class="section-title">🎭 应用场景矩阵</h2>
+            <p class="section-subtitle">跨领域的智能解决方案</p>
+        </div>
+
+        <div class="scenarios-grid">
+            <div class="scenario-card" data-scenario="business">
+                <div class="card-header">
+                    <div class="card-icon">💼</div>
+                    <h3 class="card-title">商业智能</h3>
+                    <div class="card-status">DEPLOYED</div>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>实时数据挖掘与趋势预测</li>
+                        <li>多维度风险模型构建</li>
+                        <li>基于数据的智能决策引擎</li>
+                    </ul>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">效率提升</span>
+                        <span class="metric-value">300%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scenario-card" data-scenario="research">
+                <div class="card-header">
+                    <div class="card-icon">🔬</div>
+                    <h3 class="card-title">科研创新</h3>
+                    <div class="card-status">ACTIVE</div>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>自动化实验设计与分析</li>
+                        <li>智能超参数优化</li>
+                        <li>研究数据的可视化呈现</li>
+                    </ul>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">研究加速</span>
+                        <span class="metric-value">250%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scenario-card" data-scenario="development">
+                <div class="card-header">
+                    <div class="card-icon">🛠️</div>
+                    <h3 class="card-title">开发加速</h3>
+                    <div class="card-status">OPTIMIZED</div>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>快速MVP构建</li>
+                        <li>智能接口适配</li>
+                        <li>系统监控与维护</li>
+                    </ul>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">开发效率</span>
+                        <span class="metric-value">400%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scenario-card" data-scenario="creative">
+                <div class="card-header">
+                    <div class="card-icon">🎨</div>
+                    <h3 class="card-title">创意实现</h3>
+                    <div class="card-status">INNOVATIVE</div>
+                </div>
+                <div class="card-content">
+                    <ul class="feature-list">
+                        <li>多媒体内容智能创作</li>
+                        <li>将数据转化为视觉艺术</li>
+                        <li>智能UI/UX原型生成</li>
+                    </ul>
+                </div>
+                <div class="card-metrics">
+                    <div class="metric-item">
+                        <span class="metric-label">创意产出</span>
+                        <span class="metric-value">∞</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 快速开始区域 -->
+    <section class="quickstart-matrix">
+        <div class="section-header">
+            <h2 class="section-title">🚀 一行代码，释放无限可能</h2>
+            <p class="section-subtitle">零配置启动，即刻体验认知计算的力量</p>
+        </div>
+
+        <div class="code-showcase">
+            <div class="code-window">
+                <div class="code-header">
+                    <div class="code-controls">
+                        <span class="control-dot red"></span>
+                        <span class="control-dot yellow"></span>
+                        <span class="control-dot green"></span>
+                    </div>
+                    <div class="code-title">quickstart.py</div>
+                    <div class="code-lang">Python</div>
+                </div>
+                <div class="code-body">
+                    <pre><code class="language-python">  
+from aiforge import AIForgeCore  
+  
+# 唤醒认知引擎  
+forge = AIForgeCore(api_key="your-api-key")  
+  
+# 思维即执行 - 让AI理解并执行复杂任务  
+result = forge("分析全球股市趋势并生成投资建议")  
+  
+# 多模态处理 - 图像、文本、数据一体化  
+analysis = forge("处理这个Excel文件，生成可视化图表")  
+  
+# 自动化工作流 - 复杂任务链式执行  
+workflow = forge("监控服务器状态，异常时发送邮件并重启")  
+                    </code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="install-section">
+            <div class="install-command">
+                <span class="command-prefix">$</span>
+                <code>pip install aiforge</code>
+                <button class="copy-btn" onclick="copyToClipboard('pip install aiforge')">
+                    <span class="copy-icon">📋</span>
+                </button>
+            </div>
+            <div class="install-note">
+                支持 Python 3.10+ | 跨平台兼容 | 零依赖冲突
+            </div>
+        </div>
+    </section>
+
+    <!-- 性能指标展示 -->
+    <section class="metrics-matrix">
+        <div class="section-header">
+            <h2 class="section-title">📊 性能指标矩阵</h2>
+            <p class="section-subtitle">实时监控系统运行状态</p>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-value">
+                    < 100ms</div>
+                        <div class="metric-label">平均响应时间</div>
+                        <div class="metric-trend up">↗ +15%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">🎯</div>
+                    <div class="metric-value">99.7%</div>
+                    <div class="metric-label">指令理解准确率</div>
+                    <div class="metric-trend up">↗ +2.3%</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">🔄</div>
+                    <div class="metric-value">94.3%</div>
+                    <div class="metric-label">缓存命中率</div>
+                    <div class="metric-trend stable">→ 稳定</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">🌐</div>
+                    <div class="metric-value">50+</div>
+                    <div class="metric-label">支持的AI模型</div>
+                    <div class="metric-trend up">↗ +12</div>
+                </div>
+            </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="cyber-footer">
+        <div class="footer-matrix">
+            <div class="footer-section">
+                <h4 class="footer-title">🌐 连接未来</h4>
+                <div class="footer-links">
+                    <a href="https://discord.gg/ksPhVyWz" class="footer-link">
+                        <span class="link-icon">💬</span>
+                        <span class="link-text">Discord 社区</span>
+                    </a>
+                    <a href="mailto:iniwaper@gmail.com" class="footer-link">
+                        <span class="link-icon">📧</span>
+                        <span class="link-text">联系我们</span>
+                    </a>
+                    <a href="https://twitter.com/iafun_tipixel" class="footer-link">
+                        <span class="link-icon">🐦</span>
+                        <span class="link-text">Twitter</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-title">🛠️ 开发者资源</h4>
+                <div class="footer-links">
+                    <a href="https://github.com/iniwap/AIForge" class="footer-link">
+                        <span class="link-icon">⚡</span>
+                        <span class="link-text">GitHub 源码</span>
+                    </a>
+                    <a href="https://docs.aiforge.dev" class="footer-link">
+                        <span class="link-icon">📚</span>
+                        <span class="link-text">开发文档</span>
+                    </a>
+                    <a href="https://api.aiforge.dev" class="footer-link">
+                        <span class="link-icon">🔌</span>
+                        <span class="link-text">API 参考</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-title">🎯 生态系统</h4>
+                <div class="footer-links">
+                    <a href="#extensions" class="footer-link">
+                        <span class="link-icon">🧩</span>
+                        <span class="link-text">扩展市场</span>
+                    </a>
+                    <a href="#templates" class="footer-link">
+                        <span class="link-icon">📋</span>
+                        <span class="link-text">模板库</span>
+                    </a>
+                    <a href="#showcase" class="footer-link">
+                        <span class="link-icon">🌟</span>
+                        <span class="link-text">案例展示</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-brand">
+                <div class="brand-logo">⚡</div>
+                <div class="brand-info">
+                    <div class="brand-name">AIForge</div>
+                    <div class="brand-slogan">重新定义可能性的边界</div>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <p>© 2025 AIForge Project. 让思维直接驱动现实世界.</p>
+                <p class="philosophy-text">Thought → Code → Reality</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
