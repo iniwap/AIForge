@@ -136,7 +136,7 @@ pytest tests/
   
 ## 📞 连接未来  
   
-- 🌐 **官网**: [aiforge.dev](https://aiforge.dev)  
+- 🌐 **官网**: [aiforge.dev](https://iniwap.github.io/AIForge)  
 - 💬 **社区**: [Discord](https://discord.gg/ksPhVyWz)  
 - 📧 **联系**: iniwaper@gmail.com 
 - 🐦 **动态**: [@AIForge](https://twitter.com/iafun_tipixel)  
@@ -149,6 +149,6 @@ pytest tests/
   
 *AIForge - Where Intelligence Meets Execution*  
   
-[立即开始](https://github.com/iniwap/AIForge) | [查看文档](https://docs.aiforge.dev) | [加入社区](https://discord.gg/ksPhVyWz)  
+[立即开始](https://github.com/iniwap/AIForge) | [查看文档](https://iniwap.github.io/AIForge) | [加入社区](https://discord.gg/ksPhVyWz)  
   
 </div>
