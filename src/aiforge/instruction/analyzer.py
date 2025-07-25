@@ -2,6 +2,7 @@ import json
 import re
 from typing import Dict, Any, List
 from ..llm.llm_client import AIForgeLLMClient
+from ..prompts.enhanced_prompts import get_base_prompt_sections
 
 
 class InstructionAnalyzer:
@@ -173,7 +174,7 @@ class InstructionAnalyzer:
         }
 
     def local_analyze_instruction(self, instruction: str) -> Dict[str, Any]:
-        """本地指令分析"""
+        """本地指令分析，移除硬编码的对话延续检测"""
         instruction_lower = instruction.lower()
 
         # 计算每种任务类型的匹配分数
@@ -389,7 +390,7 @@ class InstructionAnalyzer:
     def get_analysis_prompt(self, include_guidance: bool = True) -> str:
         """获取AI分析提示词"""
         # 构建基础提示词内容
-        base_sections = self._build_base_prompt_sections()
+        base_sections = get_base_prompt_sections()
 
         # 如果需要引导信息，添加任务类型引导
         if include_guidance:
@@ -398,76 +399,6 @@ class InstructionAnalyzer:
             return self._assemble_prompt_with_guidance(base_sections, guidance_info)
         else:
             return self._assemble_basic_prompt(base_sections)
-
-    def _build_base_prompt_sections(self) -> Dict[str, str]:
-        """构建基础提示词各个部分"""
-        return {
-            "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。",
-            "execution_mode": """
-## 直接响应类型特征：
-- 纯知识问答、概念解释、定义说明（非时效性）
-- 文本创作、写作、翻译、改写
-- 历史信息查询、理论分析
-- 建议咨询、意见评价（基于已有知识）
-- 可以通过AI的知识和语言能力直接完成且不需要最新数据
-
-## 代码执行类型特征：
-- 需要访问外部数据源（API、网页、文件系统）
-- 需要实时信息获取（天气、股价、新闻、汇率等）
-- 需要最新数据的查询和分析
-- 需要数据计算、统计、处理、转换
-- 需要文件操作、系统交互、自动化任务
-""",
-            "analysis_steps": """
-## 对于直接响应类型：
-1. 理解用户想要获得什么信息或内容
-2. 确认信息不涉及时效性要求
-3. 确认可以通过AI知识直接提供
-
-## 对于代码执行类型：
-1. 理解用户想要完成什么任务
-2. 识别是否需要最新数据或实时信息
-3. 思考完成这个任务的必要条件和输入信息
-4. 从用户指令中提取这些信息的具体值
-""",
-            "output_format": """{
-    "task_type": "任务类型",
-    "action": "具体动作",
-    "target": "任务描述",
-    "execution_mode": "direct_ai_response 或 code_generation",
-    "confidence": "置信度",
-    "reasoning": "判断理由",
-    "required_parameters": {
-        "param_name": {
-            "value": "从指令中提取的值或null",
-            "type": "参数类型",
-            "description": "参数用途说明",
-            "required": true/false,
-            "default": "默认值或null"
-        }
-    },
-    "execution_logic": "完成任务的基本逻辑描述",
-    "output_format": "期望输出格式"
-}""",
-            "principles": """
-- 专注于任务完成的必要性，而非指令的字面内容
-- 参数应该是执行任务的最小必要集合
-- 优先从指令中提取具体值，无法提取时考虑合理默认值
-- 参数命名应该清晰反映其在任务中的作用
-""",
-            "examples": """
-用户指令："北京今天的天气如何"
-思考：要获取天气信息，我需要知道：
-1. 地点：北京
-2. 时间：今天
-3. 信息类型：天气
-执行模式：code_generation
-
-用户指令："解释什么是机器学习"
-思考：这是纯知识问答，不需要外部数据
-执行模式：direct_ai_response
-""",
-        }
 
     def _build_task_type_guidance(self, builtin_types: List[str]) -> str:
         """构建任务类型引导信息"""
@@ -792,9 +723,7 @@ class InstructionAnalyzer:
 """
 
         # 其余提示词内容保持不变...
-        return self._assemble_prompt_with_guidance(
-            self._build_base_prompt_sections(), adaptive_guidance
-        )
+        return self._assemble_prompt_with_guidance(get_base_prompt_sections(), adaptive_guidance)
 
     def _get_task_type_recommendations(self) -> Dict[str, Any]:
         """获取任务类型推荐信息"""

@@ -412,3 +412,86 @@ def get_enhanced_system_prompt_universal(
         enhanced_prompt += f"\n\n# 原始指令补充\n{original_prompt}"
 
     return enhanced_prompt
+
+
+def get_base_prompt_sections() -> Dict[str, str]:
+    """构建基础提示词各个部分"""
+    return {
+        "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。",
+        "execution_mode": """
+## 直接响应类型特征：
+- 纯知识问答、概念解释、定义说明（非时效性）
+- 文本创作、写作、翻译、改写
+- 历史信息查询、理论分析
+- 建议咨询、意见评价（基于已有知识）
+- 对话延续和情感支持（感谢、追问、补充说明等）
+- 可以通过AI的知识和语言能力直接完成且不需要最新数据
+
+## 代码执行类型特征：
+- 需要访问外部数据源（API、网页、文件系统）
+- 需要实时信息获取（天气、股价、新闻、汇率等）
+- 需要最新数据的查询和分析
+- 需要数据计算、统计、处理、转换
+- 需要文件操作、系统交互、自动化任务
+""",
+        "analysis_steps": """
+## 对于直接响应类型：
+1. 理解用户想要获得什么信息或内容
+2. 确认信息不涉及时效性要求
+3. 确认可以通过AI知识直接提供
+4. 判断是否为对话延续（感谢、追问、情感表达等）
+
+## 对于代码执行类型：
+1. 理解用户想要完成什么任务
+2. 识别是否需要最新数据或实时信息
+3. 思考完成这个任务的必要条件和输入信息
+4. 从用户指令中提取这些信息的具体值
+
+## 对话上下文判断：
+如果用户指令是对话的延续（如感谢、追问、补充说明、情感表达等），请：
+1. 设置 execution_mode 为 "direct_ai_response"
+2. 在 reasoning 中说明这是对话延续
+3. 适当提高 confidence 值到 0.8 以上
+""",
+        "output_format": """{
+    "task_type": "任务类型",
+    "action": "具体动作",
+    "target": "任务描述",
+    "execution_mode": "direct_ai_response 或 code_generation",
+    "confidence": "置信度",
+    "reasoning": "判断理由",
+    "required_parameters": {
+        "param_name": {
+            "value": "从指令中提取的值或null",
+            "type": "参数类型",
+            "description": "参数用途说明",
+            "required": true/false,
+            "default": "默认值或null"
+        }
+    },
+    "execution_logic": "完成任务的基本逻辑描述",
+    "output_format": "期望输出格式"
+}""",
+        "principles": """
+- 专注于任务完成的必要性，而非指令的字面内容
+- 参数应该是执行任务的最小必要集合
+- 优先从指令中提取具体值，无法提取时考虑合理默认值
+- 参数命名应该清晰反映其在任务中的作用
+""",
+        "examples": """
+用户指令："北京今天的天气如何"
+思考：要获取天气信息，我需要知道：
+1. 地点：北京
+2. 时间：今天
+3. 信息类型：天气
+执行模式：code_generation
+
+用户指令："解释什么是机器学习"
+思考：这是纯知识问答，不需要外部数据
+执行模式：direct_ai_response
+
+用户指令："谢谢你的解释，我还想了解深度学习"
+思考：这是对话延续，用户在感谢并追问相关问题
+执行模式：direct_ai_response
+""",
+    }

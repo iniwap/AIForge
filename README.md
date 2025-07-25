@@ -2,7 +2,8 @@
   
 <div align="center">  
   
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-green)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/) [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/AIForge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-green)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/AIForge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)
   
 **重新定义人机交互边界，让思维直接转化为执行力**  
   
@@ -13,7 +14,7 @@
 ---  
   
 ## 🎯 什么是 AIForge？  
-![alt text](logo.png)  
+![alt text](logo.jpg)  
 AIForge 是一个**突破性的认知计算引擎**，它消除了自然语言与代码执行之间的壁垒。通过先进的**意图理解算法**和**自适应执行架构**，AIForge 能够：  
   
 - 🧠 **深度理解** - 多维度解析复杂指令，精准捕获用户意图  

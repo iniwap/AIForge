@@ -175,22 +175,26 @@ class AIForgeCore:
     def _is_code_worth_caching_universal(
         self, code: str, result: Any, standardized_instruction: Dict[str, Any] = None
     ) -> bool:
-        """通用版代码缓存价值判断（使用数据流分析）"""
-        # 基础验证保持不变
+        """代码缓存价值判断"""
+        # 基础验证
         if not CodeValidator.validate_code(code):
+            print("[DEBUG] 代码未通过基础验证")
             return False
 
         if not self._validate_result_format(result):
+            print("[DEBUG] 结果格式验证失败")
             return False
 
         if isinstance(result, dict):
             status = result.get("status")
             if status == "error":
+                print("[DEBUG] 结果状态为错误，不予缓存")
                 return False
             if status is not None and status != "success":
+                print("[DEBUG] 结果状态非成功，不予缓存")
                 return False
 
-        # 替换为数据流分析
+        # 只进行参数使用验证，不做复杂的硬编码检测
         if standardized_instruction:
             if not self._validate_universal_parameter_usage_with_dataflow(
                 code, standardized_instruction
@@ -203,12 +207,10 @@ class AIForgeCore:
     def _validate_universal_parameter_usage_with_dataflow(
         self, code: str, standardized_instruction: Dict[str, Any]
     ) -> bool:
-        """使用数据流分析的通用参数使用验证"""
+        """使用增强数据流分析的参数验证"""
         try:
-            # 解析代码获取AST
             tree = ast.parse(code)
 
-            # 查找execute_task函数
             function_def = None
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef) and node.name == "execute_task":
@@ -219,20 +221,26 @@ class AIForgeCore:
                 print("[DEBUG] 未找到execute_task函数")
                 return False
 
-            # 获取函数参数
             func_params = [arg.arg for arg in function_def.args.args]
             required_params = standardized_instruction.get("required_parameters", {})
 
-            print(f"[DEBUG] 数据流分析: 函数参数 {func_params}")
-            print(f"[DEBUG] 数据流分析: 必需参数 {list(required_params.keys())}")
-
-            # 创建数据流分析器
+            # 创建增强的数据流分析器
             analyzer = DataFlowAnalyzer(func_params)
-
-            # 分析函数体
             analyzer.visit(function_def)
 
-            # 检查每个必需参数是否被有意义使用
+            # 检查参数冲突
+            if analyzer.has_parameter_conflicts():
+                conflicts = analyzer.get_conflict_details()
+                for conflict in conflicts:
+                    print(f"[DEBUG] 发现参数冲突: {conflict}")
+                    if (
+                        conflict["type"] == "hardcoded_coordinates"
+                        and conflict["parameter"] == "location"
+                    ):
+                        print("[DEBUG] 检测到硬编码坐标与location参数冲突，拒绝缓存")
+                        return False
+
+            # 原有的参数使用验证
             meaningful_param_count = 0
             for param_name in func_params:
                 if param_name in required_params:
@@ -243,7 +251,6 @@ class AIForgeCore:
                     else:
                         print(f"[DEBUG] 参数 {param_name} 未被有意义使用")
 
-            # 计算有意义使用的比例
             total_required = len([p for p in func_params if p in required_params])
             if total_required == 0:
                 return True
@@ -253,7 +260,6 @@ class AIForgeCore:
                 f"[DEBUG] 参数有意义使用比例: {usage_ratio:.2f} ({meaningful_param_count}/{total_required})"
             )
 
-            # 至少60%的参数需要被有意义使用
             return usage_ratio >= 0.6
 
         except Exception as e:
@@ -445,11 +451,21 @@ class AIForgeCore:
         standardized_instruction = self._get_final_standardized_instruction(instruction)
         execution_mode = standardized_instruction.get("execution_mode", "code_generation")
         confidence = standardized_instruction.get("confidence", 0)
-        # 检查直接响应模式
-        if execution_mode == "direct_ai_response" and confidence >= 0.6:
+
+        # 检查是否是对话延续或对话类型
+        is_conversation = execution_mode == "direct_ai_response" and (
+            standardized_instruction.get("conversation_context") == "continuation"
+            or standardized_instruction.get("action")
+            in ["emotional_support_chat", "casual_chat", "consultation", "chat"]
+        )
+
+        # 对话类型直接进入直接响应模式
+        if is_conversation and confidence >= 0.6:
+            return self._handle_direct_response(standardized_instruction, instruction)
+        elif execution_mode == "direct_ai_response" and confidence >= 0.6:
             return self._handle_direct_response(standardized_instruction, instruction)
 
-        # 根据缓存配置决定执行路径
+        # 其他类型按原有逻辑处理
         if self.code_cache:
             return self._execute_with_cache_first_universal(standardized_instruction, instruction)
         else:
@@ -575,7 +591,7 @@ class AIForgeCore:
         # 第一步：本地分析
         local_analysis = self.instruction_analyzer.local_analyze_instruction(instruction)
         print(
-            f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}, cache_key={local_analysis.get('cache_key')}"
+            f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}, cache_key={local_analysis.get('cache_key')}"  # noqa 501
         )
 
         # 第二步：如果置信度低，尝试AI分析
@@ -586,7 +602,7 @@ class AIForgeCore:
             if ai_analysis and ai_analysis.get("confidence", 0) > confidence:
                 # AI分析成功，使用AI结果
                 print(
-                    f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}, confidence={ai_analysis.get('confidence')}, cache_key={ai_analysis.get('cache_key')}"
+                    f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}, confidence={ai_analysis.get('confidence')}, cache_key={ai_analysis.get('cache_key')}"  # noqa 501
                 )
 
                 return ai_analysis
@@ -693,24 +709,42 @@ class AIForgeCore:
     def _handle_direct_response(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
-        """处理直接响应任务"""
+        """处理直接响应任务，支持自动会话管理"""
         client = self.llm_manager.get_client()
         if not client:
             return None
 
         action = standardized_instruction.get("action", "respond")
 
+        # 检查是否是对话类型任务
+        is_conversational = action in [
+            "emotional_support_chat",
+            "casual_chat",
+            "consultation",
+            "chat",
+        ]
+
         # 构建直接响应提示词
         system_prompt = get_direct_response_prompt(action, standardized_instruction)
 
         try:
-            response = client.generate_code(original_instruction, system_prompt, use_history=False)
+            # 对话类型自动启用历史记录
+            use_history = is_conversational
+            response = client.generate_code(
+                original_instruction, system_prompt, use_history=use_history
+            )
 
             # 添加时间戳以符合标准格式
             import time
 
             return {
-                "data": {"content": response, "response_type": action, "direct_response": True},
+                "data": {
+                    "content": response,
+                    "response_type": action,
+                    "direct_response": True,
+                    "is_conversational": is_conversational,
+                    "conversation_active": use_history,  # 标记会话状态
+                },
                 "status": "success",
                 "summary": f"直接响应: {action} - {original_instruction[:50]}...",
                 "metadata": {
@@ -719,6 +753,7 @@ class AIForgeCore:
                     "execution_type": "direct_ai_response",
                     "action": action,
                     "no_code_generation": True,
+                    "conversation_mode": use_history,
                 },
             }
         except Exception as e:

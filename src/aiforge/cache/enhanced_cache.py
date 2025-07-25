@@ -10,10 +10,11 @@ from pathlib import Path
 from ..extensions.extension_manager import ExtensionManager
 from .code_cache import AiForgeCodeCache
 from ..utils.code_validator import CodeValidator
+from .semantic_action_matcher import SemanticActionMatcher
 
 
 class EnhancedStandardizedCache(AiForgeCodeCache):
-    """增强的标准化缓存 - 优化版"""
+    """增强的标准化缓存"""
 
     def __init__(self, cache_dir: Path, config: dict | None = None):
         # 扩展配置以支持语义匹配功能
@@ -23,6 +24,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 "semantic_threshold": enhanced_config.get("semantic_threshold", 0.4),
                 "enable_semantic_matching": enhanced_config.get("enable_semantic_matching", True),
                 "use_lightweight_semantic": enhanced_config.get("use_lightweight_semantic", True),
+                "enable_action_clustering": enhanced_config.get("enable_action_clustering", True),
+                "action_cluster_threshold": enhanced_config.get("action_cluster_threshold", 0.75),
             }
         )
 
@@ -31,6 +34,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         # 向量存储路径（增强功能特有）
         self.vector_store_path = self.cache_dir / "vector_store.pkl"
+        self.action_clusters_path = self.cache_dir / "action_clusters.pkl"
 
         # 初始化扩展管理器
         self.extension_manager = ExtensionManager()
@@ -39,12 +43,54 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         # 初始化语义分析组件（延迟加载）
         self._init_semantic_components()
 
+        # 初始化语义动作匹配器
+        self._init_semantic_action_matcher()
+
         # 加载向量存储
         self._load_vector_storage()
 
         # 初始化模块索引
         if not hasattr(self, "_module_indexes"):
             self._module_indexes = defaultdict(list)
+
+    def _init_semantic_action_matcher(self):
+        """初始化语义动作匹配器"""
+        if self.config.get("enable_action_clustering", True):
+            self.semantic_action_matcher = SemanticActionMatcher(self)
+            self._load_action_clusters()
+            print("[DEBUG] 语义动作匹配器已启用")
+        else:
+            self.semantic_action_matcher = None
+
+    def _load_action_clusters(self):
+        """加载动作聚类数据"""
+        if os.path.exists(self.action_clusters_path):
+            try:
+                with open(self.action_clusters_path, "rb") as f:
+                    cluster_data = pickle.load(f)
+                    self.semantic_action_matcher.action_clusters = cluster_data.get(
+                        "action_clusters", {}
+                    )
+                    self.semantic_action_matcher.action_vectors = cluster_data.get(
+                        "action_vectors", {}
+                    )
+                print("[DEBUG] 动作聚类数据加载成功")
+            except Exception as e:
+                print(f"[DEBUG] 加载动作聚类数据失败: {e}")
+
+    def _save_action_clusters(self):
+        """保存动作聚类数据"""
+        if self.semantic_action_matcher:
+            try:
+                cluster_data = {
+                    "action_clusters": self.semantic_action_matcher.action_clusters,
+                    "action_vectors": self.semantic_action_matcher.action_vectors,
+                }
+                with open(self.action_clusters_path, "wb") as f:
+                    pickle.dump(cluster_data, f)
+                print("[DEBUG] 动作聚类数据保存成功")
+            except Exception as e:
+                print(f"[DEBUG] 保存动作聚类数据失败: {e}")
 
     def _load_builtin_extensions(self):
         """加载内置扩展"""
@@ -140,14 +186,13 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def get_cached_modules_by_standardized_instruction(
         self, standardized_instruction: Dict[str, Any]
     ) -> List[Any]:
-        """通用缓存模块查找 - 多层级匹配策略"""
+        """通用缓存模块查找 - 集成动作聚类的多层级匹配策略"""
 
         if self.should_cleanup():
             self.cleanup()
 
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
-        # target = standardized_instruction.get("target", "")
 
         print(f"[DEBUG] 通用缓存查找: task_type={task_type}, action={action}")
 
@@ -157,23 +202,87 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         exact_matches = self._get_exact_matches(task_type, action)
         results.extend([(m, "exact", 1.0) for m in exact_matches])
 
-        # 策略2: 任务类型匹配
+        # 策略2: 动作聚类匹配（高优先级）
+        if self.semantic_action_matcher and not results:
+            cluster_matches = self._get_action_cluster_matches(action)
+            results.extend([(m, "action_cluster", 0.9) for m in cluster_matches])
+
+        # 策略3: 任务类型匹配
         if not results:
             type_matches = self._get_task_type_matches(task_type)
             results.extend([(m, "task_type", 0.8) for m in type_matches])
 
-        # 策略3: 语义相似度匹配
+        # 策略4: 语义相似度匹配
         if self.semantic_enabled:
             semantic_matches = self._get_universal_semantic_matches(standardized_instruction)
             results.extend([(m, "semantic", score) for m, score in semantic_matches])
 
-        # 策略4: 动作相似度匹配（兜底）
+        # 策略5: 动作相似度匹配（兜底）
         if not results:
             action_matches = self._get_action_similarity_matches(action)
             results.extend([(m, "action_similarity", 0.6) for m in action_matches])
 
         print(f"[DEBUG] 找到 {len(results)} 个匹配结果")
         return self._rank_and_deduplicate_results(results)
+
+    def _get_action_cluster_matches(self, action: str) -> List[Any]:
+        """基于动作聚类的匹配"""
+        if not self.semantic_action_matcher:
+            return []
+
+        matches = []
+
+        try:
+            # 获取动作所属的聚类
+            cluster_id = self.semantic_action_matcher.get_action_cluster(action)
+            print(f"[DEBUG] 动作 '{action}' 归属聚类: {cluster_id}")
+
+            # 查找同一聚类中的其他动作对应的模块
+            if cluster_id in self.semantic_action_matcher.action_clusters:
+                cluster_actions = self.semantic_action_matcher.action_clusters[cluster_id]
+
+                with self._lock:
+                    for cluster_action in cluster_actions:
+                        if cluster_action != action:  # 排除自身
+                            # 查找使用该动作的模块
+                            modules = self._find_modules_by_action(cluster_action)
+                            matches.extend(modules)
+
+            print(f"[DEBUG] 聚类匹配找到 {len(matches)} 个结果")
+
+        except Exception as e:
+            print(f"[DEBUG] 动作聚类匹配失败: {e}")
+
+        return matches
+
+    def _find_modules_by_action(self, action: str) -> List[Any]:
+        """根据动作查找模块"""
+        matches = []
+
+        try:
+            all_modules = self.CodeModule.select()
+
+            for module in all_modules:
+                try:
+                    metadata = json.loads(module.metadata)
+                    cached_action = metadata.get("standardized_instruction", {}).get("action", "")
+
+                    if cached_action == action:
+                        matches.append(
+                            (
+                                module.module_id,
+                                module.file_path,
+                                module.success_count,
+                                module.failure_count,
+                            )
+                        )
+                except Exception:
+                    continue
+
+        except Exception as e:
+            print(f"[DEBUG] 根据动作查找模块失败: {e}")
+
+        return matches
 
     def _get_exact_matches(self, task_type: str, action: str) -> List[Any]:
         """精确匹配"""
@@ -481,7 +590,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def save_standardized_module(
         self, standardized_instruction: Dict[str, Any], code: str, metadata: dict | None = None
     ) -> str | None:
-        """保存标准化模块 - 多索引策略"""
+        """保存标准化模块"""
         if not CodeValidator.validate_code(code):
             return None
 
@@ -499,7 +608,24 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             # 建立多个索引以提高命中率
             self._create_multiple_indexes(module_id, task_type, action, standardized_instruction)
 
+            # 更新动作聚类（新增）
+            self._update_action_clustering(action)
+
         return result
+
+    def _update_action_clustering(self, action: str):
+        """更新动作聚类"""
+        if self.semantic_action_matcher:
+            try:
+                # 获取或创建动作聚类
+                cluster_id = self.semantic_action_matcher.get_action_cluster(action)
+                print(f"[DEBUG] 动作 '{action}' 更新到聚类: {cluster_id}")
+
+                # 保存聚类数据
+                self._save_action_clusters()
+
+            except Exception as e:
+                print(f"[DEBUG] 更新动作聚类失败: {e}")
 
     def _save_module_record(
         self,
@@ -627,6 +753,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         """对结果进行排序和去重"""
         strategy_priority = {
             "exact": 10,  # 精确匹配最高优先级
+            "action_cluster": 9,  # 动作聚类匹配（新增）
             "task_type": 8,  # 任务类型匹配
             "semantic": 6,  # 语义匹配
             "action_similarity": 4,  # 动作相似度匹配
@@ -654,8 +781,15 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 # 计算综合分数：策略优先级 + 成功率 + 相似度分数
                 total_attempts = success_count + failure_count
                 success_rate = success_count / total_attempts if total_attempts > 0 else 0.5
+
+                # 为聚类匹配增加额外加分
+                cluster_bonus = 0.2 if strategy == "action_cluster" else 0.0
+
                 final_score = (
-                    strategy_priority.get(strategy, 1) + success_rate + (score - 1.0) * 0.5
+                    strategy_priority.get(strategy, 1)
+                    + success_rate
+                    + (score - 1.0) * 0.5
+                    + cluster_bonus
                 )
 
                 ranked_results.append(

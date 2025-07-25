@@ -1,16 +1,19 @@
 import ast
-from typing import List
+from typing import List, Set, Dict
 
 
 class DataFlowAnalyzer(ast.NodeVisitor):
     """数据流分析器，用于追踪参数的使用链"""
 
     def __init__(self, function_params: List[str]):
-        self.function_params = set(function_params)
-        self.assignments = {}  # 变量赋值关系 {target: source_vars}
-        self.usages = {}  # 变量使用情况 {var: [usage_contexts]}
-        self.meaningful_uses = set()  # 有意义使用的变量
-        self.current_context = "unknown"
+        self.function_params: Set[str] = set(function_params)
+        self.assignments: Dict[str, List[str]] = {}  # 变量赋值关系 {target: source_vars}
+        self.usages: Dict[str, List[str]] = {}  # 变量使用情况 {var: [usage_contexts]}
+        self.meaningful_uses: Set[str] = set()  # 有意义使用的变量
+        self.current_context: str = "unknown"
+        self.hardcoded_values = {}
+        self.api_calls = []
+        self.parameter_conflicts = []
 
     def visit_Assign(self, node):
         """处理赋值语句"""
@@ -31,26 +34,53 @@ class DataFlowAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node):
-        """处理函数调用"""
-        self.current_context = "function_call"
+        """检测API调用中的硬编码问题"""
+        if isinstance(node.func, ast.Attribute):
+            if (
+                isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "requests"
+                and node.func.attr == "get"
+            ):
 
-        # 检查函数调用中的参数使用
-        all_args = []
-        if hasattr(node, "args"):
-            all_args.extend(node.args)
-        if hasattr(node, "keywords"):
-            all_args.extend([kw.value for kw in node.keywords])
-
-        for arg in all_args:
-            used_vars = self._extract_variables_from_node(arg)
-            for var in used_vars:
-                if var in self.function_params:
-                    self._mark_meaningful_use(var, "function_call_argument")
-                elif var in self.assignments:
-                    # 追踪间接使用
-                    self._trace_variable_usage(var, "function_call_argument")
+                # 分析URL参数
+                if node.args:
+                    url_arg = node.args[0]
+                    self._analyze_url_for_hardcoded_values(url_arg)
 
         self.generic_visit(node)
+
+    def _analyze_url_for_hardcoded_values(self, url_node):
+        """分析URL中的硬编码值"""
+        if isinstance(url_node, ast.JoinedStr):
+            # f-string URL
+            hardcoded_coords = []
+            for value in url_node.values:
+                if isinstance(value, ast.Constant):
+                    # 检测经纬度模式
+                    coord_pattern = r"latitude=([0-9.-]+)|longitude=([0-9.-]+)"
+                    import re
+
+                    matches = re.findall(coord_pattern, str(value.value))
+                    if matches:
+                        hardcoded_coords.extend([m for m in matches if m])
+
+            if hardcoded_coords and "location" in self.function_params:
+                self.parameter_conflicts.append(
+                    {
+                        "type": "hardcoded_coordinates",
+                        "parameter": "location",
+                        "hardcoded_values": hardcoded_coords,
+                        "context": "api_url",
+                    }
+                )
+
+    def has_parameter_conflicts(self) -> bool:
+        """检查是否存在参数冲突"""
+        return len(self.parameter_conflicts) > 0
+
+    def get_conflict_details(self) -> List[Dict]:
+        """获取冲突详情"""
+        return self.parameter_conflicts
 
     def visit_JoinedStr(self, node):
         """处理f-string"""
@@ -141,15 +171,29 @@ class DataFlowAnalyzer(ast.NodeVisitor):
         self.meaningful_uses.add(var)
         if var not in self.usages:
             self.usages[var] = []
-        self.usages[var].append(context)
+        full_context = (
+            f"{self.current_context}:{context}" if self.current_context != "unknown" else context
+        )
+        self.usages[var].append(full_context)
 
-    def _trace_variable_usage(self, var: str, context: str):
-        """追踪变量的间接使用"""
+    def _trace_variable_usage(self, var: str, context: str, visited: Set[str] = None):
+        """追踪变量的间接使用（防止循环引用）"""
+        if visited is None:
+            visited = set()
+
+        # 防止循环引用导致无限递归
+        if var in visited:
+            return
+
+        visited.add(var)
+
         if var in self.assignments:
             source_vars = self.assignments[var]
             for source_var in source_vars:
                 if source_var in self.function_params:
                     self._mark_meaningful_use(source_var, f"indirect_via_{var}_in_{context}")
-                elif source_var in self.assignments:
-                    # 递归追踪
-                    self._trace_variable_usage(source_var, f"indirect_via_{var}_in_{context}")
+                elif source_var in self.assignments and source_var not in visited:
+                    # 递归追踪，传递visited集合
+                    self._trace_variable_usage(
+                        source_var, f"indirect_via_{var}_in_{context}", visited
+                    )

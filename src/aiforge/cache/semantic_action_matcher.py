@@ -8,31 +8,57 @@ class SemanticActionMatcher:
         self.cache = cache_instance
         self.action_clusters = {}
         self.action_vectors = {}
-        self.cluster_threshold = 0.75  # 聚类阈值
+        # 较低阈值（0.6-0.7）：更宽松的聚类，更多动作会被归为相似
+        # 较高阈值（0.8-0.9）：更严格的聚类，只有非常相似的动作才会聚类
+        self.cluster_threshold = cache_instance.config.get("action_cluster_threshold", 0.75)
+        self.cluster_threshold = (
+            self.cluster_threshold if 0 <= self.cluster_threshold <= 1 else 0.75
+        )
+
+    def _get_dynamic_cluster_threshold(self, action: str) -> float:
+        """根据动作特征动态调整聚类阈值"""
+        base_threshold = self.cluster_threshold
+
+        # 根据动作长度调整
+        if len(action) < 5:
+            # 短动作降低阈值，更容易聚类
+            return base_threshold - 0.1
+        elif len(action) > 15:
+            # 长动作提高阈值，更严格聚类
+            return base_threshold + 0.1
+
+        # 根据动作类型调整
+        if any(verb in action for verb in ["获取", "查询", "搜索"]):
+            # 查询类动作更容易聚类
+            return base_threshold - 0.05
+        elif any(verb in action for verb in ["生成", "创建", "制作"]):
+            # 生成类动作更严格聚类
+            return base_threshold + 0.05
+
+        return base_threshold
 
     def get_action_cluster(self, action: str) -> str:
-        """获取动作所属的语义聚类"""
+        """获取动作所属的语义聚类 - 使用动态阈值"""
         if not self.cache.semantic_enabled:
             return self._fallback_action_matching(action)
 
-        # 生成动作向量
         action_vector = self._get_action_vector(action)
 
-        # 寻找最相似的聚类
+        # 获取动态调整的阈值
+        dynamic_threshold = self._get_dynamic_cluster_threshold(action)
+
         best_cluster = None
         best_similarity = 0.0
 
         for cluster_id, cluster_actions in self.action_clusters.items():
             cluster_similarity = self._compute_cluster_similarity(action_vector, cluster_actions)
-            if cluster_similarity > best_similarity and cluster_similarity > self.cluster_threshold:
+            if cluster_similarity > best_similarity and cluster_similarity > dynamic_threshold:
                 best_similarity = cluster_similarity
                 best_cluster = cluster_id
 
-        # 如果没有找到合适的聚类，创建新聚类
         if best_cluster is None:
             best_cluster = self._create_new_cluster(action)
         else:
-            # 将动作添加到现有聚类
             self._add_to_cluster(best_cluster, action)
 
         return best_cluster

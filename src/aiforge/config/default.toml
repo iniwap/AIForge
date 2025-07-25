@@ -60,7 +60,8 @@ cleanup_interval = 10
 semantic_threshold = 0.6
 enable_semantic_matching = true
 use_lightweight_semantic = false
-
+enable_action_clustering = true
+action_cluster_threshold = 0.75
 
 [optimization]
 enabled = false
