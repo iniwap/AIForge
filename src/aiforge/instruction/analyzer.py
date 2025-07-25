@@ -458,6 +458,9 @@ class InstructionAnalyzer:
 首先判断任务是否可以通过AI直接响应完成：
 {base_sections["execution_mode"]}
 
+# 动作命名规范
+{base_sections["action_vocabulary"]}
+
 # 分析步骤
 {base_sections["analysis_steps"]}
 
@@ -561,7 +564,50 @@ class InstructionAnalyzer:
             else:
                 print(f"[DEBUG] 创建新任务类型: {task_type}")
 
+        # 6. 动作名称标准化验证
+        action = ai_analysis.get("action", "")
+        task_type = ai_analysis.get("task_type", "")
+        standardized_action = self._standardize_action_name(action, task_type)
+        if standardized_action != action:
+            print(f"[DEBUG] 动作名称标准化: '{action}' → '{standardized_action}'")
+            ai_analysis["action"] = standardized_action
+
         return True
+
+    def _standardize_action_name(self, action: str, task_type: str) -> str:
+        """基于action_vocabulary规范标准化动作名称"""
+        action_lower = action.lower()
+
+        # 基于任务类型的标准化映射
+        task_based_actions = {
+            "data_fetch": "fetch",
+            "data_process": "process",
+            "content_generation": "generate",
+            "file_operation": "transform",
+            "automation": "execute",
+            "direct_response": "respond",
+        }
+
+        # 动词标准化映射
+        verb_mappings = {
+            "fetch": ["获取", "取得", "拿到", "得到", "fetch", "get", "retrieve"],
+            "search": ["搜索", "查找", "寻找", "search", "find", "query"],
+            "process": ["分析", "处理", "计算", "process", "analyze", "compute"],
+            "generate": ["生成", "创建", "制作", "generate", "create", "produce"],
+            "respond": ["回答", "响应", "回复", "respond", "answer", "reply"],
+        }
+
+        # 优先使用任务类型映射
+        if task_type in task_based_actions:
+            base_action = task_based_actions[task_type]
+            return f"{base_action}_{task_type.split('_')[-1]}"
+
+        # 基于动词语义匹配
+        for standard_verb, variations in verb_mappings.items():
+            if any(var in action_lower for var in variations):
+                return f"{standard_verb}_content"
+
+        return action  # 如果无法标准化，返回原动作
 
     def _is_too_similar_to_existing_types(self, new_type: str, existing_types: List[str]) -> bool:
         """检查新类型是否与现有类型过于相似"""

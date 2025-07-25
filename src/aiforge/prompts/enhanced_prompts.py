@@ -452,6 +452,28 @@ def get_base_prompt_sections() -> Dict[str, str]:
 1. 设置 execution_mode 为 "direct_ai_response"
 2. 在 reasoning 中说明这是对话延续
 3. 适当提高 confidence 值到 0.8 以上
+
+## 动作命名规范：
+1. 基于任务类型生成标准化动作名
+2. 使用语义特征而非特定领域词汇
+3. 保持动作名称的一致性和可扩展性
+4. 优先使用英文动作名确保系统兼容性
+""",
+        "action_vocabulary": """
+## 标准动作生成规则：
+- 数据获取类任务 → fetch_{task_type_suffix}
+- 数据处理类任务 → process_{task_type_suffix}
+- 内容生成类任务 → generate_{task_type_suffix}
+- 文件操作类任务 → transform_{task_type_suffix}
+- 直接响应类任务 → respond_{task_type_suffix}
+
+## 语义特征识别：
+- 包含获取、查询、搜索等语义 → 归类为数据获取
+- 包含分析、处理、计算等语义 → 归类为数据处理
+- 包含生成、创建、制作等语义 → 归类为内容生成
+- 包含回答、解释、响应等语义 → 归类为直接响应
+
+注意：避免硬编码特定领域词汇，使用通用语义特征进行分类
 """,
         "output_format": """{
     "task_type": "任务类型",
