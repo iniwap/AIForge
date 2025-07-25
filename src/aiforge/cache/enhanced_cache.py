@@ -9,7 +9,6 @@ from pathlib import Path
 
 from ..extensions.extension_manager import ExtensionManager
 from .code_cache import AiForgeCodeCache
-from ..utils.code_validator import CodeValidator
 from .semantic_action_matcher import SemanticActionMatcher
 
 
@@ -226,14 +225,14 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         return self._rank_and_deduplicate_results(results)
 
     def _get_action_cluster_matches(self, action: str) -> List[Any]:
-        """基于动作聚类的匹配"""
+        """基于动作聚类的匹配，确保使用标准化"""
         if not self.semantic_action_matcher:
             return []
 
         matches = []
 
         try:
-            # 获取动作所属的聚类
+            # 获取标准化后的动作聚类
             cluster_id = self.semantic_action_matcher.get_action_cluster(action)
             print(f"[DEBUG] 动作 '{action}' 归属聚类: {cluster_id}")
 
@@ -590,16 +589,20 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def save_standardized_module(
         self, standardized_instruction: Dict[str, Any], code: str, metadata: dict | None = None
     ) -> str | None:
-        """保存标准化模块"""
-        if not CodeValidator.validate_code(code):
-            return None
-
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
+        target = standardized_instruction.get("target", "")
 
-        print(f"[DEBUG] 保存模块: task_type={task_type}, action={action}")
+        # 生成语义哈希用于区分
+        semantic_hash = self._generate_semantic_hash(target)[:6]
+        param_signature = self._generate_param_signature(
+            standardized_instruction.get("required_parameters", {})
+        )
 
-        module_id = f"enhanced_{task_type}_{action}_{int(time.time())}"
+        # 更具区分性的文件名
+        module_id = (
+            f"enhanced_{task_type}_{action}_{semantic_hash}_{param_signature}_{int(time.time())}"
+        )
 
         # 保存主记录
         result = self._save_module_record(module_id, standardized_instruction, code, metadata)
@@ -608,7 +611,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             # 建立多个索引以提高命中率
             self._create_multiple_indexes(module_id, task_type, action, standardized_instruction)
 
-            # 更新动作聚类（新增）
+            # 更新动作聚类（确保调用标准化）
             self._update_action_clustering(action)
 
         return result

@@ -38,30 +38,150 @@ class SemanticActionMatcher:
         return base_threshold
 
     def get_action_cluster(self, action: str) -> str:
-        """获取动作所属的语义聚类 - 使用动态阈值"""
+        """获取动作所属的语义聚类，支持动作标准化"""
         if not self.cache.semantic_enabled:
             return self._fallback_action_matching(action)
 
-        action_vector = self._get_action_vector(action)
+        # 动作标准化预处理（确保被调用）
+        standardized_action = self._standardize_action_before_clustering(action)
+        print(f"[DEBUG] 动作标准化: '{action}' → '{standardized_action}'")
 
-        # 获取动态调整的阈值
-        dynamic_threshold = self._get_dynamic_cluster_threshold(action)
+        # 生成动作向量（使用标准化后的动作）
+        action_vector = self._get_action_vector(standardized_action)
 
+        # 寻找最相似的聚类
         best_cluster = None
         best_similarity = 0.0
 
         for cluster_id, cluster_actions in self.action_clusters.items():
             cluster_similarity = self._compute_cluster_similarity(action_vector, cluster_actions)
-            if cluster_similarity > best_similarity and cluster_similarity > dynamic_threshold:
+            if cluster_similarity > best_similarity and cluster_similarity > self.cluster_threshold:
                 best_similarity = cluster_similarity
                 best_cluster = cluster_id
 
+        # 如果没有找到合适的聚类，创建新聚类
         if best_cluster is None:
-            best_cluster = self._create_new_cluster(action)
+            best_cluster = self._create_new_cluster(standardized_action)
+            print(f"[DEBUG] 创建新聚类: {best_cluster} for '{standardized_action}'")
         else:
-            self._add_to_cluster(best_cluster, action)
+            # 将标准化后的动作添加到现有聚类
+            self._add_to_cluster(best_cluster, standardized_action)
+            print(f"[DEBUG] 添加到现有聚类: {best_cluster} for '{standardized_action}'")
 
         return best_cluster
+
+    def _standardize_action_before_clustering(self, action: str) -> str:
+        """聚类前的动作标准化"""
+
+        # 1. 提取语义特征
+        features = self._extract_action_semantic_features(action)
+
+        # 2. 基于语义特征生成标准化动作
+        if features.get("is_retrieval", False):
+            base_verb = "fetch"
+        elif features.get("is_processing", False):
+            base_verb = "process"
+        elif features.get("is_creation", False):
+            base_verb = "generate"
+        elif features.get("is_interaction", False):
+            base_verb = "respond"
+        else:
+            base_verb = "execute"
+
+        # 3. 添加语言和复杂度标识
+        language_suffix = self._get_language_suffix(action)
+        complexity_suffix = self._get_complexity_suffix(action)
+
+        # 4. 生成最终的标准化动作名
+        standardized = f"{base_verb}_{language_suffix}_{complexity_suffix}"
+
+        return standardized
+
+    def _extract_action_semantic_features(self, action: str) -> Dict[str, bool]:
+        """提取动作的语义特征"""
+        action_lower = action.lower()
+
+        # 基于语言学模式的特征提取
+        retrieval_patterns = [
+            "取",
+            "得",
+            "获",
+            "查",
+            "找",
+            "搜",
+            "get",
+            "fetch",
+            "find",
+            "search",
+            "retrieve",
+        ]
+        processing_patterns = [
+            "析",
+            "理",
+            "算",
+            "计",
+            "process",
+            "analyze",
+            "compute",
+            "handle",
+            "transform",
+        ]
+        creation_patterns = [
+            "生",
+            "创",
+            "建",
+            "制",
+            "产",
+            "generate",
+            "create",
+            "build",
+            "make",
+            "produce",
+        ]
+        interaction_patterns = [
+            "答",
+            "应",
+            "复",
+            "互",
+            "respond",
+            "answer",
+            "reply",
+            "interact",
+            "communicate",
+        ]
+
+        return {
+            "is_retrieval": any(pattern in action_lower for pattern in retrieval_patterns),
+            "is_processing": any(pattern in action_lower for pattern in processing_patterns),
+            "is_creation": any(pattern in action_lower for pattern in creation_patterns),
+            "is_interaction": any(pattern in action_lower for pattern in interaction_patterns),
+        }
+
+    def _get_language_suffix(self, action: str) -> str:
+        """获取语言后缀"""
+        has_chinese = any("\u4e00" <= char <= "\u9fff" for char in action)
+        has_english = action.isascii() and any(c.isalpha() for c in action)
+
+        if has_chinese and has_english:
+            return "mixed"
+        elif has_chinese:
+            return "zh"
+        elif has_english:
+            return "en"
+        else:
+            return "other"
+
+    def _get_complexity_suffix(self, action: str) -> str:
+        """获取复杂度后缀"""
+        word_count = len(action.split())
+        char_count = len(action)
+
+        if word_count <= 2 and char_count <= 10:
+            return "simple"
+        elif word_count >= 4 or char_count >= 20:
+            return "complex"
+        else:
+            return "medium"
 
     def _get_action_vector(self, action: str):
         """获取动作的语义向量"""
@@ -89,49 +209,52 @@ class SemanticActionMatcher:
         return sum(similarities) / len(similarities)
 
     def _extract_action_features(self, action: str) -> Dict[str, float]:
-        """轻量级模式：提取动作特征向量"""
+        """基于通用语义特征的动作特征提取"""
         features = {}
+        action_lower = action.lower()
 
-        # 1. 动词特征
-        action_verbs = {
-            "获取": ["获取", "get", "fetch", "retrieve"],
-            "查询": ["查询", "query", "search", "find"],
-            "分析": ["分析", "analyze", "process"],
-            "生成": ["生成", "generate", "create"],
-        }
+        # 1. 语义动词特征
+        semantic_features = self._extract_action_semantic_features(action)
+        for feature_name, feature_value in semantic_features.items():
+            features[feature_name] = 1.0 if feature_value else 0.0
 
-        for verb_type, verbs in action_verbs.items():
-            features[f"verb_{verb_type}"] = 1.0 if any(v in action for v in verbs) else 0.0
+        # 2. 语言特征
+        features["is_chinese"] = (
+            1.0 if any("\u4e00" <= char <= "\u9fff" for char in action) else 0.0
+        )
+        features["is_english"] = (
+            1.0 if action.isascii() and any(c.isalpha() for c in action) else 0.0
+        )
+        features["is_mixed"] = (
+            1.0 if features["is_chinese"] > 0 and features["is_english"] > 0 else 0.0
+        )
 
-        # 2. 领域特征（动态提取）
-        domain_indicators = self._extract_domain_indicators(action)
-        for domain, score in domain_indicators.items():
-            features[f"domain_{domain}"] = score
+        # 3. 结构特征
+        features["has_underscore"] = 1.0 if "_" in action else 0.0
+        features["word_count"] = min(len(action.split()), 5) / 5.0
+        features["char_length"] = min(len(action), 20) / 20.0
 
-        # 3. 时效性特征
-        temporal_words = ["实时", "今天", "当前", "最新", "real-time", "current"]
-        features["temporal"] = 1.0 if any(w in action for w in temporal_words) else 0.0
+        # 4. 复杂度特征
+        complexity_suffix = self._get_complexity_suffix(action)
+        features["complexity_simple"] = 1.0 if complexity_suffix == "simple" else 0.0
+        features["complexity_medium"] = 1.0 if complexity_suffix == "medium" else 0.0
+        features["complexity_complex"] = 1.0 if complexity_suffix == "complex" else 0.0
+
+        # 5. 时效性特征
+        temporal_words = [
+            "实时",
+            "今天",
+            "当前",
+            "最新",
+            "real-time",
+            "current",
+            "today",
+            "now",
+            "latest",
+        ]
+        features["temporal"] = 1.0 if any(w in action_lower for w in temporal_words) else 0.0
 
         return features
-
-    def _extract_domain_indicators(self, action: str) -> Dict[str, float]:
-        """动态提取领域指示词"""
-        # 使用 TF-IDF 或其他统计方法动态识别领域特征
-        # 这里简化为基础实现
-        domains = {}
-
-        # 基于上下文词汇推断领域
-        if any(w in action for w in ["天气", "温度", "气温", "weather"]):
-            domains["weather"] = 1.0
-        elif any(w in action for w in ["新闻", "消息", "资讯", "news"]):
-            domains["news"] = 1.0
-        elif any(w in action for w in ["股票", "金融", "finance"]):
-            domains["finance"] = 1.0
-        else:
-            # 使用更复杂的语义分析
-            domains["general"] = 0.5
-
-        return domains
 
     def _compute_vector_similarity(self, vector1, vector2) -> float:
         """计算向量相似度"""
@@ -162,14 +285,24 @@ class SemanticActionMatcher:
         return dot_product / (norm1 * norm2)
 
     def _fallback_action_matching(self, action: str) -> str:
-        """语义模型不可用时的回退匹配"""
-        # 简单的基于关键词的分组
-        if any(w in action for w in ["天气", "weather"]):
-            return "weather_cluster"
-        elif any(w in action for w in ["新闻", "news"]):
-            return "news_cluster"
+        """语义模型不可用时的通用回退匹配"""
+        # 提取通用语义特征
+        features = self._extract_action_semantic_features(action)
+
+        # 基于语义特征进行聚类
+        if features.get("is_retrieval", False):
+            return "retrieval_cluster"
+        elif features.get("is_processing", False):
+            return "processing_cluster"
+        elif features.get("is_creation", False):
+            return "creation_cluster"
+        elif features.get("is_interaction", False):
+            return "interaction_cluster"
         else:
-            return "general_cluster"
+            # 基于语言和复杂度的细分
+            language_suffix = self._get_language_suffix(action)
+            complexity_suffix = self._get_complexity_suffix(action)
+            return f"general_{language_suffix}_{complexity_suffix}"
 
     def _create_new_cluster(self, action: str) -> str:
         """创建新聚类"""
