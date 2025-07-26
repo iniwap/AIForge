@@ -11,11 +11,6 @@ class UITypeRecommender:
                 "mobile_list": {"score": 6, "conditions": ["mobile_friendly"]},
                 "terminal_text": {"score": 7, "conditions": ["simple_display"]},
             },
-            "web_search": {
-                "web_table": {"score": 9, "conditions": ["multiple_results", "structured_data"]},
-                "web_card": {"score": 7, "conditions": ["few_results"]},
-                "mobile_list": {"score": 8, "conditions": ["mobile_friendly", "multiple_results"]},
-            },
             "data_analysis": {
                 "web_dashboard": {
                     "score": 10,

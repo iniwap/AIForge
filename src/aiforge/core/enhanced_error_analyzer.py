@@ -3,7 +3,7 @@ from typing import Dict, List, Any
 
 
 class EnhancedErrorAnalyzer:
-    """增强的错误分析器"""
+    """增强的错误分析器 - 专注于错误分析和建议生成"""
 
     @staticmethod
     def analyze_error(error_info: str, traceback_info: str) -> Dict[str, Any]:
@@ -62,11 +62,117 @@ class EnhancedErrorAnalyzer:
         return analysis
 
     @staticmethod
+    def generate_execution_feedback(error_info: str, traceback_info: str) -> Dict[str, Any]:
+        """生成代码执行失败的反馈 - 直接传递具体错误信息"""
+        error_analysis = EnhancedErrorAnalyzer.analyze_error(error_info, traceback_info)
+
+        # 构建包含具体错误信息的反馈
+        feedback = {
+            "error_type": error_analysis["error_type"],
+            "specific_error": error_info,  # 直接传递完整错误信息
+            "suggestion": (
+                error_analysis["fix_suggestions"][0]
+                if error_analysis["fix_suggestions"]
+                else "检查代码逻辑"
+            ),
+            "severity": error_analysis["severity"],
+        }
+
+        # 针对特定错误类型优化建议
+        if error_analysis["error_type"] == "import_error" and "No module named" in error_info:
+            module_name = re.search(r"No module named '([^']+)'", error_info)
+            if module_name:
+                module = module_name.group(1)
+                # 检查是否是已知的不可用模块
+                unavailable_modules = {
+                    "feedparser": "feedparser 模块不可用，请使用 requests + BeautifulSoup",
+                    "newspaper": "newspaper 模块不可用，请使用 requests + BeautifulSoup 爬取网页内容",
+                    "scrapy": "scrapy 模块不可用，请使用 requests + BeautifulSoup 进行网页爬取",
+                }
+
+                if module in unavailable_modules:
+                    feedback["suggestion"] = unavailable_modules[module]
+                else:
+                    feedback["suggestion"] = f"模块 {module} 不可用，请使用标准库替代"
+
+        return feedback
+
+    @staticmethod
+    def analyze_basic_failure_reason(result: Dict[str, Any]) -> str:
+        """分析基础验证失败的具体原因"""
+        if not result.get("success", False):
+            error = result.get("error", "未知错误")
+            return f"代码执行失败: {error}"
+
+        result_content = result.get("result")
+        if result_content is None:
+            return "执行结果为空"
+
+        if isinstance(result_content, dict):
+            status = result_content.get("status")
+            if status == "error":
+                summary = result_content.get("summary", "未知业务错误")
+                return f"业务逻辑错误: {summary}"
+
+            if "error" in result_content or "exception" in result_content:
+                return "结果包含错误信息"
+
+            data = result_content.get("data")
+            if data is None:
+                return "数据字段为空，未获取到有效数据"
+
+            if isinstance(data, (list, dict)) and len(data) == 0:
+                return "数据字段为空列表或字典，未获取到有效数据"
+
+            if any(
+                indicator in str(result_content).lower()
+                for indicator in ["failed", "timeout", "connection error"]
+            ):
+                return "执行结果包含失败指标"
+
+        if isinstance(result_content, str):
+            if any(
+                indicator in result_content.lower()
+                for indicator in ["error", "failed", "exception", "timeout"]
+            ):
+                return "字符串结果包含错误信息"
+
+            if not result_content.strip():
+                return "字符串结果为空"
+
+        if isinstance(result_content, (list, tuple)) and len(result_content) == 0:
+            return "结果列表为空"
+
+        return "验证失败，原因不明"
+
+    @staticmethod
     def _generate_fix_suggestions(error_type: str, error_message: str) -> List[str]:
         """根据错误类型生成修复建议"""
         suggestions = []
 
-        if error_type == "name_error":
+        if error_type == "import_error":
+            if "No module named" in error_message:
+                module_match = re.search(r"No module named '([^']+)'", error_message)
+                if module_match:
+                    module_name = module_match.group(1)
+                    if module_name == "feedparser":
+                        suggestions.extend(
+                            [
+                                "使用 requests + xml.etree.ElementTree 解析 RSS",
+                                "使用 requests + BeautifulSoup 爬取新闻网站",
+                                "避免使用第三方 RSS 解析库",
+                            ]
+                        )
+                    else:
+                        suggestions.extend(
+                            [
+                                f"模块 {module_name} 不可用，请使用标准库替代",
+                                "检查模块名拼写是否正确",
+                                "使用内置库实现相同功能",
+                            ]
+                        )
+
+        elif error_type == "name_error":
             if "not defined" in error_message:
                 var_name = re.search(r"'([^']+)' is not defined", error_message)
                 if var_name:
@@ -77,43 +183,6 @@ class EnhancedErrorAnalyzer:
                             "检查变量名拼写是否正确",
                         ]
                     )
-
-        elif error_type == "import_error":
-            if "No module named" in error_message:
-                module_match = re.search(r"No module named '([^']+)'", error_message)
-                if module_match:
-                    module_name = module_match.group(1)
-                    suggestions.extend(
-                        [
-                            f"安装缺失的模块: pip install {module_name}",
-                            "检查模块名拼写是否正确",
-                            "确保模块在 Python 路径中",
-                        ]
-                    )
-
-        elif error_type == "attribute_error":
-            if "has no attribute" in error_message:
-                suggestions.extend(
-                    [
-                        "检查对象是否有该属性或方法",
-                        "确认对象类型是否正确",
-                        "查看相关文档确认正确的属性名",
-                    ]
-                )
-
-        elif error_type == "syntax_error":
-            suggestions.extend(
-                [
-                    "检查代码语法，特别是括号、引号匹配",
-                    "确认缩进是否正确",
-                    "检查是否有多余的逗号或分号",
-                ]
-            )
-
-        elif error_type == "type_error":
-            suggestions.extend(
-                ["检查函数参数类型是否正确", "确认操作符是否适用于该数据类型", "添加类型转换或验证"]
-            )
 
         # 通用建议
         if not suggestions:
@@ -149,7 +218,6 @@ class EnhancedErrorAnalyzer:
             parts.append(f"行:{analysis['line_number']}")
 
         if analysis["error_message"]:
-            # 截取错误消息的关键部分
             msg = (
                 analysis["error_message"][:50] + "..."
                 if len(analysis["error_message"]) > 50
@@ -158,7 +226,6 @@ class EnhancedErrorAnalyzer:
             parts.append(f"消息:{msg}")
 
         if analysis["fix_suggestions"]:
-            # 只取第一个建议
             parts.append(f"建议:{analysis['fix_suggestions'][0]}")
 
         return " | ".join(parts)

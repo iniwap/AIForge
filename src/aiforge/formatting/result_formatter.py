@@ -85,17 +85,22 @@ class AIForgeResultFormatter:
 
         # 根据任务类型添加特定字段
         if task_type == "data_fetch":
-            if "data" in result and not isinstance(result["data"], dict):
+            if "data" in result and isinstance(result["data"], list):
+                # 检测是否为搜索结果格式
+                items = result["data"]
+                if items and isinstance(items[0], dict):
+                    search_fields = ["title", "url", "abstract", "source"]
+                    if any(field in items[0] for field in search_fields):
+                        # 是搜索结果，添加搜索元数据
+                        if not isinstance(result["data"], dict):
+                            result["data"] = {
+                                "results": result["data"],
+                                "total_count": len(result["data"]),
+                                "search_type": "web_search",
+                            }
+            elif "data" in result and not isinstance(result["data"], dict):
+                # 普通数据获取
                 result["data"] = {"content": result["data"], "source": "api_call"}
-        elif task_type == "web_search":
-            if "results" not in result.get("data", {}):
-                if "data" in result:
-                    result["data"] = {
-                        "results": result["data"],
-                        "total_count": (
-                            len(result["data"]) if isinstance(result["data"], list) else 1
-                        ),
-                    }
         elif task_type == "data_analysis":
             if "analysis" not in result.get("data", {}):
                 if "data" in result:

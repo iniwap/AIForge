@@ -1,8 +1,9 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 
 def get_task_specific_format(task_type: str, expected_output: Dict[str, Any] = None) -> str:
-    """基于AI分析结果动态生成输出格式要求"""
+    """获取任务特定格式，只在 data_fetch 且包含搜索字段时应用搜索增强"""
+
     if not expected_output:
         # 回退到基础格式
         return """
@@ -13,6 +14,15 @@ __result__ = {
     "summary": "结果摘要",
     "metadata": {"timestamp": "...", "task_type": "..."}
 }"""
+
+    # 只在 data_fetch 任务且包含搜索相关字段时应用搜索增强
+    if task_type == "data_fetch":
+        required_fields = expected_output.get("required_fields", [])
+        search_fields = ["title", "content", "abstract", "url", "source", "publish_time"]
+
+        # 检测是否为搜索相关任务
+        if any(field in search_fields for field in required_fields):
+            return get_search_enhanced_format(expected_output)
 
     # 基于AI分析的预期输出规则生成格式
     required_fields = expected_output.get("required_fields", [])
@@ -50,6 +60,7 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
 - 生成的代码必须能在标准 Python 环境中直接执行
 - 使用标准 Markdown 代码块格式：```python ... ```，不要输出任何解释性文字
 - 实现完整的错误处理和异常捕获
+- 数据获取可优先尝试搜索引擎百度、bing，对于新闻数据，应使用公开的新闻网站爬取、RSS源等方式
 - 禁止使用任何第三方API密钥或需要认证的API服务获取数据，只能使用公开免费的数据源
 - 数据必须来自真实的外部源，禁止使用模拟或占位符数据
 """
@@ -259,7 +270,7 @@ def get_enhanced_system_prompt_universal(
     if not parameters:
         parameters = standardized_instruction.get("parameters", {})
 
-    # 获取AI分析的预期输出规则
+    # 直接从标准化指令中获取预期输出规则
     expected_output = standardized_instruction.get("expected_output")
 
     # 最后的回退：确保有基本的指令参数
@@ -278,7 +289,7 @@ def get_enhanced_system_prompt_universal(
         optimize_tokens=optimize_tokens,
         task_type=task_type,
         parameters=parameters,
-        expected_output=expected_output,  # 传递AI分析结果
+        expected_output=expected_output,  # 直接使用标准化指令中的输出规则
     )
 
     if original_prompt:
@@ -307,20 +318,33 @@ def get_base_prompt_sections() -> Dict[str, str]:
 - 需文件操作、系统交互
 """,
         "analysis_steps": """
-## 直接响应类型分析:
-1. 确认信息不涉及时效性
-2. 确认可通过AI知识直接提供
-3. 判断是否为对话延续
+## 分析步骤:
+1. 识别任务类型和执行模式（直接响应 vs 代码执行）
+2. 提取必要参数和具体值
+3. 分析预期输出格式和验证规则
+4. 生成完整的标准化指令（包含expected_output）
 
-## 代码执行类型分析:
-1. 识别是否需要最新数据或实时信息
-2. 确定完成任务的必要条件和输入
-3. 从指令中提取具体值
+## 执行模式判断:
+### 直接响应类型:
+- 知识问答、解释、定义、理论分析
+- 文本创作、翻译、改写
+- 对话延续和情感支持
+
+### 代码执行类型:
+- 需访问外部数据源或实时信息
+- 需数据计算、处理、转换
+- 需文件操作、系统交互
 
 ## 对话上下文判断:
 若为对话延续(感谢、追问等)：
 - 设置execution_mode为"direct_ai_response"
 - 提高confidence值到0.8以上
+
+## 输出格式分析要求:
+- 根据任务类型确定数据类型
+- 识别必需字段和非空字段
+- 定义验证规则和成功指标
+- 设置业务逻辑检查
 """,
         "action_vocabulary": """
 ## 标准动作命名:
@@ -353,7 +377,22 @@ def get_base_prompt_sections() -> Dict[str, str]:
         }
     },
     "execution_logic": "完成任务的基本逻辑",
-    "output_format": "期望输出格式"
+    "output_format": "期望输出格式",
+    "expected_output": {
+        "expected_data_type": "dict/list/str/int/float",
+        "required_fields": ["field1", "field2"],
+        "validation_rules": {
+            "min_items": 1,
+            "non_empty_fields": ["title", "content"],
+            "status_field": "status",
+            "success_indicators": ["data存在", "results非空"]
+        },
+        "failure_indicators": ["error", "exception", "failed"],
+        "business_logic_checks": [
+            "数据量应大于0",
+            "必须包含有效内容"
+        ]
+    }
 }""",
         "principles": """
 - 专注任务完成的必要性
@@ -377,3 +416,115 @@ def get_base_prompt_sections() -> Dict[str, str]:
 执行模式：direct_ai_response
 """,
     }
+
+
+def get_search_enhanced_format(expected_output: Dict[str, Any]) -> str:
+    """生成搜索引擎增强格式"""
+    required_fields = expected_output.get("required_fields", [])
+
+    return f"""
+# 搜索引擎增强代码生成指导
+
+## 可选搜索策略：
+1. 依次尝试不同搜索引擎（百度、Bing、360、搜狗）
+2. 使用新闻聚合API（如NewsAPI、RSS源）
+3. 尝试社交媒体平台搜索
+4. 使用学术搜索引擎
+
+## 核心要求：
+- 实现多重容错机制，至少尝试2-3种不同方法
+- 对每个结果访问原始页面提取完整信息
+- 优先获取最近7天内的新鲜内容，按发布时间排序
+- 摘要长度至少50字，包含关键信息
+- 不能使用需要API密钥的方式
+- 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
+
+# 时间提取策略：
+- 优先meta标签：article:published_time、datePublished、pubdate、publishdate等
+- 备选方案：time标签、日期相关class、页面文本匹配
+- 有效的日期格式：标准格式、中文格式、相对时间（如“昨天”、“1天前”、“1小时前”等）、英文时间（如“yesterday”等）
+
+## 输出格式要求：
+__result__ = {{
+    "data": [
+        {{
+            {get_field_template(required_fields)}
+        }}
+    ],
+    "status": "success",
+    "summary": "搜索完成",
+    "metadata": {{"timestamp": "...", "task_type": "data_fetch"}}
+}}
+
+# 必需字段：{', '.join(required_fields)}
+"""
+
+
+def get_field_template(required_fields: List[str]) -> str:
+    """构建字段模板"""
+    field_templates = {
+        "title": "标题",
+        "content": "正文内容",
+        "abstract": "摘要内容",
+        "source": "来源网站",
+        "publish_time": "发布时间",
+        "url": "原文链接",
+    }
+
+    templates = []
+    for field in required_fields:
+        if field in field_templates:
+            templates.append(field_templates[field])
+        else:
+            templates.append(f'"{field}": "{field}_value"')
+
+    return ",\n            ".join(templates)
+
+
+def get_format_example(data_type: str, required_fields: List[str]) -> str:
+    """根据数据类型和必需字段构建格式示例"""
+
+    if data_type == "list":
+        # 构建列表格式示例
+        if required_fields:
+            # 为每个必需字段创建示例值
+            field_examples = {}
+            for field in required_fields:
+                field_examples[field] = f"{field}_value"
+
+            return f"[{field_examples}]"
+        else:
+            return "[item1, item2, ...]"
+
+    elif data_type == "dict":
+        # 构建字典格式示例
+        if required_fields:
+            field_examples = {}
+            for field in required_fields:
+                field_examples[field] = f"{field}_value"
+
+            return str(field_examples).replace("'", '"')
+        else:
+            return '{"key": "value"}'
+
+    elif data_type == "str":
+        return '"string_result"'
+
+    elif data_type == "int":
+        return "123"
+
+    elif data_type == "float":
+        return "123.45"
+
+    elif data_type == "bool":
+        return "true"
+
+    else:
+        # 默认返回字典格式
+        if required_fields:
+            field_examples = {}
+            for field in required_fields:
+                field_examples[field] = f"{field}_value"
+            return str(field_examples).replace("'", '"')
+        else:
+            return '{"result": "value"}'

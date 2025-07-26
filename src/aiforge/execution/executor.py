@@ -8,6 +8,8 @@ import traceback
 class AIForgeExecutor:
     """AIForge代码执行引擎"""
 
+    MAX_EXECUTE_TIMEOUT = 10  # 代码执行超过10秒失败
+
     def __init__(self):
         self.history = []
         self.console = Console()
@@ -218,7 +220,12 @@ class AIForgeExecutor:
         return None
 
     def execute_python_code(self, code: str) -> Dict[str, Any]:
-        """智能执行Python代码"""
+        """智能执行Python代码，增加超时控制"""
+        import signal
+
+        def timeout_handler(signum, frame):
+            raise TimeoutError("代码执行超时")
+
         try:
             # 预处理代码
             code = self._preprocess_code(code)
@@ -230,8 +237,15 @@ class AIForgeExecutor:
             exec_globals = self._build_smart_execution_environment(code)
             exec_locals = {}
 
-            # 执行代码
-            exec(code, exec_globals, exec_locals)
+            # 设置执行超时
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(self.MAX_EXECUTE_TIMEOUT)
+
+            try:
+                # 执行代码
+                exec(code, exec_globals, exec_locals)
+            finally:
+                signal.alarm(0)  # 取消超时
 
             # 提取结果
             result = self._extract_result(exec_locals)
@@ -258,6 +272,12 @@ class AIForgeExecutor:
 
             return execution_result
 
+        except TimeoutError:
+            return {
+                "success": False,
+                "error": "代码执行超时（15秒限制）",
+                "code": code,
+            }
         except SyntaxError as e:
             return {
                 "success": False,

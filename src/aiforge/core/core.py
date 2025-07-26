@@ -629,16 +629,16 @@ class AIForgeCore:
             return result
 
     def _get_final_standardized_instruction(self, instruction: str) -> Dict[str, Any]:
-        """获取最终的标准化指令，包含预期输出分析"""
+        """获取最终的标准化指令"""
         print(f"[DEBUG] 输入指令: {instruction}")
 
-        # 第一步：本地分析
+        # 第一步：本地分析（已包含输出格式）
         local_analysis = self.instruction_analyzer.local_analyze_instruction(instruction)
         print(
             f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}"  # noqa 501
         )
 
-        # 第二步：如果置信度低，尝试AI分析
+        # 第二步：如果置信度低，尝试AI分析（AI分析也会包含输出格式）
         confidence = local_analysis.get("confidence", 0)
         final_analysis = local_analysis
 
@@ -649,17 +649,7 @@ class AIForgeCore:
                 final_analysis = ai_analysis
                 print(f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}")
 
-        # 第三步：生成预期输出规则 - 这是关键的新增部分
-        if self.instruction_analyzer and final_analysis.get("confidence", 0) >= 0.6:
-            task_type = final_analysis.get("task_type", "general")
-            required_params = final_analysis.get("required_parameters", {})
-
-            # 调用 analyze_expected_output 方法
-            expected_output = self.instruction_analyzer.analyze_expected_output(
-                instruction, task_type, required_params
-            )
-            final_analysis["expected_output"] = expected_output
-            print(f"[DEBUG] 生成预期输出规则: {expected_output}")
+        print(f"[DEBUG] 最终标准化指令（含输出格式）: {final_analysis}")
 
         return final_analysis
 

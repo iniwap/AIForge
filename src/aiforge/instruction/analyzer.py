@@ -26,10 +26,13 @@ class InstructionAnalyzer:
                     "接口",
                     "爬取",
                     "crawl",
+                    "信息",
+                    "资讯",
+                    "内容",
                 ],
                 "actions": ["search", "fetch", "get", "crawl"],
                 "output_formats": ["json", "list", "dict"],
-                "common_params": ["query", "url", "max_results", "topic"],
+                "common_params": ["query", "topic", "time_range", "date"],
             },
             "data_process": {
                 "keywords": [
@@ -174,7 +177,7 @@ class InstructionAnalyzer:
         }
 
     def local_analyze_instruction(self, instruction: str) -> Dict[str, Any]:
-        """本地指令分析，移除硬编码的对话延续检测"""
+        """本地指令分析"""
         instruction_lower = instruction.lower()
 
         # 计算每种任务类型的匹配分数
@@ -185,7 +188,7 @@ class InstructionAnalyzer:
             # 检查排除关键词
             exclude_keywords = pattern_data.get("exclude_keywords", [])
             if any(exclude_keyword in instruction_lower for exclude_keyword in exclude_keywords):
-                continue  # 跳过包含排除关键词的任务类型
+                continue
 
             score = sum(1 for keyword in pattern_data["keywords"] if keyword in instruction_lower)
             if score > 0:
@@ -203,24 +206,23 @@ class InstructionAnalyzer:
         max_possible_score = len(best_pattern["keywords"])
         confidence = min(type_scores[best_task_type] / max_possible_score * 2, 1.0)
 
-        # 生成完整的标准化指令
+        # 提取参数
+        parameters = self._smart_extract_parameters(instruction, best_pattern["common_params"])
+
+        # 生成完整的标准化指令，包含预期输出
         standardized = {
             "task_type": best_task_type,
             "action": self._smart_infer_action(instruction, best_pattern["actions"]),
             "target": self._extract_target(instruction),
-            "parameters": self._smart_extract_parameters(
-                instruction, best_pattern["common_params"]
-            ),
+            "parameters": parameters,
             "output_format": self._smart_infer_output_format(
                 instruction, best_pattern["output_formats"]
             ),
-            "cache_key": self._generate_semantic_cache_key(
-                best_task_type,
-                instruction,
-                self._smart_extract_parameters(instruction, best_pattern["common_params"]),
-            ),
+            "cache_key": self._generate_semantic_cache_key(best_task_type, instruction, parameters),
             "confidence": confidence,
             "source": "local_analysis",
+            # 新增：直接包含预期输出分析
+            "expected_output": self._get_default_expected_output(best_task_type),
         }
 
         return standardized
@@ -385,6 +387,7 @@ class InstructionAnalyzer:
             "cache_key": f"general_{hash(instruction) % 10000}",
             "confidence": 0.3,
             "source": "default",
+            "expected_output": self._get_default_expected_output("general"),
         }
 
     def get_analysis_prompt(self, include_guidance: bool = True) -> str:
@@ -794,56 +797,9 @@ class InstructionAnalyzer:
         }
         return use_cases.get(task_type, [])
 
-    def analyze_expected_output(
-        self, instruction: str, task_type: str, parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """分析任务的预期输出结果，用于后续验证"""
-        expected_output_prompt = f"""
-分析以下任务的预期输出结果：
-任务类型：{task_type}
-用户指令：{instruction}
-参数：{parameters}
-
-请分析并返回JSON格式的预期结果验证规则：
-{{
-    "expected_data_type": "dict/list/str/int/float",
-    "required_fields": ["field1", "field2"],
-    "validation_rules": {{
-        "min_items": 1,
-        "non_empty_fields": ["title", "content"],
-        "status_field": "status",
-        "success_indicators": ["data存在", "results非空", "error字段不存在"]
-    }},
-    "failure_indicators": ["error", "exception", "failed", "timeout"],
-    "business_logic_checks": [
-        "数据量应大于0",
-        "必须包含有效内容",
-        "时间戳应为最新"
-    ]
-}}
-"""
-
-        try:
-            response = self.llm_client.generate_code(expected_output_prompt, "")
-            return self.parse_standardized_instruction(response)
-        except Exception:
-            return self._get_default_expected_output(task_type)
-
     def _get_default_expected_output(self, task_type: str) -> Dict[str, Any]:
         """获取默认的预期输出规则"""
         defaults = {
-            "web_search": {
-                "expected_data_type": "dict",
-                "required_fields": ["data", "status"],
-                "validation_rules": {
-                    "min_items": 1,
-                    "non_empty_fields": ["results"],
-                    "status_field": "status",
-                    "success_indicators": ["data存在", "results非空"],
-                },
-                "failure_indicators": ["error", "exception", "failed", "timeout"],
-                "business_logic_checks": ["搜索结果数量应大于0", "结果应包含有效链接"],
-            },
             "data_analysis": {
                 "expected_data_type": "dict",
                 "required_fields": ["data", "analysis"],

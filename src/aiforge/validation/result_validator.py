@@ -62,16 +62,16 @@ class IntelligentResultValidator:
         if result_content is None:
             return False, "执行结果为None"
 
-        # 检查结果是否为空列表/字典
+        # 强化空数据检查
         if isinstance(result_content, (list, dict)) and len(result_content) == 0:
             return False, "执行结果为空"
 
-        # 新增：检查data字段是否为空
+        # 检查data字段是否为空
         if isinstance(result_content, dict):
             if result_content.get("status") != "success":
-                return False, f"结果状态为错误: {result_content.get('error', '未知错误')}"
+                return False, f"结果状态为错误: {result_content.get('summary', '未知错误')}"
 
-            # 检查data字段是否存在且非空
+            # 严格检查data字段
             data = result_content.get("data")
             if data is not None:
                 if isinstance(data, (list, dict)) and len(data) == 0:
@@ -80,13 +80,6 @@ class IntelligentResultValidator:
                     content = data.get("content")
                     if isinstance(content, (list, dict)) and len(content) == 0:
                         return False, "数据内容为空，未获取到有效数据"
-
-            failure_indicators = expected.get(
-                "failure_indicators", ["error", "exception", "failed", "timeout"]
-            )
-            for indicator in failure_indicators:
-                if indicator in result_content:
-                    return False, f"结果包含错误指示: {indicator}"
 
         return True, ""
 

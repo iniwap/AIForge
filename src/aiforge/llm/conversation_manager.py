@@ -1,4 +1,5 @@
 import re
+import json
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -71,16 +72,41 @@ class ConversationManager:
         self.conversation_history = important_messages + recent_messages
 
     def get_context_messages(self) -> List[Dict[str, str]]:
-        """获取用于 LLM 的上下文消息"""
+        """获取过滤后的上下文消息"""
+        context_messages = []
+
+        # 只保留最近的关键信息
+        for message in self.conversation_history[-3:]:  # 减少到3条
+            if message.get("metadata", {}).get("is_error_feedback"):
+                # 过滤错误反馈，只保留核心信息
+                filtered_content = self._filter_error_feedback(message["content"])
+                if filtered_content:
+                    context_messages.append({"role": message["role"], "content": filtered_content})
+            elif message["role"] == "user" and len(message["content"]) < 50:
+                # 只保留非常简短的用户消息
+                context_messages.append(message)
+
         # 添加错误模式总结
         if self.error_patterns:
-            pattern_summary = f"历史错误模式: {', '.join(set(self.error_patterns[-5:]))}"
-            context_msg = {"role": "system", "content": f"注意避免以下常见错误: {pattern_summary}"}
-            return [context_msg] + [
-                {"role": msg["role"], "content": msg["content"]}
-                for msg in self.conversation_history
-            ]
+            recent_patterns = list(set(self.error_patterns[-3:]))  # 最近3个不重复模式
+            if recent_patterns:
+                pattern_msg = {
+                    "role": "system",
+                    "content": f"避免错误: {', '.join(recent_patterns)}",
+                }
+                context_messages.insert(0, pattern_msg)
 
-        return [
-            {"role": msg["role"], "content": msg["content"]} for msg in self.conversation_history
-        ]
+        return context_messages
+
+    def _filter_error_feedback(self, content: str) -> str:
+        """过滤错误反馈，只保留核心信息"""
+        try:
+            feedback = json.loads(content)
+            # 只保留最关键的信息
+            core_info = {
+                "type": feedback.get("error_type", "unknown"),
+                "hint": feedback.get("suggestion", "")[:30],  # 极简建议
+            }
+            return json.dumps(core_info, ensure_ascii=False)
+        except Exception:
+            return ""  # 解析失败直接忽略

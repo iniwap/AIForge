@@ -26,26 +26,6 @@ class RuleBasedAdapter:
                 },
                 "terminal_text": {"format": "simple_text", "fields": ["content", "source"]},
             },
-            "web_search": {
-                "web_table": {
-                    "columns": ["title", "url", "content"],
-                    "sortable": ["title"],
-                    "searchable": True,
-                    "max_content_length": 100,
-                },
-                "web_card": {
-                    "primary_field": "title",
-                    "secondary_fields": ["url", "content"],
-                    "layout": "vertical",
-                    "display_format": "search_result",
-                },
-                "mobile_list": {
-                    "title_field": "title",
-                    "subtitle_field": "url",
-                    "detail_fields": ["content"],
-                },
-                "terminal_text": {"format": "numbered_list", "fields": ["title", "url"]},
-            },
             "data_analysis": {
                 "web_dashboard": {
                     "sections": ["analysis", "summary", "visualizations"],

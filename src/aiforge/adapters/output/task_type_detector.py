@@ -9,12 +9,25 @@ class TaskTypeDetector:
     def __init__(self):
         self.detection_rules = {
             "data_fetch": {
-                "data_patterns": ["content", "source", "location", "weather", "temperature"],
-                "structure_patterns": ["single_item", "key_value_pairs"],
-            },
-            "web_search": {
-                "data_patterns": ["results", "title", "url", "query", "total_count"],
-                "structure_patterns": ["result_list", "search_metadata"],
+                "data_patterns": [
+                    "content",
+                    "source",
+                    "location",
+                    "weather",
+                    "temperature",
+                    "title",
+                    "abstract",
+                    "url",
+                    "publish_time",
+                    "results",
+                    "query",
+                ],
+                "structure_patterns": [
+                    "single_item",
+                    "key_value_pairs",
+                    "search_results",
+                    "result_list",
+                ],
             },
             "data_analysis": {
                 "data_patterns": ["analysis", "key_findings", "trends", "summary", "metrics"],
@@ -79,12 +92,19 @@ class TaskTypeDetector:
 
     def _has_structure_pattern(self, data: Dict[str, Any], pattern: str) -> bool:
         """检查是否符合特定结构模式"""
+        if pattern == "search_results" or pattern == "result_list":
+            # 统一处理搜索结果检测
+            if isinstance(data.get("data"), list):
+                items = data["data"]
+                if items and isinstance(items[0], dict):
+                    search_fields = ["title", "abstract", "content", "url", "source"]
+                    return any(field in items[0] for field in search_fields)
+            return False
+
         if pattern == "single_item":
             return len(data) <= self.MAX_SINGLE_ITEM_KEYS and not any(
                 isinstance(v, list) for v in data.values()
             )
-        elif pattern == "result_list":
-            return "results" in data and isinstance(data["results"], list)
         elif pattern == "search_metadata":
             return any(key in data for key in ["query", "total_count", "source"])
         elif pattern == "analysis_report":

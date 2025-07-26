@@ -1,5 +1,6 @@
 import requests
 import time
+import json
 from rich.console import Console
 from typing import Dict, Any
 from .conversation_manager import ConversationManager
@@ -46,9 +47,6 @@ class AIForgeLLMClient:
     ) -> str | None:
         """生成代码的核心方法"""
 
-        print("instruction+>", instruction)
-        print("system_prompt+>", system_prompt)
-
         for attempt in range(max_retries):
             try:
                 headers = {
@@ -71,6 +69,7 @@ class AIForgeLLMClient:
                 if instruction:
                     messages.append({"role": "user", "content": instruction})
 
+                print("send messages=>", messages)
                 payload = {
                     "model": self.model,
                     "messages": messages,
@@ -134,13 +133,27 @@ class AIForgeLLMClient:
 
         return None
 
-    def send_feedback(self, feedback: str, is_error: bool = False, metadata: Dict[str, Any] = None):
-        """发送反馈信息给LLM"""
-        feedback_metadata = metadata or {}
-        feedback_metadata["is_error_feedback"] = is_error
+    def send_feedback(self, feedback: str, is_error: bool = True, metadata: Dict[str, Any] = None):
+        """发送反馈信息，控制信息量"""
+        if not metadata:
+            metadata = {}
 
-        self.conversation_manager.add_message("user", feedback, feedback_metadata)
-        return True  # 不立即生成响应，等待下一轮
+        metadata["is_error_feedback"] = is_error
+
+        # 对反馈内容进行长度控制
+        if len(feedback) > 200:  # 限制反馈长度
+            try:
+                feedback_obj = json.loads(feedback)
+                # 保留核心字段
+                simplified = {
+                    "error_type": feedback_obj.get("error_type", "unknown"),
+                    "suggestion": feedback_obj.get("suggestion", "")[:50],
+                }
+                feedback = json.dumps(simplified, ensure_ascii=False)
+            except Exception:
+                feedback = feedback[:200]  # 硬截断
+
+        self.conversation_manager.add_message("user", feedback, metadata)
 
     def get_usage_stats(self):
         """获取使用统计"""
