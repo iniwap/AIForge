@@ -60,9 +60,6 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
 - 生成的代码必须能在标准 Python 环境中直接执行
 - 使用标准 Markdown 代码块格式：```python ... ```，不要输出任何解释性文字
 - 实现完整的错误处理和异常捕获
-- 数据获取可优先尝试搜索引擎百度、bing，对于新闻数据，应使用公开的新闻网站爬取、RSS源等方式
-- 禁止使用任何第三方API密钥或需要认证的API服务获取数据，只能使用公开免费的数据源
-- 数据必须来自真实的外部源，禁止使用模拟或占位符数据
 """
 
     if optimize_tokens:
@@ -76,8 +73,7 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
 {code_rule}
 
 # 执行规范
-执行代码，并将执行结果赋值给 __result__
-
+执行代码，并将执行结果赋值给 __result__ ，结果禁止使用模拟或占位符数据
 """
     return base_prompt
 
@@ -479,52 +475,3 @@ def get_field_template(required_fields: List[str]) -> str:
             templates.append(f'"{field}": "{field}_value"')
 
     return ",\n            ".join(templates)
-
-
-def get_format_example(data_type: str, required_fields: List[str]) -> str:
-    """根据数据类型和必需字段构建格式示例"""
-
-    if data_type == "list":
-        # 构建列表格式示例
-        if required_fields:
-            # 为每个必需字段创建示例值
-            field_examples = {}
-            for field in required_fields:
-                field_examples[field] = f"{field}_value"
-
-            return f"[{field_examples}]"
-        else:
-            return "[item1, item2, ...]"
-
-    elif data_type == "dict":
-        # 构建字典格式示例
-        if required_fields:
-            field_examples = {}
-            for field in required_fields:
-                field_examples[field] = f"{field}_value"
-
-            return str(field_examples).replace("'", '"')
-        else:
-            return '{"key": "value"}'
-
-    elif data_type == "str":
-        return '"string_result"'
-
-    elif data_type == "int":
-        return "123"
-
-    elif data_type == "float":
-        return "123.45"
-
-    elif data_type == "bool":
-        return "true"
-
-    else:
-        # 默认返回字典格式
-        if required_fields:
-            field_examples = {}
-            for field in required_fields:
-                field_examples[field] = f"{field}_value"
-            return str(field_examples).replace("'", '"')
-        else:
-            return '{"result": "value"}'
