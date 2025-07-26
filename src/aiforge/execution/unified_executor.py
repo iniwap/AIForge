@@ -112,7 +112,7 @@ class UnifiedParameterizedExecutor(CachedModuleExecutor):
 
         # 第二步：如果参数不完全匹配，尝试智能映射
         if len(param_values) < len(func_params):
-            print(f"[DEBUG] 统一执行器: 参数不完全匹配，尝试智能映射")
+            print("[DEBUG] 统一执行器: 参数不完全匹配，尝试智能映射")
             smart_mapped = self._smart_parameter_mapping(
                 effective_parameters, func_params, param_values
             )
@@ -245,7 +245,7 @@ class UnifiedParameterizedExecutor(CachedModuleExecutor):
 
         # 策略4: 无参数调用
         try:
-            print(f"[DEBUG] 尝试无参数调用")
+            print("[DEBUG] 尝试无参数调用")
             return func()
         except Exception as e:
             print(f"[DEBUG] 无参数调用失败: {e}")

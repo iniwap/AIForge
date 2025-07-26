@@ -228,6 +228,14 @@ class AIForgeCore:
             analyzer = DataFlowAnalyzer(func_params)
             analyzer.visit(function_def)
 
+            # 检查API密钥相关冲突
+            if analyzer.has_parameter_conflicts():
+                conflicts = analyzer.get_conflict_details()
+                for conflict in conflicts:
+                    if conflict["type"] == "api_key_usage":
+                        print(f"[DEBUG] 发现API密钥使用冲突: {conflict}")
+                        return False
+
             # 检查参数冲突
             if analyzer.has_parameter_conflicts():
                 conflicts = analyzer.get_conflict_details()

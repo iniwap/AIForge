@@ -34,20 +34,116 @@ class DataFlowAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node):
-        """检测API调用中的硬编码问题"""
+        """检测API调用中的硬编码问题和API密钥使用"""
         if isinstance(node.func, ast.Attribute):
             if (
                 isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "requests"
-                and node.func.attr == "get"
+                and node.func.attr in ["get", "post", "put", "delete", "patch", "head", "options"]
             ):
-
-                # 分析URL参数
+                # 分析URL参数中的硬编码值
                 if node.args:
                     url_arg = node.args[0]
                     self._analyze_url_for_hardcoded_values(url_arg)
+                    self._analyze_url_for_api_keys(url_arg)
+
+                # 检查headers参数中的认证信息
+                self._check_headers_for_auth(node)
+
+                # 检查其他关键字参数中的API密钥
+                self._check_params_for_api_keys(node)
+
+        # 检查其他可能的HTTP库调用
+        self._check_other_http_libraries(node)
 
         self.generic_visit(node)
+
+    def _analyze_url_for_api_keys(self, url_node):
+        """分析URL中的API密钥参数"""
+        if isinstance(url_node, ast.JoinedStr):
+            # f-string URL中可能包含API密钥
+            for value in url_node.values:
+                if isinstance(value, ast.Constant):
+                    url_part = str(value.value).lower()
+                    if any(
+                        pattern in url_part for pattern in ["api_key=", "apikey=", "token=", "key="]
+                    ):
+                        self.parameter_conflicts.append(
+                            {
+                                "type": "api_key_in_url",
+                                "context": "url_parameter",
+                                "message": "检测到URL中包含API密钥参数",
+                            }
+                        )
+        elif isinstance(url_node, ast.Constant):
+            # 常量URL
+            url_str = str(url_node.value).lower()
+            if any(pattern in url_str for pattern in ["api_key=", "apikey=", "token=", "key="]):
+                self.parameter_conflicts.append(
+                    {
+                        "type": "api_key_in_url",
+                        "context": "constant_url",
+                        "message": "检测到URL常量中包含API密钥参数",
+                    }
+                )
+
+    def _check_headers_for_auth(self, node):
+        """检查headers参数中的认证信息"""
+        for keyword in node.keywords:
+            if keyword.arg == "headers":
+                self._analyze_headers_dict(keyword.value)
+
+    def _analyze_headers_dict(self, headers_node):
+        """分析headers字典中的认证信息"""
+        if isinstance(headers_node, ast.Dict):
+            for key, value in zip(headers_node.keys, headers_node.values):
+                if isinstance(key, ast.Constant):
+                    key_str = str(key.value).lower()
+                    if key_str in ["authorization", "x-api-key", "api-key", "auth-token"]:
+                        self.parameter_conflicts.append(
+                            {
+                                "type": "api_key_in_headers",
+                                "parameter": key_str,
+                                "context": "headers_dict",
+                                "message": f"检测到headers中包含认证信息: {key_str}",
+                            }
+                        )
+
+    def _check_params_for_api_keys(self, node):
+        """检查其他参数中的API密钥"""
+        api_key_params = ["api_key", "apikey", "token", "secret", "auth", "key"]
+
+        for keyword in node.keywords:
+            if keyword.arg and keyword.arg.lower() in api_key_params:
+                self.parameter_conflicts.append(
+                    {
+                        "type": "api_key_parameter",
+                        "parameter": keyword.arg,
+                        "context": "function_parameter",
+                        "message": f"检测到可能的API密钥参数: {keyword.arg}",
+                    }
+                )
+
+    def _check_other_http_libraries(self, node):
+        """检查其他HTTP库的使用"""
+        if isinstance(node.func, ast.Attribute):
+            # 检查urllib
+            if isinstance(node.func.value, ast.Name) and node.func.value.id in [
+                "urllib",
+                "httpx",
+                "aiohttp",
+            ]:
+                # 对这些库也进行类似的检查
+                self._check_params_for_api_keys(node)
+
+            # 检查urllib.request
+            elif (
+                isinstance(node.func.value, ast.Attribute)
+                and isinstance(node.func.value.value, ast.Name)
+                and node.func.value.value.id == "urllib"
+                and node.func.value.attr == "request"
+            ):
+                self._check_params_for_api_keys(node)
 
     def _analyze_url_for_hardcoded_values(self, url_node):
         """分析URL中的硬编码值"""
@@ -176,13 +272,15 @@ class DataFlowAnalyzer(ast.NodeVisitor):
         )
         self.usages[var].append(full_context)
 
-    def _trace_variable_usage(self, var: str, context: str, visited: Set[str] = None):
-        """追踪变量的间接使用（防止循环引用）"""
+    def _trace_variable_usage(
+        self, var: str, context: str, visited: Set[str] = None, depth: int = 0
+    ):
+        """追踪变量的间接使用"""
         if visited is None:
             visited = set()
 
-        # 防止循环引用导致无限递归
-        if var in visited:
+        # 防止循环引用和过深递归
+        if var in visited or depth > 10:  # 限制递归深度
             return
 
         visited.add(var)
@@ -193,7 +291,7 @@ class DataFlowAnalyzer(ast.NodeVisitor):
                 if source_var in self.function_params:
                     self._mark_meaningful_use(source_var, f"indirect_via_{var}_in_{context}")
                 elif source_var in self.assignments and source_var not in visited:
-                    # 递归追踪，传递visited集合
+                    # 递归追踪，传递visited集合和深度
                     self._trace_variable_usage(
-                        source_var, f"indirect_via_{var}_in_{context}", visited
+                        source_var, f"indirect_via_{var}_in_{context}", visited, depth + 1
                     )

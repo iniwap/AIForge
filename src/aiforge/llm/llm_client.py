@@ -46,6 +46,9 @@ class AIForgeLLMClient:
     ) -> str | None:
         """生成代码的核心方法"""
 
+        print("instruction+>", instruction)
+        print("system_prompt+>", system_prompt)
+
         for attempt in range(max_retries):
             try:
                 headers = {

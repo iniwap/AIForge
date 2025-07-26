@@ -9,7 +9,7 @@ def get_task_specific_format(task_type: str, expected_output: Dict[str, Any] = N
 # 输出格式要求：
 __result__ = {
     "data": main_result,
-    "status": "success/error",
+    "status": "success或error",
     "summary": "结果摘要",
     "metadata": {"timestamp": "...", "task_type": "..."}
 }"""
@@ -31,7 +31,7 @@ __result__ = {
 # 基于AI分析的输出格式要求：
 __result__ = {{
     "data": {data_example},
-    "status": "success",
+    "status": "success或error",
     "summary": "任务完成描述",
     "metadata": {{"timestamp": "...", "task_type": "{task_type}"}}
 }}
@@ -49,8 +49,9 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
     code_rule = """
 - 生成的代码必须能在标准 Python 环境中直接执行
 - 使用标准 Markdown 代码块格式：```python ... ```，不要输出任何解释性文字
-- 使用预装库：requests, BeautifulSoup, pandas, numpy 等
 - 实现完整的错误处理和异常捕获
+- 禁止使用任何第三方API密钥或需要认证的API服务获取数据，只能使用公开免费的数据源
+- 数据必须来自真实的外部源，禁止使用模拟或占位符数据
 """
 
     if optimize_tokens:
@@ -85,44 +86,32 @@ def _get_enhanced_aiforge_prompt_with_universal_validation(
         param_analysis = _analyze_parameters_for_execution(parameters)
 
         execution_guidance = f"""
-## 🔧 智能参数化执行指导
+## 🔧 参数化执行指导
 
-基于任务分析，生成以下参数化函数：
+根据任务分析生成函数：
 
 def execute_task({param_analysis['signature']}):
     '''
     {param_analysis['docstring']}
     '''
-    # 🚨 通用参数使用要求：
-    # 1. 每个参数都必须在函数逻辑中被实际使用
-    # 2. 参数值必须影响函数的执行结果或返回值
-    # 3. 不得硬编码任何可以从参数获取的值
-    # 4. 参数应该用于控制函数的行为、数据源或输出格式
-
-    # 实现逻辑应该基于参数的实际含义和任务需求
+    # 实现功能逻辑
     return result_data
 
 # 参数说明：
 {param_analysis['param_docs']}
 
-🚨 必须在函数定义后立即调用：
+# 必须立即调用：
 __result__ = execute_task({param_analysis['call_args']})
 
-## 📋 通用参数使用验证标准：
-1. 参数必须在函数体内被引用和使用
-2. 参数的值必须影响函数的执行路径或结果
-3. 避免硬编码任何可以通过参数传递的值
-4. 参数应该用于：
-   - 控制函数行为（条件判断、循环控制）
-   - 作为数据源（API调用、文件路径、查询条件）
-   - 影响输出格式（格式化、过滤、排序）
-   - 配置执行参数（超时、重试次数、精度）
+## 📋 参数使用规范：
+1. 每个参数必须在函数体内被实际使用，影响执行路径或结果
+2. 禁止硬编码可通过参数获取的值
+3. 参数应用于：控制行为、作为数据源、影响输出、配置执行
 
-## ❌ 通用禁止模式：
-- 定义参数但不在函数体中使用
-- 参数仅用于字符串拼接显示，不影响核心逻辑
-- 硬编码值而忽略相应参数
-- 参数仅用于注释或日志，不参与业务逻辑
+## ❌ 避免模式：
+- 定义但不使用的参数
+- 参数仅用于显示而不影响核心逻辑
+- 忽略参数而使用硬编码值
 """
 
     enhanced_prompt = f"""
@@ -303,103 +292,88 @@ def get_base_prompt_sections() -> Dict[str, str]:
     return {
         "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。",
         "execution_mode": """
-## 直接响应类型特征：
-- 纯知识问答、概念解释、定义说明（非时效性）
-- 文本创作、写作、翻译、改写
-- 历史信息查询、理论分析
-- 建议咨询、意见评价（基于已有知识）
-- 对话延续和情感支持（感谢、追问、补充说明等）
-- 可以通过AI的知识和语言能力直接完成且不需要最新数据
+## 直接响应类型:
+- 知识问答、解释、定义、理论分析
+- 文本创作、翻译、改写
+- 建议咨询、意见评价
+- 对话延续和情感支持
+- 可用AI知识直接完成且不需最新数据
 
-## 代码执行类型特征：
-- 需要访问外部数据源（API、网页、文件系统）
-- 需要实时信息获取（天气、股价、新闻、汇率等）
-- 需要最新数据的查询和分析
-- 需要数据计算、统计、处理、转换
-- 需要文件操作、系统交互、自动化任务
+## 代码执行类型:
+- 需访问外部数据源(API、网页、文件)
+- 需实时信息(天气、股价、新闻)
+- 需最新数据查询和分析
+- 需数据计算、处理、转换
+- 需文件操作、系统交互
 """,
         "analysis_steps": """
-## 对于直接响应类型：
-1. 理解用户想要获得什么信息或内容
-2. 确认信息不涉及时效性要求
-3. 确认可以通过AI知识直接提供
-4. 判断是否为对话延续（感谢、追问、情感表达等）
+## 直接响应类型分析:
+1. 确认信息不涉及时效性
+2. 确认可通过AI知识直接提供
+3. 判断是否为对话延续
 
-## 对于代码执行类型：
-1. 理解用户想要完成什么任务
-2. 识别是否需要最新数据或实时信息
-3. 思考完成这个任务的必要条件和输入信息
-4. 从用户指令中提取这些信息的具体值
+## 代码执行类型分析:
+1. 识别是否需要最新数据或实时信息
+2. 确定完成任务的必要条件和输入
+3. 从指令中提取具体值
 
-## 对话上下文判断：
-如果用户指令是对话的延续（如感谢、追问、补充说明、情感表达等），请：
-1. 设置 execution_mode 为 "direct_ai_response"
-2. 在 reasoning 中说明这是对话延续
-3. 适当提高 confidence 值到 0.8 以上
-
-## 动作命名规范：
-1. 基于任务类型生成标准化动作名
-2. 使用语义特征而非特定领域词汇
-3. 保持动作名称的一致性和可扩展性
-4. 优先使用英文动作名确保系统兼容性
+## 对话上下文判断:
+若为对话延续(感谢、追问等)：
+- 设置execution_mode为"direct_ai_response"
+- 提高confidence值到0.8以上
 """,
         "action_vocabulary": """
-## 标准动作生成规则：
-- 数据获取类任务 → fetch_{task_type_suffix}
-- 数据处理类任务 → process_{task_type_suffix}
-- 内容生成类任务 → generate_{task_type_suffix}
-- 文件操作类任务 → transform_{task_type_suffix}
-- 直接响应类任务 → respond_{task_type_suffix}
+## 标准动作命名:
+- 数据获取 → fetch_{task_type_suffix}
+- 数据处理 → process_{task_type_suffix}
+- 内容生成 → generate_{task_type_suffix}
+- 文件操作 → transform_{task_type_suffix}
+- 直接响应 → respond_{task_type_suffix}
 
-## 语义特征识别：
-- 包含获取、查询、搜索等语义 → 归类为数据获取
-- 包含分析、处理、计算等语义 → 归类为数据处理
-- 包含生成、创建、制作等语义 → 归类为内容生成
-- 包含回答、解释、响应等语义 → 归类为直接响应
-
-注意：避免硬编码特定领域词汇，使用通用语义特征进行分类
+## 语义特征:
+- 获取/查询/搜索 → 数据获取
+- 分析/处理/计算 → 数据处理
+- 生成/创建/制作 → 内容生成
+- 回答/解释/响应 → 直接响应
 """,
         "output_format": """{
     "task_type": "任务类型",
     "action": "具体动作",
     "target": "任务描述",
-    "execution_mode": "direct_ai_response 或 code_generation",
+    "execution_mode": "direct_ai_response或code_generation",
     "confidence": "置信度",
     "reasoning": "判断理由",
     "required_parameters": {
         "param_name": {
-            "value": "从指令中提取的值或null",
+            "value": "提取的值或null",
             "type": "参数类型",
-            "description": "参数用途说明",
+            "description": "用途说明",
             "required": true/false,
             "default": "默认值或null"
         }
     },
-    "execution_logic": "完成任务的基本逻辑描述",
+    "execution_logic": "完成任务的基本逻辑",
     "output_format": "期望输出格式"
 }""",
         "principles": """
-- 专注于任务完成的必要性，而非指令的字面内容
-- 参数应该是执行任务的最小必要集合
-- **预期输出应采用最低限度满足用户需求的策略**
-- **避免过度详细的验证规则，优先保证任务成功执行**
-- 优先从指令中提取具体值，无法提取时考虑合理默认值
-- 参数命名应该清晰反映其在任务中的作用
+- 专注任务完成的必要性
+- 使用最小必要参数集
+- 采用最低限度满足需求的输出
+- 避免过度验证，保证任务执行
+- 优先提取具体值，次考虑默认值
+- 参数命名应反映其作用
 """,
         "examples": """
-用户指令："北京今天的天气如何"
-思考：要获取天气信息，我需要知道：
-1. 地点：北京
-2. 时间：今天
-3. 信息类型：天气
+指令："北京今天的天气如何"
+思考：需要地点(北京)、时间(今天)、信息类型(天气)
 执行模式：code_generation
 
-用户指令："解释什么是机器学习"
-思考：这是纯知识问答，不需要外部数据
+指令："解释什么是机器学习"
+思考：纯知识问答，不需外部数据
 执行模式：direct_ai_response
 
-用户指令："谢谢你的解释，我还想了解深度学习"
-思考：这是对话延续，用户在感谢并追问相关问题
+指令："谢谢你的解释，我还想了解深度学习"
+思考：对话延续，感谢并追问
 执行模式：direct_ai_response
 """,
     }

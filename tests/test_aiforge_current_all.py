@@ -354,35 +354,35 @@ if __name__ == "__main__":
 
 r"""
 # 运行所有测试  
-pytest tests/test_comprehensive_architecture.py -v  
+pytest tests/test_aiforge_current_all.py -v  
   
 # 运行特定测试类  
-pytest tests/test_comprehensive_architecture.py::TestInstructionAnalysis -v  
+pytest tests/test_aiforge_current_all.py::TestInstructionAnalysis -v  
   
 # 运行特定测试方法  
-pytest tests/test_comprehensive_architecture.py::TestCachingSystem::test_cache_hit_weather_queries -v  
+pytest tests/test_aiforge_current_all.py::TestCachingSystem::test_cache_hit_weather_queries -v  
   
 # 并行运行测试（需要安装pytest-xdist）  
-pytest tests/test_comprehensive_architecture.py -n auto  
+pytest tests/test_aiforge_current_all.py -n auto  
 
 # 生成覆盖率报告（需要安装pytest-cov）  
 pip install pytest-cov  
   
 # 运行测试并生成覆盖率报告  
-pytest tests/test_comprehensive_architecture.py --cov=src/aiforge --cov-report=html --cov-report=term  
+pytest tests/test_aiforge_current_all.py --cov=src/aiforge --cov-report=html --cov-report=term  
   
 # 生成详细的覆盖率报告  
-pytest tests/test_comprehensive_architecture.py \  
+pytest tests/test_aiforge_current_all.py \  
     --cov=src/aiforge \  
     --cov-report=html:htmlcov 
     --cov-report=term-missing \  
     --cov-report=xml  
   
 # 只显示未覆盖的行  
-pytest tests/test_comprehensive_architecture.py --cov=src/aiforge --cov-report=term-missing  
+pytest tests/test_aiforge_current_all.py --cov=src/aiforge --cov-report=term-missing  
   
 # 设置覆盖率阈值（例如80%）  
-pytest tests/test_comprehensive_architecture.py --cov=src/aiforge --cov-fail-under=80
+pytest tests/test_aiforge_current_all.py --cov=src/aiforge --cov-fail-under=80
 
 
 
@@ -412,7 +412,7 @@ directory = htmlcov
 # GitHub Actions 示例  
 - name: Run tests with coverage  
   run: |  
-    pytest tests/test_comprehensive_architecture.py \  
+    pytest tests/test_aiforge_current_all.py \  
       --cov=src/aiforge \  
       --cov-report=xml \  
       --cov-report=term  

@@ -1,4 +1,4 @@
-# 🌟 AIForge - 智能意图通用执行引擎
+# 🌟 AIForge - 智能意图自适应执行引擎
   
 <div align="center">  
   

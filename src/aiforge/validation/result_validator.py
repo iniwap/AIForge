@@ -66,10 +66,20 @@ class IntelligentResultValidator:
         if isinstance(result_content, (list, dict)) and len(result_content) == 0:
             return False, "执行结果为空"
 
-        # 检查是否包含明显的错误指示
+        # 新增：检查data字段是否为空
         if isinstance(result_content, dict):
-            if result_content.get("status") == "error":
+            if result_content.get("status") != "success":
                 return False, f"结果状态为错误: {result_content.get('error', '未知错误')}"
+
+            # 检查data字段是否存在且非空
+            data = result_content.get("data")
+            if data is not None:
+                if isinstance(data, (list, dict)) and len(data) == 0:
+                    return False, "数据字段为空，未获取到有效数据"
+                elif isinstance(data, dict) and data.get("content") is not None:
+                    content = data.get("content")
+                    if isinstance(content, (list, dict)) and len(content) == 0:
+                        return False, "数据内容为空，未获取到有效数据"
 
             failure_indicators = expected.get(
                 "failure_indicators", ["error", "exception", "failed", "timeout"]
@@ -104,25 +114,35 @@ class IntelligentResultValidator:
                     if not value or (isinstance(value, (list, dict)) and len(value) == 0):
                         return False, f"字段 {field} 不应为空"
 
-        # 检查最小项目数
-        min_items = validation_rules.get("min_items", 0)
+        # 增强最小项目数检查
+        min_items = validation_rules.get("min_items", 1)  # 默认至少需要1项数据
         if isinstance(result_content, dict) and "data" in result_content:
             data = result_content["data"]
-            if isinstance(data, dict) and "results" in data:
-                results = data["results"]
-                if isinstance(results, list) and len(results) < min_items:
-                    return False, f"结果数量 {len(results)} 少于最小要求 {min_items}"
+            if isinstance(data, dict):
+                if "results" in data:
+                    results = data["results"]
+                    if isinstance(results, list) and len(results) < min_items:
+                        return False, f"结果数量 {len(results)} 少于最小要求 {min_items}"
+                elif "content" in data:
+                    content = data["content"]
+                    if isinstance(content, list) and len(content) < min_items:
+                        return False, f"数据内容数量 {len(content)} 少于最小要求 {min_items}"
+                # 检查data本身是否为空字典
+                elif len(data) == 0:
+                    return False, f"数据为空，少于最小要求 {min_items}"
             elif isinstance(data, list) and len(data) < min_items:
                 return False, f"数据项数量 {len(data)} 少于最小要求 {min_items}"
 
-        # 检查成功指示器
+        # 修正成功指示器检查
         success_indicators = validation_rules.get("success_indicators", [])
         if success_indicators and isinstance(result_content, dict):
             has_success_indicator = False
             for indicator in success_indicators:
-                if "data存在" in indicator and "data" in result_content and result_content["data"]:
-                    has_success_indicator = True
-                    break
+                if "data存在" in indicator:
+                    data = result_content.get("data")
+                    if data and not (isinstance(data, (list, dict)) and len(data) == 0):
+                        has_success_indicator = True
+                        break
                 elif "results非空" in indicator and isinstance(result_content.get("data"), dict):
                     results = result_content["data"].get("results", [])
                     if results and len(results) > 0:
@@ -130,7 +150,7 @@ class IntelligentResultValidator:
                         break
 
             if not has_success_indicator:
-                return False, "未找到成功执行的指示器"
+                return False, "未找到成功执行的指示器或数据为空"
 
         return True, ""
 

@@ -609,37 +609,18 @@ class InstructionAnalyzer:
 
         return action  # 如果无法标准化，返回原动作
 
-    def _is_too_similar_to_existing_types(self, new_type: str, existing_types: List[str]) -> bool:
-        """检查新类型是否与现有类型过于相似"""
-        new_type_lower = new_type.lower()
+    def _is_too_similar_to_existing_types(self, task_type: str, builtin_types: List[str]) -> bool:
+        """检查是否与现有类型过于相似"""
+        try:
+            from difflib import SequenceMatcher
 
-        for existing_type in existing_types:
-            existing_lower = existing_type.lower()
-
-            # 检查是否包含相同的关键词
-            if any(word in existing_lower for word in new_type_lower.split("_")):
-                return True
-
-            # 检查编辑距离（简单实现）
-            if self._calculate_similarity(new_type_lower, existing_lower) > 0.7:
-                return True
-
-        return False
-
-    def _calculate_similarity(self, str1: str, str2: str) -> float:
-        """计算两个字符串的相似度"""
-        # 简单的相似度计算（可以使用更复杂的算法）
-        if str1 == str2:
-            return 1.0
-
-        # 计算公共子串长度
-        common_chars = set(str1) & set(str2)
-        total_chars = set(str1) | set(str2)
-
-        if not total_chars:
-            return 0.0
-
-        return len(common_chars) / len(total_chars)
+            for existing_type in builtin_types:
+                similarity = SequenceMatcher(None, task_type.lower(), existing_type.lower()).ratio()
+                if similarity > 0.8:  # 相似度阈值
+                    return True
+            return False
+        except Exception:
+            return False
 
     def get_task_type_usage_stats(self) -> Dict[str, Any]:
         """获取任务类型使用统计"""
@@ -882,7 +863,12 @@ class InstructionAnalyzer:
                     "status_field": "status",
                 },
                 "failure_indicators": ["error", "exception", "fetch_failed"],
-                "business_logic_checks": ["获取的数据应非空", "数据格式应正确"],
+                "business_logic_checks": [
+                    "获取的数据应非空",
+                    "数据格式应正确",
+                    "数据必须来自真实的外部源",
+                    "禁止使用模拟或占位符数据",
+                ],
             },
             "data_process": {
                 "expected_data_type": "dict",

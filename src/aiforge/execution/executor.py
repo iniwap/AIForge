@@ -1,23 +1,8 @@
-import re
-from typing import Dict, Any, List
+import ast
+import importlib
+from typing import Dict, Any, List, Set
 from rich.console import Console
 import traceback
-
-INIT_IMPORTS = """
-import os
-import re
-import sys
-import json
-import time
-import random
-import requests
-import urllib.parse
-from urllib.parse import quote
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor, as_completed
-"""
 
 
 class AIForgeExecutor:
@@ -27,39 +12,228 @@ class AIForgeExecutor:
         self.history = []
         self.console = Console()
 
-    def _preprocess_code(self, code: str) -> str:
-        """预处理代码"""
-        # 移除整个代码块开头和结尾的空白字符
-        code = code.strip()
+    def _extract_imports_from_code(self, code: str) -> Dict[str, Dict[str, Any]]:
+        """提取代码中的所有导入语句"""
+        try:
+            tree = ast.parse(code)
+            imports = {}
 
-        # 分行处理每一行
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        name = alias.asname or alias.name
+                        imports[name] = {
+                            "type": "import",
+                            "module": alias.name,
+                            "alias": alias.asname,
+                            "line": node.lineno,
+                        }
+                elif isinstance(node, ast.ImportFrom):
+                    module = node.module or ""
+                    for alias in node.names:
+                        name = alias.asname or alias.name
+                        imports[name] = {
+                            "type": "from_import",
+                            "module": module,
+                            "name": alias.name,
+                            "alias": alias.asname,
+                            "line": node.lineno,
+                        }
+
+            return imports
+        except SyntaxError:
+            return {}
+
+    def _extract_used_names(self, code: str) -> Set[str]:
+        """提取代码中使用的所有名称"""
+        try:
+            tree = ast.parse(code)
+            used_names = set()
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                    # 只收集被使用（Load）的名称，不包括被赋值（Store）的
+                    used_names.add(node.id)
+                elif isinstance(node, ast.Attribute):
+                    # 提取属性访问的根对象
+                    current = node
+                    while isinstance(current, ast.Attribute):
+                        current = current.value
+                    if isinstance(current, ast.Name):
+                        used_names.add(current.id)
+
+            return used_names
+        except SyntaxError:
+            return set()
+
+    def _build_smart_execution_environment(self, code: str) -> Dict[str, Any]:
+        """智能构建执行环境 - 完美方案"""
+        exec_globals = {"__builtins__": __builtins__}
+
+        # 第一步：分析用户代码的导入语句和使用的名称
+        user_imports = self._extract_imports_from_code(code)
+        used_names = self._extract_used_names(code)
+
+        # 第二步：完全按照用户导入语句构建环境
+        for name, import_info in user_imports.items():
+            try:
+                if import_info["type"] == "import":
+                    # 执行 import module 形式的导入
+                    module = importlib.import_module(import_info["module"])
+                    exec_globals[name] = module
+                elif import_info["type"] == "from_import":
+                    # 执行 from module import name 形式的导入
+                    module = importlib.import_module(import_info["module"])
+                    if import_info["name"] == "*":
+                        # 处理 from module import * 的情况
+                        for attr_name in dir(module):
+                            if not attr_name.startswith("_"):
+                                exec_globals[attr_name] = getattr(module, attr_name)
+                    else:
+                        exec_globals[name] = getattr(module, import_info["name"])
+            except (ImportError, AttributeError) as e:
+                # 导入失败时，尝试智能替代
+                fallback_module = self._smart_import_fallback(name, import_info)
+                if fallback_module is not None:
+                    exec_globals[name] = fallback_module
+                else:
+                    print(f"[WARNING] 无法导入模块 {name}: {e}")
+
+        # 第三步：为使用但未导入的名称提供智能补全
+        missing_names = used_names - set(user_imports.keys()) - set(exec_globals.keys())
+        for name in missing_names:
+            # 跳过明显的变量名和函数名
+            if (
+                name in ["__result__", "result", "data", "output"]
+                or name.islower()
+                and len(name) <= 3
+            ):
+                continue
+
+            smart_module = self._smart_import_missing(name)
+            if smart_module is not None:
+                exec_globals[name] = smart_module
+                print(f"[INFO] 智能补全导入: {name}")
+
+        return exec_globals
+
+    def _smart_import_fallback(self, name: str, import_info: Dict[str, Any]) -> Any:
+        """智能导入回退机制"""
+        try:
+            # 常见模块的智能替代
+            fallback_mappings = {
+                "feedparser": None,  # 第三方库，无法替代
+                "requests": "requests",
+                "datetime": "datetime",
+                "BeautifulSoup": "bs4.BeautifulSoup",
+                "json": "json",
+                "os": "os",
+                "re": "re",
+                "sys": "sys",
+                "time": "time",
+                "random": "random",
+            }
+
+            if name in fallback_mappings:
+                fallback_path = fallback_mappings[name]
+                if fallback_path is None:
+                    return None
+
+                if "." in fallback_path:
+                    # 处理嵌套导入，如 bs4.BeautifulSoup
+                    module_path, attr_name = fallback_path.rsplit(".", 1)
+                    module = importlib.import_module(module_path)
+                    return getattr(module, attr_name)
+                else:
+                    return importlib.import_module(fallback_path)
+
+            # 尝试直接导入原模块名
+            if import_info["type"] == "import":
+                return importlib.import_module(import_info["module"])
+            elif import_info["type"] == "from_import":
+                module = importlib.import_module(import_info["module"])
+                return getattr(module, import_info["name"])
+
+        except Exception:
+            return None
+
+    def _smart_import_missing(self, name: str) -> Any:
+        """为缺失的名称提供智能导入"""
+        try:
+            # 常见的模块名映射
+            common_modules = {
+                "requests": "requests",
+                "json": "json",
+                "os": "os",
+                "re": "re",
+                "sys": "sys",
+                "time": "time",
+                "random": "random",
+                "datetime": "datetime",
+                "BeautifulSoup": "bs4.BeautifulSoup",
+                "pd": "pandas",
+                "np": "numpy",
+                "plt": "matplotlib.pyplot",
+            }
+
+            if name in common_modules:
+                module_path = common_modules[name]
+                if "." in module_path:
+                    # 处理嵌套导入
+                    module_name, attr_name = module_path.rsplit(".", 1)
+                    module = importlib.import_module(module_name)
+                    return getattr(module, attr_name)
+                else:
+                    return importlib.import_module(module_path)
+
+            # 尝试直接导入
+            return importlib.import_module(name)
+
+        except Exception:
+            return None
+
+    def _preprocess_code(self, code: str) -> str:
+        """智能代码预处理"""
         lines = code.split("\n")
         processed_lines = []
 
         for line in lines:
-            # 将制表符转换为空格
+            # 标准化制表符
             line = line.expandtabs(4)
-            # 保持行的原样（不要去除单行的空白以保持缩进）
             processed_lines.append(line)
 
         return "\n".join(processed_lines)
 
-    def execute_python_code(self, code: str) -> Dict[str, Any]:
-        """执行Python代码并返回结果"""
-        try:
-            exec_globals = {
-                "__builtins__": __builtins__,
-            }
-            exec_locals = {}
+    def _extract_result(self, locals_dict: dict) -> Any:
+        """智能提取执行结果"""
+        if "__result__" in locals_dict:
+            return locals_dict["__result__"]
 
+        # 按优先级查找结果
+        result_keys = ["result", "output", "data", "response", "return_value", "answer"]
+        for key in result_keys:
+            if key in locals_dict:
+                return locals_dict[key]
+
+        return None
+
+    def execute_python_code(self, code: str) -> Dict[str, Any]:
+        """智能执行Python代码"""
+        try:
             # 预处理代码
             code = self._preprocess_code(code)
-            # 先尝试编译以捕获语法错误
+
+            # 语法检查
             compile(code, "<string>", "exec")
 
-            exec(INIT_IMPORTS, exec_globals)
+            # 智能构建执行环境
+            exec_globals = self._build_smart_execution_environment(code)
+            exec_locals = {}
+
+            # 执行代码
             exec(code, exec_globals, exec_locals)
 
+            # 提取结果
             result = self._extract_result(exec_locals)
 
             execution_result = {
@@ -78,7 +252,7 @@ class AIForgeExecutor:
                 {
                     "code": code,
                     "result": {"__result__": result},
-                    "success": business_success,  # 基于业务逻辑判断成功
+                    "success": business_success,
                 }
             )
 
@@ -100,19 +274,9 @@ class AIForgeExecutor:
 
             return error_result
 
-    def _extract_result(self, locals_dict: dict) -> Any:
-        """智能提取执行结果"""
-        if "__result__" in locals_dict:
-            return locals_dict["__result__"]
-
-        result_keys = ["result", "output", "data", "response", "return_value"]
-        for key in result_keys:
-            if key in locals_dict:
-                return locals_dict[key]
-        return None
-
     def extract_code_blocks(self, text: str) -> List[str]:
         """从LLM响应中提取代码块"""
+        import re
 
         # 匹配 ```python...``` 格式
         pattern = r"```python\s*\n(.*?)\n```"
@@ -126,7 +290,6 @@ class AIForgeExecutor:
         # 清理每个代码块
         cleaned_matches = []
         for match in matches:
-            # 去除开头和结尾的空白字符，确保格式正确
             cleaned_code = match.strip()
             cleaned_matches.append(cleaned_code)
 
