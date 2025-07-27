@@ -69,7 +69,7 @@ class AIForgeExecutor:
             return set()
 
     def _build_smart_execution_environment(self, code: str) -> Dict[str, Any]:
-        """智能构建执行环境 - 完美方案"""
+        """智能构建执行环境"""
         exec_globals = {"__builtins__": __builtins__}
 
         # 第一步：分析用户代码的导入语句和使用的名称

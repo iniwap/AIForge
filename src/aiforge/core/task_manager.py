@@ -13,10 +13,11 @@ from ..execution.code_blocks import CodeBlockManager, CodeBlock
 from ..prompts.enhanced_prompts import get_base_aiforge_prompt
 from .enhanced_error_analyzer import EnhancedErrorAnalyzer
 from ..validation.result_validator import IntelligentResultValidator
+from ..instruction.analyzer import InstructionAnalyzer
 
 
 class AIForgeTask:
-    """AIForge 任务执行器 - 专注于任务执行流程控制"""
+    """AIForge 任务执行器"""
 
     def __init__(
         self, llm_client: AIForgeLLMClient, max_rounds, optimization, max_optimization_attempts
@@ -27,7 +28,6 @@ class AIForgeTask:
 
         self.formatter = AIForgeResultFormatter(self.console)
         self.code_block_manager = CodeBlockManager()
-        self.error_analyzer = EnhancedErrorAnalyzer()
 
         # 智能结果验证器
         self.result_validator = IntelligentResultValidator(llm_client)
@@ -113,7 +113,7 @@ class AIForgeTask:
         traceback_info = result.get("traceback", "")
 
         # 使用增强的错误分析器生成智能反馈
-        feedback = self.error_analyzer.generate_execution_feedback(error_info, traceback_info)
+        feedback = EnhancedErrorAnalyzer.generate_execution_feedback(error_info, traceback_info)
 
         feedback_json = json.dumps(feedback, ensure_ascii=False)
         self.client.send_feedback(feedback_json)
@@ -122,16 +122,16 @@ class AIForgeTask:
         self, result: Dict[str, Any], instruction: str, task_type: str = None
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """使用智能验证器验证执行结果"""
-        if not self.expected_output:
-            is_valid = self._basic_execution_check(result)
-            if not is_valid:
-                # 使用 EnhancedErrorAnalyzer 分析失败原因
-                failure_reason = self.error_analyzer.analyze_basic_failure_reason(result)
-                return False, failure_reason, {"validation_type": "basic"}
-            return True, "", {}
 
+        # 如果没有预期输出，构建默认的验证规则
+        if not self.expected_output:
+            default_expected_output = InstructionAnalyzer.get_default_expected_output(task_type)
+        else:
+            default_expected_output = self.expected_output
+
+        # 统一使用智能验证器进行完整验证
         return self.result_validator.validate_execution_result(
-            result, self.expected_output, instruction, task_type or "general"
+            result, default_expected_output, instruction, task_type or "general"
         )
 
     def _send_validation_feedback(
@@ -139,7 +139,7 @@ class AIForgeTask:
     ):
         """发送验证失败反馈"""
         # 使用 EnhancedErrorAnalyzer 分析验证失败
-        feedback = self.error_analyzer.generate_validation_feedback(
+        feedback = EnhancedErrorAnalyzer.generate_validation_feedback(
             failure_reason, validation_details, attempt_num, self.expected_output
         )
 
@@ -184,7 +184,7 @@ class AIForgeTask:
         system_prompt: str | None = None,
         task_type: str | None = None,
     ):
-        """执行方法 - 支持单轮内有限次数优化"""
+        """执行方法"""
         if instruction and system_prompt:
             self.instruction = instruction
             self.system_prompt = system_prompt

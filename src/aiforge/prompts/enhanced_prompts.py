@@ -78,7 +78,7 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
     return base_prompt
 
 
-def _get_enhanced_aiforge_prompt_with_universal_validation(
+def _get_enhanced_aiforge_prompt_with_validation(
     optimize_tokens: bool = True,
     task_type: Optional[str] = None,
     parameters: Optional[Dict[str, Any]] = None,
@@ -255,7 +255,7 @@ def get_direct_response_prompt(action: str, standardized_instruction: Dict[str, 
     return enhanced_prompt
 
 
-def get_enhanced_system_prompt_universal(
+def get_enhanced_system_prompt(
     standardized_instruction: Dict[str, Any], optimize_tokens=True, original_prompt: str = None
 ) -> str:
     """基于标准化指令构建通用增强系统提示词"""
@@ -281,7 +281,7 @@ def get_enhanced_system_prompt_universal(
         }
 
     # 使用通用增强版提示词生成，传递预期输出规则
-    enhanced_prompt = _get_enhanced_aiforge_prompt_with_universal_validation(
+    enhanced_prompt = _get_enhanced_aiforge_prompt_with_validation(
         optimize_tokens=optimize_tokens,
         task_type=task_type,
         parameters=parameters,
@@ -429,9 +429,8 @@ def get_search_enhanced_format(expected_output: Dict[str, Any]) -> str:
 
 ## 核心要求：
 - 实现多重容错机制，至少尝试2-3种不同方法
-- 对每个结果访问原始页面提取完整信息
-- 优先获取最近7天内的新鲜内容，按发布时间排序
-- 摘要长度至少50字，包含关键信息
+- 对每个结果，使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容
+- 按发布时间排序，优先最近7天内容
 - 不能使用需要API密钥的方式
 - 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
 
@@ -459,12 +458,12 @@ __result__ = {{
 def get_field_template(required_fields: List[str]) -> str:
     """构建字段模板"""
     field_templates = {
-        "title": "标题",
-        "content": "正文内容",
-        "abstract": "摘要内容",
-        "source": "来源网站",
-        "publish_time": "发布时间",
-        "url": "原文链接",
+        "title": '"title": "标题"',
+        "content": '"content": "正文内容"',
+        "abstract": '"abstract": "摘要内容"',
+        "source": '"source": "来源网站"',
+        "publish_time": '"publish_time": "发布时间"',
+        "url": '"url": "原文链接"',
     }
 
     templates = []

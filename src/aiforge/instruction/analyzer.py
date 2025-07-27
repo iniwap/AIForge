@@ -221,8 +221,7 @@ class InstructionAnalyzer:
             "cache_key": self._generate_semantic_cache_key(best_task_type, instruction, parameters),
             "confidence": confidence,
             "source": "local_analysis",
-            # 新增：直接包含预期输出分析
-            "expected_output": self._get_default_expected_output(best_task_type),
+            "expected_output": self.get_default_expected_output(best_task_type),
         }
 
         return standardized
@@ -387,7 +386,7 @@ class InstructionAnalyzer:
             "cache_key": f"general_{hash(instruction) % 10000}",
             "confidence": 0.3,
             "source": "default",
-            "expected_output": self._get_default_expected_output("general"),
+            "expected_output": self.get_default_expected_output("general"),
         }
 
     def get_analysis_prompt(self, include_guidance: bool = True) -> str:
@@ -797,7 +796,8 @@ class InstructionAnalyzer:
         }
         return use_cases.get(task_type, [])
 
-    def _get_default_expected_output(self, task_type: str) -> Dict[str, Any]:
+    @staticmethod
+    def get_default_expected_output(task_type: str) -> Dict[str, Any]:
         """获取默认的预期输出规则"""
         defaults = {
             "data_analysis": {

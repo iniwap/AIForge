@@ -108,7 +108,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             return False
 
     def _init_semantic_components(self):
-        """初始化语义分析组件 - 支持轻量级模式"""
+        """初始化语义分析组件"""
         if not self.config.get("enable_semantic_matching", True):
             self.semantic_enabled = False
             return
@@ -133,7 +133,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
     @property
     def semantic_model(self):
-        """延迟加载语义模型 - 优先使用内置模型"""
+        """延迟加载语义模型"""
         if self._semantic_model is None:
             try:
                 print("[DEBUG] 正在加载语义模型...")
@@ -187,7 +187,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def get_cached_modules_by_standardized_instruction(
         self, standardized_instruction: Dict[str, Any]
     ) -> List[Any]:
-        """通用缓存模块查找 - 集成动作聚类的多层级匹配策略"""
+        """通用缓存模块查找"""
 
         if self.should_cleanup():
             self.cleanup()
@@ -215,7 +215,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         # 策略4: 语义相似度匹配
         if self.semantic_enabled:
-            semantic_matches = self._get_universal_semantic_matches(standardized_instruction)
+            semantic_matches = self._get_semantic_matches(standardized_instruction)
             results.extend([(m, "semantic", score) for m, score in semantic_matches])
 
         # 策略5: 动作相似度匹配（兜底）
@@ -260,28 +260,31 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         """根据动作查找模块"""
         matches = []
 
-        try:
-            all_modules = self.CodeModule.select()
+        with self._lock:
+            try:
+                all_modules = self.CodeModule.select()
 
-            for module in all_modules:
-                try:
-                    metadata = json.loads(module.metadata)
-                    cached_action = metadata.get("standardized_instruction", {}).get("action", "")
-
-                    if cached_action == action:
-                        matches.append(
-                            (
-                                module.module_id,
-                                module.file_path,
-                                module.success_count,
-                                module.failure_count,
-                            )
+                for module in all_modules:
+                    try:
+                        metadata = json.loads(module.metadata)
+                        cached_action = metadata.get("standardized_instruction", {}).get(
+                            "action", ""
                         )
-                except Exception:
-                    continue
 
-        except Exception as e:
-            print(f"[DEBUG] 根据动作查找模块失败: {e}")
+                        if cached_action == action:
+                            matches.append(
+                                (
+                                    module.module_id,
+                                    module.file_path,
+                                    module.success_count,
+                                    module.failure_count,
+                                )
+                            )
+                    except Exception:
+                        continue
+
+            except Exception as e:
+                print(f"[DEBUG] 根据动作查找模块失败: {e}")
 
         return matches
 
@@ -336,7 +339,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         return matches
 
     def _get_action_similarity_matches(self, action: str) -> List[Any]:
-        """动作相似度匹配 - 通用实现"""
+        """动作相似度匹配"""
         matches = []
 
         with self._lock:
@@ -373,10 +376,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         return matches
 
-    def _get_universal_semantic_matches(
-        self, standardized_instruction: Dict[str, Any]
-    ) -> List[tuple]:
-        """通用语义匹配 - 不依赖硬编码关键词"""
+    def _get_semantic_matches(self, standardized_instruction: Dict[str, Any]) -> List[tuple]:
+        """通用语义匹配"""
         if not self.semantic_enabled:
             return []
 
@@ -446,7 +447,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def _compute_multi_dimensional_similarity(
         self, target1: str, action1: str, type1: str, target2: str, action2: str, type2: str
     ) -> float:
-        """多维度相似度计算 - 通用方法"""
+        """多维度相似度计算"""
 
         # 任务类型完全匹配得分最高
         type_similarity = 1.0 if type1 == type2 else 0.0
@@ -519,7 +520,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
     def _calculate_dynamic_threshold(
         self, target1: str, action1: str, type1: str, target2: str, action2: str, type2: str
     ) -> float:
-        """动态阈值计算 - 根据匹配情况调整阈值"""
+        """动态阈值计算"""
 
         # 基础阈值
         base_threshold = 0.4

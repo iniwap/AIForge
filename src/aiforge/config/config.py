@@ -115,7 +115,6 @@ class AIForgeConfig:
                         "enabled": False,
                         "aggressive_minify": False,
                         "max_feedback_length": 200,
-                        "compress_strings": True,
                         "obfuscate_variables": True,
                     },
                 }

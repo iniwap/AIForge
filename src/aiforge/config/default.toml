@@ -68,7 +68,6 @@ action_cluster_threshold = 0.75
 enabled = false
 aggressive_minify = true
 max_feedback_length = 200
-compress_strings = true
 obfuscate_variables = true
 
 

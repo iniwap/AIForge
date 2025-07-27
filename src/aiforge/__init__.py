@@ -14,7 +14,10 @@ from .config.config import AIForgeConfig
 
 from .formatting.result_formatter import AIForgeResultFormatter
 from .execution.code_blocks import CodeBlockManager, CodeBlock
-from .prompts.enhanced_prompts import get_enhanced_system_prompt_universal
+from .prompts.enhanced_prompts import get_enhanced_system_prompt
+from .cli.wizard import create_config_wizard
+from .cache.enhanced_cache import EnhancedStandardizedCache
+
 
 __all__ = [
     "AIForgeCore",
@@ -30,7 +33,7 @@ __all__ = [
     "AIForgeResultFormatter",
     "CodeBlockManager",
     "CodeBlock",
-    "get_enhanced_system_prompt_universal",
+    "get_enhanced_system_prompt",
 ]
 
 __version__ = "0.1.0"

@@ -3,7 +3,7 @@ from typing import Dict, List, Any
 
 
 class EnhancedErrorAnalyzer:
-    """增强的错误分析器 - 专注于错误分析和建议生成"""
+    """增强的错误分析器"""
 
     @staticmethod
     def analyze_error(error_info: str, traceback_info: str) -> Dict[str, Any]:
@@ -63,7 +63,7 @@ class EnhancedErrorAnalyzer:
 
     @staticmethod
     def generate_execution_feedback(error_info: str, traceback_info: str) -> Dict[str, Any]:
-        """生成代码执行失败的反馈 - 直接传递具体错误信息"""
+        """生成代码执行失败的反馈"""
         error_analysis = EnhancedErrorAnalyzer.analyze_error(error_info, traceback_info)
 
         # 构建包含具体错误信息的反馈
@@ -229,3 +229,141 @@ class EnhancedErrorAnalyzer:
             parts.append(f"建议:{analysis['fix_suggestions'][0]}")
 
         return " | ".join(parts)
+
+    @staticmethod
+    def generate_validation_feedback(
+        failure_reason: str,
+        validation_details: Dict[str, Any],
+        attempt_num: int,
+        expected_output: Dict[str, Any] = None,
+    ) -> Dict[str, Any]:
+        """生成验证失败的反馈"""
+
+        # 分析验证失败类型
+        validation_type = validation_details.get("validation_type", "unknown")
+
+        # 解析失败原因中的关键信息
+        failure_analysis = EnhancedErrorAnalyzer._analyze_validation_failure(failure_reason)
+
+        # 构建基础反馈结构
+        feedback = {
+            "validation_type": validation_type,
+            "specific_failure": failure_reason,
+            "suggestion": "",
+            "severity": "medium",
+            "attempt_context": f"第{attempt_num}次尝试",
+            "failure_category": failure_analysis["category"],
+        }
+
+        # 根据验证类型生成具体建议
+        if validation_type == "local_basic":
+            feedback["suggestion"] = EnhancedErrorAnalyzer._generate_basic_validation_suggestions(
+                failure_reason, attempt_num
+            )
+            feedback["severity"] = "high"
+
+        elif validation_type == "local_business":
+            feedback["suggestion"] = (
+                EnhancedErrorAnalyzer._generate_business_validation_suggestions(
+                    failure_reason, expected_output, attempt_num
+                )
+            )
+            feedback["severity"] = "medium"
+
+        elif validation_type == "ai_deep":
+            feedback["suggestion"] = EnhancedErrorAnalyzer._generate_ai_validation_suggestions(
+                failure_reason, attempt_num
+            )
+            feedback["severity"] = "low"
+        else:
+            feedback["suggestion"] = "请检查代码逻辑，确保输出符合预期格式"
+
+        # 根据尝试次数调整建议的具体程度
+        if attempt_num >= 2:
+            feedback["suggestion"] += f" (已尝试{attempt_num}次，请仔细检查数据获取逻辑)"
+
+        return feedback
+
+    @staticmethod
+    def _analyze_validation_failure(failure_reason: str) -> Dict[str, str]:
+        """分析验证失败原因的类别"""
+        failure_reason_lower = failure_reason.lower()
+
+        if "数据字段为空" in failure_reason_lower or "未获取到有效数据" in failure_reason_lower:
+            return {"category": "empty_data", "type": "数据为空"}
+        elif "缺少必需字段" in failure_reason_lower:
+            return {"category": "missing_field", "type": "字段缺失"}
+        elif "结果数量" in failure_reason_lower and "少于最小要求" in failure_reason_lower:
+            return {"category": "insufficient_data", "type": "数据不足"}
+        elif "字段" in failure_reason_lower and "不应为空" in failure_reason_lower:
+            return {"category": "empty_field", "type": "字段为空"}
+        elif "状态为错误" in failure_reason_lower:
+            return {"category": "error_status", "type": "状态错误"}
+        else:
+            return {"category": "unknown", "type": "未知错误"}
+
+    @staticmethod
+    def _generate_basic_validation_suggestions(failure_reason: str, attempt_num: int) -> str:
+        """生成基础验证失败的建议"""
+        failure_reason_lower = failure_reason.lower()
+
+        if "代码执行失败" in failure_reason_lower:
+            return "检查代码语法和逻辑错误，确保所有变量都已正确定义"
+        elif "执行结果为None" in failure_reason_lower:
+            return "确保代码中有 __result__ = 结果 的赋值语句"
+        elif "执行结果为空" in failure_reason_lower:
+            return "检查数据获取逻辑，确保能够获取到有效数据"
+        elif "数据字段为空" in failure_reason_lower:
+            return "优化数据获取策略，检查API调用或网页爬取逻辑是否正确"
+        else:
+            return "检查代码基础逻辑，确保执行成功并返回有效结果"
+
+    @staticmethod
+    def _generate_business_validation_suggestions(
+        failure_reason: str, expected_output: Dict[str, Any], attempt_num: int
+    ) -> str:
+        """生成业务逻辑验证失败的建议"""
+        if "缺少必需字段" in failure_reason:
+            # 提取缺少的字段名
+            field_match = re.search(r"缺少必需字段: (\\w+)", failure_reason)
+            if field_match:
+                missing_field = field_match.group(1)
+                if expected_output:
+                    required_fields = expected_output.get("required_fields", [])
+                    return f"请在结果中添加 '{missing_field}' 字段。必需字段包括: {', '.join(required_fields)}"
+                else:
+                    return f"请在结果中添加 '{missing_field}' 字段"
+            else:
+                return "检查输出格式，确保包含所有必需字段"
+
+        elif "结果数量" in failure_reason and "少于最小要求" in failure_reason:
+            # 提取数量信息
+            count_match = re.search(r"结果数量 (\\d+) 少于最小要求 (\\d+)", failure_reason)
+            if count_match:
+                actual_count = count_match.group(1)
+                required_count = count_match.group(2)
+                return f"当前获取到{actual_count}条数据，需要至少{required_count}条。请优化搜索策略或扩大搜索范围"
+            else:
+                return "增加数据获取数量，优化搜索关键词或扩大搜索范围"
+
+        elif "字段" in failure_reason and "不应为空" in failure_reason:
+            field_match = re.search(r"字段 (\\w+) 不应为空", failure_reason)
+            if field_match:
+                empty_field = field_match.group(1)
+                return f"确保 '{empty_field}' 字段包含有效内容，不能为空值、空字符串或空列表"
+            else:
+                return "检查所有字段内容，确保非空字段都包含有效数据"
+
+        elif "未找到成功执行的指示器" in failure_reason:
+            return "确保数据获取成功，检查 data 字段是否包含有效内容"
+
+        else:
+            return "检查业务逻辑，确保输出数据符合预期格式和内容要求"
+
+    @staticmethod
+    def _generate_ai_validation_suggestions(failure_reason: str, attempt_num: int) -> str:
+        """生成AI深度验证失败的建议"""
+        if "AI验证失败" in failure_reason:
+            return "结果虽然格式正确但内容质量不符合要求，请优化数据获取的准确性和完整性"
+        else:
+            return "提升结果质量，确保数据内容真实有效且符合用户需求"
