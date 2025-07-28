@@ -1,6 +1,5 @@
 import requests
 import time
-import json
 from rich.console import Console
 from typing import Dict, Any
 from .conversation_manager import ConversationManager
@@ -44,6 +43,7 @@ class AIForgeLLMClient:
         system_prompt: str | None = None,
         use_history: bool = True,
         max_retries: int = 2,
+        context_type: str = "generation",
     ) -> str | None:
         """生成代码的核心方法"""
 
@@ -134,35 +134,14 @@ class AIForgeLLMClient:
         return None
 
     def send_feedback(self, feedback: str, is_error: bool = True, metadata: Dict[str, Any] = None):
-        """发送反馈信息，避免重复和过度处理"""
+        """发送反馈信息，使用特殊的历史管理"""
         if not metadata:
             metadata = {}
 
         metadata["is_error_feedback"] = is_error
+        metadata["message_type"] = "feedback"
 
-        # 避免发送重复的反馈
-        recent_messages = self.conversation_manager.conversation_history[-3:]
-        for msg in recent_messages:
-            if msg.get("content") == feedback:
-                print(f"[DEBUG] 跳过重复反馈: {feedback[:50]}...")
-                return
-
-        # 简化反馈内容，避免过度处理
-        if len(feedback) > 150:  # 减少长度限制
-            try:
-                feedback_obj = json.loads(feedback)
-                # 只保留最核心的字段
-                simplified = {
-                    "error": feedback_obj.get("error_type", "unknown"),
-                    "message": feedback_obj.get("specific_error", "")[:100],
-                    "hint": feedback_obj.get("suggestion", "")[:50],
-                }
-                feedback = json.dumps(simplified, ensure_ascii=False)
-            except (json.JSONDecodeError, AttributeError):
-                # 如果不是JSON格式，直接截断
-                feedback = feedback[:150]
-
-        # 添加到对话历史
+        # 反馈消息不参与常规的代码生成上下文
         self.conversation_manager.add_message("user", feedback, metadata)
 
     def get_usage_stats(self):

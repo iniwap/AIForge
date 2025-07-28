@@ -235,17 +235,55 @@ class AIForgeExecutor:
         return "\n".join(processed_lines)
 
     def _extract_result(self, namespace_dict: dict) -> Any:
-        """智能提取执行结果，适配统一命名空间"""
-        if "__result__" in namespace_dict:
-            return namespace_dict["__result__"]
+        """强制验证数组格式的结果提取"""
+        if "__result__" not in namespace_dict:
+            return {
+                "data": [],
+                "status": "error",
+                "summary": "代码未设置 __result__ 变量",
+                "metadata": {"error": "missing_result_variable"},
+            }
 
-        # 按优先级查找结果
-        result_keys = ["result", "output", "data", "response", "return_value", "answer"]
-        for key in result_keys:
-            if key in namespace_dict:
-                return namespace_dict[key]
+        result = namespace_dict["__result__"]
 
-        return None
+        # 强制验证基本结构
+        if not isinstance(result, dict):
+            return {
+                "data": [],
+                "status": "error",
+                "summary": "__result__ 必须是字典格式",
+                "metadata": {"error": "invalid_result_type"},
+            }
+
+        # 强制验证 data 字段
+        if "data" not in result:
+            return {
+                "data": [],
+                "status": "error",
+                "summary": "__result__ 缺少 data 字段",
+                "metadata": {"error": "missing_data_field"},
+            }
+
+        # 强制验证 data 是数组
+        if not isinstance(result["data"], list):
+            return {
+                "data": [],
+                "status": "error",
+                "summary": "data 字段必须是数组格式",
+                "metadata": {"error": "data_not_array"},
+            }
+
+        # 强制验证数组元素是字典
+        for i, item in enumerate(result["data"]):
+            if not isinstance(item, dict):
+                return {
+                    "data": [],
+                    "status": "error",
+                    "summary": f"data[{i}] 必须是字典格式",
+                    "metadata": {"error": "data_item_not_dict"},
+                }
+
+        return result
 
     def execute_python_code(self, code: str) -> Dict[str, Any]:
         """智能执行Python代码，修复多函数定义问题"""

@@ -9,7 +9,7 @@ def get_task_specific_format(task_type: str, expected_output: Dict[str, Any] = N
         return """
 # 输出格式要求：
 __result__ = {
-    "data": main_result,
+    "data": [{"字段1": "值1", ...},...],
     "status": "success或error",
     "summary": "结果摘要",
     "metadata": {"timestamp": "...", "task_type": "..."}
@@ -40,7 +40,7 @@ __result__ = {
     format_str = f"""
 # 基于AI分析的输出格式要求：
 __result__ = {{
-    "data": {data_example},
+    "data": [{data_example},...],
     "status": "success或error",
     "summary": "任务完成描述",
     "metadata": {{"timestamp": "...", "task_type": "{task_type}"}}
@@ -444,9 +444,9 @@ __result__ = {{
     "data": [
         {{
             {get_field_template(required_fields)}
-        }}
+        }},...
     ],
-    "status": "success",
+    "status": "success或error",
     "summary": "搜索完成",
     "metadata": {{"timestamp": "...", "task_type": "data_fetch"}}
 }}

@@ -166,11 +166,16 @@ class AIForgeTask:
             self.console.print("🤖 正在生成代码...", style="dim white")
 
             if optimization_attempt == 1:
-                response = self.client.generate_code(self.instruction, self.system_prompt)
-            else:
-                minimal_instruction = "根据错误优化代码"
+                # 首次生成，不使用历史
                 response = self.client.generate_code(
-                    minimal_instruction, self.system_prompt, use_history=True
+                    self.instruction, self.system_prompt, use_history=False
+                )
+            else:
+                response = self.client.generate_code(
+                    None,
+                    self.system_prompt,
+                    use_history=True,
+                    context_type="feedback",
                 )
 
             if not response:
@@ -249,20 +254,72 @@ class AIForgeTask:
                     )
                     self.client.send_feedback(
                         self.result_manager.get_validation_feedback(
-                            failure_reason, validation_details, optimization_attempt
+                            failure_reason, validation_details
                         )
                     )
                     optimization_attempt += 1
                 else:
                     self.console.print(
-                        f"❌ 第 {optimization_attempt} 次尝试验证失败，已达到最大优化次数，放弃当前轮",
+                        f"❌ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，已达到最大优化次数",
                         style="red",
                     )
+
+                    # 尝试返回最佳可用结果
+                    best_result = self._get_best_available_result()
+                    if best_result:
+                        self.console.print("🔄 返回质量最佳的可用结果", style="yellow")
+                        last_execution["result"]["result"] = best_result
+                        last_execution["success"] = True
+                        return True
+
+                    self.console.print("❌ 放弃当前轮", style="red")
                     return False
 
         # 所有优化尝试都失败
         self.console.print(f"❌ 单轮内 {max_optimization_attempts} 次优化尝试全部失败", style="red")
         return False
+
+    def _get_best_available_result(self):
+        """获取质量最佳的可用结果"""
+        if not self.execution_history:
+            return None
+
+        best_result = None
+        max_valid_items = 0
+
+        for execution in reversed(self.execution_history):
+            result = execution.get("result", {}).get("result", {})
+            if isinstance(result, dict):
+                data = result.get("data", [])
+                if isinstance(data, list):
+                    # 统计有效数据项数量
+                    valid_count = 0
+                    for item in data:
+                        if isinstance(item, dict):
+                            title = item.get("title", "").strip()
+                            content = item.get("content", "").strip()
+                            if title and content and len(content) > 20:
+                                valid_count += 1
+
+                    if valid_count > max_valid_items:
+                        max_valid_items = valid_count
+                        # 过滤并返回有效数据
+                        valid_data = []
+                        for item in data:
+                            if isinstance(item, dict):
+                                title = item.get("title", "").strip()
+                                content = item.get("content", "").strip()
+                                if title and content and len(content) > 20:
+                                    valid_data.append(item)
+
+                        best_result = {
+                            "data": valid_data,
+                            "status": "success",
+                            "summary": f"返回{len(valid_data)}条最佳结果",
+                            "metadata": result.get("metadata", {}),
+                        }
+
+        return best_result
 
     def done(self):
         """任务完成清理"""

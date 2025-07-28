@@ -6,7 +6,6 @@ from rich.console import Console
 
 from ..validation.result_validator import ResultValidator
 from ..instruction.analyzer import InstructionAnalyzer
-from .enhanced_error_analyzer import EnhancedErrorAnalyzer
 from ..formatting.result_formatter import AIForgeResultFormatter
 
 
@@ -57,20 +56,53 @@ class AIForgeResult:
             result, default_expected_output, instruction, task_type or "general", llm_client
         )
 
-    def get_validation_feedback(
-        self, failure_reason: str, validation_details: Dict[str, Any], attempt_num: int
-    ):
-        """获取验证失败反馈"""
-        feedback = EnhancedErrorAnalyzer.generate_validation_feedback(
-            failure_reason, validation_details, attempt_num, self.expected_output
-        )
-        feedback_json = json.dumps(feedback, ensure_ascii=False)
-        return feedback_json
+    def get_validation_feedback(self, failure_reason: str, validation_details: Dict[str, Any]):
+        """获取验证反馈信息"""
+        validation_type = validation_details.get("validation_type", "unknown")
+
+        # 构建简化的反馈结构
+        if validation_type == "execution_error":
+            feedback = {
+                "type": "execution_error",
+                "message": failure_reason,
+                "suggestion": "检查代码语法和逻辑错误",
+            }
+        elif validation_type == "ai_deep":  # 修正：应该是 ai_deep 而不是 ai_validation
+            feedback = {
+                "type": "ai_validation_failed",
+                "message": failure_reason,
+                "suggestion": "请重新生成代码以更好地满足用户需求。检查数据获取逻辑，确保返回有效的标题和内容字段",
+            }
+        elif validation_type in ["empty_data", "missing_data", "missing_field"]:
+            feedback = {
+                "type": "data_validation_failed",
+                "message": failure_reason,
+                "suggestion": "请检查数据获取逻辑，确保返回正确格式的数据",
+            }
+        elif validation_type == "local_basic":
+            feedback = {
+                "type": "basic_validation_failed",
+                "message": failure_reason,
+                "suggestion": "检查代码执行和基本数据结构",
+            }
+        elif validation_type == "local_business":
+            feedback = {
+                "type": "business_validation_failed",
+                "message": failure_reason,
+                "suggestion": "检查业务逻辑和必需字段",
+            }
+        else:
+            feedback = {
+                "type": "validation_failed",
+                "message": failure_reason,
+                "suggestion": "请检查代码逻辑和输出格式",
+            }
+
+        return json.dumps(feedback, ensure_ascii=False)
 
     def get_intelligent_feedback(self, result: Dict[str, Any]):
-        """使用 EnhancedErrorAnalyzer 发送精简但有效的反馈"""
+        """返回代码执行错误的JSON反馈"""
         error_info = result.get("error", "")
-        traceback_info = result.get("traceback", "")
 
         # 检查是否为系统级错误
         system_errors = [
@@ -81,25 +113,16 @@ class AIForgeResult:
         if any(sys_err in error_info for sys_err in system_errors):
             # 系统级错误不发送给 AI，直接记录日志
             print(f"[SYSTEM ERROR] {error_info}")
-            return
+            return None
 
-        simple_errors = ["NameError", "SyntaxError", "TypeError", "ValueError", "AttributeError"]
-        if any(err_type in error_info for err_type in simple_errors):
-            # 直接发送原始错误信息，不做复杂转换
-            simple_feedback = {
-                "error_type": "code_error",
-                "specific_error": error_info,
-                "suggestion": "请检查代码中的变量名、语法和类型使用",
-            }
-            feedback_json = json.dumps(simple_feedback, ensure_ascii=False)
-            self.client.send_feedback(feedback_json)
-            return
+        # 构建简化的错误反馈
+        feedback = {
+            "type": "execution_error",
+            "message": f"代码执行失败: {error_info}",
+            "suggestion": "请检查代码语法、变量定义和逻辑错误",
+        }
 
-        # 使用增强的错误分析器生成智能反馈
-        feedback = EnhancedErrorAnalyzer.generate_execution_feedback(error_info, traceback_info)
-
-        feedback_json = json.dumps(feedback, ensure_ascii=False)
-        return feedback_json
+        return json.dumps(feedback, ensure_ascii=False)
 
     def process_execution_result(self, result_content, instruction: str, task_type: str = None):
         """后处理执行结果，强制标准化格式"""

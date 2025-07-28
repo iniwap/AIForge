@@ -228,9 +228,27 @@ class ExecutionManager:
             print(f"[DEBUG] AI分析原始结果: {ai_analysis}")
 
             if instruction_analyzer.is_ai_analysis_valid(ai_analysis):
+                # 检查是否有数量相关的参数，并确保 expected_output 正确设置
+                required_parameters = ai_analysis.get("required_parameters", {})
+                expected_output = ai_analysis.get("expected_output", {})
+
+                # 如果 AI 分析中包含数量要求，确保验证规则得到更新
+                for param_name, param_info in required_parameters.items():
+                    if param_name in ["required_count", "count", "limit", "num_items"]:
+                        if isinstance(param_info, dict) and "value" in param_info:
+                            try:
+                                quantity = int(param_info["value"])
+                                if "validation_rules" not in expected_output:
+                                    expected_output["validation_rules"] = {}
+                                expected_output["validation_rules"]["min_items"] = max(
+                                    1, min(quantity, 50)
+                                )
+                            except (ValueError, TypeError):
+                                continue
+
+                ai_analysis["expected_output"] = expected_output
                 ai_analysis["source"] = "ai_analysis"
                 ai_analysis["confidence"] = 0.9
-                print(f"[DEBUG] AI分析验证通过: {ai_analysis}")
 
                 return ai_analysis
             else:

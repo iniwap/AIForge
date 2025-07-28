@@ -40,37 +40,25 @@ class ConversationManager:
 
         self.conversation_history = important_messages + recent_messages
 
-    def get_context_messages(self) -> List[Dict[str, str]]:
-        """获取过滤后的上下文消息，避免重复反馈"""
-        context_messages = []
-
-        # 只保留最近的关键信息，避免累积历史错误
-        recent_messages = self.conversation_history[-2:]  # 只保留最近2条
-
-        for message in recent_messages:
-            if message.get("metadata", {}).get("is_error_feedback"):
-                # 过滤错误反馈，只保留核心信息
-                filtered_content = self._filter_error_feedback(message["content"])
-                if filtered_content:
-                    context_messages.append({"role": message["role"], "content": filtered_content})
-            elif message["role"] == "user" and len(message["content"]) < 50:
-                # 只保留非常简短的用户消息
-                context_messages.append(message)
-
-        # 避免重复的错误模式总结
-        if self.error_patterns:
-            # 只使用最新的错误模式，不累积
-            latest_pattern = self.error_patterns[-1] if self.error_patterns else None
-            if latest_pattern and not any(
-                latest_pattern in msg.get("content", "") for msg in context_messages
-            ):
-                pattern_msg = {
-                    "role": "system",
-                    "content": f"避免错误: {latest_pattern}",
-                }
-                context_messages.insert(0, pattern_msg)
-
-        return context_messages
+    def get_context_messages(self, context_type: str = "generation") -> List[Dict[str, str]]:
+        """根据上下文类型获取相关消息"""
+        if context_type == "generation":
+            # 代码生成时，只保留最近的错误反馈，过滤掉完整代码响应
+            filtered_messages = []
+            for msg in self.conversation_history[-3:]:  # 只看最近3条消息
+                if msg["role"] == "user":
+                    # 只保留反馈消息
+                    if msg.get("metadata", {}).get("is_error_feedback"):
+                        # 限制反馈消息长度，避免包含大量代码
+                        content = msg["content"]
+                        if len(content) > 300:
+                            content = content[:300] + "..."
+                        filtered_messages.append({"role": msg["role"], "content": content})
+                # 不包含 AI 的代码响应，避免源码循环
+            return filtered_messages
+        else:
+            # 其他类型保持原有逻辑
+            return self.conversation_history[-2:]
 
     def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None):
         """添加消息到历史记录，优化错误模式提取"""

@@ -221,7 +221,7 @@ class InstructionAnalyzer:
             "cache_key": self._generate_semantic_cache_key(best_task_type, instruction, parameters),
             "confidence": confidence,
             "source": "local_analysis",
-            "expected_output": self.get_default_expected_output(best_task_type),
+            "expected_output": self.get_default_expected_output(best_task_type, parameters),
         }
 
         return standardized
@@ -273,8 +273,16 @@ class InstructionAnalyzer:
                 "type": "str",
                 "description": "搜索查询内容",
             },
-            "max_results": {
-                "patterns": [r"(\d+)(?:条|个|项)", r"最多(\d+)", r"前(\d+)"],
+            "required_count": {
+                "patterns": [
+                    r"(\\d+)(?:条|个|项|篇|份|次)",
+                    r"最多(\\d+)",
+                    r"前(\\d+)",
+                    r"至少(\\d+)",
+                    r"处理(\\d+)",
+                    r"生成(\\d+)",
+                    r"获取(\\d+)",
+                ],
                 "type": "int",
                 "description": "最大结果数量",
             },
@@ -744,7 +752,15 @@ class InstructionAnalyzer:
 {guidance_strength}使用以下经过验证的内置任务类型：
 {builtin_types}
 
-系统状态：
+# 数量分析指导
+## 数量要求分析：
+- 识别用户指令中的数量要求（如"10条"、"至少5个"、"前8篇"等）
+- 将数量要求映射到 validation_rules.min_items
+- 如果用户指定了具体数量，设置 min_items 为该数量
+- 如果用户说"至少N个"，设置 min_items 为 N
+- 如果用户说"前N个"或"最多N个"，设置 min_items 为 min(N, 1)
+
+# 系统状态：
 - 当前引导强度：{guidance_strength}
 - 内置类型使用率：{self.get_task_type_usage_stats().get('builtin_usage_rate', 0):.1%}
 
@@ -797,13 +813,16 @@ class InstructionAnalyzer:
         return use_cases.get(task_type, [])
 
     @staticmethod
-    def get_default_expected_output(task_type: str) -> Dict[str, Any]:
+    def get_default_expected_output(
+        task_type: str, extracted_params: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """获取默认的预期输出规则"""
         defaults = {
             "data_analysis": {
-                "expected_data_type": "dict",
+                "expected_data_type": "list",
                 "required_fields": ["data", "analysis"],
                 "validation_rules": {
+                    "min_items": 0,
                     "non_empty_fields": ["key_findings"],
                     "success_indicators": ["分析结果存在", "关键发现非空"],
                 },
@@ -811,12 +830,14 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["分析结果应包含具体数据", "关键发现应有实际内容"],
             },
             "data_fetch": {
-                "expected_data_type": "dict",
+                "expected_data_type": "list",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 1,
                     "non_empty_fields": ["data"],
                     "status_field": "status",
+                    "partial_success": True,
+                    "min_valid_ratio": 0.3,
                 },
                 "failure_indicators": ["error", "exception", "fetch_failed"],
                 "business_logic_checks": [
@@ -827,9 +848,10 @@ class InstructionAnalyzer:
                 ],
             },
             "data_process": {
-                "expected_data_type": "dict",
+                "expected_data_type": "list",
                 "required_fields": ["data", "processed_data"],
                 "validation_rules": {
+                    "min_items": 0,
                     "non_empty_fields": ["processed_data"],
                     "success_indicators": ["处理完成", "数据已转换"],
                 },
@@ -837,9 +859,10 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["处理后数据应与原数据不同", "处理结果应有意义"],
             },
             "file_operation": {
-                "expected_data_type": "dict",
+                "expected_data_type": "list",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
+                    "min_items": 0,
                     "status_field": "status",
                     "success_indicators": ["操作成功", "文件已处理"],
                 },
@@ -847,30 +870,67 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["文件操作应成功完成", "结果应反映实际操作"],
             },
             "automation": {
-                "expected_data_type": "dict",
+                "expected_data_type": "list",
                 "required_fields": ["data", "status", "summary"],
-                "validation_rules": {"non_empty_fields": ["summary"], "status_field": "status"},
+                "validation_rules": {
+                    "min_items": 0,
+                    "non_empty_fields": ["summary"],
+                    "status_field": "status",
+                },
                 "failure_indicators": ["error", "exception", "automation_failed"],
                 "business_logic_checks": ["自动化任务应完整执行", "执行摘要应详细"],
             },
             "content_generation": {
-                "expected_data_type": "dict",
+                "expected_data_type": "list",
                 "required_fields": ["data", "generated_content"],
                 "validation_rules": {
+                    "min_items": 1,
                     "non_empty_fields": ["generated_content"],
                     "success_indicators": ["内容已生成", "生成完成"],
                 },
                 "failure_indicators": ["error", "exception", "generation_failed"],
                 "business_logic_checks": ["生成的内容应符合要求", "内容长度应合理"],
             },
-        }
-        return defaults.get(
-            task_type,
-            {
-                "expected_data_type": "dict",
+            "default": {
+                "expected_data_type": "list",
                 "required_fields": ["data", "status"],
-                "validation_rules": {"status_field": "status"},
+                "validation_rules": {
+                    "min_items": 0,
+                    "status_field": "status",
+                },
                 "failure_indicators": ["error", "exception"],
                 "business_logic_checks": ["执行结果应符合基本要求"],
             },
-        )
+        }
+
+        base_config = defaults.get(task_type, defaults.get("default"))
+
+        # 通用的数量参数调整逻辑
+        if extracted_params:
+            quantity_params = [
+                "required_count",
+                "count",
+                "limit",
+                "num_items",
+                "quantity",
+                "amount",
+            ]
+            for param_name in quantity_params:
+                if param_name in extracted_params:
+                    param_info = extracted_params[param_name]
+                    if isinstance(param_info, dict) and "value" in param_info:
+                        try:
+                            quantity = int(param_info["value"])
+                            base_config["validation_rules"]["min_items"] = max(
+                                1, min(quantity, 100)
+                            )
+                            # 更新业务逻辑检查
+                            base_config["business_logic_checks"] = [
+                                f"至少处理{base_config['validation_rules']['min_items']}项数据",
+                                "数据格式应正确",
+                            ]
+                            break
+                        except (ValueError, TypeError):
+                            continue
+
+        return base_config
