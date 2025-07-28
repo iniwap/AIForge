@@ -223,7 +223,7 @@ class AIForgeTask:
             last_execution["result"]["result"] = processed_result
 
             # 使用ResultManager验证执行结果
-            is_valid, failure_reason, validation_details = (
+            is_valid, validation_type, failure_reason, validation_details = (
                 self.result_manager.validate_execution_result(
                     last_execution["result"],
                     self.instruction,
@@ -249,7 +249,7 @@ class AIForgeTask:
 
                 if optimization_attempt < max_optimization_attempts:
                     self.console.print(
-                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，发送优化反馈",
+                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，发送优化反馈（{validation_type}）",  # noqa 501
                         style="yellow",
                     )
                     self.client.send_feedback(
@@ -260,8 +260,7 @@ class AIForgeTask:
                     optimization_attempt += 1
                 else:
                     self.console.print(
-                        f"❌ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，已达到最大优化次数",
-                        style="red",
+                        f"❌ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，已达到最大优化次数（{validation_type}）",  # noqa 501
                     )
 
                     # 尝试返回最佳可用结果

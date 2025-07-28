@@ -275,13 +275,13 @@ class InstructionAnalyzer:
             },
             "required_count": {
                 "patterns": [
-                    r"(\\d+)(?:条|个|项|篇|份|次)",
-                    r"最多(\\d+)",
-                    r"前(\\d+)",
-                    r"至少(\\d+)",
-                    r"处理(\\d+)",
-                    r"生成(\\d+)",
-                    r"获取(\\d+)",
+                    r"(\d+)(?:条|个|项|篇|份|次)",
+                    r"最多(\d+)",
+                    r"前(\d+)",
+                    r"至少(\d+)",
+                    r"处理(\d+)",
+                    r"生成(\d+)",
+                    r"获取(\d+)",
                 ],
                 "type": "int",
                 "description": "最大结果数量",
@@ -564,60 +564,27 @@ class InstructionAnalyzer:
                 print(f"[DEBUG] 新任务类型 '{task_type}' 与现有类型过于相似")
                 return False
 
-        # 5. 注册新的任务类型（如果有管理器）
+        # 5. 注册新的任务类型和动作（如果有管理器）
         if hasattr(self, "task_type_manager") and self.task_type_manager:
+            task_type = ai_analysis.get("task_type")
+            action = ai_analysis.get("action", "")
+
+            # 注册任务类型
             self.task_type_manager.register_task_type(task_type, ai_analysis)
 
+            # 注册动态动作（新增）
+            if action and task_type:
+                self.task_type_manager.register_dynamic_action(action, task_type, ai_analysis)
+
             # 记录类型使用统计
+            builtin_types = list(self.standardized_patterns.keys())
+            is_builtin = task_type in builtin_types
             if is_builtin:
                 print(f"[DEBUG] 使用内置任务类型: {task_type}")
             else:
                 print(f"[DEBUG] 创建新任务类型: {task_type}")
 
-        # 6. 动作名称标准化验证
-        action = ai_analysis.get("action", "")
-        task_type = ai_analysis.get("task_type", "")
-        standardized_action = self._standardize_action_name(action, task_type)
-        if standardized_action != action:
-            print(f"[DEBUG] 动作名称标准化: '{action}' → '{standardized_action}'")
-            ai_analysis["action"] = standardized_action
-
         return True
-
-    def _standardize_action_name(self, action: str, task_type: str) -> str:
-        """基于action_vocabulary规范标准化动作名称"""
-        action_lower = action.lower()
-
-        # 基于任务类型的标准化映射
-        task_based_actions = {
-            "data_fetch": "fetch",
-            "data_process": "process",
-            "content_generation": "generate",
-            "file_operation": "transform",
-            "automation": "execute",
-            "direct_response": "respond",
-        }
-
-        # 动词标准化映射
-        verb_mappings = {
-            "fetch": ["获取", "取得", "拿到", "得到", "fetch", "get", "retrieve"],
-            "search": ["搜索", "查找", "寻找", "search", "find", "query"],
-            "process": ["分析", "处理", "计算", "process", "analyze", "compute"],
-            "generate": ["生成", "创建", "制作", "generate", "create", "produce"],
-            "respond": ["回答", "响应", "回复", "respond", "answer", "reply"],
-        }
-
-        # 优先使用任务类型映射
-        if task_type in task_based_actions:
-            base_action = task_based_actions[task_type]
-            return f"{base_action}_{task_type.split('_')[-1]}"
-
-        # 基于动词语义匹配
-        for standard_verb, variations in verb_mappings.items():
-            if any(var in action_lower for var in variations):
-                return f"{standard_verb}_content"
-
-        return action  # 如果无法标准化，返回原动作
 
     def _is_too_similar_to_existing_types(self, task_type: str, builtin_types: List[str]) -> bool:
         """检查是否与现有类型过于相似"""
@@ -819,7 +786,7 @@ class InstructionAnalyzer:
         """获取默认的预期输出规则"""
         defaults = {
             "data_analysis": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "analysis"],
                 "validation_rules": {
                     "min_items": 0,
@@ -830,7 +797,7 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["分析结果应包含具体数据", "关键发现应有实际内容"],
             },
             "data_fetch": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 1,
@@ -848,7 +815,7 @@ class InstructionAnalyzer:
                 ],
             },
             "data_process": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "processed_data"],
                 "validation_rules": {
                     "min_items": 0,
@@ -859,7 +826,7 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["处理后数据应与原数据不同", "处理结果应有意义"],
             },
             "file_operation": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 0,
@@ -870,7 +837,7 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["文件操作应成功完成", "结果应反映实际操作"],
             },
             "automation": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "status", "summary"],
                 "validation_rules": {
                     "min_items": 0,
@@ -881,7 +848,7 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["自动化任务应完整执行", "执行摘要应详细"],
             },
             "content_generation": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "generated_content"],
                 "validation_rules": {
                     "min_items": 1,
@@ -892,7 +859,7 @@ class InstructionAnalyzer:
                 "business_logic_checks": ["生成的内容应符合要求", "内容长度应合理"],
             },
             "default": {
-                "expected_data_type": "list",
+                "expected_result_type": "dict",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 0,

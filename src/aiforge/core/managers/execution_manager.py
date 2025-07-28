@@ -144,7 +144,7 @@ class ExecutionManager:
         if confidence < 0.6:
             # 处理低置信度情况
             basic_expected_output = {
-                "expected_data_type": "dict",
+                "expected_result_type": "dict",
                 "required_fields": ["result"],
                 "validation_rules": {"non_empty_fields": ["result"]},
             }
@@ -494,11 +494,21 @@ class ExecutionManager:
         if not code_cache:
             return None
 
-        # 如果有动态任务类型管理器，注册新的任务类型
+        # 如果有动态任务类型管理器，注册新的任务类型和动作
         task_type = standardized_instruction.get("task_type", "general")
+        action = standardized_instruction.get("action", "")
         task_type_manager = self.components.get("task_type_manager")
+
         if task_type_manager:
             task_type_manager.register_task_type(task_type, standardized_instruction)
+
+            # 如果是AI分析来源，注册动态动作
+            if standardized_instruction.get("source") == "ai_analysis" and action:
+                task_type_manager.register_dynamic_action(
+                    action, task_type, standardized_instruction
+                )
+                # 增加使用计数
+                task_type_manager.increment_action_usage(action)
 
         try:
             # 提取参数化信息用于元数据

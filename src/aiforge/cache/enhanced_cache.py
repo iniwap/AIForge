@@ -194,8 +194,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
+        source = standardized_instruction.get("source", "unknown")  # 获取来源信息
 
-        print(f"[DEBUG] 通用缓存查找: task_type={task_type}, action={action}")
+        print(f"[DEBUG] 通用缓存查找: task_type={task_type}, action={action}, source={source}")
 
         results = []
 
@@ -205,7 +206,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         # 策略2: 动作聚类匹配（高优先级）
         if self.semantic_action_matcher and not results:
-            cluster_matches = self._get_action_cluster_matches(action)
+            cluster_matches = self._get_action_cluster_matches(action, source)
             results.extend([(m, "action_cluster", 0.9) for m in cluster_matches])
 
         # 策略3: 任务类型匹配
@@ -226,7 +227,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         print(f"[DEBUG] 找到 {len(results)} 个匹配结果")
         return self._rank_and_deduplicate_results(results)
 
-    def _get_action_cluster_matches(self, action: str) -> List[Any]:
+    def _get_action_cluster_matches(self, action: str, source: str = "unknown") -> List[Any]:
         """基于动作聚类的匹配，确保使用标准化"""
         if not self.semantic_action_matcher:
             return []
@@ -234,8 +235,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         matches = []
 
         try:
-            # 获取标准化后的动作聚类
-            cluster_id = self.semantic_action_matcher.get_action_cluster(action)
+            # 获取标准化后的动作聚类，传递来源信息
+            cluster_id = self.semantic_action_matcher.get_action_cluster(action, source)
             print(f"[DEBUG] 动作 '{action}' 归属聚类: {cluster_id}")
 
             # 查找同一聚类中的其他动作对应的模块

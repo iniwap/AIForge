@@ -21,7 +21,7 @@ class ResultValidator:
         # 第一步：本地基础验证
         local_valid, local_reason = self._local_basic_validation(result, expected_output)
         if not local_valid:
-            return False, f"本地验证失败: {local_reason}", {"validation_type": "local_basic"}
+            return False, "本地验证失败", local_reason, {"validation_type": "local_basic"}
 
         # 第二步：本地业务逻辑验证
         business_valid, business_reason = self._local_business_validation(
@@ -30,7 +30,8 @@ class ResultValidator:
         if not business_valid:
             return (
                 False,
-                f"业务逻辑验证失败: {business_reason}",
+                "业务逻辑验证失败",
+                business_reason,
                 {"validation_type": "local_business"},
             )
 
@@ -41,11 +42,11 @@ class ResultValidator:
                     result, expected_output, original_instruction, task_type, llm_client
                 )
                 if not ai_valid:
-                    return False, f"AI验证失败: {ai_reason}", {"validation_type": "ai_deep"}
+                    return False, "AI验证失败", ai_reason, {"validation_type": "ai_deep"}
             else:
-                return False, "AI验证失败: llm_client 为None", {"validation_type": "ai_deep"}
+                return False, "AI验证失败", "llm_client 为None", {"validation_type": "ai_deep"}
 
-        return True, "验证通过", {"validation_type": "complete"}
+        return True, "", "验证通过", {"validation_type": "complete"}
 
     def _local_basic_validation(
         self, result: Dict[str, Any], expected: Dict[str, Any]
@@ -72,11 +73,11 @@ class ResultValidator:
             data = result_content.get("data")
             if data is not None:
                 if isinstance(data, (list, dict)) and len(data) == 0:
-                    return False, "数据字段为空，未获取到有效数据"
+                    return False, "data字段为空列表，未获取到有效数据"
                 elif data is None:
-                    return False, "数据字段为None"
+                    return False, "data字段为None"
             else:
-                return False, "缺少数据字段"
+                return False, "缺少data字段"
 
         # 如果结果本身是空列表或字典，直接失败
         if isinstance(result_content, (list, dict)) and len(result_content) == 0:

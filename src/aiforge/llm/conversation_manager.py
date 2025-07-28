@@ -27,10 +27,11 @@ class ConversationManager:
 
         for msg in self.conversation_history[:-4]:
             metadata = msg.get("metadata", {})
+            content = msg.get("content", "")
             if (
                 metadata.get("is_error_feedback")
                 or metadata.get("is_success")
-                or "error" in msg["content"].lower()
+                or (content and "error" in content.lower())
             ):
                 important_messages.append(msg)
 

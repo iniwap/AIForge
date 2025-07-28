@@ -135,6 +135,9 @@ class AIForgeLLMClient:
 
     def send_feedback(self, feedback: str, is_error: bool = True, metadata: Dict[str, Any] = None):
         """发送反馈信息，使用特殊的历史管理"""
+        if not feedback:
+            return
+
         if not metadata:
             metadata = {}
 

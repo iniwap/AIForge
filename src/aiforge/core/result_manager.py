@@ -108,6 +108,7 @@ class AIForgeResult:
         system_errors = [
             "代码执行超时",
             "Permission denied",
+            "Access denied",
         ]
 
         if any(sys_err in error_info for sys_err in system_errors):
@@ -129,10 +130,13 @@ class AIForgeResult:
         task_type = task_type or "general"
 
         if not isinstance(result_content, dict):
+            # 区分执行失败和空数据
+            is_empty_data = isinstance(result_content, list) and len(result_content) == 0
+
             result_content = {
                 "data": result_content,
-                "status": "success" if result_content else "error",
-                "summary": "执行完成" if result_content else "执行失败",
+                "status": "success",  # 代码执行成功，即使数据为空
+                "summary": "执行完成，但未获取到数据" if is_empty_data else "执行完成",
                 "metadata": {
                     "timestamp": datetime.now().isoformat(),
                     "task_type": task_type,
@@ -246,11 +250,11 @@ class AIForgeResult:
                     return False
 
         # 严格验证数据类型
-        expected_data_type = expected_output.get("expected_data_type", "dict")
-        if expected_data_type == "list" and not isinstance(result_data, list):
+        expected_result_type = expected_output.get("expected_result_type", "dict")
+        if expected_result_type == "list" and not isinstance(result_data, list):
             print("[DEBUG] 严格验证失败：数据类型不匹配")
             return False
-        elif expected_data_type == "dict" and not isinstance(result_data, dict):
+        elif expected_result_type == "dict" and not isinstance(result_data, dict):
             print("[DEBUG] 严格验证失败：数据类型不匹配")
             return False
 

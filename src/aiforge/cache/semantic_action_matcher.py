@@ -37,14 +37,19 @@ class SemanticActionMatcher:
 
         return base_threshold
 
-    def get_action_cluster(self, action: str) -> str:
-        """获取动作所属的语义聚类，支持动作标准化"""
+    def get_action_cluster(self, action: str, source: str = "unknown") -> str:
+        """获取动作所属的语义聚类，支持来源区分"""
         if not self.cache.semantic_enabled:
             return self._fallback_action_matching(action)
 
-        # 动作标准化预处理（确保被调用）
-        standardized_action = self._standardize_action_before_clustering(action)
-        print(f"[DEBUG] 动作标准化: '{action}' → '{standardized_action}'")
+        # 对于 AI 生成的动作，保持原始语义
+        if source == "ai_analysis":
+            standardized_action = action  # 保持原样
+            print(f"[DEBUG] AI生成动作保持原样: '{action}'")
+        else:
+            # 只对本地分析结果进行标准化
+            standardized_action = self._standardize_action_before_clustering(action)
+            print(f"[DEBUG] 本地动作标准化: '{action}' → '{standardized_action}'")
 
         # 生成动作向量（使用标准化后的动作）
         action_vector = self._get_action_vector(standardized_action)

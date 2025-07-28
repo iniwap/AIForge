@@ -19,6 +19,9 @@ class DynamicTaskTypeManager:
             "general",
         }
         self.dynamic_types = self._load_dynamic_types()
+        self.type_priorities = {}
+        self.dynamic_actions = {}
+        self._load_dynamic_data()
 
     def _load_dynamic_types(self) -> Dict[str, Dict]:
         """加载动态任务类型"""
@@ -84,3 +87,60 @@ class DynamicTaskTypeManager:
                 json.dump(self.dynamic_types, f, ensure_ascii=False, indent=2)
         except Exception:
             pass
+
+    def register_dynamic_action(self, action: str, task_type: str, analysis_result: Dict[str, Any]):
+        """注册动态生成的动作"""
+        if not hasattr(self, "dynamic_actions"):
+            self.dynamic_actions = {}
+
+        self.dynamic_actions[action] = {
+            "task_type": task_type,
+            "semantic_info": analysis_result.get("reasoning", ""),
+            "parameters": analysis_result.get("required_parameters", {}),
+            "created_at": time.time(),
+            "usage_count": 0,
+            "source": "ai_analysis",
+        }
+
+        # 保存到文件
+        self._save_dynamic_data()
+        print(f"[DEBUG] 注册动态动作: {action} -> {task_type}")
+
+    def get_dynamic_action_info(self, action: str) -> Dict[str, Any]:
+        """获取动态动作信息"""
+        return self.dynamic_actions.get(action, {})
+
+    def increment_action_usage(self, action: str):
+        """增加动作使用计数"""
+        if action in self.dynamic_actions:
+            self.dynamic_actions[action]["usage_count"] += 1
+            self._save_dynamic_data()
+
+    def _save_dynamic_data(self):
+        """保存动态数据到文件"""
+        dynamic_data = {
+            "dynamic_types": self.dynamic_types,
+            "type_priorities": self.type_priorities,
+            "dynamic_actions": getattr(self, "dynamic_actions", {}),
+        }
+
+        dynamic_file = self.cache_dir / "dynamic_data.json"
+        try:
+            with open(dynamic_file, "w", encoding="utf-8") as f:
+                json.dump(dynamic_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[DEBUG] 保存动态数据失败: {e}")
+
+    def _load_dynamic_data(self):
+        """从文件加载动态数据"""
+        dynamic_file = self.cache_dir / "dynamic_data.json"
+        if dynamic_file.exists():
+            try:
+                with open(dynamic_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.dynamic_types = data.get("dynamic_types", {})
+                    self.type_priorities = data.get("type_priorities", {})
+                    self.dynamic_actions = data.get("dynamic_actions", {})
+            except Exception as e:
+                print(f"[DEBUG] 加载动态数据失败: {e}")
+                self.dynamic_actions = {}

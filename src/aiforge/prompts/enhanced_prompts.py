@@ -13,7 +13,10 @@ __result__ = {
     "status": "success或error",
     "summary": "结果摘要",
     "metadata": {"timestamp": "...", "task_type": "..."}
-}"""
+}
+
+# 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）
+"""
 
     # 只在 data_fetch 任务且包含搜索相关字段时应用搜索增强
     if task_type == "data_fetch":
@@ -26,7 +29,7 @@ __result__ = {
 
     # 基于AI分析的预期输出规则生成格式
     required_fields = expected_output.get("required_fields", [])
-    expected_data_type = expected_output.get("expected_data_type", "dict")
+    expected_result_type = expected_output.get("expected_result_type", "dict")
 
     # 构建data字段示例
     data_example = {}
@@ -48,7 +51,8 @@ __result__ = {{
 
 # 必需字段：{', '.join(required_fields)}
 # 非空字段：{', '.join(non_empty_fields)}
-# 数据类型：{expected_data_type}
+# 数据类型：{expected_result_type}
+# 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）
 """
     return format_str
 
@@ -375,7 +379,7 @@ def get_base_prompt_sections() -> Dict[str, str]:
     "execution_logic": "完成任务的基本逻辑",
     "output_format": "期望输出格式",
     "expected_output": {
-        "expected_data_type": "dict/list/str/int/float",
+        "expected_result_type": "dict",
         "required_fields": ["field1", "field2"],
         "validation_rules": {
             "min_items": 1,
@@ -452,6 +456,7 @@ __result__ = {{
 }}
 
 # 必需字段：{', '.join(required_fields)}
+# 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）
 """
 
 
