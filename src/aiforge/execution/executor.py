@@ -69,7 +69,7 @@ class AIForgeExecutor:
             return set()
 
     def _build_smart_execution_environment(self, code: str) -> Dict[str, Any]:
-        """智能构建执行环境"""
+        """智能构建执行环境，优化补全逻辑"""
         exec_globals = {"__builtins__": __builtins__}
 
         # 第一步：分析用户代码的导入语句和使用的名称
@@ -80,42 +80,70 @@ class AIForgeExecutor:
         for name, import_info in user_imports.items():
             try:
                 if import_info["type"] == "import":
-                    # 执行 import module 形式的导入
                     module = importlib.import_module(import_info["module"])
                     exec_globals[name] = module
                 elif import_info["type"] == "from_import":
-                    # 执行 from module import name 形式的导入
                     module = importlib.import_module(import_info["module"])
                     if import_info["name"] == "*":
-                        # 处理 from module import * 的情况
                         for attr_name in dir(module):
                             if not attr_name.startswith("_"):
                                 exec_globals[attr_name] = getattr(module, attr_name)
                     else:
                         exec_globals[name] = getattr(module, import_info["name"])
             except (ImportError, AttributeError) as e:
-                # 导入失败时，尝试智能替代
                 fallback_module = self._smart_import_fallback(name, import_info)
                 if fallback_module is not None:
                     exec_globals[name] = fallback_module
                 else:
                     print(f"[WARNING] 无法导入模块 {name}: {e}")
 
-        # 第三步：为使用但未导入的名称提供智能补全
+        # 第三步：更精确的智能补全，避免不必要的导入
         missing_names = used_names - set(user_imports.keys()) - set(exec_globals.keys())
         for name in missing_names:
-            # 跳过明显的变量名和函数名
+            # 更严格的过滤条件
             if (
-                name in ["__result__", "result", "data", "output"]
+                name in ["__result__", "result", "data", "output", "response", "content"]
                 or name.islower()
                 and len(name) <= 3
+                or name
+                in [
+                    "a",
+                    "b",
+                    "c",
+                    "d",
+                    "e",
+                    "f",
+                    "g",
+                    "h",
+                    "i",
+                    "j",
+                    "k",
+                    "l",
+                    "m",
+                    "n",
+                    "o",
+                    "p",
+                    "q",
+                    "r",
+                    "s",
+                    "t",
+                    "u",
+                    "v",
+                    "w",
+                    "x",
+                    "y",
+                    "z",
+                ]
             ):
                 continue
 
-            smart_module = self._smart_import_missing(name)
-            if smart_module is not None:
-                exec_globals[name] = smart_module
-                print(f"[INFO] 智能补全导入: {name}")
+            # 只对明确的模块名进行智能补全
+            known_modules = ["requests", "json", "os", "sys", "re", "datetime", "time", "random"]
+            if name in known_modules:
+                smart_module = self._smart_import_missing(name)
+                if smart_module is not None:
+                    exec_globals[name] = smart_module
+                    print(f"[INFO] 智能补全导入: {name}")
 
         return exec_globals
 
@@ -206,21 +234,23 @@ class AIForgeExecutor:
 
         return "\n".join(processed_lines)
 
-    def _extract_result(self, locals_dict: dict) -> Any:
-        """智能提取执行结果"""
-        if "__result__" in locals_dict:
-            return locals_dict["__result__"]
+    def _extract_result(self, namespace_dict: dict) -> Any:
+        """智能提取执行结果，适配统一命名空间"""
+        if "__result__" in namespace_dict:
+            return namespace_dict["__result__"]
 
         # 按优先级查找结果
         result_keys = ["result", "output", "data", "response", "return_value", "answer"]
         for key in result_keys:
-            if key in locals_dict:
-                return locals_dict[key]
+            if key in namespace_dict:
+                return namespace_dict[key]
 
         return None
 
     def execute_python_code(self, code: str) -> Dict[str, Any]:
-        """智能执行Python代码，增加超时控制"""
+        """智能执行Python代码，修复多函数定义问题"""
+        import platform
+        import threading
         import signal
 
         def timeout_handler(signum, frame):
@@ -235,25 +265,56 @@ class AIForgeExecutor:
 
             # 智能构建执行环境
             exec_globals = self._build_smart_execution_environment(code)
-            exec_locals = {}
 
-            # 设置执行超时
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(self.MAX_EXECUTE_TIMEOUT)
+            # 不使用分离的exec_locals，直接在exec_globals中执行
+            # 这样所有函数定义都在同一个全局命名空间中，可以相互访问
 
-            try:
-                # 执行代码
-                exec(code, exec_globals, exec_locals)
-            finally:
-                signal.alarm(0)  # 取消超时
+            # 跨平台超时控制
+            if platform.system() != "Windows":
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(self.MAX_EXECUTE_TIMEOUT)
 
-            # 提取结果
-            result = self._extract_result(exec_locals)
+                try:
+                    # 直接在exec_globals中执行，不使用exec_locals
+                    exec(code, exec_globals, exec_globals)
+                finally:
+                    signal.alarm(0)
+            else:
+                # Windows系统的超时处理
+                timeout_occurred = threading.Event()
+                execution_exception = None
+
+                def timeout_callback():
+                    timeout_occurred.set()
+
+                def execute_with_timeout():
+                    nonlocal execution_exception
+                    try:
+                        # 直接在exec_globals中执行
+                        exec(code, exec_globals, exec_globals)
+                    except Exception as e:
+                        execution_exception = e
+
+                timer = threading.Timer(self.MAX_EXECUTE_TIMEOUT, timeout_callback)
+                timer.start()
+
+                exec_thread = threading.Thread(target=execute_with_timeout)
+                exec_thread.start()
+                exec_thread.join(self.MAX_EXECUTE_TIMEOUT + 1)
+
+                timer.cancel()
+
+                if timeout_occurred.is_set():
+                    raise TimeoutError("代码执行超时")
+                if execution_exception:
+                    raise execution_exception
+
+            # 修复：从exec_globals中提取结果
+            result = self._extract_result(exec_globals)
 
             execution_result = {
                 "success": True,
                 "result": result,
-                "locals": exec_locals,
                 "code": code,
             }
 
@@ -275,7 +336,7 @@ class AIForgeExecutor:
         except TimeoutError:
             return {
                 "success": False,
-                "error": "代码执行超时（15秒限制）",
+                "error": "代码执行超时（10秒限制）",
                 "code": code,
             }
         except SyntaxError as e:

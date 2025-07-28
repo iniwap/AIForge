@@ -3,11 +3,8 @@ import json
 import re
 
 
-class IntelligentResultValidator:
+class ResultValidator:
     """智能结果验证器"""
-
-    def __init__(self, llm_client=None):
-        self.llm_client = llm_client
 
     def validate_execution_result(
         self,
@@ -15,6 +12,7 @@ class IntelligentResultValidator:
         expected_output: Dict[str, Any],
         original_instruction: str,
         task_type: str,
+        llm_client=None,
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """
         验证执行结果
@@ -38,12 +36,15 @@ class IntelligentResultValidator:
             )
 
         # 第三步：AI深度验证（如果本地验证通过但仍有疑虑）
-        if self.llm_client and self._needs_ai_validation(result, expected_output):
-            ai_valid, ai_reason = self._ai_deep_validation(
-                result, expected_output, original_instruction, task_type
-            )
-            if not ai_valid:
-                return False, f"AI验证失败: {ai_reason}", {"validation_type": "ai_deep"}
+        if self._needs_ai_validation(result, expected_output):
+            if llm_client:
+                ai_valid, ai_reason = self._ai_deep_validation(
+                    result, expected_output, original_instruction, task_type, llm_client
+                )
+                if not ai_valid:
+                    return False, f"AI验证失败: {ai_reason}", {"validation_type": "ai_deep"}
+            else:
+                return False, "AI验证失败: llm_client 为None", {"validation_type": "ai_deep"}
 
         return True, "验证通过", {"validation_type": "complete"}
 
@@ -160,6 +161,7 @@ class IntelligentResultValidator:
         expected: Dict[str, Any],
         original_instruction: str,
         task_type: str,
+        llm_client,
     ) -> Tuple[bool, str]:
         """AI深度验证 - 判断是否真正达到任务目标"""
 
@@ -190,7 +192,7 @@ class IntelligentResultValidator:
 """
 
         try:
-            response = self.llm_client.generate_code(validation_prompt, "")
+            response = llm_client.generate_code(validation_prompt, "")
             ai_result = self._parse_ai_validation_response(response)
 
             if ai_result.get("validation_passed", False):

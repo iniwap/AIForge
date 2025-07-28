@@ -1,6 +1,6 @@
 # 核心模块导入
 from .core.core import AIForgeCore
-from .core.task_manager import AIForgeManager, AIForgeTask
+from .core.task_manager import AIForgeManager, AIForgeTask, AIForgeResult
 
 # LLM模块导入
 from .llm.llm_client import AIForgeLLMClient, AIForgeOllamaClient
@@ -24,6 +24,7 @@ __all__ = [
     "AIForgeLLMClient",
     "AIForgeOllamaClient",
     "AIForgeExecutor",
+    "AIForgeResult",
     "AIForgeManager",
     "AIForgeTask",
     "AIForgeConfig",

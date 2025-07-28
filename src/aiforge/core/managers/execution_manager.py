@@ -6,9 +6,10 @@ from ...prompts.enhanced_prompts import (
     get_enhanced_system_prompt,
     get_direct_response_prompt,
 )
-from ...utils.code_validator import CodeValidator
+from ...validation.code_validator import CodeValidator
 from ..data_flow_analyzer import DataFlowAnalyzer
 from ...adapters.input.input_adapter_manager import InputSource
+from ..result_manager import AIForgeResult
 
 
 class ExecutionManager:
@@ -259,7 +260,9 @@ class ExecutionManager:
                     )
                     if result:
                         # 对缓存执行结果进行严格验证
-                        is_valid = self._validate_cached_result(result, standardized_instruction)
+                        is_valid = AIForgeResult.validate_cached_result(
+                            result, standardized_instruction
+                        )
                         if is_valid:
                             print("[DEBUG] 缓存模块执行成功且验证通过")
                             code_cache.update_module_stats(module_id, True)
@@ -277,130 +280,6 @@ class ExecutionManager:
                 code_cache.update_module_stats(module_id, False)
 
         return None
-
-    def _validate_cached_result(
-        self, result: Dict[str, Any], standardized_instruction: Dict[str, Any]
-    ) -> bool:
-        """严格的缓存结果验证"""
-        # 严格的格式验证
-        if not self._validate_result_format(result):
-            print("[DEBUG] 缓存结果格式验证失败")
-            return False
-
-        # 严格的状态检查
-        if isinstance(result, dict):
-            status = result.get("status")
-            # 只有明确的 success 状态才通过
-            if status != "success":
-                print(f"[DEBUG] 缓存结果状态不是success: {status}")
-                return False
-
-            # 检查是否有任何错误指示
-            result_data = result.get("result", {})
-            if isinstance(result_data, dict):
-                if (
-                    "error" in result_data
-                    or "exception" in result_data
-                    or "failed" in str(result_data).lower()
-                ):
-                    print("[DEBUG] 缓存结果包含错误信息")
-                    return False
-
-        # 严格的预期输出验证
-        expected_output = standardized_instruction.get("expected_output")
-        if expected_output:
-            return self._strict_expected_output_validation(result, expected_output)
-
-        # 严格的数据完整性检查
-        if not self._strict_data_integrity_check(result):
-            print("[DEBUG] 缓存结果数据完整性检查失败")
-            return False
-
-        return True
-
-    def _validate_result_format(self, result: Any) -> bool:
-        """验证结果是否符合标准格式"""
-        if not isinstance(result, dict):
-            return False
-
-        # 检查必要字段
-        required_fields = ["data", "status", "summary", "metadata"]
-        if not all(field in result for field in required_fields):
-            return False
-
-        # 检查metadata格式
-        metadata = result.get("metadata", {})
-        if not isinstance(metadata, dict):
-            return False
-
-        required_metadata = ["timestamp", "task_type"]
-        if not all(field in metadata for field in required_metadata):
-            return False
-
-        return True
-
-    def _strict_expected_output_validation(
-        self, result: Dict[str, Any], expected_output: Dict[str, Any]
-    ) -> bool:
-        """严格的预期输出验证"""
-        result_data = result.get("result", {})
-        if not isinstance(result_data, dict):
-            result_data = result.get("data", {})
-
-        # 严格验证所有必需字段
-        required_fields = expected_output.get("required_fields", [])
-        for field in required_fields:
-            if field not in result_data:
-                print(f"[DEBUG] 严格验证失败：缺少必需字段 {field}")
-                return False
-
-        # 严格验证非空字段
-        validation_rules = expected_output.get("validation_rules", {})
-        non_empty_fields = validation_rules.get("non_empty_fields", [])
-        for field in non_empty_fields:
-            if field in result_data:
-                value = result_data[field]
-                if (
-                    value is None
-                    or value == ""
-                    or (isinstance(value, (list, dict)) and len(value) == 0)
-                ):
-                    print(f"[DEBUG] 严格验证失败：字段 {field} 为空")
-                    return False
-
-        # 严格验证数据类型
-        expected_data_type = expected_output.get("expected_data_type", "dict")
-        if expected_data_type == "list" and not isinstance(result_data, list):
-            print("[DEBUG] 严格验证失败：数据类型不匹配")
-            return False
-        elif expected_data_type == "dict" and not isinstance(result_data, dict):
-            print("[DEBUG] 严格验证失败：数据类型不匹配")
-            return False
-
-        return True
-
-    def _strict_data_integrity_check(self, result: Dict[str, Any]) -> bool:
-        """严格的数据完整性检查"""
-        # 检查结果是否有实际内容
-        result_data = result.get("result")
-        if result_data is None:
-            return False
-
-        # 如果是字典，检查是否为空
-        if isinstance(result_data, dict) and len(result_data) == 0:
-            return False
-
-        # 如果是列表，检查是否为空
-        if isinstance(result_data, list) and len(result_data) == 0:
-            return False
-
-        # 检查是否包含明显的错误标识
-        result_str = str(result_data).lower()
-        error_indicators = ["error", "failed", "exception", "traceback", "none", "null"]
-        if any(indicator in result_str for indicator in error_indicators):
-            return False
-
-        return True
 
     def _code_matches_intent(self, code: str, standardized_instruction: Dict[str, Any]) -> bool:
         """通用版代码意图匹配验证"""
@@ -568,7 +447,7 @@ class ExecutionManager:
             print("[DEBUG] 代码未通过基础验证")
             return False
 
-        if not self._validate_result_format(result):
+        if not AIForgeResult.validate_result_format(result):
             print("[DEBUG] 结果格式验证失败")
             return False
 
@@ -642,12 +521,7 @@ class ExecutionManager:
         task = None
         try:
             task = task_manager.new_task(instruction, client)
-
-            # 设置预期输出规则
-            if expected_output:
-                task.set_expected_output(expected_output)
-
-            task.run(instruction, system_prompt, task_type)
+            task.run(instruction, system_prompt, task_type, expected_output)
 
             # 查找最有价值的成功执行代码
             best_entry = self._find_best_successful_code(task.executor.history)

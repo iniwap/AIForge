@@ -1,0 +1,254 @@
+import json
+import hashlib
+from datetime import datetime
+from typing import Dict, Any, Tuple
+from rich.console import Console
+
+from ..validation.result_validator import ResultValidator
+from ..instruction.analyzer import InstructionAnalyzer
+from .enhanced_error_analyzer import EnhancedErrorAnalyzer
+from ..formatting.result_formatter import AIForgeResultFormatter
+
+
+class AIForgeResult:
+    """AIForge 执行结果处理器"""
+
+    def __init__(self, console: Console = None):
+        self.formatter = AIForgeResultFormatter(console) if console else None
+        self.result_validator = ResultValidator()
+        self.expected_output = None
+
+    def set_expected_output(self, expected_output: Dict[str, Any]):
+        """设置预期输出规则"""
+        self.expected_output = expected_output
+
+    def basic_execution_check(self, result: Dict[str, Any]) -> bool:
+        """基础执行检查"""
+        if not result.get("success", False):
+            return False
+
+        result_content = result.get("result")
+        if result_content is None:
+            return False
+
+        if isinstance(result_content, dict):
+            status = result_content.get("status")
+            if status == "error":
+                return False
+            elif status == "success":
+                return True
+            if "error" in result_content or "exception" in result_content:
+                return False
+
+        return True
+
+    def validate_execution_result(
+        self, result: Dict[str, Any], instruction: str, task_type: str = None, llm_client=None
+    ) -> Tuple[bool, str, Dict[str, Any]]:
+        """使用智能验证器验证执行结果"""
+        # 如果没有预期输出，构建默认的验证规则
+        if not self.expected_output:
+            default_expected_output = InstructionAnalyzer.get_default_expected_output(task_type)
+        else:
+            default_expected_output = self.expected_output
+
+        # 统一使用智能验证器进行完整验证
+        return self.result_validator.validate_execution_result(
+            result, default_expected_output, instruction, task_type or "general", llm_client
+        )
+
+    def get_validation_feedback(
+        self, failure_reason: str, validation_details: Dict[str, Any], attempt_num: int
+    ):
+        """获取验证失败反馈"""
+        feedback = EnhancedErrorAnalyzer.generate_validation_feedback(
+            failure_reason, validation_details, attempt_num, self.expected_output
+        )
+        feedback_json = json.dumps(feedback, ensure_ascii=False)
+        return feedback_json
+
+    def get_intelligent_feedback(self, result: Dict[str, Any]):
+        """使用 EnhancedErrorAnalyzer 发送精简但有效的反馈"""
+        error_info = result.get("error", "")
+        traceback_info = result.get("traceback", "")
+
+        # 检查是否为系统级错误
+        system_errors = [
+            "代码执行超时",
+            "Permission denied",
+        ]
+
+        if any(sys_err in error_info for sys_err in system_errors):
+            # 系统级错误不发送给 AI，直接记录日志
+            print(f"[SYSTEM ERROR] {error_info}")
+            return
+
+        simple_errors = ["NameError", "SyntaxError", "TypeError", "ValueError", "AttributeError"]
+        if any(err_type in error_info for err_type in simple_errors):
+            # 直接发送原始错误信息，不做复杂转换
+            simple_feedback = {
+                "error_type": "code_error",
+                "specific_error": error_info,
+                "suggestion": "请检查代码中的变量名、语法和类型使用",
+            }
+            feedback_json = json.dumps(simple_feedback, ensure_ascii=False)
+            self.client.send_feedback(feedback_json)
+            return
+
+        # 使用增强的错误分析器生成智能反馈
+        feedback = EnhancedErrorAnalyzer.generate_execution_feedback(error_info, traceback_info)
+
+        feedback_json = json.dumps(feedback, ensure_ascii=False)
+        return feedback_json
+
+    def process_execution_result(self, result_content, instruction: str, task_type: str = None):
+        """后处理执行结果，强制标准化格式"""
+        task_type = task_type or "general"
+
+        if not isinstance(result_content, dict):
+            result_content = {
+                "data": result_content,
+                "status": "success" if result_content else "error",
+                "summary": "执行完成" if result_content else "执行失败",
+                "metadata": {
+                    "timestamp": datetime.now().isoformat(),
+                    "task_type": task_type,
+                    "auto_wrapped": True,
+                },
+            }
+        else:
+            result_content.setdefault("status", "success")
+            result_content.setdefault("summary", "操作完成")
+            result_content.setdefault("metadata", {})
+            result_content["metadata"].update(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "task_type": task_type,
+                    "instruction_hash": hashlib.md5(instruction.encode()).hexdigest(),
+                }
+            )
+
+        if self.formatter:
+            processed_result = self.formatter.format_task_type_result(result_content, task_type)
+            return processed_result
+        return result_content
+
+    @staticmethod
+    def validate_cached_result(
+        result: Dict[str, Any], standardized_instruction: Dict[str, Any]
+    ) -> bool:
+        """严格的缓存结果验证"""
+        # 严格的格式验证
+        if not AIForgeResult.validate_result_format(result):
+            print("[DEBUG] 缓存结果格式验证失败")
+            return False
+
+        # 严格的状态检查
+        if isinstance(result, dict):
+            status = result.get("status")
+            if status != "success":
+                print(f"[DEBUG] 缓存结果状态不是success: {status}")
+                return False
+
+            result_data = result.get("result", {})
+            if isinstance(result_data, dict):
+                if (
+                    "error" in result_data
+                    or "exception" in result_data
+                    or "failed" in str(result_data).lower()
+                ):
+                    print("[DEBUG] 缓存结果包含错误信息")
+                    return False
+
+        # 严格的预期输出验证
+        expected_output = standardized_instruction.get("expected_output")
+        if expected_output:
+            return AIForgeResult.strict_expected_output_validation(result, expected_output)
+
+        # 严格的数据完整性检查
+        if not AIForgeResult.strict_data_integrity_check(result):
+            print("[DEBUG] 缓存结果数据完整性检查失败")
+            return False
+
+        return True
+
+    @staticmethod
+    def validate_result_format(result: Any) -> bool:
+        """验证结果是否符合标准格式"""
+        if not isinstance(result, dict):
+            return False
+
+        required_fields = ["data", "status", "summary", "metadata"]
+        if not all(field in result for field in required_fields):
+            return False
+
+        metadata = result.get("metadata", {})
+        if not isinstance(metadata, dict):
+            return False
+
+        required_metadata = ["timestamp", "task_type"]
+        if not all(field in metadata for field in required_metadata):
+            return False
+
+        return True
+
+    @staticmethod
+    def strict_expected_output_validation(
+        result: Dict[str, Any], expected_output: Dict[str, Any]
+    ) -> bool:
+        """严格的预期输出验证"""
+        result_data = result.get("result", {})
+        if not isinstance(result_data, dict):
+            result_data = result.get("data", {})
+
+        # 严格验证所有必需字段
+        required_fields = expected_output.get("required_fields", [])
+        for field in required_fields:
+            if field not in result_data:
+                print(f"[DEBUG] 严格验证失败：缺少必需字段 {field}")
+                return False
+
+        # 严格验证非空字段
+        validation_rules = expected_output.get("validation_rules", {})
+        non_empty_fields = validation_rules.get("non_empty_fields", [])
+        for field in non_empty_fields:
+            if field in result_data:
+                value = result_data[field]
+                if (
+                    value is None
+                    or value == ""
+                    or (isinstance(value, (list, dict)) and len(value) == 0)
+                ):
+                    print(f"[DEBUG] 严格验证失败：字段 {field} 为空")
+                    return False
+
+        # 严格验证数据类型
+        expected_data_type = expected_output.get("expected_data_type", "dict")
+        if expected_data_type == "list" and not isinstance(result_data, list):
+            print("[DEBUG] 严格验证失败：数据类型不匹配")
+            return False
+        elif expected_data_type == "dict" and not isinstance(result_data, dict):
+            print("[DEBUG] 严格验证失败：数据类型不匹配")
+            return False
+
+        return True
+
+    @staticmethod
+    def strict_data_integrity_check(result: Dict[str, Any]) -> bool:
+        """严格的数据完整性检查"""
+        result_data = result.get("result")
+        if result_data is None:
+            return False
+
+        if isinstance(result_data, dict) and len(result_data) == 0:
+            return False
+
+        if isinstance(result_data, list) and len(result_data) == 0:
+            return False
+
+        result_str = str(result_data).lower()
+        error_indicators = ["error", "failed", "exception", "traceback", "none", "null"]
+        if any(indicator in result_str for indicator in error_indicators):
+            return False
+
+        return True

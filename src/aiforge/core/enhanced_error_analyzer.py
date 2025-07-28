@@ -98,54 +98,6 @@ class EnhancedErrorAnalyzer:
         return feedback
 
     @staticmethod
-    def analyze_basic_failure_reason(result: Dict[str, Any]) -> str:
-        """分析基础验证失败的具体原因"""
-        if not result.get("success", False):
-            error = result.get("error", "未知错误")
-            return f"代码执行失败: {error}"
-
-        result_content = result.get("result")
-        if result_content is None:
-            return "执行结果为空"
-
-        if isinstance(result_content, dict):
-            status = result_content.get("status")
-            if status == "error":
-                summary = result_content.get("summary", "未知业务错误")
-                return f"业务逻辑错误: {summary}"
-
-            if "error" in result_content or "exception" in result_content:
-                return "结果包含错误信息"
-
-            data = result_content.get("data")
-            if data is None:
-                return "数据字段为空，未获取到有效数据"
-
-            if isinstance(data, (list, dict)) and len(data) == 0:
-                return "数据字段为空列表或字典，未获取到有效数据"
-
-            if any(
-                indicator in str(result_content).lower()
-                for indicator in ["failed", "timeout", "connection error"]
-            ):
-                return "执行结果包含失败指标"
-
-        if isinstance(result_content, str):
-            if any(
-                indicator in result_content.lower()
-                for indicator in ["error", "failed", "exception", "timeout"]
-            ):
-                return "字符串结果包含错误信息"
-
-            if not result_content.strip():
-                return "字符串结果为空"
-
-        if isinstance(result_content, (list, tuple)) and len(result_content) == 0:
-            return "结果列表为空"
-
-        return "验证失败，原因不明"
-
-    @staticmethod
     def _generate_fix_suggestions(error_type: str, error_message: str) -> List[str]:
         """根据错误类型生成修复建议"""
         suggestions = []
@@ -325,7 +277,7 @@ class EnhancedErrorAnalyzer:
         """生成业务逻辑验证失败的建议"""
         if "缺少必需字段" in failure_reason:
             # 提取缺少的字段名
-            field_match = re.search(r"缺少必需字段: (\\w+)", failure_reason)
+            field_match = re.search(r"缺少必需字段: (\w+)", failure_reason)
             if field_match:
                 missing_field = field_match.group(1)
                 if expected_output:
@@ -338,7 +290,7 @@ class EnhancedErrorAnalyzer:
 
         elif "结果数量" in failure_reason and "少于最小要求" in failure_reason:
             # 提取数量信息
-            count_match = re.search(r"结果数量 (\\d+) 少于最小要求 (\\d+)", failure_reason)
+            count_match = re.search(r"结果数量 (\d+) 少于最小要求 (\d+)", failure_reason)
             if count_match:
                 actual_count = count_match.group(1)
                 required_count = count_match.group(2)
@@ -347,7 +299,7 @@ class EnhancedErrorAnalyzer:
                 return "增加数据获取数量，优化搜索关键词或扩大搜索范围"
 
         elif "字段" in failure_reason and "不应为空" in failure_reason:
-            field_match = re.search(r"字段 (\\w+) 不应为空", failure_reason)
+            field_match = re.search(r"字段 (\w+) 不应为空", failure_reason)
             if field_match:
                 empty_field = field_match.group(1)
                 return f"确保 '{empty_field}' 字段包含有效内容，不能为空值、空字符串或空列表"

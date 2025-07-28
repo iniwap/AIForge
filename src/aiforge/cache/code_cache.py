@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 from peewee import CharField, DoubleField, IntegerField, Model, TextField, BooleanField
 from playhouse.sqlite_ext import SqliteExtDatabase
-from ..utils.code_validator import CodeValidator
+from ..validation.code_validator import CodeValidator
 
 
 @dataclass
