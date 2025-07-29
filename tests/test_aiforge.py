@@ -20,7 +20,7 @@ def test_quick_start():
 def test_provider_deepseek():
     """方式2：指定提供商"""
     forge = AIForgeCore(api_key=os.environ["DEEPSEEK_API_KEY"], provider="deepseek", max_rounds=3)
-    result = forge("分析数据文件")
+    result = forge("北京朝阳降雨量下至全国第一相关新闻报导及内容")
     print("deepseek result:", result)
     assert result is not None
 

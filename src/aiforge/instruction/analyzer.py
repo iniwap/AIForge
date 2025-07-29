@@ -397,19 +397,6 @@ class InstructionAnalyzer:
             "expected_output": self.get_default_expected_output("general"),
         }
 
-    def get_analysis_prompt(self, include_guidance: bool = True) -> str:
-        """获取AI分析提示词"""
-        # 构建基础提示词内容
-        base_sections = get_base_prompt_sections()
-
-        # 如果需要引导信息，添加任务类型引导
-        if include_guidance:
-            builtin_types = list(self.standardized_patterns.keys())
-            guidance_info = self._build_task_type_guidance(builtin_types)
-            return self._assemble_prompt_with_guidance(base_sections, guidance_info)
-        else:
-            return self._assemble_basic_prompt(base_sections)
-
     def _build_task_type_guidance(self, builtin_types: List[str]) -> str:
         """构建任务类型引导信息"""
         # 获取动态类型统计（如果有任务类型管理器）
@@ -470,34 +457,6 @@ class InstructionAnalyzer:
 
 # 动作命名规范
 {base_sections["action_vocabulary"]}
-
-# 分析步骤
-{base_sections["analysis_steps"]}
-
-# 输出格式
-{base_sections["output_format"]}
-
-# 分析原则
-{base_sections["principles"]}
-
-# 示例思考过程
-{base_sections["examples"]}
-
-请严格按照JSON格式返回分析结果。
-"""
-
-    def _assemble_basic_prompt(self, base_sections: Dict[str, str]) -> str:
-        """组装基础提示词（无引导信息）"""
-        return f"""
-# 角色定义
-{base_sections["role"]}
-
-# 核心任务
-分析用户指令，思考：要完成这个任务，我需要哪些具体信息作为输入参数？
-
-# 执行模式判断
-首先判断任务是否可以通过AI直接响应完成：
-{base_sections["execution_mode"]}
 
 # 分析步骤
 {base_sections["analysis_steps"]}
@@ -715,7 +674,7 @@ class InstructionAnalyzer:
 
         # 构建自适应引导信息
         adaptive_guidance = f"""
-# 任务类型指导（自适应模式）
+# 任务类型指导
 {guidance_strength}使用以下经过验证的内置任务类型：
 {builtin_types}
 
@@ -723,7 +682,7 @@ class InstructionAnalyzer:
 ## 整体性搜索判断：
 - 如果指令主要目的是"获取/查找/搜索"某类信息（如新闻、资讯、数据）
 - 非任务型指令，且没有复杂的处理逻辑要求
-- 应该识别为整体性搜索，只提取一个search_query参数（原始指令）
+- 应该识别为整体性搜索，严格要求只提取一个search_query参数=原始指令
 
 # 数量分析指导
 ## 数量要求分析：
@@ -740,7 +699,6 @@ class InstructionAnalyzer:
 这些内置类型具有更高的缓存命中率和执行效率。
 """
 
-        # 其余提示词内容保持不变...
         return self._assemble_prompt_with_guidance(get_base_prompt_sections(), adaptive_guidance)
 
     def _get_task_type_recommendations(self) -> Dict[str, Any]:
