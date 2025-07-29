@@ -130,18 +130,30 @@ class AIForgeTask:
 
             self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
-            round_success, round_result, round_code = self._execute_single_round_with_optimization(
-                rounds, max_optimization_attempts
+            round_success, round_result, round_code, fail_best = (
+                self._execute_single_round_with_optimization(rounds, max_optimization_attempts)
             )
 
             if round_success:
                 success = True
                 final_result = round_result
                 final_code = round_code
-                self.console.print(f"🎉 第 {rounds} 轮执行成功，任务完成！", style="bold green")
+                if fail_best:
+                    self.console.print(
+                        "🎉 全部轮次执行失败，返回最佳结果，执行结束！", style="bold yellow"
+                    )
+                else:
+                    self.console.print(f"🎉 第 {rounds} 轮执行成功，任务完成！", style="bold green")
                 break
             else:
-                self.console.print(f"⚠️ 第 {rounds} 轮执行失败，进入下一轮重新开始", style="yellow")
+                if rounds >= self.max_rounds:
+                    self.console.print(
+                        "⚠️ 全部轮次执行失败，未获取到有效结果，执行结束！", style="yellow"
+                    )
+                else:
+                    self.console.print(
+                        f"⚠️ 第 {rounds} 轮执行失败，进入下一轮重新开始", style="yellow"
+                    )
                 if hasattr(self.client, "reset_conversation"):
                     self.client.reset_conversation()
 
@@ -247,7 +259,12 @@ class AIForgeTask:
                 self.console.print(
                     f"✅ 第 {optimization_attempt} 次尝试验证通过！", style="bold green"
                 )
-                return True, last_execution["result"].get("result"), last_execution.get("code", "")
+                return (
+                    True,
+                    last_execution["result"].get("result"),
+                    last_execution.get("code", ""),
+                    False,
+                )
             else:
                 last_execution["success"] = False
 
@@ -279,13 +296,13 @@ class AIForgeTask:
 
                         last_execution["result"]["result"] = best_result
                         last_execution["success"] = True
-                        return True, best_result, best_code
+                        return True, best_result, best_code, True
 
-                    return False, None, ""
+                    return False, None, "", False
 
         # 所有优化尝试都失败
         self.console.print(f"❌ 单轮内 {max_optimization_attempts} 次优化尝试全部失败", style="red")
-        return False, None, ""
+        return False, None, "", False
 
     def _get_best_available_result(self):
         """获取质量最佳的可用结果"""

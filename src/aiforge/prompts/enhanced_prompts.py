@@ -433,6 +433,29 @@ def get_search_enhanced_format(expected_output: Dict[str, Any]) -> str:
 3. 尝试社交媒体平台搜索
 4. 使用学术搜索引擎
 
+## 搜索引擎URL模式：
+- 百度: https://www.baidu.com/s?wd={{quote(search_query)}}
+- Bing: https://www.bing.com/search?q={{quote(search_query)}}
+- 360: https://www.so.com/s?q={{quote(search_query)}}
+- 搜狗: https://www.sogou.com/web?query={{quote(search_query)}}
+
+## 关键CSS选择器：
+百度结果容器: ["div.result", "div.c-container", "div[class*='result']"]
+百度标题: ["h3", "h3 a", ".t", ".c-title"]
+百度摘要: ["div.c-abstract", ".c-span9", "[class*='abstract']"]
+
+Bing结果容器: ["li.b_algo", "div.b_algo", "li[class*='algo']"]
+Bing标题: ["h2", "h3", "h2 a", ".b_title"]
+Bing摘要: ["p.b_lineclamp4", "div.b_caption", ".b_snippet"]
+
+360结果容器: ["li.res-list", "div.result", "li[class*='res']"]
+360标题: ["h3.res-title", "h3", ".res-title"]
+360摘要: ["p.res-desc", "div.res-desc", ".res-summary"]
+
+搜狗结果容器: ["div.vrwrap", "div.results", "div.result"]
+搜狗标题: ["h3.vr-title", "h3.vrTitle", "a.title", "h3"]
+搜狗摘要: ["div.str-info", "div.str_info", "p.str-info"]
+
 ## 核心要求：
 - 实现多重容错机制，至少尝试2-3种不同方法
 - 对每个结果，使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容
