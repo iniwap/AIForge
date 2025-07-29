@@ -6,7 +6,6 @@ from ...prompts.enhanced_prompts import (
     get_enhanced_system_prompt,
     get_direct_response_prompt,
 )
-from ...validation.code_validator import CodeValidator
 from ..data_flow_analyzer import DataFlowAnalyzer
 from ...adapters.input.input_adapter_manager import InputSource
 from ..result_manager import AIForgeResult
@@ -39,7 +38,7 @@ class ExecutionManager:
 
         # 第一步：本地标准化指令分析
         if not instruction_analyzer:
-            result, _ = self._generate_and_execute_with_code(instruction, None, None)
+            result, _, _ = self._generate_and_execute_with_code(instruction, None, None)
             return result
 
         # 使用统一的指令分析入口
@@ -159,7 +158,7 @@ class ExecutionManager:
                 temp_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
-            result, code = self._generate_and_execute_with_code(
+            result, code, success = self._generate_and_execute_with_code(
                 None, enhanced_prompt, "general", basic_expected_output
             )
         else:
@@ -167,20 +166,39 @@ class ExecutionManager:
                 standardized_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
-            result, code = self._generate_and_execute_with_code(
+            result, code, success = self._generate_and_execute_with_code(
                 None,
                 enhanced_prompt,
                 standardized_instruction.get("task_type"),
                 standardized_instruction.get("expected_output"),
             )
 
-        if save_cache:
-            # 使用通用验证保存成功的代码到缓存
-            if result and code:
-                if self._is_code_worth_caching(code, result, standardized_instruction):
-                    self._save_standardized_module(standardized_instruction, code)
+        if save_cache and success and result and code:
+            # 只进行标准化层级的验证，信任 TaskManager 的基础验证结果
+            if self._should_cache_standardized_code(code, standardized_instruction):
+                self._save_standardized_module(standardized_instruction, code)
+            else:
+                print("[DEBUG] 代码未通过标准化验证，不予缓存")
 
         return result
+
+    def _should_cache_standardized_code(
+        self, code: str, standardized_instruction: Dict[str, Any]
+    ) -> bool:
+        """标准化层级的缓存价值判断"""
+
+        # 跳过基础验证，直接进行标准化相关验证
+        if not standardized_instruction:
+            return True  # 如果没有标准化指令，直接允许缓存
+
+        # 核心：只进行参数使用的数据流分析验证
+        if not self._validate_parameter_usage_with_dataflow(code, standardized_instruction):
+            print("[DEBUG] 代码未通过数据流参数使用验证，不予缓存")
+            return False
+
+        # 可以添加其他标准化相关的验证
+
+        return True
 
     def _get_final_standardized_instruction(self, instruction: str) -> Dict[str, Any]:
         """获取最终的标准化指令"""
@@ -456,36 +474,6 @@ class ExecutionManager:
             print(f"[DEBUG] 数据流分析失败: {e}")
             return False
 
-    def _is_code_worth_caching(
-        self, code: str, result: Any, standardized_instruction: Dict[str, Any] = None
-    ) -> bool:
-        """代码缓存价值判断"""
-        # 基础验证
-        if not CodeValidator.validate_code(code):
-            print("[DEBUG] 代码未通过基础验证")
-            return False
-
-        if not AIForgeResult.validate_result_format(result):
-            print("[DEBUG] 结果格式验证失败")
-            return False
-
-        if isinstance(result, dict):
-            status = result.get("status")
-            if status == "error":
-                print("[DEBUG] 结果状态为错误，不予缓存")
-                return False
-            if status is not None and status != "success":
-                print("[DEBUG] 结果状态非成功，不予缓存")
-                return False
-
-        # 只进行参数使用验证，不做复杂的硬编码检测
-        if standardized_instruction:
-            if not self._validate_parameter_usage_with_dataflow(code, standardized_instruction):
-                print("[DEBUG] 代码未通过数据流参数使用验证，不予缓存")
-                return False
-
-        return True
-
     def _save_standardized_module(
         self, standardized_instruction: Dict[str, Any], code: str
     ) -> str | None:
@@ -549,58 +537,15 @@ class ExecutionManager:
         task = None
         try:
             task = task_manager.new_task(instruction, client)
-            task.run(instruction, system_prompt, task_type, expected_output)
+            result, code, success = task.run(instruction, system_prompt, task_type, expected_output)
 
-            # 查找最有价值的成功执行代码
-            best_entry = self._find_best_successful_code(task.executor.history)
-            if best_entry:
-                result = best_entry["result"]["__result__"]
-                code = best_entry.get("code", "")
-                return result, code
-
-            return None, None
+            if success and result:
+                return result, code or "", success
+            else:
+                return None, None, False
         finally:
             if task:
                 task.done()
-
-    def _find_best_successful_code(self, history: List[Dict]) -> Optional[Dict]:
-        """找到最有价值的成功执行代码"""
-        successful_entries = []
-
-        # 收集所有成功的执行记录
-        for entry in history:
-            if entry.get("success") and entry.get("result", {}).get("__result__"):
-                successful_entries.append(entry)
-
-        if not successful_entries:
-            return None
-
-        # 按代码质量排序，优先选择功能代码
-        def code_quality_score(entry):
-            code = entry.get("code", "")
-
-            # 如果只是简单的 __result__ 赋值，得分很低
-            lines = code.strip().split("\n")
-            if len(lines) <= 3 and all(
-                "__result__" in line or line.strip() == "" for line in lines
-            ):
-                return 1
-
-            # 包含函数定义、导入语句等的代码得分更高
-            score = 10
-            if "def " in code:
-                score += 50
-            if "import " in code or "from " in code:
-                score += 30
-            if "class " in code:
-                score += 40
-            if len(lines) > 10:
-                score += 20
-
-            return score
-
-        # 返回质量得分最高的代码
-        return max(successful_entries, key=code_quality_score)
 
     def _execute_cached_module(self, module, instruction: str, **kwargs) -> Any:
         """执行缓存模块"""

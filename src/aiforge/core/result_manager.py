@@ -223,59 +223,79 @@ class AIForgeResult:
     def strict_expected_output_validation(
         result: Dict[str, Any], expected_output: Dict[str, Any]
     ) -> bool:
-        """严格的预期输出验证"""
-        result_data = result.get("result", {})
-        if not isinstance(result_data, dict):
-            result_data = result.get("data", {})
+        """严格的预期输出验证 - 统一数据格式版本"""
+        # 统一从标准位置获取数据
+        data = result.get("data", [])
 
-        # 严格验证所有必需字段
+        # 验证 data 必须是列表
+        if not isinstance(data, list):
+            print("[DEBUG] 严格验证失败：data字段必须是列表格式")
+            return False
+
+        # 先检查是否有数据
+        if len(data) == 0:
+            print("[DEBUG] 严格验证失败：data字段为空，未获取到有效数据")
+            return False
+
+        # 验证数据项的必需字段
         required_fields = expected_output.get("required_fields", [])
-        for field in required_fields:
-            if field not in result_data:
-                print(f"[DEBUG] 严格验证失败：缺少必需字段 {field}")
+        if required_fields and len(data) > 0:
+            first_item = data[0]
+            if not isinstance(first_item, dict):
+                print("[DEBUG] 严格验证失败：数据项必须是字典格式")
                 return False
 
-        # 严格验证非空字段
-        validation_rules = expected_output.get("validation_rules", {})
-        non_empty_fields = validation_rules.get("non_empty_fields", [])
-        for field in non_empty_fields:
-            if field in result_data:
-                value = result_data[field]
-                if (
-                    value is None
-                    or value == ""
-                    or (isinstance(value, (list, dict)) and len(value) == 0)
-                ):
-                    print(f"[DEBUG] 严格验证失败：字段 {field} 为空")
+            for field in required_fields:
+                if field not in first_item:
+                    print(f"[DEBUG] 严格验证失败：数据项缺少必需字段 {field}")
                     return False
 
-        # 严格验证数据类型
-        expected_result_type = expected_output.get("expected_result_type", "dict")
-        if expected_result_type == "list" and not isinstance(result_data, list):
-            print("[DEBUG] 严格验证失败：数据类型不匹配")
-            return False
-        elif expected_result_type == "dict" and not isinstance(result_data, dict):
-            print("[DEBUG] 严格验证失败：数据类型不匹配")
-            return False
+        # 验证非空字段
+        validation_rules = expected_output.get("validation_rules", {})
+        non_empty_fields = validation_rules.get("non_empty_fields", [])
+        for item in data:
+            if isinstance(item, dict):
+                for field in non_empty_fields:
+                    if field in item:
+                        value = item[field]
+                        if (
+                            value is None
+                            or value == ""
+                            or (isinstance(value, (list, dict)) and len(value) == 0)
+                        ):
+                            print(f"[DEBUG] 严格验证失败：字段 {field} 为空")
+                            return False
 
         return True
 
     @staticmethod
     def strict_data_integrity_check(result: Dict[str, Any]) -> bool:
-        """严格的数据完整性检查"""
-        result_data = result.get("result")
-        if result_data is None:
+        """严格的数据完整性检查 - 统一数据格式版本"""
+        # 统一从标准位置获取数据
+        data = result.get("data")
+        if data is None:
+            print("[DEBUG] 数据完整性检查失败：缺少data字段")
             return False
 
-        if isinstance(result_data, dict) and len(result_data) == 0:
+        if not isinstance(data, list):
+            print("[DEBUG] 数据完整性检查失败：data字段必须是列表")
             return False
 
-        if isinstance(result_data, list) and len(result_data) == 0:
+        if len(data) == 0:
+            print("[DEBUG] 数据完整性检查失败：data字段为空")
             return False
 
-        result_str = str(result_data).lower()
-        error_indicators = ["error", "failed", "exception", "traceback", "none", "null"]
-        if any(indicator in result_str for indicator in error_indicators):
-            return False
+        # 检查数据项的完整性
+        for i, item in enumerate(data):
+            if not isinstance(item, dict):
+                print(f"[DEBUG] 数据完整性检查失败：data[{i}]必须是字典格式")
+                return False
+
+            # 检查是否包含错误指示符
+            item_str = str(item).lower()
+            error_indicators = ["error", "failed", "exception", "traceback"]
+            if any(indicator in item_str for indicator in error_indicators):
+                print(f"[DEBUG] 数据完整性检查失败：data[{i}]包含错误信息")
+                return False
 
         return True

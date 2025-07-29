@@ -236,3 +236,28 @@ class ResultValidator:
         except Exception as e:
             # AI验证失败时，保守地认为验证通过
             return True, f"AI验证异常，默认通过: {str(e)}"
+
+    def _parse_ai_validation_response(self, response: str) -> Dict[str, Any]:
+        """解析AI验证响应"""
+        try:
+            # 尝试直接解析JSON
+            return json.loads(response)
+        except json.JSONDecodeError:
+            # 如果直接解析失败，尝试提取JSON部分
+            import re
+
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
+            if json_match:
+                try:
+                    return json.loads(json_match.group())
+                except json.JSONDecodeError:
+                    pass
+
+            # 解析失败时返回默认失败结果
+            return {
+                "validation_passed": False,
+                "confidence": 0.0,
+                "failure_reason": "AI响应格式无法解析",
+                "improvement_suggestions": [],
+                "core_issues": ["AI验证响应格式错误"],
+            }

@@ -112,6 +112,8 @@ class AIForgeTask:
 
         rounds = 1
         success = False
+        final_result = None
+        final_code = ""
 
         while rounds <= self.max_rounds:
             if rounds > 1:
@@ -128,12 +130,14 @@ class AIForgeTask:
 
             self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
-            round_success = self._execute_single_round_with_optimization(
+            round_success, round_result, round_code = self._execute_single_round_with_optimization(
                 rounds, max_optimization_attempts
             )
 
             if round_success:
                 success = True
+                final_result = round_result
+                final_code = round_code
                 self.console.print(f"🎉 第 {rounds} 轮执行成功，任务完成！", style="bold green")
                 break
             else:
@@ -150,7 +154,7 @@ class AIForgeTask:
             success,
         )
 
-        return self.execution_history
+        return final_result, final_code, success
 
     def _execute_single_round_with_optimization(
         self, round_num: int, max_optimization_attempts: int
@@ -243,13 +247,13 @@ class AIForgeTask:
                 self.console.print(
                     f"✅ 第 {optimization_attempt} 次尝试验证通过！", style="bold green"
                 )
-                return True
+                return True, last_execution["result"].get("result"), last_execution.get("code", "")
             else:
                 last_execution["success"] = False
 
                 if optimization_attempt < max_optimization_attempts:
                     self.console.print(
-                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，发送优化反馈（{validation_type}）",  # noqa 501
+                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}，发送优化反馈",  # noqa 501
                         style="yellow",
                     )
                     self.client.send_feedback(
@@ -260,23 +264,28 @@ class AIForgeTask:
                     optimization_attempt += 1
                 else:
                     self.console.print(
-                        f"❌ 第 {optimization_attempt} 次尝试验证失败: {failure_reason}，已达到最大优化次数（{validation_type}）",  # noqa 501
+                        f"❌ 第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}，已达到最大优化次数",  # noqa 501
                     )
 
                     # 尝试返回最佳可用结果
                     best_result = self._get_best_available_result()
                     if best_result:
-                        self.console.print("🔄 返回质量最佳的可用结果", style="yellow")
+                        # 查找对应的代码
+                        best_code = ""
+                        for execution in reversed(self.execution_history):
+                            if execution.get("result", {}).get("result") == best_result:
+                                best_code = execution.get("code", "")
+                                break
+
                         last_execution["result"]["result"] = best_result
                         last_execution["success"] = True
-                        return True
+                        return True, best_result, best_code
 
-                    self.console.print("❌ 放弃当前轮", style="red")
-                    return False
+                    return False, None, ""
 
         # 所有优化尝试都失败
         self.console.print(f"❌ 单轮内 {max_optimization_attempts} 次优化尝试全部失败", style="red")
-        return False
+        return False, None, ""
 
     def _get_best_available_result(self):
         """获取质量最佳的可用结果"""

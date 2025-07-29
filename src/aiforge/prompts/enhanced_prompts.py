@@ -67,7 +67,9 @@ def get_base_aiforge_prompt(optimize_tokens: bool = True) -> str:
 """
 
     if optimize_tokens:
-        code_rule += "\n- 生成极简代码，无注释，无空行\n- 使用最短变量名(a,b,c,d等)"
+        code_rule += (
+            "\n- 生成极简代码，无注释，无空行\n- 使用最短变量名(a,b,c,d等)，函数的参数名不得压缩"
+        )
 
     # 构建基础 prompt
     base_prompt = f"""
