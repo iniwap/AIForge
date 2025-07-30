@@ -31,7 +31,6 @@ class InstructionAnalyzer:
                     "内容",
                 ],
                 "actions": ["search", "fetch", "get", "crawl"],
-                "output_formats": ["json", "list", "dict"],
                 "common_params": ["query", "topic", "time_range", "date"],
             },
             "data_process": {
@@ -46,7 +45,6 @@ class InstructionAnalyzer:
                     "transform",
                 ],
                 "actions": ["analyze", "process", "calculate", "transform"],
-                "output_formats": ["json", "table", "report"],
                 "common_params": ["data_source", "method", "format"],
             },
             "file_operation": {
@@ -63,7 +61,6 @@ class InstructionAnalyzer:
                     "batch",
                 ],
                 "actions": ["read", "write", "save", "process"],
-                "output_formats": ["file", "json", "text"],
                 "common_params": ["file_path", "format", "encoding"],
             },
             "automation": {
@@ -78,7 +75,6 @@ class InstructionAnalyzer:
                     "task",
                 ],
                 "actions": ["automate", "schedule", "monitor", "execute"],
-                "output_formats": ["status", "log", "report"],
                 "common_params": ["interval", "condition", "action"],
             },
             "content_generation": {
@@ -93,7 +89,6 @@ class InstructionAnalyzer:
                     "report",
                 ],
                 "actions": ["generate", "create", "write", "compose"],
-                "output_formats": ["text", "document", "html"],
                 "common_params": ["template", "content", "style"],
             },
             "direct_response": {
@@ -171,7 +166,6 @@ class InstructionAnalyzer:
                     "状态",
                 ],
                 "actions": ["respond", "answer", "create", "translate", "summarize", "suggest"],
-                "output_formats": ["text", "markdown"],
                 "common_params": ["content", "style"],
             },
         }
@@ -215,9 +209,6 @@ class InstructionAnalyzer:
             "action": self._smart_infer_action(instruction, best_pattern["actions"]),
             "target": self._extract_target(instruction),
             "parameters": parameters,
-            "output_format": self._smart_infer_output_format(
-                instruction, best_pattern["output_formats"]
-            ),
             "cache_key": self._generate_semantic_cache_key(best_task_type, instruction, parameters),
             "confidence": confidence,
             "source": "local_analysis",
@@ -326,30 +317,6 @@ class InstructionAnalyzer:
 
         return params
 
-    def _smart_infer_output_format(self, instruction: str, possible_formats: List[str]) -> str:
-        """智能推断输出格式"""
-        instruction_lower = instruction.lower()
-
-        format_keywords = {
-            "json": ["json", "字典", "dict"],
-            "list": ["列表", "list", "数组"],
-            "table": ["表格", "table", "csv"],
-            "text": ["文本", "text", "字符串"],
-            "markdown": ["markdown", "md", "格式化"],
-            "file": ["文件", "file"],
-            "report": ["报告", "report"],
-        }
-
-        for fmt in possible_formats:
-            if fmt in format_keywords:
-                if any(keyword in instruction_lower for keyword in format_keywords[fmt]):
-                    return fmt
-
-        # 根据任务类型返回默认格式
-        if "direct_response" in possible_formats:
-            return "text"
-        return "json"
-
     def _generate_semantic_cache_key(
         self, task_type: str, instruction: str, parameters: Dict = None
     ) -> str:
@@ -390,7 +357,6 @@ class InstructionAnalyzer:
             "action": "process",
             "target": instruction[:100],
             "parameters": {},
-            "output_format": "json",
             "cache_key": f"general_{hash(instruction) % 10000}",
             "confidence": 0.3,
             "source": "default",
@@ -463,12 +429,6 @@ class InstructionAnalyzer:
 
 # 输出格式
 {base_sections["output_format"]}
-
-# 分析原则
-{base_sections["principles"]}
-
-# 示例思考过程
-{base_sections["examples"]}
 
 请严格按照JSON格式返回分析结果。
 """
@@ -750,18 +710,15 @@ class InstructionAnalyzer:
         """获取默认的预期输出规则"""
         defaults = {
             "data_analysis": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "analysis"],
                 "validation_rules": {
                     "min_items": 0,
                     "non_empty_fields": ["key_findings"],
                     "success_indicators": ["分析结果存在", "关键发现非空"],
                 },
-                "failure_indicators": ["error", "exception", "analysis_failed"],
                 "business_logic_checks": ["分析结果应包含具体数据", "关键发现应有实际内容"],
             },
             "data_fetch": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 1,
@@ -770,7 +727,6 @@ class InstructionAnalyzer:
                     "partial_success": True,
                     "min_valid_ratio": 0.3,
                 },
-                "failure_indicators": ["error", "exception", "fetch_failed"],
                 "business_logic_checks": [
                     "获取的数据应非空",
                     "数据格式应正确",
@@ -779,57 +735,47 @@ class InstructionAnalyzer:
                 ],
             },
             "data_process": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "processed_data"],
                 "validation_rules": {
                     "min_items": 0,
                     "non_empty_fields": ["processed_data"],
                     "success_indicators": ["处理完成", "数据已转换"],
                 },
-                "failure_indicators": ["error", "exception", "process_failed"],
                 "business_logic_checks": ["处理后数据应与原数据不同", "处理结果应有意义"],
             },
             "file_operation": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 0,
                     "status_field": "status",
                     "success_indicators": ["操作成功", "文件已处理"],
                 },
-                "failure_indicators": ["error", "exception", "file_not_found", "permission_denied"],
                 "business_logic_checks": ["文件操作应成功完成", "结果应反映实际操作"],
             },
             "automation": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "status", "summary"],
                 "validation_rules": {
                     "min_items": 0,
                     "non_empty_fields": ["summary"],
                     "status_field": "status",
                 },
-                "failure_indicators": ["error", "exception", "automation_failed"],
                 "business_logic_checks": ["自动化任务应完整执行", "执行摘要应详细"],
             },
             "content_generation": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "generated_content"],
                 "validation_rules": {
                     "min_items": 1,
                     "non_empty_fields": ["generated_content"],
                     "success_indicators": ["内容已生成", "生成完成"],
                 },
-                "failure_indicators": ["error", "exception", "generation_failed"],
                 "business_logic_checks": ["生成的内容应符合要求", "内容长度应合理"],
             },
             "default": {
-                "expected_result_type": "dict",
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 0,
                     "status_field": "status",
                 },
-                "failure_indicators": ["error", "exception"],
                 "business_logic_checks": ["执行结果应符合基本要求"],
             },
         }

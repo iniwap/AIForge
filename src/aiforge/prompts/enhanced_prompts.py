@@ -29,7 +29,6 @@ __result__ = {
 
     # 基于AI分析的预期输出规则生成格式
     required_fields = expected_output.get("required_fields", [])
-    expected_result_type = expected_output.get("expected_result_type", "dict")
 
     # 构建data字段示例
     data_example = {}
@@ -51,7 +50,6 @@ __result__ = {{
 
 # 必需字段：{', '.join(required_fields)}
 # 非空字段：{', '.join(non_empty_fields)}
-# 数据类型：{expected_result_type}
 # 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）
 """
     return format_str
@@ -203,7 +201,19 @@ def get_direct_response_prompt(action: str, standardized_instruction: Dict[str, 
 
     # 从 standardized_instruction 中提取增强信息
     target = standardized_instruction.get("target", "")
-    output_format = standardized_instruction.get("output_format", "text")
+
+    # 根据 action 类型选择合适的输出格式
+    action_format_mapping = {
+        "create": "markdown",  # 内容创作通常需要格式化
+        "translate": "text",  # 翻译保持纯文本
+        "summarize": "structured_text",  # 总结需要结构化
+        "answer": "text",  # 问答保持简洁
+        "respond": "text",  # 响应保持简洁
+        "suggest": "structured_text",  # 建议需要结构化
+    }
+
+    output_format = action_format_mapping.get(action, "text")
+
     parameters = standardized_instruction.get("parameters", {})
     task_type = standardized_instruction.get("task_type", "")
 
@@ -305,14 +315,15 @@ def get_base_prompt_sections() -> Dict[str, str]:
     return {
         "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。",
         "execution_mode": """
-## 直接响应类型:
+## 执行类型
+### 直接响应类型:
 - 知识问答、解释、定义、理论分析
 - 文本创作、翻译、改写
 - 建议咨询、意见评价
 - 对话延续和情感支持
 - 可用AI知识直接完成且不需最新数据
 
-## 代码执行类型:
+### 代码生成类型:
 - 需访问外部数据源(API、网页、文件)
 - 需实时信息(天气、股价、新闻)
 - 需最新数据查询和分析
@@ -321,26 +332,10 @@ def get_base_prompt_sections() -> Dict[str, str]:
 """,
         "analysis_steps": """
 ## 分析步骤:
-1. 识别任务类型和执行模式（直接响应 vs 代码执行）
+1. 识别任务类型和执行类型
 2. 提取必要参数和具体值
 3. 分析预期输出格式和验证规则
 4. 生成完整的标准化指令（包含expected_output）
-
-## 执行模式判断:
-### 直接响应类型:
-- 知识问答、解释、定义、理论分析
-- 文本创作、翻译、改写
-- 对话延续和情感支持
-
-### 代码执行类型:
-- 需访问外部数据源或实时信息
-- 需数据计算、处理、转换
-- 需文件操作、系统交互
-
-## 对话上下文判断:
-若为对话延续(感谢、追问等)：
-- 设置execution_mode为"direct_ai_response"
-- 提高confidence值到0.8以上
 
 ## 输出格式分析要求:
 - 根据任务类型确定数据类型
@@ -356,11 +351,6 @@ def get_base_prompt_sections() -> Dict[str, str]:
 - 文件操作 → transform_{task_type_suffix}
 - 直接响应 → respond_{task_type_suffix}
 
-## 语义特征:
-- 获取/查询/搜索 → 数据获取
-- 分析/处理/计算 → 数据处理
-- 生成/创建/制作 → 内容生成
-- 回答/解释/响应 → 直接响应
 """,
         "output_format": """{
     "task_type": "任务类型",
@@ -378,45 +368,20 @@ def get_base_prompt_sections() -> Dict[str, str]:
             "default": "默认值或null"
         }
     },
-    "execution_logic": "完成任务的基本逻辑",
-    "output_format": "期望输出格式",
     "expected_output": {
-        "expected_result_type": "dict",
-        "required_fields": ["field1", "field2"],
+        "required_fields": [],
         "validation_rules": {
             "min_items": 1,
             "non_empty_fields": ["title", "content"],
             "status_field": "status",
             "success_indicators": ["data存在", "results非空"]
         },
-        "failure_indicators": ["error", "exception", "failed"],
         "business_logic_checks": [
             "数据量应大于0",
             "必须包含有效内容"
         ]
     }
 }""",
-        "principles": """
-- 专注任务完成的必要性
-- 使用最小必要参数集
-- 采用最低限度满足需求的输出
-- 避免过度验证，保证任务执行
-- 优先提取具体值，次考虑默认值
-- 参数命名应反映其作用
-""",
-        "examples": """
-指令："北京今天的天气如何"
-思考：需要地点(北京)、时间(今天)、信息类型(天气)
-执行模式：code_generation
-
-指令："解释什么是机器学习"
-思考：纯知识问答，不需外部数据
-执行模式：direct_ai_response
-
-指令："谢谢你的解释，我还想了解深度学习"
-思考：对话延续，感谢并追问
-执行模式：direct_ai_response
-""",
     }
 
 

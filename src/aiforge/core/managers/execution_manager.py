@@ -143,7 +143,6 @@ class ExecutionManager:
         if confidence < 0.6:
             # 处理低置信度情况
             basic_expected_output = {
-                "expected_result_type": "dict",
                 "required_fields": ["result"],
                 "validation_rules": {"non_empty_fields": ["result"]},
             }
@@ -501,14 +500,12 @@ class ExecutionManager:
         try:
             # 提取参数化信息用于元数据
             required_params = standardized_instruction.get("required_parameters", {})
-            execution_logic = standardized_instruction.get("execution_logic", "")
 
             metadata = {
                 "task_type": task_type,
                 "is_standardized": True,
                 "is_parameterized": bool(required_params),
                 "parameter_count": len(required_params),
-                "execution_logic": execution_logic,
                 "validation_level": "universal",  # 标记使用了通用验证
                 "parameter_usage_validated": True,  # 标记参数使用已验证
             }

@@ -183,6 +183,7 @@ class AIForgeResult:
                     "error" in result_data
                     or "exception" in result_data
                     or "failed" in str(result_data).lower()
+                    or "traceback" in str(result_data).lower()
                 ):
                     print("[DEBUG] 缓存结果包含错误信息")
                     return False
