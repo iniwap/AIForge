@@ -90,10 +90,15 @@ class AIForgeTask:
             self.instruction = instruction
             self.system_prompt = system_prompt
         elif instruction and not system_prompt:
-            self.instruction = instruction
-            self.system_prompt = get_base_aiforge_prompt(
-                optimize_tokens=self.optimization.get("optimize_tokens", True)
-            )
+            if "__result__" in instruction:
+                # 用户明确指定生成代码prompt的
+                self.instruction = None
+                self.system_prompt = instruction
+            else:
+                self.instruction = instruction
+                self.system_prompt = get_base_aiforge_prompt(
+                    optimize_tokens=self.optimization.get("optimize_tokens", True)
+                )
         elif not instruction and system_prompt:
             self.instruction = "请根据系统提示生成代码"
             self.system_prompt = system_prompt

@@ -46,10 +46,13 @@ class AIForgeCore:
             return None, None
 
         # 委托给执行管理器
-        result, code = self.execution_manager._generate_and_execute_with_code(
+        result, code, success = self.execution_manager._generate_and_execute_with_code(
             instruction, system_prompt, None, None
         )
-        return result, code
+        if not success:
+            return None, None
+        else:
+            return result, code
 
     def process_input(
         self, raw_input_x: Any, source: str, context_data: Optional[Dict[str, Any]] = None
