@@ -48,9 +48,7 @@ class ExecutionManager:
 
         # 检查是否是对话延续或对话类型
         is_conversation = execution_mode == "direct_ai_response" and (
-            standardized_instruction.get("conversation_context") == "continuation"
-            or standardized_instruction.get("action")
-            in ["emotional_support_chat", "casual_chat", "consultation", "chat"]
+            standardized_instruction.get("action") == "chat_ai"
         )
 
         # 对话类型直接进入直接响应模式
@@ -579,12 +577,7 @@ class ExecutionManager:
         action = standardized_instruction.get("action", "respond")
 
         # 检查是否是对话类型任务
-        is_conversational = action in [
-            "emotional_support_chat",
-            "casual_chat",
-            "consultation",
-            "chat",
-        ]
+        is_conversational = action == "chat_ai"
 
         # 构建直接响应提示词
         system_prompt = get_direct_response_prompt(action, standardized_instruction)

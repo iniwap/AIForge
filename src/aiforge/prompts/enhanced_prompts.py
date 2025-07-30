@@ -147,31 +147,20 @@ def _analyze_parameters_for_execution(parameters: Dict[str, Any]) -> Dict[str, s
         if isinstance(param_info, dict):
             value = param_info.get("value")
             param_type = param_info.get("type", "str")
-            description = param_info.get("description", "")
             required = param_info.get("required", True)
 
             # 构建函数签名
             if required and value is not None:
                 param_names.append(param_name)
                 call_args.append(f'"{value}"' if param_type == "str" else str(value))
-            elif not required:
-                default_val = param_info.get("default", "None")
-                param_names.append(f"{param_name}={default_val}")
-                if value is not None:
-                    call_args.append(f'"{value}"' if param_type == "str" else str(value))
-                else:
-                    if default_val is None:
-                        call_args.append("None")
-                    else:
-                        call_args.append(str(default_val))
 
             # 构建参数文档
-            param_docs.append(f"- {param_name} ({param_type}): {description}")
+            param_docs.append(f"- {param_name} ({param_type})")
         else:
             # 简单参数处理
             param_names.append(param_name)
             call_args.append(f'"{param_info}"' if isinstance(param_info, str) else str(param_info))
-            param_docs.append(f"- {param_name}: {param_info}")
+            param_docs.append(f"- {param_name}")
 
     signature = ", ".join(param_names)
     call_signature = ", ".join(call_args)
@@ -195,6 +184,7 @@ def get_direct_response_prompt(action: str, standardized_instruction: Dict[str, 
         "translate": "你是一个翻译助手，请准确翻译用户提供的内容。保持原意和语言风格。",
         "summarize": "你是一个文本分析助手，请总结和分析用户提供的文本内容。",
         "suggest": "你是一个咨询顾问，请根据用户需求提供建议和意见。",
+        "chat_ai": "你是一个友好、专业且体贴的AI助手，请根据对话情境提供合适的回应。",
     }
 
     base_prompt = prompts.get(action, "你是一个AI助手，请直接响应用户的需求。")
@@ -210,6 +200,7 @@ def get_direct_response_prompt(action: str, standardized_instruction: Dict[str, 
         "answer": "text",  # 问答保持简洁
         "respond": "text",  # 响应保持简洁
         "suggest": "structured_text",  # 建议需要结构化
+        "chat_ai": "text",
     }
 
     output_format = action_format_mapping.get(action, "text")
@@ -291,7 +282,6 @@ def get_enhanced_system_prompt(
             "instruction": {
                 "value": standardized_instruction.get("target", ""),
                 "type": "str",
-                "description": "用户输入的指令内容",
                 "required": True,
             }
         }
@@ -315,41 +305,23 @@ def get_base_prompt_sections() -> Dict[str, str]:
     return {
         "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。",
         "execution_mode": """
-## 执行类型
-### 直接响应类型:
-- 知识问答、解释、定义、理论分析
-- 文本创作、翻译、改写
-- 建议咨询、意见评价
-- 对话延续和情感支持
-- 可用AI知识直接完成且不需最新数据
-
-### 代码生成类型:
-- 需访问外部数据源(API、网页、文件)
-- 需实时信息(天气、股价、新闻)
-- 需最新数据查询和分析
-- 需数据计算、处理、转换
-- 需文件操作、系统交互
+- 直接响应：AI知识可直接完成，无需最新数据，包括对话延续和情感支持
+- 代码生成：需要外部数据源、实时信息或系统交互
 """,
         "analysis_steps": """
-## 分析步骤:
-1. 识别任务类型和执行类型
-2. 提取必要参数和具体值
-3. 分析预期输出格式和验证规则
-4. 生成完整的标准化指令（包含expected_output）
-
-## 输出格式分析要求:
-- 根据任务类型确定数据类型
-- 识别必需字段和非空字段
-- 定义验证规则和成功指标
-- 设置业务逻辑检查
+- 识别任务类型和执行模式
+- 提取关键参数和数量要求，设置合适的 min_items
+- 定义必需字段和验证规则
+- "获取/查找/搜索"某类信息的非任务型指令，仅提取一个required_parameters参数search_query=原始指令
+- 智能识别对话延续和情感支持类指令，自动设置为直接响应模式
 """,
         "action_vocabulary": """
-## 标准动作命名:
 - 数据获取 → fetch_{task_type_suffix}
 - 数据处理 → process_{task_type_suffix}
 - 内容生成 → generate_{task_type_suffix}
 - 文件操作 → transform_{task_type_suffix}
 - 直接响应 → respond_{task_type_suffix}
+- 对话延续和情感支持 → chat_ai
 
 """,
         "output_format": """{
@@ -358,14 +330,11 @@ def get_base_prompt_sections() -> Dict[str, str]:
     "target": "任务描述",
     "execution_mode": "direct_ai_response或code_generation",
     "confidence": "置信度",
-    "reasoning": "判断理由",
     "required_parameters": {
         "param_name": {
-            "value": "提取的值或null",
+            "value": "提取的值或None",
             "type": "参数类型",
-            "description": "用途说明",
             "required": true/false,
-            "default": "默认值或null"
         }
     },
     "expected_output": {
@@ -373,13 +342,7 @@ def get_base_prompt_sections() -> Dict[str, str]:
         "validation_rules": {
             "min_items": 1,
             "non_empty_fields": ["title", "content"],
-            "status_field": "status",
-            "success_indicators": ["data存在", "results非空"]
         },
-        "business_logic_checks": [
-            "数据量应大于0",
-            "必须包含有效内容"
-        ]
     }
 }""",
     }
@@ -427,6 +390,7 @@ Bing摘要: ["p.b_lineclamp4", "div.b_caption", ".b_snippet"]
 - 按发布时间排序，优先最近7天内容
 - 不能使用需要API密钥的方式
 - 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
+- 实现智能反爬虫机制，自动处理请求头、延迟、重试和验证码检测
 
 # 时间提取策略：
 - 优先meta标签：article:published_time、datePublished、pubdate、publishdate等

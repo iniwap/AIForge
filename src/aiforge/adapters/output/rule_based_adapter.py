@@ -57,7 +57,6 @@ class RuleBasedAdapter:
                 "web_progress": {
                     "progress_field": "success_count",
                     "total_field": "total_files",
-                    "status_field": "status",
                     "error_field": "errors",
                 },
                 "mobile_list": {
@@ -90,7 +89,6 @@ class RuleBasedAdapter:
             "automation": {
                 "web_timeline": {
                     "step_field": "executed_steps",
-                    "status_field": "success_steps",
                     "layout": "vertical",
                 },
                 "web_card": {
@@ -187,7 +185,6 @@ class RuleBasedAdapter:
         """适配为进度显示格式"""
         progress_field = template.get("progress_field", "success_count")
         total_field = template.get("total_field", "total_files")
-        status_field = template.get("status_field", "status")
 
         progress = data.get(progress_field, 0)
         total = data.get(total_field, 1)
@@ -202,7 +199,6 @@ class RuleBasedAdapter:
                         "current": progress,
                         "total": total,
                         "percentage": percentage,
-                        "status": data.get(status_field, "processing"),
                     },
                     "priority": 9,
                 }

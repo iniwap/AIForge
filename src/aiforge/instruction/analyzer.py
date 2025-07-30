@@ -262,7 +262,6 @@ class InstructionAnalyzer:
                     r"查找(.+?)(?:的|，|。|$)",
                 ],
                 "type": "str",
-                "description": "搜索查询内容",
             },
             "required_count": {
                 "patterns": [
@@ -275,23 +274,19 @@ class InstructionAnalyzer:
                     r"获取(\d+)",
                 ],
                 "type": "int",
-                "description": "最大结果数量",
             },
             "file_path": {
                 "patterns": [r"([^\s]+\.[a-zA-Z]+)", r"文件(.+?)(?:的|，|。|$)"],
                 "type": "str",
-                "description": "文件路径",
             },
-            "url": {"patterns": [r"(https?://[^\s]+)"], "type": "str", "description": "URL地址"},
+            "url": {"patterns": [r"(https?://[^\s]+)"], "type": "str"},
             "content": {
                 "patterns": [r"内容[：:](.+?)(?:的|，|。|$)", r"文本[：:](.+?)(?:的|，|。|$)"],
                 "type": "str",
-                "description": "处理内容",
             },
             "style": {
                 "patterns": [r"风格[：:](.+?)(?:的|，|。|$)", r"样式[：:](.+?)(?:的|，|。|$)"],
                 "type": "str",
-                "description": "输出风格",
             },
         }
 
@@ -311,7 +306,6 @@ class InstructionAnalyzer:
                         params[param] = {
                             "value": value,
                             "type": param_config["type"],
-                            "description": param_config["description"],
                         }
                         break
 
@@ -418,13 +412,12 @@ class InstructionAnalyzer:
 {guidance_info}
 
 # 执行模式判断
-首先判断任务是否可以通过AI直接响应完成：
 {base_sections["execution_mode"]}
 
 # 动作命名规范
 {base_sections["action_vocabulary"]}
 
-# 分析步骤
+# 分析要求
 {base_sections["analysis_steps"]}
 
 # 输出格式
@@ -472,12 +465,6 @@ class InstructionAnalyzer:
 
         # 4. 如果不是内置类型，进行额外验证
         if not is_builtin:
-            # 检查reasoning字段，确保有充分理由创建新类型
-            reasoning = ai_analysis.get("reasoning", "")
-            if not reasoning or len(reasoning) < 20:
-                print(f"[DEBUG] 新任务类型 '{task_type}' 缺少充分的创建理由")
-                return False
-
             # 检查是否与现有类型过于相似
             if self._is_too_similar_to_existing_types(task_type, builtin_types):
                 print(f"[DEBUG] 新任务类型 '{task_type}' 与现有类型过于相似")
@@ -638,20 +625,6 @@ class InstructionAnalyzer:
 {guidance_strength}使用以下经过验证的内置任务类型：
 {builtin_types}
 
-# 搜索意图识别指导
-## 整体性搜索判断：
-- 如果指令主要目的是"获取/查找/搜索"某类信息（如新闻、资讯、数据）
-- 非任务型指令，且没有复杂的处理逻辑要求
-- 应该识别为整体性搜索，严格要求只提取一个search_query参数=原始指令
-
-# 数量分析指导
-## 数量要求分析：
-- 识别用户指令中的数量要求（如"10条"、"至少5个"、"前8篇"等）
-- 将数量要求映射到 validation_rules.min_items
-- 如果用户指定了具体数量，设置 min_items 为该数量
-- 如果用户说"至少N个"，设置 min_items 为 N
-- 如果用户说"前N个"或"最多N个"，设置 min_items 为 min(N, 1)
-
 # 系统状态：
 - 当前引导强度：{guidance_strength}
 - 内置类型使用率：{self.get_task_type_usage_stats().get('builtin_usage_rate', 0):.1%}
@@ -714,69 +687,49 @@ class InstructionAnalyzer:
                 "validation_rules": {
                     "min_items": 0,
                     "non_empty_fields": ["key_findings"],
-                    "success_indicators": ["分析结果存在", "关键发现非空"],
                 },
-                "business_logic_checks": ["分析结果应包含具体数据", "关键发现应有实际内容"],
             },
             "data_fetch": {
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 1,
                     "non_empty_fields": ["data"],
-                    "status_field": "status",
                     "partial_success": True,
                     "min_valid_ratio": 0.3,
                 },
-                "business_logic_checks": [
-                    "获取的数据应非空",
-                    "数据格式应正确",
-                    "数据必须来自真实的外部源",
-                    "禁止使用模拟或占位符数据",
-                ],
             },
             "data_process": {
                 "required_fields": ["data", "processed_data"],
                 "validation_rules": {
                     "min_items": 0,
                     "non_empty_fields": ["processed_data"],
-                    "success_indicators": ["处理完成", "数据已转换"],
                 },
-                "business_logic_checks": ["处理后数据应与原数据不同", "处理结果应有意义"],
             },
             "file_operation": {
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 0,
-                    "status_field": "status",
-                    "success_indicators": ["操作成功", "文件已处理"],
                 },
-                "business_logic_checks": ["文件操作应成功完成", "结果应反映实际操作"],
             },
             "automation": {
                 "required_fields": ["data", "status", "summary"],
                 "validation_rules": {
                     "min_items": 0,
                     "non_empty_fields": ["summary"],
-                    "status_field": "status",
                 },
-                "business_logic_checks": ["自动化任务应完整执行", "执行摘要应详细"],
             },
             "content_generation": {
                 "required_fields": ["data", "generated_content"],
                 "validation_rules": {
                     "min_items": 1,
                     "non_empty_fields": ["generated_content"],
-                    "success_indicators": ["内容已生成", "生成完成"],
                 },
-                "business_logic_checks": ["生成的内容应符合要求", "内容长度应合理"],
             },
             "default": {
                 "required_fields": ["data", "status"],
                 "validation_rules": {
                     "min_items": 0,
-                    "status_field": "status",
                 },
-                "business_logic_checks": ["执行结果应符合基本要求"],
             },
         }
 
@@ -801,11 +754,6 @@ class InstructionAnalyzer:
                             base_config["validation_rules"]["min_items"] = max(
                                 1, min(quantity, 100)
                             )
-                            # 更新业务逻辑检查
-                            base_config["business_logic_checks"] = [
-                                f"至少处理{base_config['validation_rules']['min_items']}项数据",
-                                "数据格式应正确",
-                            ]
                             break
                         except (ValueError, TypeError):
                             continue

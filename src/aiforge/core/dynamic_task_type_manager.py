@@ -95,7 +95,6 @@ class DynamicTaskTypeManager:
 
         self.dynamic_actions[action] = {
             "task_type": task_type,
-            "semantic_info": analysis_result.get("reasoning", ""),
             "parameters": analysis_result.get("required_parameters", {}),
             "created_at": time.time(),
             "usage_count": 0,
