@@ -9,6 +9,7 @@ from ...prompts.enhanced_prompts import (
 from ..data_flow_analyzer import DataFlowAnalyzer
 from ...adapters.input.input_adapter_manager import InputSource
 from ..result_manager import AIForgeResult
+from ..helpers.cache_helper import CacheHelper
 
 
 class ExecutionManager:
@@ -36,13 +37,23 @@ class ExecutionManager:
         """基于标准化指令的统一执行流程"""
         instruction_analyzer = self.components.get("instruction_analyzer")
 
-        # 第一步：本地标准化指令分析
         if not instruction_analyzer:
             result, _, _ = self._generate_and_execute_with_code(instruction, None, None)
             return result
 
         # 使用统一的指令分析入口
         standardized_instruction = self._get_final_standardized_instruction(instruction)
+
+        # 委托给搜索管理器处理搜索任务
+        search_manager = self.components.get("search_manager")
+        if search_manager and search_manager.is_search_task(standardized_instruction):
+            result = search_manager.execute_multi_level_search(
+                standardized_instruction, instruction
+            )
+            if result["status"] != "error" and len(result["data"]) != 0:
+                return result
+
+        # 非搜索的执行逻辑...
         execution_mode = standardized_instruction.get("execution_mode", "code_generation")
         confidence = standardized_instruction.get("confidence", 0)
 
@@ -173,7 +184,9 @@ class ExecutionManager:
         if save_cache and success and result and code:
             # 只进行标准化层级的验证，信任 TaskManager 的基础验证结果
             if self._should_cache_standardized_code(code, standardized_instruction):
-                self._save_standardized_module(standardized_instruction, code)
+                CacheHelper.save_standardized_module(
+                    self.components, standardized_instruction, code
+                )
             else:
                 print("[DEBUG] 代码未通过标准化验证，不予缓存")
 
@@ -470,49 +483,6 @@ class ExecutionManager:
         except Exception as e:
             print(f"[DEBUG] 数据流分析失败: {e}")
             return False
-
-    def _save_standardized_module(
-        self, standardized_instruction: Dict[str, Any], code: str
-    ) -> str | None:
-        """保存基于参数化标准化指令的模块"""
-        code_cache = self.components.get("code_cache")
-        if not code_cache:
-            return None
-
-        # 如果有动态任务类型管理器，注册新的任务类型和动作
-        task_type = standardized_instruction.get("task_type", "general")
-        action = standardized_instruction.get("action", "")
-        task_type_manager = self.components.get("task_type_manager")
-
-        if task_type_manager:
-            task_type_manager.register_task_type(task_type, standardized_instruction)
-
-            # 如果是AI分析来源，注册动态动作
-            if standardized_instruction.get("source") == "ai_analysis" and action:
-                task_type_manager.register_dynamic_action(
-                    action, task_type, standardized_instruction
-                )
-                # 增加使用计数
-                task_type_manager.increment_action_usage(action)
-
-        try:
-            # 提取参数化信息用于元数据
-            required_params = standardized_instruction.get("required_parameters", {})
-
-            metadata = {
-                "task_type": task_type,
-                "is_standardized": True,
-                "is_parameterized": bool(required_params),
-                "parameter_count": len(required_params),
-                "validation_level": "universal",  # 标记使用了通用验证
-                "parameter_usage_validated": True,  # 标记参数使用已验证
-            }
-
-            # 直接调用缓存的保存方法
-            result = code_cache.save_standardized_module(standardized_instruction, code, metadata)
-            return result
-        except Exception:
-            return None
 
     def _generate_and_execute_with_code(
         self,

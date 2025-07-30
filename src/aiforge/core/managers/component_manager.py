@@ -6,6 +6,7 @@ import importlib
 from ...config.config import AIForgeConfig
 from ...llm.llm_manager import AIForgeLLMManager
 from ..task_manager import AIForgeManager
+from .search_manager import SearchManager
 from ..runner import AIForgeRunner
 from ...instruction.analyzer import InstructionAnalyzer
 from ...cache.enhanced_cache import EnhancedStandardizedCache
@@ -15,6 +16,7 @@ from ...adapters.input.input_adapter_manager import InputAdapterManager
 from ...execution.unified_executor import UnifiedParameterizedExecutor
 from ...execution.executor_interface import CachedModuleExecutor
 from ...extensions.template_extension import DomainTemplateExtension
+from ...templates.template_manager import TemplateManager
 
 
 class ComponentManager:
@@ -37,6 +39,8 @@ class ComponentManager:
         self._init_cache()
         self._init_executors()
         self._init_adapters()
+        self._init_search_manager()
+        self._init_template_manager()
 
         self._initialized = True
         return self.components
@@ -49,6 +53,15 @@ class ComponentManager:
         """初始化任务管理器"""
         llm_manager = self.components["llm_manager"]
         self.components["task_manager"] = AIForgeManager(llm_manager)
+
+    def _init_search_manager(self):
+        self.components["search_manager"] = SearchManager(self.components)
+
+    def _init_template_manager(self):
+        """初始化模板管理器"""
+        template_manager = TemplateManager()
+        template_manager.initialize()  # 触发模板的自动注册
+        self.components["template_manager"] = template_manager
 
     def _init_runner(self):
         """初始化代码执行器"""

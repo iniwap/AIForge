@@ -18,15 +18,6 @@ __result__ = {
 # 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）
 """
 
-    # 只在 data_fetch 任务且包含搜索相关字段时应用搜索增强
-    if task_type == "data_fetch":
-        required_fields = expected_output.get("required_fields", [])
-        search_fields = ["title", "content", "abstract", "url", "source", "publish_time"]
-
-        # 检测是否为搜索相关任务
-        if any(field in search_fields for field in required_fields):
-            return get_search_enhanced_format(expected_output)
-
     # 基于AI分析的预期输出规则生成格式
     required_fields = expected_output.get("required_fields", [])
 
@@ -346,72 +337,6 @@ def get_base_prompt_sections() -> Dict[str, str]:
     }
 }""",
     }
-
-
-def get_search_enhanced_format(expected_output: Dict[str, Any]) -> str:
-    """生成搜索引擎增强格式"""
-    required_fields = expected_output.get("required_fields", [])
-
-    return f"""
-# 搜索引擎增强代码生成指导
-
-## 可选搜索策略：
-1. 依次尝试不同搜索引擎（百度、Bing、360、搜狗）
-2. 使用新闻聚合API（如NewsAPI、RSS源）
-3. 尝试社交媒体平台搜索
-4. 使用学术搜索引擎
-
-## 搜索引擎URL模式：
-- 百度: https://www.baidu.com/s?wd={{quote(search_query)}}
-- Bing: https://www.bing.com/search?q={{quote(search_query)}}
-- 360: https://www.so.com/s?q={{quote(search_query)}}
-- 搜狗: https://www.sogou.com/web?query={{quote(search_query)}}
-
-## 关键CSS选择器：
-百度结果容器: ["div.result", "div.c-container", "div[class*='result']"]
-百度标题: ["h3", "h3 a", ".t", ".c-title"]
-百度摘要: ["div.c-abstract", ".c-span9", "[class*='abstract']"]
-
-Bing结果容器: ["li.b_algo", "div.b_algo", "li[class*='algo']"]
-Bing标题: ["h2", "h3", "h2 a", ".b_title"]
-Bing摘要: ["p.b_lineclamp4", "div.b_caption", ".b_snippet"]
-
-360结果容器: ["li.res-list", "div.result", "li[class*='res']"]
-360标题: ["h3.res-title", "h3", ".res-title"]
-360摘要: ["p.res-desc", "div.res-desc", ".res-summary"]
-
-搜狗结果容器: ["div.vrwrap", "div.results", "div.result"]
-搜狗标题: ["h3.vr-title", "h3.vrTitle", "a.title", "h3"]
-搜狗摘要: ["div.str-info", "div.str_info", "p.str-info"]
-
-## 核心要求：
-- 实现多重容错机制，至少尝试2-3种不同方法
-- 对每个结果，使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容
-- 按发布时间排序，优先最近7天内容
-- 不能使用需要API密钥的方式
-- 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
-- 实现智能反爬虫机制，自动处理请求头、延迟、重试和验证码检测
-
-# 时间提取策略：
-- 优先meta标签：article:published_time、datePublished、pubdate、publishdate等
-- 备选方案：time标签、日期相关class、页面文本匹配
-- 有效的日期格式：标准格式、中文格式、相对时间（如“昨天”、“1天前”、“1小时前”等）、英文时间（如“yesterday”等）
-
-## 输出格式要求：
-__result__ = {{
-    "data": [
-        {{
-            {get_field_template(required_fields)}
-        }},...
-    ],
-    "status": "success或error",
-    "summary": "搜索完成",
-    "metadata": {{"timestamp": "...", "task_type": "data_fetch"}}
-}}
-
-# 必需字段：{', '.join(required_fields)}
-# 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）
-"""
 
 
 def get_field_template(required_fields: List[str]) -> str:

@@ -23,15 +23,15 @@ from dateutil.relativedelta import relativedelta
 import html
 
 
-def get_template_guided_search_instruction(serach_query, max_results):
+def get_template_guided_search_instruction(search_query, max_results):
     search_instruction = f"""
         请生成一个搜索函数，获取最新相关信息，参考以下配置：
 
         # 搜索引擎URL模式：
-        - 百度: https://www.baidu.com/s?wd={{quote(serach_query)}}&rn={{max_results}}
-        - Bing: https://www.bing.com/search?q={{quote(serach_query)}}&count={{max_results}}
-        - 360: https://www.so.com/s?q={{quote(serach_query)}}&rn={{max_results}}
-        - 搜狗: https://www.sogou.com/web?query={{quote(serach_query)}}
+        - 百度: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}
+        - Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}
+        - 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}
+        - 搜狗: https://www.sogou.com/web?query={{quote(search_query)}}
 
         # 关键CSS选择器：
         百度结果容器: ["div.result", "div.c-container", "div[class*='result']"]
@@ -63,7 +63,7 @@ def get_template_guided_search_instruction(serach_query, max_results):
         # 返回数据格式（严格遵守）：
         {{
             "timestamp": time.time(),
-            "serach_query": "{serach_query}",
+            "search_query": "{search_query}",
             "results": [
                 {{
                     "title": "标题",
@@ -76,14 +76,14 @@ def get_template_guided_search_instruction(serach_query, max_results):
             "error": 错误信息或None
         }}
 
-         __result__ = search_web("{serach_query}", {max_results})
+         __result__ = search_web("{search_query}", {max_results})
 
         """
 
     return search_instruction
 
 
-def get_free_form_ai_search_instruction(serach_query, max_results):
+def get_free_form_ai_search_instruction(search_query, max_results):
     search_instruction = f"""
         请创新性地生成搜索函数，获取最新相关信息。
 
@@ -94,7 +94,7 @@ def get_free_form_ai_search_instruction(serach_query, max_results):
         4. 使用学术搜索引擎
 
         # 核心要求：
-        - 函数名为search_web，参数serach_query和max_results
+        - 函数名为search_web，参数search_query和max_results
         - 实现多重容错机制，至少尝试2-3种不同方法
         - 对每个结果访问原始页面提取完整信息
         - 优先获取最近7天内的新鲜内容，按发布时间排序
@@ -110,7 +110,7 @@ def get_free_form_ai_search_instruction(serach_query, max_results):
         # 返回数据格式（严格遵守）：
         {{
             "timestamp": time.time(),
-            "serach_query": "{serach_query}",
+            "search_query": "{search_query}",
             "results": [
                 {{
                     "title": "标题",
@@ -123,7 +123,7 @@ def get_free_form_ai_search_instruction(serach_query, max_results):
             "error": 错误信息或None
         }}
 
-        __result__ = search_web("{serach_query}", {max_results})
+        __result__ = search_web("{search_query}", {max_results})
 
         """
 
@@ -139,7 +139,7 @@ class SearchEngine(Enum):
 
 
 def search_web(
-    serach_query,
+    search_query,
     max_results=10,
     min_results=1,
     module_type: SearchEngine = SearchEngine.COMBINED,
@@ -150,13 +150,13 @@ def search_web(
         for engine in SearchEngine:
             try:
                 if engine == SearchEngine.BAIDU:
-                    search_result = template_baidu_specific(serach_query, max_results)
+                    search_result = template_baidu_specific(search_query, max_results)
                 elif engine == SearchEngine.BING:
-                    search_result = template_bing_specific(serach_query, max_results)
+                    search_result = template_bing_specific(search_query, max_results)
                 elif engine == SearchEngine.SO_360:
-                    search_result = template_360_specific(serach_query, max_results)
+                    search_result = template_360_specific(search_query, max_results)
                 elif engine == SearchEngine.SOUGOU:
-                    search_result = template_sougou_specific(serach_query, max_results)
+                    search_result = template_sougou_specific(search_query, max_results)
                 else:
                     continue
 
@@ -170,16 +170,16 @@ def search_web(
         return None
 
     elif module_type == SearchEngine.BAIDU:
-        result = template_baidu_specific(serach_query, max_results)
+        result = template_baidu_specific(search_query, max_results)
         return result if validate_search_result(result, min_results) else None
     elif module_type == SearchEngine.BING:
-        result = template_bing_specific(serach_query, max_results)
+        result = template_bing_specific(search_query, max_results)
         return result if validate_search_result(result, min_results) else None
     elif module_type == SearchEngine.SO_360:
-        result = template_360_specific(serach_query, max_results)
+        result = template_360_specific(search_query, max_results)
         return result if validate_search_result(result, min_results) else None
     elif module_type == SearchEngine.SOUGOU:
-        result = template_sougou_specific(serach_query, max_results)
+        result = template_sougou_specific(search_query, max_results)
         return result if validate_search_result(result, min_results) else None
     else:
         return None
@@ -827,13 +827,13 @@ def sort_and_filter_results(results):
     return recent_results
 
 
-def _search_template(serach_query, max_results, engine_config):
+def _search_template(search_query, max_results, engine_config):
     """通用搜索模板"""
     try:
         results = []
         headers = get_common_headers()
         search_url = engine_config["url"].format(
-            serach_query=quote(serach_query), max_results=max_results
+            search_query=quote(search_query), max_results=max_results
         )
 
         response = requests.get(search_url, headers=headers, timeout=10)
@@ -851,7 +851,7 @@ def _search_template(serach_query, max_results, engine_config):
         if not search_results:
             return {
                 "timestamp": time.time(),
-                "serach_query": serach_query,
+                "search_query": search_query,
                 "results": [],
                 "success": False,
                 "error": "未找到搜索结果容器",
@@ -953,7 +953,7 @@ def _search_template(serach_query, max_results, engine_config):
 
         return {
             "timestamp": time.time(),
-            "serach_query": serach_query,
+            "search_query": search_query,
             "results": results,
             "success": bool(results),
             "error": None if results else "未生成有效结果",
@@ -962,7 +962,7 @@ def _search_template(serach_query, max_results, engine_config):
     except Exception as e:
         return {
             "timestamp": time.time(),
-            "serach_query": serach_query,
+            "search_query": search_query,
             "results": [],
             "success": False,
             "error": str(e),
@@ -974,7 +974,7 @@ ENGINE_CONFIGS = {
     "MIN_ABSTRACT_LENGTH": 300,
     "MAX_ABSTRACT_LENGTH": 500,
     "baidu": {
-        "url": "https://www.baidu.com/s?wd={serach_query}&rn={max_results}",
+        "url": "https://www.baidu.com/s?wd={search_query}&rn={max_results}",
         "redirect_pattern": "baidu.com/link?url=",
         "result_selectors": [
             "div.result",
@@ -1058,7 +1058,7 @@ ENGINE_CONFIGS = {
         "fallback_abstract": False,
     },
     "bing": {
-        "url": "https://www.bing.com/search?q={serach_query}&count={max_results}",
+        "url": "https://www.bing.com/search?q={search_query}&count={max_results}",
         "result_selectors": [
             "li.b_algo",
             "div.b_algo",
@@ -1135,7 +1135,7 @@ ENGINE_CONFIGS = {
         "fallback_abstract": False,
     },
     "360": {
-        "url": "https://www.so.com/s?q={serach_query}&pn=1&rn={max_results}",
+        "url": "https://www.so.com/s?q={search_query}&pn=1&rn={max_results}",
         "result_selectors": [
             "li.res-list",
             "div.result",
@@ -1208,7 +1208,7 @@ ENGINE_CONFIGS = {
         "fallback_abstract": False,
     },
     "sogou": {
-        "url": "https://www.sogou.com/web?query={serach_query}",
+        "url": "https://www.sogou.com/web?query={search_query}",
         "redirect_pattern": "/link?url=",
         "result_selectors": [
             "div.vrwrap",
@@ -1290,20 +1290,20 @@ ENGINE_CONFIGS = {
 
 
 # 搜索引擎特定函数
-def template_baidu_specific(serach_query, max_results=10):
-    return _search_template(serach_query, max_results, ENGINE_CONFIGS["baidu"])
+def template_baidu_specific(search_query, max_results=10):
+    return _search_template(search_query, max_results, ENGINE_CONFIGS["baidu"])
 
 
-def template_bing_specific(serach_query, max_results=10):
-    return _search_template(serach_query, max_results, ENGINE_CONFIGS["bing"])
+def template_bing_specific(search_query, max_results=10):
+    return _search_template(search_query, max_results, ENGINE_CONFIGS["bing"])
 
 
-def template_360_specific(serach_query, max_results=10):
-    return _search_template(serach_query, max_results, ENGINE_CONFIGS["360"])
+def template_360_specific(search_query, max_results=10):
+    return _search_template(search_query, max_results, ENGINE_CONFIGS["360"])
 
 
-def template_sougou_specific(serach_query, max_results=10):
-    return _search_template(serach_query, max_results, ENGINE_CONFIGS["sogou"])
+def template_sougou_specific(search_query, max_results=10):
+    return _search_template(search_query, max_results, ENGINE_CONFIGS["sogou"])
 
 
 def extract_full_article_content(page_soup):
