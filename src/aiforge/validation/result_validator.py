@@ -88,44 +88,34 @@ class ResultValidator:
     def _local_business_validation(
         self, result: Dict[str, Any], expected: Dict[str, Any], task_type: str
     ) -> Tuple[bool, str]:
-        """业务逻辑验证"""
+        """业务逻辑验证 - 使用策略模式"""
 
         result_content = result.get("result")
         validation_rules = expected.get("validation_rules", {})
+
+        # 使用验证策略管理器
+        from ..strategies.validation_strategy import ValidationStrategyManager
+
+        strategy_manager = ValidationStrategyManager()
+        validation_strategy = strategy_manager.get_strategy(task_type)
 
         # 对于 data_fetch 任务，采用部分成功策略
         if task_type == "data_fetch" and isinstance(result_content, dict):
             data = result_content.get("data", [])
             if isinstance(data, list) and len(data) > 0:
-                # 统计有效数据项
-                valid_items = []
                 required_fields = expected.get("required_fields", [])
                 non_empty_fields = validation_rules.get("non_empty_fields", [])
 
-                for item in data:
-                    if isinstance(item, dict):
-                        # 检查必需字段
-                        has_required_fields = all(field in item for field in required_fields)
+                # 使用策略进行验证
+                valid_items, valid_count = validation_strategy.validate_data_items(
+                    data, required_fields, non_empty_fields
+                )
 
-                        # 检查非空字段
-                        has_valid_content = True
-                        for field in non_empty_fields:
-                            if field in item:
-                                value = item[field]
-                                if not value or (
-                                    isinstance(value, str) and len(value.strip()) < 10
-                                ):
-                                    has_valid_content = False
-                                    break
-
-                        if has_required_fields and has_valid_content:
-                            valid_items.append(item)
-
-                # 如果至少有一条有效数据，认为成功
-                if len(valid_items) >= 1:
-                    # 更新结果，只保留有效数据
+                # 检查最小数据量
+                min_items = validation_rules.get("min_items", 1)
+                if valid_count >= min_items:
                     result_content["data"] = valid_items
-                    result_content["summary"] = f"找到{len(valid_items)}条有效结果"
+                    result_content["summary"] = f"找到{valid_count}条有效结果"
                     return True, ""
                 else:
                     return False, f"虽然获取到{len(data)}条数据，但没有符合质量要求的有效数据"
@@ -145,16 +135,20 @@ class ResultValidator:
         if len(data) == 0:
             return False, "数据数组为空"
 
-        # 检查必需字段（在数组元素中）
+        # 使用策略进行字段验证
         required_fields = expected.get("required_fields", [])
         if required_fields and len(data) > 0:
             first_item = data[0]
             if not isinstance(first_item, dict):
                 return False, "数据项必须是字典格式"
 
-            for field in required_fields:
-                if field not in first_item:
-                    return False, f"数据项缺少必需字段: {field}"
+            # 使用策略检查必需字段
+            valid_items, _ = validation_strategy.validate_data_items(
+                [first_item], required_fields, []
+            )
+
+            if len(valid_items) == 0:
+                return False, "数据项缺少必需字段"
 
         # 检查最小数据量
         min_items = validation_rules.get("min_items", 1)

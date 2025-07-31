@@ -8,7 +8,7 @@ import traceback
 class AIForgeExecutor:
     """AIForge代码执行引擎"""
 
-    MAX_EXECUTE_TIMEOUT = 10  # 代码执行超过10秒失败
+    MAX_EXECUTE_TIMEOUT = 30  # 代码执行超过30秒失败
 
     def __init__(self):
         self.history = []
@@ -240,7 +240,7 @@ class AIForgeExecutor:
             return {
                 "data": [],
                 "status": "error",
-                "summary": "代码未设置 __result__ 变量",
+                "summary": "代码未执行函数并赋值给 __result__ 变量",
                 "metadata": {"error": "missing_result_variable"},
             }
 

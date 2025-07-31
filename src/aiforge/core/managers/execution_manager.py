@@ -91,7 +91,7 @@ class AIForgeExecutionManager:
             )
 
             if validated_modules:
-                cache_result = self._try_execute_cached_modules(
+                cache_result = self.try_execute_cached_modules(
                     validated_modules, standardized_instruction
                 )
                 if cache_result is not None:
@@ -284,7 +284,7 @@ class AIForgeExecutionManager:
 
         return None
 
-    def _try_execute_cached_modules(
+    def try_execute_cached_modules(
         self, cached_modules: List[Any], standardized_instruction: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """尝试执行缓存模块，包含结果验证"""

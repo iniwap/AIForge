@@ -97,8 +97,10 @@ class TaskTypeDetector:
             if isinstance(data.get("data"), list):
                 items = data["data"]
                 if items and isinstance(items[0], dict):
-                    search_fields = ["title", "abstract", "content", "url", "source"]
-                    return any(field in items[0] for field in search_fields)
+                    from ...strategies.field_processor import SemanticFieldStrategy
+
+                    field_processor = SemanticFieldStrategy()
+                    return field_processor.can_handle(items)
             return False
 
         if pattern == "single_item":

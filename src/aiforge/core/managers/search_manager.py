@@ -1,6 +1,8 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 import time
 from ..helpers.cache_helper import CacheHelper
+from ...strategies.field_processor_manager import FieldProcessorManager
+from ...strategies.field_processor import SemanticFieldStrategy
 
 
 class AIForgeSearchManager:
@@ -8,6 +10,7 @@ class AIForgeSearchManager:
 
     def __init__(self, components: Dict[str, Any]):
         self.components = components
+        self.processor_manager = FieldProcessorManager()
 
     def is_search_task(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为搜索类任务"""
@@ -92,14 +95,18 @@ class AIForgeSearchManager:
             if cached_modules:
                 print(f"[DEBUG] 找到 {len(cached_modules)} 个搜索缓存模块")
 
-                cache_result = self._try_execute_cached_modules(
+                execution_manager = self.components.get("execution_manager")
+                if not execution_manager:
+                    return None
+
+                cache_result = execution_manager.try_execute_cached_modules(
                     cached_modules, standardized_instruction
                 )
                 if cache_result:
                     # 应用字段映射
                     expected_output = standardized_instruction.get("expected_output")
                     if expected_output and expected_output.get("required_fields"):
-                        cache_result["data"] = self._map_search_fields_to_expected(
+                        cache_result["data"] = self.processor_manager.process_field(
                             cache_result.get("data", []), expected_output["required_fields"]
                         )
 
@@ -140,12 +147,12 @@ class AIForgeSearchManager:
                     min_abstract_len=search_params["min_abstract_len"],
                 )
             else:
-                return None
+                return None, False
 
             # 执行代码生成流程
             execution_manager = self.components.get("execution_manager")
             if not execution_manager:
-                return None
+                return None, False
 
             result, code, success = execution_manager.generate_and_execute_with_code(
                 search_instruction,
@@ -165,9 +172,9 @@ class AIForgeSearchManager:
 
                 # 标记执行类型
                 result["metadata"]["execution_type"] = "template_guided_search"
-                return result
+                return result, True
 
-            return None
+            return None, False
 
         except Exception as e:
             import traceback
@@ -175,7 +182,7 @@ class AIForgeSearchManager:
             traceback.print_exc()
 
             print(f"[DEBUG] 模板引导搜索失败: {e}")
-            return None
+            return None, False
 
     def _try_free_form_search(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
@@ -205,12 +212,12 @@ class AIForgeSearchManager:
                     min_abstract_len=search_params["min_abstract_len"],
                 )
             else:
-                return None
+                return None, False
 
             # 执行代码生成流程
             execution_manager = self.components.get("execution_manager")
             if not execution_manager:
-                return None
+                return None, False
 
             result, code, success = execution_manager.generate_and_execute_with_code(
                 search_instruction,
@@ -230,9 +237,9 @@ class AIForgeSearchManager:
 
                 # 标记执行类型
                 result["metadata"]["execution_type"] = "free_form_search"
-                return result
+                return result, True
 
-            return None
+            return None, False
 
         except Exception as e:
             import traceback
@@ -240,7 +247,7 @@ class AIForgeSearchManager:
             traceback.print_exc()
 
             print(f"[DEBUG] 自由形式搜索失败: {e}")
-            return None
+            return None, False
 
     def _extract_search_params(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
@@ -329,88 +336,6 @@ class AIForgeSearchManager:
         # 使用原始指令
         return original_instruction
 
-    def _map_search_fields_to_expected(
-        self, results: List[Dict], expected_fields: List
-    ) -> List[Dict]:
-        """将搜索结果字段映射到期望的输出字段"""
-        mapped_results = []
-
-        for result in results:
-            if not isinstance(result, dict):
-                mapped_results.append(result)
-                continue
-
-            mapped_result = {}
-
-            # 获取原始搜索字段
-            original_title = result.get("title", "")
-            original_url = result.get("url", "")
-            original_abstract = result.get("abstract", "")
-            original_pub_time = result.get("pub_time", "")
-
-            # 映射到期望字段
-            for field_name in expected_fields:
-                field_lower = field_name.lower()
-
-                # 语义映射逻辑
-                if any(
-                    keyword in field_lower
-                    for keyword in ["title", "标题", "headline", "subject", "name"]
-                ):
-                    mapped_result[field_name] = original_title
-                elif any(
-                    keyword in field_lower
-                    for keyword in ["url", "link", "链接", "href", "source_url", "source"]
-                ):
-                    mapped_result[field_name] = original_url
-                elif any(
-                    keyword in field_lower
-                    for keyword in [
-                        "abstract",
-                        "content",
-                        "article",
-                        "summary",
-                        "摘要",
-                        "内容",
-                        "正文",
-                        "description",
-                        "excerpt",
-                        "text",
-                    ]
-                ):
-                    mapped_result[field_name] = original_abstract
-                elif any(
-                    keyword in field_lower
-                    for keyword in [
-                        "time",
-                        "date",
-                        "时间",
-                        "日期",
-                        "publish",
-                        "created",
-                        "updated",
-                        "pub_time",
-                        "publish_time",
-                        "created_at",
-                        "updated_at",
-                        "timestamp",
-                    ]
-                ):
-                    mapped_result[field_name] = original_pub_time
-                else:
-                    # 无法映射的字段填空
-                    mapped_result[field_name] = ""
-
-            # 如果expected_output没有时间字段，但搜索结果有，则添加
-            if original_pub_time and not any(
-                "time" in f.lower() or "date" in f.lower() for f in expected_fields
-            ):
-                mapped_result["pub_time"] = original_pub_time
-
-            mapped_results.append(mapped_result)
-
-        return mapped_results
-
     def _convert_search_result_to_aiforge_format(
         self,
         search_result: Dict[str, Any],
@@ -428,7 +353,7 @@ class AIForgeSearchManager:
         # 应用字段映射
         expected_output = standardized_instruction.get("expected_output")
         if expected_output and expected_output.get("required_fields"):
-            results = self._map_search_fields_to_expected(
+            results = self.processor_manager.process_field(
                 results, expected_output["required_fields"]
             )
 
@@ -448,8 +373,11 @@ class AIForgeSearchManager:
 
         return aiforge_result
 
-    def _validate_search_result_quality(self, search_result: Dict[str, Any]) -> bool:
+    def _validate_search_result_quality(
+        self, search_result: Dict[str, Any], standardized_instruction: Dict[str, Any] = None
+    ) -> bool:
         """验证搜索结果质量"""
+
         if not search_result:
             return False
 
@@ -460,16 +388,44 @@ class AIForgeSearchManager:
         if status != "success" or not data:
             return False
 
-        # 质量验证：检查数据完整性
+        # 获取期望字段
+        required_fields = []
+        if standardized_instruction:
+            expected_output = standardized_instruction.get("expected_output", {})
+            required_fields = expected_output.get("required_fields", [])
+
+        # 如果没有指定required_fields，使用默认验证
+        if not required_fields:
+            required_fields = ["title", "content"]  # 最基本的字段要求
+
+        # 使用语义字段策略进行质量验证
+        field_processor = SemanticFieldStrategy()
         valid_results = 0
+
         for item in data:
             if isinstance(item, dict):
-                title = item.get("title", "")
-                url = item.get("url", "")
-                abstract = item.get("abstract", "")
+                # 动态验证所有required_fields
+                all_fields_valid = True
 
-                # 基本字段完整性检查
-                if title and url and len(abstract) > 50:
+                for required_field in required_fields:
+                    matched_field = field_processor._find_best_source_field(item, required_field)
+                    value = item.get(matched_field, "")
+
+                    # 根据字段类型设置不同的验证标准
+                    if not value:
+                        all_fields_valid = False
+                        break
+
+                    # 对内容类字段进行长度检查
+                    if any(
+                        kw in required_field.lower()
+                        for kw in ["content", "abstract", "summary", "内容"]
+                    ):
+                        if isinstance(value, str) and len(value.strip()) < 50:
+                            all_fields_valid = False
+                            break
+
+                if all_fields_valid:
                     valid_results += 1
 
         # 至少要有一个有效结果
@@ -483,31 +439,36 @@ class AIForgeSearchManager:
 
         # 第一层：直接调用 search_web
         print("[DEBUG] 第一层：尝试直接调用 search_web")
+
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
-        if direct_result and self._validate_search_result_quality(direct_result):
+        if direct_result:
             print("[DEBUG] 第一层搜索成功，直接返回")
             return direct_result
 
         # 第二层：使用缓存中的搜索函数
         print("[DEBUG] 第二层：尝试使用缓存搜索")
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)
-        if cache_result and self._validate_search_result_quality(cache_result):
+        if cache_result and self._validate_search_result_quality(
+            cache_result, standardized_instruction
+        ):
             print("[DEBUG] 第二层缓存搜索成功，直接返回")
             return cache_result
 
         # 第三层：使用 get_template_guided_search_instruction
         print("[DEBUG] 第三层：尝试模板引导搜索")
-        template_result = self._try_template_guided_search(
+        template_result, success = self._try_template_guided_search(
             standardized_instruction, original_instruction
         )
-        if template_result and self._validate_search_result_quality(template_result):
+        if success:
             print("[DEBUG] 第三层模板搜索成功，返回结果")
             return template_result
 
         # 第四层：使用 get_free_form_ai_search_instruction
         print("[DEBUG] 第四层：尝试自由形式搜索")
-        freeform_result = self._try_free_form_search(standardized_instruction, original_instruction)
-        if freeform_result and self._validate_search_result_quality(freeform_result):
+        freeform_result, success = self._try_free_form_search(
+            standardized_instruction, original_instruction
+        )
+        if success:
             print("[DEBUG] 第四层自由形式搜索成功，返回结果")
             return freeform_result
 
