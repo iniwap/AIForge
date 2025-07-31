@@ -1,10 +1,9 @@
 from typing import Dict, Any, Optional
 import time
 from ..helpers.cache_helper import CacheHelper
-from ...templates.search_template import ENGINE_CONFIGS
 
 
-class SearchManager:
+class AIForgeSearchManager:
     """搜索管理器 - 负责多层级搜索策略和search_template集成"""
 
     def __init__(self, components: Dict[str, Any]):
@@ -99,20 +98,19 @@ class SearchManager:
                 return None
 
             print(
-                f"[DEBUG] 直接调用search_web: query={search_params['search_query']}, max_results={search_params['max_results']}"  # noqa 501
+                f"[DEBUG] 直接调用search_web: query={search_params['search_query']}, max_results={search_params['max_results']}, min_items={search_params['min_items']}"  # noqa 501
             )
-
-            # 动态更新ENGINE_CONFIGS
-            self._update_engine_configs(search_params)
 
             # 直接调用
             template_manager = self.components.get("template_manager")
             if template_manager:
                 search_result = template_manager.get_template(
                     "search_direct",
-                    search_params["search_query"],
-                    search_params["max_results"],
-                    search_params["min_results"],
+                    search_query=search_params["search_query"],
+                    max_results=search_params["max_results"],
+                    min_items=search_params["min_items"],
+                    min_abstract_len=search_params["min_abstract_len"],
+                    max_abstract_len=search_params["max_abstract_len"],
                 )
             else:
                 return None
@@ -179,9 +177,6 @@ class SearchManager:
                 f"[DEBUG] 模板引导搜索: query={search_params['search_query']}, max_results={search_params['max_results']}"  # noqa 501
             )
 
-            # 动态更新ENGINE_CONFIGS
-            self._update_engine_configs(search_params)
-
             # 生成搜索指令
             template_manager = self.components.get("template_manager")
             if template_manager:
@@ -189,12 +184,17 @@ class SearchManager:
                     "search_guided",
                     search_query=search_params["search_query"],
                     max_results=search_params["max_results"],
+                    min_abstract_len=search_params["min_abstract_len"],
                 )
             else:
                 return None
 
             # 执行代码生成流程
-            result, code, success = self._generate_and_execute_with_code(
+            execution_manager = self.components.get("execution_manager")
+            if not execution_manager:
+                return None
+
+            result, code, success = execution_manager.generate_and_execute_with_code(
                 search_instruction,
                 None,  # 不使用系统提示词
                 "data_fetch",
@@ -238,20 +238,24 @@ class SearchManager:
                 f"[DEBUG] 自由形式搜索: query={search_params['search_query']}, max_results={search_params['max_results']}"  # noqa 501
             )
 
-            # 动态更新ENGINE_CONFIGS
-            self._update_engine_configs(search_params)
-
             # 生成搜索指令
             template_manager = self.components.get("template_manager")
             if template_manager:
                 search_instruction = template_manager.get_template(
-                    "search_free_form", search_params["search_query"], search_params["max_results"]
+                    "search_free_form",
+                    search_query=search_params["search_query"],
+                    max_results=search_params["max_results"],
+                    min_abstract_len=search_params["min_abstract_len"],
                 )
             else:
                 return None
 
             # 执行代码生成流程
-            result, code, success = self._generate_and_execute_with_code(
+            execution_manager = self.components.get("execution_manager")
+            if not execution_manager:
+                return None
+
+            result, code, success = execution_manager.generate_and_execute_with_code(
                 search_instruction,
                 None,  # 不使用系统提示词
                 "data_fetch",
@@ -286,19 +290,43 @@ class SearchManager:
         default_params = {
             "search_query": "",
             "max_results": 10,
-            "min_results": 1,
-            "MIN_ABSTRACT_LENGTH": ENGINE_CONFIGS.get("MIN_ABSTRACT_LENGTH", 300),
-            "MAX_ABSTRACT_LENGTH": ENGINE_CONFIGS.get("MAX_ABSTRACT_LENGTH", 500),
+            "min_items": 1,
+            "min_abstract_len": 300,
+            "max_abstract_len": 500,
         }
 
         parameters = standardized_instruction.get("required_parameters", {})
+        expected_output = standardized_instruction.get("expected_output", {})
 
         # 提取搜索查询
         search_query = self._extract_search_query(standardized_instruction, original_instruction)
         default_params["search_query"] = search_query
 
-        # 提取其他参数
-        for param_name in ["max_results", "count", "limit"]:
+        # 提取 min_items (最小要求) - 优先从 count 参数获取
+        for param_name in ["count", "min_count", "min_items"]:
+            if param_name in parameters:
+                try:
+                    value = (
+                        parameters[param_name].get("value", 1)
+                        if isinstance(parameters[param_name], dict)
+                        else parameters[param_name]
+                    )
+                    default_params["min_items"] = max(1, int(value))
+                    break
+                except (ValueError, TypeError, AttributeError):
+                    continue
+
+        # 如果没有从参数中找到，从 validation_rules 获取
+        if default_params["min_items"] == 1:  # 仍是默认值
+            validation_rules = expected_output.get("validation_rules", {})
+            if "min_items" in validation_rules:
+                try:
+                    default_params["min_items"] = max(1, int(validation_rules["min_items"]))
+                except (ValueError, TypeError):
+                    pass
+
+        # 提取 max_results (最大限制)
+        for param_name in ["max_results", "limit", "max_count"]:
             if param_name in parameters:
                 try:
                     value = (
@@ -311,20 +339,10 @@ class SearchManager:
                 except (ValueError, TypeError, AttributeError):
                     continue
 
-        for param_name in ["min_results", "min_count"]:
-            if param_name in parameters:
-                try:
-                    value = (
-                        parameters[param_name].get("value", 1)
-                        if isinstance(parameters[param_name], dict)
-                        else parameters[param_name]
-                    )
-                    default_params["min_results"] = max(
-                        1, min(int(value), default_params["max_results"])
-                    )
-                    break
-                except (ValueError, TypeError, AttributeError):
-                    continue
+        # 确保 max_results 至少等于 min_items
+        default_params["max_results"] = max(
+            default_params["max_results"], default_params["min_items"]
+        )
 
         return default_params
 
@@ -351,24 +369,9 @@ class SearchManager:
         # 使用原始指令
         return original_instruction
 
-    def _update_engine_configs(self, search_params: Dict[str, Any]) -> None:
-        """动态更新ENGINE_CONFIGS"""
-        try:
-            # 更新全局配置
-            ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"] = search_params["MIN_ABSTRACT_LENGTH"]
-            ENGINE_CONFIGS["MAX_ABSTRACT_LENGTH"] = search_params["MAX_ABSTRACT_LENGTH"]
-
-            print(
-                f"[DEBUG] 已更新ENGINE_CONFIGS: MIN_ABSTRACT_LENGTH={search_params['MIN_ABSTRACT_LENGTH']}, MAX_ABSTRACT_LENGTH={search_params['MAX_ABSTRACT_LENGTH']}"  # noqa 501
-            )
-
-        except Exception as e:
-            print(f"[DEBUG] 更新ENGINE_CONFIGS失败: {e}")
-
     def _convert_search_result_to_aiforge_format(
         self,
         search_result: Dict[str, Any],
-        standardized_instruction: Dict[str, Any],
         execution_type: str,
     ) -> Dict[str, Any]:
         """将search_web结果转换为AIForge标准格式"""

@@ -6,9 +6,10 @@ import importlib
 from ...config.config import AIForgeConfig
 from ...llm.llm_manager import AIForgeLLMManager
 from ..task_manager import AIForgeManager
-from .search_manager import SearchManager
+from .search_manager import AIForgeSearchManager
+from .execution_manager import AIForgeExecutionManager
 from ..runner import AIForgeRunner
-from ...instruction.analyzer import InstructionAnalyzer
+from ...instruction.analyzer import AIForgeInstructionAnalyzer
 from ...cache.enhanced_cache import EnhancedStandardizedCache
 from ..dynamic_task_type_manager import DynamicTaskTypeManager
 from ...adapters.output.enhanced_hybrid_adapter import EnhancedHybridUIAdapter
@@ -17,9 +18,10 @@ from ...execution.unified_executor import UnifiedParameterizedExecutor
 from ...execution.executor_interface import CachedModuleExecutor
 from ...extensions.template_extension import DomainTemplateExtension
 from ...templates.template_manager import TemplateManager
+from .config_manager import AIForgeConfigManager
 
 
-class ComponentManager:
+class AIForgeComponentManager:
     """组件管理器 - 负责所有组件的生命周期管理"""
 
     def __init__(self):
@@ -27,11 +29,10 @@ class ComponentManager:
         self.config: Optional[AIForgeConfig] = None
         self._initialized = False
 
-    def initialize_components(self, config: AIForgeConfig) -> Dict[str, Any]:
+    def initialize_components(self, config_file, api_key, provider, **kwargs) -> Dict[str, Any]:
         """初始化所有组件"""
-        self.config = config
 
-        # 初始化核心组件
+        self._init_config_manager(config_file, api_key, provider, **kwargs)
         self._init_llm_manager()
         self._init_task_manager()
         self._init_runner()
@@ -39,11 +40,17 @@ class ComponentManager:
         self._init_cache()
         self._init_executors()
         self._init_adapters()
+        self._init_execution_manager()
         self._init_search_manager()
         self._init_template_manager()
 
         self._initialized = True
-        return self.components
+
+    def _init_config_manager(self, config_file, api_key, provider, **kwargs):
+        self.components["config_manager"] = AIForgeConfigManager()
+        self.config = self.components["config_manager"].initialize_config(
+            config_file, api_key, provider, **kwargs
+        )
 
     def _init_llm_manager(self):
         """初始化LLM管理器"""
@@ -54,8 +61,12 @@ class ComponentManager:
         llm_manager = self.components["llm_manager"]
         self.components["task_manager"] = AIForgeManager(llm_manager)
 
+    def _init_execution_manager(self):
+        self.components["execution_manager"] = AIForgeExecutionManager()
+        self.components["execution_manager"].initialize(self.components, self.config)
+
     def _init_search_manager(self):
-        self.components["search_manager"] = SearchManager(self.components)
+        self.components["search_manager"] = AIForgeSearchManager(self.components)
 
     def _init_template_manager(self):
         """初始化模板管理器"""
@@ -73,7 +84,7 @@ class ComponentManager:
         llm_manager = self.components["llm_manager"]
         default_client = llm_manager.get_client()
         self.components["instruction_analyzer"] = (
-            InstructionAnalyzer(default_client) if default_client else None
+            AIForgeInstructionAnalyzer(default_client) if default_client else None
         )
 
     def _init_cache(self):

@@ -5,7 +5,7 @@ from typing import Dict, Any, Tuple
 from rich.console import Console
 
 from ..validation.result_validator import ResultValidator
-from ..instruction.analyzer import InstructionAnalyzer
+from ..instruction.analyzer import AIForgeInstructionAnalyzer
 from ..formatting.result_formatter import AIForgeResultFormatter
 
 
@@ -47,7 +47,9 @@ class AIForgeResult:
         """使用智能验证器验证执行结果"""
         # 如果没有预期输出，构建默认的验证规则
         if not self.expected_output:
-            default_expected_output = InstructionAnalyzer.get_default_expected_output(task_type)
+            default_expected_output = AIForgeInstructionAnalyzer.get_default_expected_output(
+                task_type
+            )
         else:
             default_expected_output = self.expected_output
 

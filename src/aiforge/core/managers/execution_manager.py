@@ -2,17 +2,14 @@ from typing import Dict, Any, Optional, List, Tuple
 import ast
 import time
 
-from ...prompts.enhanced_prompts import (
-    get_enhanced_system_prompt,
-    get_direct_response_prompt,
-)
+from ...prompts.prompt_generator import AIForgePromptGenerator
 from ..data_flow_analyzer import DataFlowAnalyzer
 from ...adapters.input.input_adapter_manager import InputSource
 from ..result_manager import AIForgeResult
 from ..helpers.cache_helper import CacheHelper
 
 
-class ExecutionManager:
+class AIForgeExecutionManager:
     """执行管理器 - 负责所有执行策略和流程"""
 
     def __init__(self):
@@ -38,7 +35,7 @@ class ExecutionManager:
         instruction_analyzer = self.components.get("instruction_analyzer")
 
         if not instruction_analyzer:
-            result, _, _ = self._generate_and_execute_with_code(instruction, None, None)
+            result, _, _ = self.generate_and_execute_with_code(instruction, None, None)
             return result
 
         # 使用统一的指令分析入口
@@ -162,19 +159,19 @@ class ExecutionManager:
                     "instruction": {"value": original_instruction, "type": "str", "required": True}
                 },
             }
-            enhanced_prompt = get_enhanced_system_prompt(
+            enhanced_prompt = AIForgePromptGenerator.get_enhanced_system_prompt(
                 temp_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
-            result, code, success = self._generate_and_execute_with_code(
+            result, code, success = self.generate_and_execute_with_code(
                 None, enhanced_prompt, "general", basic_expected_output
             )
         else:
-            enhanced_prompt = get_enhanced_system_prompt(
+            enhanced_prompt = AIForgePromptGenerator.get_enhanced_system_prompt(
                 standardized_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
-            result, code, success = self._generate_and_execute_with_code(
+            result, code, success = self.generate_and_execute_with_code(
                 None,
                 enhanced_prompt,
                 standardized_instruction.get("task_type"),
@@ -484,7 +481,7 @@ class ExecutionManager:
             print(f"[DEBUG] 数据流分析失败: {e}")
             return False
 
-    def _generate_and_execute_with_code(
+    def generate_and_execute_with_code(
         self,
         instruction: str,
         system_prompt: str | None = None,
@@ -550,7 +547,9 @@ class ExecutionManager:
         is_conversational = action == "chat_ai"
 
         # 构建直接响应提示词
-        system_prompt = get_direct_response_prompt(action, standardized_instruction)
+        system_prompt = AIForgePromptGenerator.get_direct_response_prompt(
+            action, standardized_instruction
+        )
         try:
             # 对话类型自动启用历史记录
             use_history = is_conversational

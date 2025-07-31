@@ -19,3 +19,7 @@ def test_search():
     )
     print("test_search result:", result)
     assert result is not None
+
+
+def test_search_web():
+    print(search_web("日本海啸 最新新闻"))

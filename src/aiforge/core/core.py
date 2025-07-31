@@ -1,8 +1,6 @@
 from typing import Dict, Any, Optional, List, Tuple
 
-from .managers.config_manager import ConfigManager
-from .managers.component_manager import ComponentManager
-from .managers.execution_manager import ExecutionManager
+from .managers.component_manager import AIForgeComponentManager
 
 
 class AIForgeCore:
@@ -24,19 +22,17 @@ class AIForgeCore:
             provider: LLM提供商名称
             **kwargs: 其他配置参数（max_rounds, workdir等）
         """
-        # 初始化三大管理器
-        self.config_manager = ConfigManager()
-        self.component_manager = ComponentManager()
-        self.execution_manager = ExecutionManager()
-
-        # 协调初始化流程
-        config = self.config_manager.initialize_config(config_file, api_key, provider, **kwargs)
-        components = self.component_manager.initialize_components(config)
-        self.execution_manager.initialize(components, config)
+        # 初始化组件管理器
+        self.component_manager = AIForgeComponentManager()
+        self.component_manager.initialize_components(config_file, api_key, provider, **kwargs)
 
     def run(self, instruction: str) -> Optional[Dict[str, Any]]:
         """入口：基于标准化指令的统一执行入口"""
-        return self.execution_manager.execute_instruction(instruction)
+        execution_manager = self.component_manager.get_component("execution_manager")
+        if not execution_manager:
+            return None
+
+        return execution_manager.execute_instruction(instruction)
 
     def generate_and_execute(
         self, instruction: str, system_prompt: str | None = None
@@ -45,8 +41,11 @@ class AIForgeCore:
         if not instruction:
             return None, None
 
-        # 委托给执行管理器
-        result, code, success = self.execution_manager._generate_and_execute_with_code(
+        execution_manager = self.component_manager.get_component("execution_manager")
+        if not execution_manager:
+            return None, None
+
+        result, code, success = execution_manager.generate_and_execute_with_code(
             instruction, system_prompt, None, None
         )
         if not success:
@@ -58,7 +57,11 @@ class AIForgeCore:
         self, raw_input_x: Any, source: str, context_data: Optional[Dict[str, Any]] = None
     ) -> str:
         """处理多端输入并返回标准化指令"""
-        return self.execution_manager.process_input(raw_input_x, source, context_data)
+        execution_manager = self.component_manager.get_component("execution_manager")
+        if not execution_manager:
+            return None
+
+        return execution_manager.process_input(raw_input_x, source, context_data)
 
     def run_with_input_adaptation(
         self, raw_input_x: Any, source: str, context_data: Optional[Dict[str, Any]] = None

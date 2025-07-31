@@ -2,10 +2,10 @@ import json
 import re
 from typing import Dict, Any, List
 from ..llm.llm_client import AIForgeLLMClient
-from ..prompts.enhanced_prompts import get_base_prompt_sections
+from ..prompts.prompt_generator import AIForgePromptGenerator
 
 
-class InstructionAnalyzer:
+class AIForgeInstructionAnalyzer:
     """指令分析器"""
 
     def __init__(self, llm_client: AIForgeLLMClient):
@@ -632,7 +632,9 @@ class InstructionAnalyzer:
 这些内置类型具有更高的缓存命中率和执行效率。
 """
 
-        return self._assemble_prompt_with_guidance(get_base_prompt_sections(), adaptive_guidance)
+        return self._assemble_prompt_with_guidance(
+            AIForgePromptGenerator.get_base_prompt_sections(), adaptive_guidance
+        )
 
     def _get_task_type_recommendations(self) -> Dict[str, Any]:
         """获取任务类型推荐信息"""

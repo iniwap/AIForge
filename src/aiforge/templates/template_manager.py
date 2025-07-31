@@ -49,7 +49,6 @@ class TemplateManager:
                 get_template_guided_search_instruction,
                 get_free_form_ai_search_instruction,
                 search_web,
-                ENGINE_CONFIGS,
             )
 
             # 注册引导式搜索模板
@@ -60,9 +59,13 @@ class TemplateManager:
                 description="引导式搜索指令生成模板，提供详细的CSS选择器和处理逻辑",
                 parameters={
                     "search_query": {"type": "str", "required": True, "description": "搜索查询"},
-                    "max_results": {"type": "int", "required": True, "description": "最大结果数"},
+                    "max_results": {"type": "int", "required": False, "description": "最大结果数"},
+                    "min_abstract_len": {
+                        "type": "str",
+                        "required": False,
+                        "description": "最短摘要长度",
+                    },
                 },
-                config=ENGINE_CONFIGS,
             )
 
             # 注册自由形式搜索模板
@@ -73,9 +76,13 @@ class TemplateManager:
                 description="自由形式搜索指令生成模板，允许创新性的搜索策略",
                 parameters={
                     "search_query": {"type": "str", "required": True, "description": "搜索查询"},
-                    "max_results": {"type": "int", "required": True, "description": "最大结果数"},
+                    "max_results": {"type": "int", "required": False, "description": "最大结果数"},
+                    "min_abstract_len": {
+                        "type": "str",
+                        "required": False,
+                        "description": "最少摘要字数",
+                    },
                 },
-                config=ENGINE_CONFIGS,
             )
 
             # 注册直接搜索函数
@@ -92,14 +99,17 @@ class TemplateManager:
                         "default": 10,
                         "description": "最大结果数",
                     },
-                    "min_results": {
-                        "type": "int",
+                    "min_abstract_len": {
+                        "type": "str",
                         "required": False,
-                        "default": 1,
-                        "description": "最小结果数",
+                        "description": "最少摘要字数",
+                    },
+                    "max_abstract_len": {
+                        "type": "str",
+                        "required": False,
+                        "description": "最多摘要字数",
                     },
                 },
-                config=ENGINE_CONFIGS,
             )
 
         except ImportError as e:

@@ -1,3 +1,3 @@
-from .analyzer import InstructionAnalyzer
+from .analyzer import AIForgeInstructionAnalyzer
 
-__all__ = ["InstructionAnalyzer"]
+__all__ = ["AIForgeInstructionAnalyzer"]

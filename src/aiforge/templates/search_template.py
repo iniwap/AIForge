@@ -15,15 +15,13 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import quote
-import unicodedata
 from datetime import datetime, timedelta
 from enum import Enum
 import concurrent.futures
-from dateutil.relativedelta import relativedelta
-import html
+from ..utils import utils
 
 
-def get_template_guided_search_instruction(search_query, max_results):
+def get_template_guided_search_instruction(search_query, max_results=10, min_abstract_len=300):
     search_instruction = f"""
         请生成一个搜索函数，获取最新相关信息，参考以下配置：
 
@@ -68,7 +66,7 @@ def get_template_guided_search_instruction(search_query, max_results):
                 {{
                     "title": "标题",
                     "url": "链接",
-                    "abstract": "详细摘要（去除空格换行，至少{ENGINE_CONFIGS['MIN_ABSTRACT_LENGTH']/2}字）",
+                    "abstract": "详细摘要（去除空格换行，至少{min_abstract_len/2}字）",
                     "pub_time": "发布时间"
                 }}
             ],
@@ -83,7 +81,7 @@ def get_template_guided_search_instruction(search_query, max_results):
     return search_instruction
 
 
-def get_free_form_ai_search_instruction(search_query, max_results):
+def get_free_form_ai_search_instruction(search_query, max_results=10, min_abstract_len=300):
     search_instruction = f"""
         请创新性地生成搜索函数，获取最新相关信息。
 
@@ -98,7 +96,7 @@ def get_free_form_ai_search_instruction(search_query, max_results):
         - 实现多重容错机制，至少尝试2-3种不同方法
         - 对每个结果访问原始页面提取完整信息
         - 优先获取最近7天内的新鲜内容，按发布时间排序
-        - 摘要长度至少{ENGINE_CONFIGS['MIN_ABSTRACT_LENGTH']/4}字，包含关键信息
+        - 摘要长度至少{min_abstract_len/4}字，包含关键信息
         - 不能使用需要API密钥的方式
         - 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
 
@@ -115,7 +113,7 @@ def get_free_form_ai_search_instruction(search_query, max_results):
                 {{
                     "title": "标题",
                     "url": "链接",
-                    "abstract": "详细摘要（去除空格换行，至少{ENGINE_CONFIGS['MIN_ABSTRACT_LENGTH']/4}字）",
+                    "abstract": "详细摘要（去除空格换行，至少{min_abstract_len/4}字）",
                     "pub_time": "发布时间"（可以为""）
                 }}
             ],
@@ -141,7 +139,9 @@ class SearchEngine(Enum):
 def search_web(
     search_query,
     max_results=10,
-    min_results=1,
+    min_items=1,
+    min_abstract_len=300,
+    max_abstract_len=500,
     module_type: SearchEngine = SearchEngine.COMBINED,
 ):
     """根据模块类型返回对应的搜索模板，尝试所有搜索引擎直到找到有效结果"""
@@ -150,18 +150,26 @@ def search_web(
         for engine in SearchEngine:
             try:
                 if engine == SearchEngine.BAIDU:
-                    search_result = template_baidu_specific(search_query, max_results)
+                    search_result = template_baidu_specific(
+                        search_query, max_results, min_abstract_len, max_abstract_len
+                    )
                 elif engine == SearchEngine.BING:
-                    search_result = template_bing_specific(search_query, max_results)
+                    search_result = template_bing_specific(
+                        search_query, max_results, min_abstract_len, max_abstract_len
+                    )
                 elif engine == SearchEngine.SO_360:
-                    search_result = template_360_specific(search_query, max_results)
+                    search_result = template_360_specific(
+                        search_query, max_results, min_abstract_len, max_abstract_len
+                    )
                 elif engine == SearchEngine.SOUGOU:
-                    search_result = template_sougou_specific(search_query, max_results)
+                    search_result = template_sougou_specific(
+                        search_query, max_results, min_abstract_len, max_abstract_len
+                    )
                 else:
                     continue
 
                 # 验证搜索结果质量
-                if validate_search_result(search_result, min_results):
+                if validate_search_result(search_result, min_items):
                     return search_result
             except Exception as e:  # noqa 841
                 continue
@@ -170,86 +178,36 @@ def search_web(
         return None
 
     elif module_type == SearchEngine.BAIDU:
-        result = template_baidu_specific(search_query, max_results)
-        return result if validate_search_result(result, min_results) else None
+        result = template_baidu_specific(
+            search_query, max_results, min_abstract_len, max_abstract_len
+        )
+        return result if validate_search_result(result, min_items) else None
     elif module_type == SearchEngine.BING:
-        result = template_bing_specific(search_query, max_results)
-        return result if validate_search_result(result, min_results) else None
+        result = template_bing_specific(
+            search_query, max_results, min_abstract_len, max_abstract_len
+        )
+        return result if validate_search_result(result, min_items) else None
     elif module_type == SearchEngine.SO_360:
-        result = template_360_specific(search_query, max_results)
-        return result if validate_search_result(result, min_results) else None
+        result = template_360_specific(
+            search_query, max_results, min_abstract_len, max_abstract_len
+        )
+        return result if validate_search_result(result, min_items) else None
     elif module_type == SearchEngine.SOUGOU:
-        result = template_sougou_specific(search_query, max_results)
-        return result if validate_search_result(result, min_results) else None
+        result = template_sougou_specific(
+            search_query, max_results, min_abstract_len, max_abstract_len
+        )
+        return result if validate_search_result(result, min_items) else None
     else:
         return None
 
 
-def simple_validate_search_result(result, min_results, search_type="ai_guided"):
-    """
-    验证搜索结果质量，确保至少min_results条结果满足指定搜索类型的完整性条件
-
-    Args:
-        result: 搜索结果字典
-        search_type: 搜索类型 ("ai_guided" 或 "ai_free")
-
-    Returns:
-        bool: 是否有效
-    """
-    # 快速失败检查
-    if not result or not isinstance(result, dict):
-        return False
-
-    if not result.get("success", False):
-        return False
-
-    results = result.get("results", [])
-    if not results or len(results) < min_results:
-        return False
-
-    # 定义验证规则
-    validation_rules = {
-        "ai_guided": {
-            "abstract_min_length": ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"] / 2,
-            "require_date": True,
-        },
-        "ai_free": {
-            "abstract_min_length": ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"] / 4,
-            "require_date": False,
-        },
-    }
-
-    # 获取当前搜索类型的规则
-    rules = validation_rules.get(search_type, validation_rules["ai_guided"])
-
-    # 验证结果项
-    for item in results:
-        if not isinstance(item, dict):
-            continue
-
-        abstract = item.get("abstract", "")
-        if not abstract or len(abstract.strip()) < rules["abstract_min_length"]:
-            continue
-
-        # 如果需要验证日期
-        if rules["require_date"]:
-            pub_time = item.get("pub_time", "")
-            if not pub_time or not is_valid_date(pub_time):
-                continue
-
-        # 找到一个有效结果就返回True
-        return True
-
-    return False
-
-
-def validate_search_result(result, min_results=1, search_type="local"):
+def validate_search_result(result, min_items=1, search_type="local", min_abstract_len=300):
     """验证搜索结果质量，确保至少min_results条结果满足指定搜索类型的完整性条件，并返回转换后的日期格式"""
     if not isinstance(result, dict) or not result.get("success", False):
         return False
 
     results = result.get("results", [])
-    if not results or len(results) < min_results:
+    if not results or len(results) < min_items:
         return False
 
     timestamp = result.get("timestamp", time.time())
@@ -281,7 +239,7 @@ def validate_search_result(result, min_results=1, search_type="local"):
                         pass
             if timestamp:
                 try:
-                    actual_date = calculate_actual_date(pub_time, timestamp)
+                    actual_date = utils.calculate_actual_date(pub_time, timestamp)
                     if actual_date:
                         item["pub_time"] = actual_date.strftime("%Y-%m-%d")
                     else:
@@ -300,8 +258,8 @@ def validate_search_result(result, min_results=1, search_type="local"):
                 match = re.search(pattern, abstract, re.IGNORECASE)
                 if match:
                     pub_time = match.group(0)
-                    if is_valid_date(pub_time):
-                        pub_time_date = calculate_actual_date(pub_time, timestamp)
+                    if utils.is_valid_date(pub_time):
+                        pub_time_date = utils.calculate_actual_date(pub_time, timestamp)
                         if pub_time_date:
                             item["pub_time"] = pub_time_date.strftime("%Y-%m-%d")
                             break
@@ -315,19 +273,19 @@ def validate_search_result(result, min_results=1, search_type="local"):
 
     quality_rules = {
         "local": {
-            "abstract_min_length": ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"],
+            "abstract_min_length": min_abstract_len,
             "require_valid_date": True,
         },
         "ai_guided": {
-            "abstract_min_length": ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"] / 2,
+            "abstract_min_length": min_abstract_len / 2,
             "require_valid_date": True,
         },
         "ai_free": {
-            "abstract_min_length": ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"] / 4,
+            "abstract_min_length": min_abstract_len / 4,
             "require_valid_date": False,
         },
         "reference_article": {
-            "content_min_length": ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"],
+            "content_min_length": min_abstract_len,
             "require_valid_date": True,
         },
     }
@@ -364,244 +322,6 @@ def validate_search_result(result, min_results=1, search_type="local"):
     return False
 
 
-def is_valid_date(date_str, timestamp=None):
-    """验证日期字符串是否可转换为有效日期"""
-    if not date_str or date_str in [None, "", "None", "未知"]:
-        return False
-
-    date_str = clean_date_text(str(date_str))
-
-    if timestamp is None:
-        timestamp = time.time()
-
-    date_patterns = [
-        # 完整日期时间（支持带空格的中文格式）
-        r"\d{4}\s*[-/年\.]?\s*\d{1,2}\s*[-/月\.]?\s*\d{1,2}\s*(?:日)?(?:\s+\d{1,2}:\d{1,2}(?::\d{1,2})?)?",  # noqa 501
-        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})?",
-        r"\d{1,2}[-/]\d{1,2}[-/]\d{4}\s+\d{1,2}:\d{1,2}(?::\d{1,2})?",
-        # 完整日期
-        r"\d{4}\s*[-/年\.]?\s*\d{1,2}\s*[-/月\.]?\s*\d{1,2}\s*(?:日)?",
-        r"\d{1,2}[-/]\d{1,2}[-/]\d{4}",
-        # 相对时间
-        r"(\d+)\s*(秒|分钟|分|小时|个小时|天|日|周|星期|个月|月|年)前",
-        r"(刚刚|今天|昨天|前天|上周|上星期|上个月|上月|去年)",
-        # 不完整日期
-        r"\d{1,2}\s*[-/\.月]?\s*\d{1,2}\s*(?:日)?",
-        # Unix 时间戳
-        r"^\d{10}$",
-        r"^\d{13}$",
-        # 英文格式
-        r"\d+\s*(second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\s*ago",  # noqa 501
-        r"(yesterday|today|just\s*now|last\s*(week|month|year)|this\s*(week|month|year))",
-    ]
-
-    for pattern in date_patterns:
-        if re.search(pattern, date_str, re.IGNORECASE):
-            return True
-
-    return False
-
-
-def calculate_actual_date(pub_time, timestamp):
-    """将发布日期转换为 datetime 对象"""
-    if not pub_time or not timestamp:
-        return None
-
-    try:
-        pub_time_cleaned = clean_date_text(str(pub_time))
-        reference_date = datetime.fromtimestamp(timestamp)
-
-        # 优先处理 Unix 时间戳 (修正后的位置)
-        if re.match(r"^\d{10}$", pub_time_cleaned):
-            return datetime.fromtimestamp(int(pub_time_cleaned))
-        if re.match(r"^\d{13}$", pub_time_cleaned):
-            return datetime.fromtimestamp(int(pub_time_cleaned) / 1000)
-
-        # 1. 相对时间
-        relative_patterns = [
-            (r"(\d+)\s*秒前", lambda n: reference_date - timedelta(seconds=n)),
-            (r"(\d+)\s*(分钟|分)前", lambda n: reference_date - timedelta(minutes=n)),
-            (r"(\d+)\s*(小时|个小时)前", lambda n: reference_date - timedelta(hours=n)),
-            (r"(\d+)\s*(天|日)前", lambda n: reference_date - timedelta(days=n)),
-            (r"(\d+)\s*(周|星期)前", lambda n: reference_date - timedelta(weeks=n)),
-            (r"(\d+)\s*(个月|月)前", lambda n: reference_date - relativedelta(months=n)),
-            (r"(\d+)\s*年前", lambda n: reference_date - relativedelta(years=n)),
-        ]
-
-        for pattern, calc_func in relative_patterns:
-            match = re.search(pattern, pub_time_cleaned, re.IGNORECASE)
-            if match:
-                num = int(match.group(1))
-                return calc_func(num)
-
-        # 2. 特殊相对时间
-        special_relative = {
-            "刚刚": reference_date,
-            "今天": reference_date.replace(hour=0, minute=0, second=0, microsecond=0),
-            "昨天": reference_date - timedelta(days=1),
-            "前天": reference_date - timedelta(days=2),
-            "上周": reference_date - timedelta(weeks=1),
-            "上星期": reference_date - timedelta(weeks=1),
-            "上个月": reference_date - relativedelta(months=1),
-            "上月": reference_date - relativedelta(months=1),
-            "去年": reference_date - relativedelta(years=1),
-        }
-
-        for key, calc_date in special_relative.items():
-            if key in pub_time_cleaned:
-                return calc_date
-
-        # 3. 英文相对时间
-        english_relative = [
-            (r"(\d+)\s*seconds?\s*ago", lambda n: reference_date - timedelta(seconds=n)),
-            (r"(\d+)\s*minutes?\s*ago", lambda n: reference_date - timedelta(minutes=n)),
-            (r"(\d+)\s*hours?\s*ago", lambda n: reference_date - timedelta(hours=n)),
-            (r"(\d+)\s*days?\s*ago", lambda n: reference_date - timedelta(days=n)),
-            (r"(\d+)\s*weeks?\s*ago", lambda n: reference_date - timedelta(weeks=n)),
-            (r"(\d+)\s*months?\s*ago", lambda n: reference_date - relativedelta(months=n)),
-            (r"(\d+)\s*years?\s*ago", lambda n: reference_date - relativedelta(years=n)),
-            (r"yesterday", lambda: reference_date - timedelta(days=1)),
-            (r"just\s*now", lambda: reference_date),
-            (r"last\s*week", lambda: reference_date - timedelta(weeks=1)),
-            (r"last\s*month", lambda: reference_date - relativedelta(months=1)),
-            (r"last\s*year", lambda: reference_date - relativedelta(years=1)),
-        ]
-
-        for pattern, calc_func in english_relative:
-            match = re.search(pattern, pub_time_cleaned, re.IGNORECASE)
-            if match:
-                if match.groups():
-                    num = int(match.group(1))
-                    return calc_func(num)
-                return calc_func()
-
-        # 4. 不完整日期
-        incomplete_patterns = [
-            r"(\d{1,2})\s*[-/\.月]?\s*(\d{1,2})\s*(?:日)?",
-        ]
-
-        for pattern in incomplete_patterns:
-            match = re.search(pattern, pub_time_cleaned)
-            if match:
-                month, day = map(int, match.groups())
-                if 1 <= month <= 12 and 1 <= day <= 31:
-                    current_year = reference_date.year
-                    try_date = reference_date.replace(year=current_year, month=month, day=day)
-                    if try_date > reference_date:
-                        try_date = try_date.replace(year=current_year - 1)
-                    # 验证日期合理性
-                    if abs((try_date - reference_date).days) > 365:
-                        try_date_alt = try_date.replace(
-                            year=current_year - 1 if try_date > reference_date else current_year + 1
-                        )
-                        if abs((try_date_alt - reference_date).days) < abs(
-                            (try_date - reference_date).days
-                        ):
-                            try_date = try_date_alt
-                    return try_date
-
-        # 5. 完整日期
-        complete_patterns = [
-            (r"(\d{4})\s*[-/年\.]?\s*\d{1,2}\s*[-/月\.]?\s*\d{1,2}\s*(?:日)?", "%Y-%m-%d"),
-            (r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})", "%m/%d/%Y"),
-        ]
-
-        for pattern, date_format in complete_patterns:
-            match = re.search(pattern, pub_time_cleaned)
-            if match:
-                date_str = match.group(0)
-                return datetime.strptime(date_str, date_format)
-
-    except Exception:
-        return None
-
-    return None
-
-
-def is_within_days(date_str, days=7):
-    """检查日期是否在指定天数内"""
-    if not date_str:
-        return False
-    try:
-        timestamp = parse_date_to_timestamp(date_str)
-        if timestamp == 0:
-            return False
-        days_ago = (datetime.now() - timedelta(days=days)).timestamp()
-        return timestamp >= days_ago
-    except Exception as e:  # noqa 841
-        return False
-
-
-def clean_date_text(text):
-    """专为日期清理文本，保留日期格式关键字符"""
-    if not text:
-        return ""
-    try:
-        # 如果是纯数字字符串，直接返回，避免不必要的清理
-        if isinstance(text, (int, float)):
-            return str(text)
-        if isinstance(text, str) and text.isdigit():
-            return text
-
-        if isinstance(text, bytes):
-            text = text.decode("utf-8", errors="ignore")
-        text = html.unescape(text)
-        text = re.sub(
-            r"^(发表于|更新时间|发布时间|创建时间|Posted on|Published on|Date):\s*",
-            "",
-            text,
-            flags=re.IGNORECASE,
-        ).strip()
-        text = "".join(char for char in text if unicodedata.category(char)[0] != "C")
-        # 保留单个空格，避免破坏中文日期格式
-        text = re.sub(r"\s+", " ", text).strip()
-        return text
-    except Exception:
-        return ""
-
-
-def clean_text(text):
-    """清理乱码文本，更少地过滤有效字符"""
-    if not text:
-        return ""
-    try:
-        # 如果是字节串，尝试解码
-        if isinstance(text, bytes):
-            text = text.decode("utf-8", errors="ignore")
-
-        # 处理常见的 Unicode 转义序列，这可能表示乱码文本
-        # 例如，字符串中可能出现 "\\xef\\xbb\\xbf" 这样的内容
-        try:
-            if "\\x" in text:
-                # 尝试解码常见的有问题字节序列
-                text = (
-                    text.encode("utf-8")
-                    .decode("unicode_escape")
-                    .encode("latin1")
-                    .decode("utf-8", errors="ignore")  # 添加 errors='ignore'
-                )
-        except Exception:
-            pass  # 如果解码失败，保留原始文本
-
-        # 移除 Unicode 分类为 'C' (Other) 的字符，这通常包括控制字符、格式字符、未分配字符和私用字符。
-        # 这种方式对于移除真正不可打印/不可见的字符来说通常是安全的。
-        # 同时排除行分隔符 (Zl) 和段落分隔符 (Zp)
-        text = "".join(
-            char for char in text if unicodedata.category(char)[0] not in ["C", "Zl", "Zp"]
-        )
-
-        # 可选：移除未被解析的 HTML 实体，例如 "&#x200B;" 或其他具名实体
-        text = re.sub(r"&#x[0-9a-fA-F]+;", "", text)  # 移除 HTML 数字字符引用
-        text = re.sub(r"&[a-zA-Z]+;", "", text)  # 移除 HTML 具名字符引用
-
-        # 将多个空格替换为单个空格，并移除首尾空格
-        text = re.sub(r"\s+", " ", text).strip()
-
-        return text.strip()
-    except Exception:
-        return ""
-
-
 def get_common_headers():
     """获取通用请求头"""
     return {
@@ -612,52 +332,6 @@ def get_common_headers():
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
     }
-
-
-def parse_date_to_timestamp(date_str):
-    """将日期字符串转换为时间戳用于排序，增加更多日期格式识别"""
-    if not date_str:
-        return 0
-
-    # 预处理常见的非标准字符和修饰语
-    # 移除括号及其内容，例如 "(发布时间)"
-    date_str = re.sub(r"\(.*?\)", "", date_str).strip()
-    date_str = date_str.replace("年", "-").replace("月", "-").replace("日", "").replace("/", "-")
-    # 移除常见的日期前缀或无关文本，但保留日期本身
-    date_str = re.sub(
-        r"^(发表于|更新时间|发布时间|创建时间|Posted on|Published on|Date):\s*",
-        "",
-        date_str,
-        flags=re.IGNORECASE,
-    ).strip()
-    date_str = re.sub(
-        r"[^\d\s\-:]", "", date_str
-    )  # 移除多余的非日期字符，但保留数字、空格、连字符、冒号
-    date_str = date_str.split("T")[
-        0
-    ]  # 通常时间戳格式的'T'后面是时间，我们只取日期部分，但确保不会切掉只有日期部分的时间
-
-    # 尝试匹配更广泛的日期时间格式
-    formats = [
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d %H:%M",
-        "%Y-%m-%d",
-        "%Y%m%d",  # 例如 20240530
-        "%m-%d-%Y",  # 例如 05-30-2024
-        "%B %d, %Y",  # 例如 May 30, 2024 (如果文本是英文)
-        "%d %B %Y",  # 例如 30 May 2024 (如果文本是英文)
-        "%Y.%m.%d",  # 例如 2024.05.30
-        "%y-%m-%d",  # 例如 24-05-30
-    ]
-
-    for fmt in formats:
-        try:
-            dt = datetime.strptime(date_str, fmt)
-            return dt.timestamp()
-        except ValueError:
-            continue
-
-    return 0
 
 
 def _extract_publish_time(page_soup):
@@ -719,9 +393,9 @@ def _extract_publish_time(page_soup):
                 pass
 
         # 如果 datetime 属性解析失败，尝试文本内容
-        text_content = clean_date_text(time_tag.get_text())
-        if text_content and is_valid_date(text_content):
-            time_date = calculate_actual_date(text_content, time.time())
+        text_content = utils.clean_date_text(time_tag.get_text())
+        if text_content and utils.is_valid_date(text_content):
+            time_date = utils.calculate_actual_date(text_content, time.time())
             if time_date:
                 return time_date.strftime("%Y-%m-%d")
 
@@ -747,14 +421,14 @@ def _extract_publish_time(page_soup):
     for selector in date_selectors:
         elements = page_soup.select(selector)
         for elem in elements:
-            text = clean_date_text(elem.get_text())
-            if text and is_valid_date(text):
-                elem_date = calculate_actual_date(text, time.time())
+            text = utils.clean_date_text(elem.get_text())
+            if text and utils.is_valid_date(text):
+                elem_date = utils.calculate_actual_date(text, time.time())
                 if elem_date:
                     return elem_date.strftime("%Y-%m-%d")
 
     # 兜底：全文搜索
-    text = clean_date_text(page_soup.get_text())
+    text = utils.clean_date_text(page_soup.get_text())
     for pattern in [
         r"\d{4}\s*[-/年\.]?\s*\d{1,2}\s*[-/月\.]?\s*\d{1,2}\s*(?:日)?(?:\s+\d{1,2}:\d{1,2}(?::\d{1,2})?)?",  # noqa 501
         r"\d{1,2}[-/]\d{1,2}[-/]\d{4}",
@@ -765,8 +439,8 @@ def _extract_publish_time(page_soup):
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             pub_time = match.group(0)
-            if is_valid_date(pub_time):
-                pub_time_date = calculate_actual_date(pub_time, time.time())
+            if utils.is_valid_date(pub_time):
+                pub_time_date = utils.calculate_actual_date(pub_time, time.time())
                 if pub_time_date:
                     return pub_time_date.strftime("%Y-%m-%d")
 
@@ -792,26 +466,26 @@ def extract_page_content(url, headers=None):
         return None, None
 
 
-def enhance_abstract(abstract, page_soup):
+def enhance_abstract(abstract, page_soup, min_abstract_len=300, max_abstract_len=500):
     """
     增强摘要内容，从原文提取。
-    如果 _extract_full_article_content 的内容长度 >= MIN_ABSTRACT_LENGTH，直接返回；
-    否则，结合原始摘要，确保总长度不超过 MAX_ABSTRACT_LENGTH。
+    如果 _extract_full_article_content 的内容长度 >= min_abstract_len
+    否则，结合原始摘要，确保总长度不超过 max_abstract_len
     """
     if not page_soup:
         return abstract
 
     # 提取正文
-    article = extract_full_article_content(page_soup)
+    article = extract_full_article_content(page_soup, min_abstract_len)
 
     if article:
-        # 检查正文长度是否满足 MIN_ABSTRACT_LENGTH
-        if len(article) >= ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"]:
-            # 直接返回正文，截取至 MAX_ABSTRACT_LENGTH
-            return article[: ENGINE_CONFIGS["MAX_ABSTRACT_LENGTH"]].strip()
+        # 检查正文长度是否满足 min_abstract_len
+        if len(article) >= min_abstract_len:
+            # 直接返回正文，截取至 max_abstract_len
+            return article[:max_abstract_len].strip()
         else:
             # 清理原始摘要，结合正文
-            return (abstract + " " + article)[: ENGINE_CONFIGS["MAX_ABSTRACT_LENGTH"]].strip()
+            return (abstract + " " + article)[:max_abstract_len].strip()
 
     # 回退到原始摘要
     return abstract
@@ -821,13 +495,19 @@ def sort_and_filter_results(results):
     if not results:
         return results
 
-    recent_results = [result for result in results if is_within_days(result.get("pub_time"), 7)]
-    recent_results.sort(key=lambda x: parse_date_to_timestamp(x.get("pub_time", "")), reverse=True)
+    recent_results = [
+        result for result in results if utils.is_within_days(result.get("pub_time"), 7)
+    ]
+    recent_results.sort(
+        key=lambda x: utils.parse_date_to_timestamp(x.get("pub_time", "")), reverse=True
+    )
 
     return recent_results
 
 
-def _search_template(search_query, max_results, engine_config):
+def _search_template(
+    search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=500
+):
     """通用搜索模板"""
     try:
         results = []
@@ -879,7 +559,7 @@ def _search_template(search_query, max_results, engine_config):
                 if not link_elem:
                     continue
 
-                title = clean_text(title_elem.get_text().strip()) or "无标题"
+                title = utils.clean_text(title_elem.get_text().strip()) or "无标题"
                 url = link_elem.get("href", "")
 
                 # 处理重定向链接
@@ -901,13 +581,13 @@ def _search_template(search_query, max_results, engine_config):
                 for selector in engine_config["abstract_selectors"]:
                     abstract_elem = result.select_one(selector)
                     if abstract_elem:
-                        abstract = clean_text(abstract_elem.get_text().strip())
+                        abstract = utils.clean_text(abstract_elem.get_text().strip())
                         if len(abstract) > 20:
                             break
                 if not abstract and engine_config.get("fallback_abstract"):
                     abstract_elem = result.find(text=True, recursive=True)
                     abstract = (
-                        clean_text(abstract_elem.strip())[: ENGINE_CONFIGS["MAX_ABSTRACT_LENGTH"]]
+                        utils.clean_text(abstract_elem.strip())[:max_abstract_len]
                         if abstract_elem
                         else ""
                     )
@@ -932,8 +612,12 @@ def _search_template(search_query, max_results, engine_config):
                         if res["url"] == url:
                             res["pub_time"] = pub_time
                             res["abstract"] = (
-                                enhance_abstract(res["abstract"], page_soup) or res["abstract"]
+                                enhance_abstract(
+                                    res["abstract"], page_soup, min_abstract_len, max_abstract_len
+                                )
+                                or res["abstract"]
                             )
+
                             break
                 except Exception:
                     pass
@@ -970,9 +654,8 @@ def _search_template(search_query, max_results, engine_config):
 
 
 # 搜索引擎配置
+
 ENGINE_CONFIGS = {
-    "MIN_ABSTRACT_LENGTH": 300,
-    "MAX_ABSTRACT_LENGTH": 500,
     "baidu": {
         "url": "https://www.baidu.com/s?wd={search_query}&rn={max_results}",
         "redirect_pattern": "baidu.com/link?url=",
@@ -1290,23 +973,37 @@ ENGINE_CONFIGS = {
 
 
 # 搜索引擎特定函数
-def template_baidu_specific(search_query, max_results=10):
-    return _search_template(search_query, max_results, ENGINE_CONFIGS["baidu"])
+def template_baidu_specific(
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=500
+):
+    return _search_template(
+        search_query, max_results, ENGINE_CONFIGS["baidu"], min_abstract_len, max_abstract_len
+    )
 
 
-def template_bing_specific(search_query, max_results=10):
-    return _search_template(search_query, max_results, ENGINE_CONFIGS["bing"])
+def template_bing_specific(
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=500
+):
+    return _search_template(
+        search_query, max_results, ENGINE_CONFIGS["bing"], min_abstract_len, max_abstract_len
+    )
 
 
-def template_360_specific(search_query, max_results=10):
-    return _search_template(search_query, max_results, ENGINE_CONFIGS["360"])
+def template_360_specific(search_query, max_results=10, min_abstract_len=300, max_abstract_len=500):
+    return _search_template(
+        search_query, max_results, ENGINE_CONFIGS["360"], min_abstract_len, max_abstract_len
+    )
 
 
-def template_sougou_specific(search_query, max_results=10):
-    return _search_template(search_query, max_results, ENGINE_CONFIGS["sogou"])
+def template_sougou_specific(
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=500
+):
+    return _search_template(
+        search_query, max_results, ENGINE_CONFIGS["sogou"], min_abstract_len, max_abstract_len
+    )
 
 
-def extract_full_article_content(page_soup):
+def extract_full_article_content(page_soup, min_abstract_len=300):
     """提取完整文章内容，过滤无关信息"""
     # 定义噪声关键词，针对微信公众号和常见无关内容
     noise_keywords = [
@@ -1552,7 +1249,7 @@ def extract_full_article_content(page_soup):
             for elem in content_elem.find_all(
                 ["p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "span"]
             ):
-                text = clean_text(elem.get_text().strip())
+                text = utils.clean_text(elem.get_text().strip())
                 if text and len(text) > 10 and text not in seen_texts:  # 过滤过短文本并去重
                     # 过滤噪声关键词
                     if not any(keyword in text.lower() for keyword in noise_keywords):
@@ -1563,7 +1260,7 @@ def extract_full_article_content(page_soup):
                 # 保留段落结构，清理多余换行符
                 full_text = "\n\n".join(text_parts)
                 full_text = re.sub(r"\n{3,}", "\n\n", full_text).strip()
-                if len(full_text) > ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"]:
+                if len(full_text) > min_abstract_len:
                     return full_text
 
     # 第四步：回退到 body
@@ -1575,7 +1272,7 @@ def extract_full_article_content(page_soup):
         text_parts = []
         seen_texts = set()
         for elem in body.find_all(["p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "span"]):
-            text = clean_text(elem.get_text().strip())
+            text = utils.clean_text(elem.get_text().strip())
             if text and len(text) > 10 and text not in seen_texts:
                 if not any(keyword in text.lower() for keyword in noise_keywords):
                     text_parts.append(text)
@@ -1584,12 +1281,12 @@ def extract_full_article_content(page_soup):
         if text_parts:
             full_text = "\n\n".join(text_parts)
             full_text = re.sub(r"\n{3,}", "\n\n", full_text).strip()
-            if len(full_text) > ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"]:
+            if len(full_text) > min_abstract_len:
                 return full_text
 
         # 第五步：极宽松回退，模仿原始版本
-        text = clean_text(body.get_text())
-        if text and len(text) > ENGINE_CONFIGS["MIN_ABSTRACT_LENGTH"]:
+        text = utils.clean_text(body.get_text())
+        if text and len(text) > min_abstract_len:
             return text
 
     return ""

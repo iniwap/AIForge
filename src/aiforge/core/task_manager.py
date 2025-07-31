@@ -8,7 +8,7 @@ from ..execution.executor import AIForgeExecutor
 from ..optimization.feedback_optimizer import FeedbackOptimizer
 from ..formatting.result_formatter import AIForgeResultFormatter
 from ..execution.code_blocks import CodeBlockManager, CodeBlock
-from ..prompts.enhanced_prompts import get_base_aiforge_prompt
+from ..prompts.prompt_generator import AIForgePromptGenerator
 from .result_manager import AIForgeResult
 
 
@@ -96,7 +96,7 @@ class AIForgeTask:
                 self.system_prompt = instruction
             else:
                 self.instruction = instruction
-                self.system_prompt = get_base_aiforge_prompt(
+                self.system_prompt = AIForgePromptGenerator.get_base_aiforge_prompt(
                     optimize_tokens=self.optimization.get("optimize_tokens", True)
                 )
         elif not instruction and system_prompt:

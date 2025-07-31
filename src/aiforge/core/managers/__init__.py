@@ -1,5 +1,5 @@
-from .config_manager import ConfigManager
-from .component_manager import ComponentManager
-from .execution_manager import ExecutionManager
+from .config_manager import AIForgeConfigManager
+from .component_manager import AIForgeComponentManager
+from .execution_manager import AIForgeExecutionManager
 
-__all__ = ["ConfigManager", "ComponentManager", "ExecutionManager"]
+__all__ = ["AIForgeConfigManager", "AIForgeComponentManager", "AIForgeExecutionManager"]

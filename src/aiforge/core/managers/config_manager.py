@@ -3,7 +3,7 @@ from pathlib import Path
 from ...config.config import AIForgeConfig
 
 
-class ConfigManager:
+class AIForgeConfigManager:
     """配置管理器 - 负责所有配置相关操作"""
 
     def __init__(self):
