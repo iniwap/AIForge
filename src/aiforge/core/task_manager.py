@@ -92,7 +92,7 @@ class AIForgeTask:
         elif instruction and not system_prompt:
             if "__result__" in instruction:
                 # 用户明确指定生成代码prompt的
-                self.instruction = None
+                self.instruction = "基于模板生成代码"
                 self.system_prompt = instruction
             else:
                 self.instruction = instruction

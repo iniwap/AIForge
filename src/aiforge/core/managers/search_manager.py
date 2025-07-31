@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import time
 from ..helpers.cache_helper import CacheHelper
 
@@ -28,61 +28,6 @@ class AIForgeSearchManager:
         )
 
         return any(search_indicators) or search_params
-
-    def execute_multi_level_search(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
-    ) -> Optional[Dict[str, Any]]:
-        """执行多层级搜索策略"""
-        print("[DEBUG] 开始多层级搜索策略")
-
-        # 第一层：直接调用 search_web
-        print("[DEBUG] 第一层：尝试直接调用 search_web")
-        direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
-        if direct_result and self._validate_search_result_quality(direct_result):
-            print("[DEBUG] 第一层搜索成功，直接返回")
-            return direct_result
-
-        # 第二层：使用缓存中的搜索函数
-        print("[DEBUG] 第二层：尝试使用缓存搜索")
-        cache_result = self._try_cached_search(standardized_instruction, original_instruction)
-        if cache_result and self._validate_search_result_quality(cache_result):
-            print("[DEBUG] 第二层缓存搜索成功，直接返回")
-            return cache_result
-
-        # 第三层：使用 get_template_guided_search_instruction
-        print("[DEBUG] 第三层：尝试模板引导搜索")
-        template_result = self._try_template_guided_search(
-            standardized_instruction, original_instruction
-        )
-        if template_result and self._validate_search_result_quality(template_result):
-            print("[DEBUG] 第三层模板搜索成功，返回结果")
-            return template_result
-
-        # 第四层：使用 get_free_form_ai_search_instruction
-        print("[DEBUG] 第四层：尝试自由形式搜索")
-        freeform_result = self._try_free_form_search(standardized_instruction, original_instruction)
-        if freeform_result and self._validate_search_result_quality(freeform_result):
-            print("[DEBUG] 第四层自由形式搜索成功，返回结果")
-            return freeform_result
-
-        # 所有层级都失败
-        print("[DEBUG] 所有搜索层级都失败")
-        return {
-            "data": [],
-            "status": "error",
-            "summary": "所有搜索策略都失败",
-            "metadata": {
-                "timestamp": time.time(),
-                "task_type": "data_fetch",
-                "execution_type": "multi_level_search_failed",
-                "search_levels_attempted": [
-                    "direct_search_web",
-                    "cached_search",
-                    "template_guided",
-                    "free_form",
-                ],
-            },
-        }
 
     def _try_direct_search_web(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
@@ -118,7 +63,7 @@ class AIForgeSearchManager:
             if search_result:
                 # 转换为AIForge标准格式
                 return self._convert_search_result_to_aiforge_format(
-                    search_result, "direct_search_web"
+                    search_result, standardized_instruction, "direct_search_web"
                 )
 
             return None
@@ -151,6 +96,13 @@ class AIForgeSearchManager:
                     cached_modules, standardized_instruction
                 )
                 if cache_result:
+                    # 应用字段映射
+                    expected_output = standardized_instruction.get("expected_output")
+                    if expected_output and expected_output.get("required_fields"):
+                        cache_result["data"] = self._map_search_fields_to_expected(
+                            cache_result.get("data", []), expected_output["required_fields"]
+                        )
+
                     cache_result["metadata"]["execution_type"] = "cached_search"
                     return cache_result
 
@@ -183,6 +135,7 @@ class AIForgeSearchManager:
                 search_instruction = template_manager.get_template(
                     "search_guided",
                     search_query=search_params["search_query"],
+                    expected_output=standardized_instruction.get("expected_output"),
                     max_results=search_params["max_results"],
                     min_abstract_len=search_params["min_abstract_len"],
                 )
@@ -200,7 +153,6 @@ class AIForgeSearchManager:
                 "data_fetch",
                 standardized_instruction.get("expected_output"),
             )
-
             if success and result and code:
                 # 缓存生成的代码
                 template_instruction = standardized_instruction.copy()
@@ -218,6 +170,10 @@ class AIForgeSearchManager:
             return None
 
         except Exception as e:
+            import traceback
+
+            traceback.print_exc()
+
             print(f"[DEBUG] 模板引导搜索失败: {e}")
             return None
 
@@ -244,6 +200,7 @@ class AIForgeSearchManager:
                 search_instruction = template_manager.get_template(
                     "search_free_form",
                     search_query=search_params["search_query"],
+                    expected_output=standardized_instruction.get("expected_output"),
                     max_results=search_params["max_results"],
                     min_abstract_len=search_params["min_abstract_len"],
                 )
@@ -261,7 +218,6 @@ class AIForgeSearchManager:
                 "data_fetch",
                 standardized_instruction.get("expected_output"),
             )
-
             if success and result and code:
                 # 缓存生成的代码
                 freeform_instruction = standardized_instruction.copy()
@@ -279,6 +235,10 @@ class AIForgeSearchManager:
             return None
 
         except Exception as e:
+            import traceback
+
+            traceback.print_exc()
+
             print(f"[DEBUG] 自由形式搜索失败: {e}")
             return None
 
@@ -369,18 +329,108 @@ class AIForgeSearchManager:
         # 使用原始指令
         return original_instruction
 
+    def _map_search_fields_to_expected(
+        self, results: List[Dict], expected_fields: List
+    ) -> List[Dict]:
+        """将搜索结果字段映射到期望的输出字段"""
+        mapped_results = []
+
+        for result in results:
+            if not isinstance(result, dict):
+                mapped_results.append(result)
+                continue
+
+            mapped_result = {}
+
+            # 获取原始搜索字段
+            original_title = result.get("title", "")
+            original_url = result.get("url", "")
+            original_abstract = result.get("abstract", "")
+            original_pub_time = result.get("pub_time", "")
+
+            # 映射到期望字段
+            for field_name in expected_fields:
+                field_lower = field_name.lower()
+
+                # 语义映射逻辑
+                if any(
+                    keyword in field_lower
+                    for keyword in ["title", "标题", "headline", "subject", "name"]
+                ):
+                    mapped_result[field_name] = original_title
+                elif any(
+                    keyword in field_lower
+                    for keyword in ["url", "link", "链接", "href", "source_url", "source"]
+                ):
+                    mapped_result[field_name] = original_url
+                elif any(
+                    keyword in field_lower
+                    for keyword in [
+                        "abstract",
+                        "content",
+                        "article",
+                        "summary",
+                        "摘要",
+                        "内容",
+                        "正文",
+                        "description",
+                        "excerpt",
+                        "text",
+                    ]
+                ):
+                    mapped_result[field_name] = original_abstract
+                elif any(
+                    keyword in field_lower
+                    for keyword in [
+                        "time",
+                        "date",
+                        "时间",
+                        "日期",
+                        "publish",
+                        "created",
+                        "updated",
+                        "pub_time",
+                        "publish_time",
+                        "created_at",
+                        "updated_at",
+                        "timestamp",
+                    ]
+                ):
+                    mapped_result[field_name] = original_pub_time
+                else:
+                    # 无法映射的字段填空
+                    mapped_result[field_name] = ""
+
+            # 如果expected_output没有时间字段，但搜索结果有，则添加
+            if original_pub_time and not any(
+                "time" in f.lower() or "date" in f.lower() for f in expected_fields
+            ):
+                mapped_result["pub_time"] = original_pub_time
+
+            mapped_results.append(mapped_result)
+
+        return mapped_results
+
     def _convert_search_result_to_aiforge_format(
         self,
         search_result: Dict[str, Any],
+        standardized_instruction: Dict[str, Any],
         execution_type: str,
     ) -> Dict[str, Any]:
-        """将search_web结果转换为AIForge标准格式"""
+        """将search_web结果转换为AIForge标准格式，并应用字段映射"""
         import time
 
         # 提取搜索结果数据
         results = search_result.get("results", [])
         success = search_result.get("success", False)
         error = search_result.get("error")
+
+        # 应用字段映射
+        expected_output = standardized_instruction.get("expected_output")
+        if expected_output and expected_output.get("required_fields"):
+            results = self._map_search_fields_to_expected(
+                results, expected_output["required_fields"]
+            )
 
         # 转换为AIForge标准格式
         aiforge_result = {
@@ -425,7 +475,7 @@ class AIForgeSearchManager:
         # 至少要有一个有效结果
         return valid_results > 0
 
-    def _execute_multi_level_search(
+    def execute_multi_level_search(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """执行多层级搜索策略"""

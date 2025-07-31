@@ -494,7 +494,7 @@ class AIForgeExecutionManager:
 
         client = llm_manager.get_client()
         if not client:
-            return None, None
+            return None, None, False
 
         task = None
         try:

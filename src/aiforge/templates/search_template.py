@@ -21,9 +21,138 @@ import concurrent.futures
 from ..utils import utils
 
 
-def get_template_guided_search_instruction(search_query, max_results=10, min_abstract_len=300):
+def _generate_dynamic_data_format(expected_output, min_abstract_len, is_free_form=False):
+    """根据expected_output直接生成data字段格式"""
+
+    abstract_len = min_abstract_len / 2 if not is_free_form else min_abstract_len / 4
+    # 如果没有expected_output，使用基本格式
+    if not expected_output or not expected_output.get("required_fields"):
+        return """{{
+                "title": "标题",
+                "url": "链接",
+                "content": "详细内容（去除空格换行，至少{}字）",
+                "pub_time": "发布时间" + ("（可以为空）" if {} else "")
+            }}""".format(
+            abstract_len, is_free_form
+        )
+
+    # 直接使用expected_output中的字段
+    expected_fields = expected_output["required_fields"]
+    result_fields = []
+
+    # 添加所有期望的字段
+    for field_name in expected_fields:
+        # 根据字段名推断合适的描述
+        if any(kw in field_name.lower() for kw in ["title", "标题", "headline", "subject", "name"]):
+            description = "标题"
+        elif any(
+            kw in field_name.lower()
+            for kw in ["url", "link", "链接", "href", "source_url", "source"]
+        ):
+            description = "链接"
+        elif any(
+            kw in field_name.lower()
+            for kw in [
+                "abstract",
+                "content",
+                "article",
+                "summary",
+                "摘要",
+                "内容",
+                "正文",
+                "description",
+                "excerpt",
+                "text",
+            ]
+        ):
+            description = f"详细内容（去除空格换行，至少{abstract_len}字）"
+        elif any(
+            kw in field_name.lower()
+            for kw in [
+                "time",
+                "date",
+                "时间",
+                "日期",
+                "publish",
+                "created",
+                "updated",
+                "pub_time",
+                "publish_time",
+                "created_at",
+                "updated_at",
+                "timestamp",
+            ]
+        ):
+            description = "发布时间" + ("（可以为''）" if is_free_form else "")
+        else:
+            description = "对应值"
+
+        result_fields.append(f'"{field_name}": "{description}"')
+
+    # 检查并补充必要的搜索字段
+    field_names = set(expected_fields)
+    field_names_lower = {name.lower() for name in field_names}
+
+    # 如果没有URL字段，添加一个
+    if not any(
+        kw in field_names_lower for kw in ["url", "link", "链接", "href", "source_url", "source"]
+    ):
+        result_fields.append('"url": "链接"')
+
+    # 如果没有内容字段，添加一个
+    if not any(
+        kw in field_names_lower
+        for kw in [
+            "abstract",
+            "content",
+            "article",
+            "summary",
+            "摘要",
+            "内容",
+            "正文",
+            "description",
+            "excerpt",
+            "text",
+        ]
+    ):
+        content_desc = f"详细内容（去除空格换行，至少{abstract_len}字）"  # noqa 501
+        result_fields.append(f'"content": "{content_desc}"')
+
+    # 如果没有时间字段，添加一个
+    if not any(
+        kw in field_names_lower
+        for kw in [
+            "time",
+            "date",
+            "时间",
+            "日期",
+            "publish",
+            "created",
+            "updated",
+            "pub_time",
+            "publish_time",
+            "created_at",
+            "updated_at",
+            "timestamp",
+        ]
+    ):
+        time_desc = "发布时间" + ("（可以为''）" if is_free_form else "")
+        result_fields.append(f'"pub_time": "{time_desc}"')
+
+    return "{\n                " + ",\n                ".join(result_fields) + "\n            }"
+
+
+def get_template_guided_search_instruction(
+    search_query,
+    expected_output,
+    max_results=10,
+    min_abstract_len=300,
+):
+    # 动态生成返回格式
+    data_format = _generate_dynamic_data_format(expected_output, min_abstract_len)
+
     search_instruction = f"""
-        请生成一个搜索函数，获取最新相关信息，参考以下配置：
+        请生成一个搜索函数（不要任何注释、打印日志），获取最新相关信息，参考以下配置：
 
         # 搜索引擎URL模式：
         - 百度: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}
@@ -50,28 +179,27 @@ def get_template_guided_search_instruction(search_query, max_results=10, min_abs
 
         # 重要处理逻辑：
         1. 按优先级依次尝试四个搜索引擎（不要使用API密钥方式）
-        2. 使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容
+        2. 优先使用摘要内容作为content，如果不满足，使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容
         3. 从页面提取发布时间，遵从以下策略：
             - 优先meta标签：article:published_time、datePublished、pubdate、publishdate等
             - 备选方案：time标签、日期相关class、页面文本匹配
-            - 有效的日期格式：标准格式、中文格式、相对时间（如“昨天”、“1天前”、“1小时前”等）、英文时间（如“yesterday”等）
+            - 有效的日期格式：标准格式、中文格式、相对时间（如"昨天"、"1天前"、"1小时前"等）、英文时间（如"yesterday"等）
         4. 按发布时间排序，优先最近7天内容
         5. 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
 
         # 返回数据格式（严格遵守）：
         {{
-            "timestamp": time.time(),
-            "search_query": "{search_query}",
-            "results": [
-                {{
-                    "title": "标题",
-                    "url": "链接",
-                    "abstract": "详细摘要（去除空格换行，至少{min_abstract_len/2}字）",
-                    "pub_time": "发布时间"
-                }}
+            "data": [
+                {data_format}
             ],
-            "success": True/False,
-            "error": 错误信息或None
+            "status": "success或error",
+            "summary": f"搜索完成，找到 len(data) 条结果",
+            "metadata": {{
+                "timestamp": time.time(),
+                "task_type": "data_fetch",
+                "search_query": "{search_query}",
+                "execution_type": "template_guided_search"
+            }}
         }}
 
          __result__ = search_web("{search_query}", {max_results})
@@ -81,9 +209,19 @@ def get_template_guided_search_instruction(search_query, max_results=10, min_abs
     return search_instruction
 
 
-def get_free_form_ai_search_instruction(search_query, max_results=10, min_abstract_len=300):
+def get_free_form_ai_search_instruction(
+    search_query,
+    expected_output,
+    max_results=10,
+    min_abstract_len=300,
+):
+    # 动态生成返回格式
+    data_format = _generate_dynamic_data_format(
+        expected_output, min_abstract_len, is_free_form=True
+    )
+
     search_instruction = f"""
-        请创新性地生成搜索函数，获取最新相关信息。
+        请创新性地生成搜索函数（不要任何注释、打印日志），获取最新相关信息。
 
         # 可选搜索策略：
         1. 依次尝试不同搜索引擎（百度、Bing、360、搜狗）
@@ -103,22 +241,21 @@ def get_free_form_ai_search_instruction(search_query, max_results=10, min_abstra
         # 时间提取策略：
         - 优先meta标签：article:published_time、datePublished、pubdate、publishdate等
         - 备选方案：time标签、日期相关class、页面文本匹配
-        - 有效的日期格式：标准格式、中文格式、相对时间（如“昨天”、“1天前”、“1小时前”等）、英文时间（如“yesterday”等）
+        - 有效的日期格式：标准格式、中文格式、相对时间（如"昨天"、"1天前"、"1小时前"等）、英文时间（如"yesterday"等）
 
         # 返回数据格式（严格遵守）：
         {{
-            "timestamp": time.time(),
-            "search_query": "{search_query}",
-            "results": [
-                {{
-                    "title": "标题",
-                    "url": "链接",
-                    "abstract": "详细摘要（去除空格换行，至少{min_abstract_len/4}字）",
-                    "pub_time": "发布时间"（可以为""）
-                }}
+            "data": [
+                {data_format}
             ],
-            "success": True/False,
-            "error": 错误信息或None
+            "status": "success",
+            "summary": "搜索完成",
+            "metadata": {{
+                "timestamp": time.time(),
+                "task_type": "data_fetch",
+                "search_query": "{search_query}",
+                "execution_type": "free_form_search"
+            }}
         }}
 
         __result__ = search_web("{search_query}", {max_results})

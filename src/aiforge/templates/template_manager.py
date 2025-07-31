@@ -59,11 +59,16 @@ class TemplateManager:
                 description="引导式搜索指令生成模板，提供详细的CSS选择器和处理逻辑",
                 parameters={
                     "search_query": {"type": "str", "required": True, "description": "搜索查询"},
+                    "expected_output": {
+                        "type": "dict",
+                        "required": True,
+                        "description": "期望输出",
+                    },
                     "max_results": {"type": "int", "required": False, "description": "最大结果数"},
                     "min_abstract_len": {
                         "type": "str",
                         "required": False,
-                        "description": "最短摘要长度",
+                        "description": "最少内容字数",
                     },
                 },
             )
@@ -76,6 +81,11 @@ class TemplateManager:
                 description="自由形式搜索指令生成模板，允许创新性的搜索策略",
                 parameters={
                     "search_query": {"type": "str", "required": True, "description": "搜索查询"},
+                    "expected_output": {
+                        "type": "dict",
+                        "required": True,
+                        "description": "期望输出",
+                    },
                     "max_results": {"type": "int", "required": False, "description": "最大结果数"},
                     "min_abstract_len": {
                         "type": "str",
