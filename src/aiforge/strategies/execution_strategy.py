@@ -7,6 +7,9 @@ import asyncio
 class ExecutionStrategy(ABC):
     """执行策略接口"""
 
+    def __init__(self, parameter_mapping_service=None):
+        self.parameter_mapping_service = parameter_mapping_service
+
     @abstractmethod
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否能处理该模块和指令"""
@@ -21,6 +24,33 @@ class ExecutionStrategy(ABC):
     def get_priority(self) -> int:
         """获取策略优先级，数字越大优先级越高"""
         pass
+
+    def _extract_parameters(self, standardized_instruction: Dict[str, Any]) -> Dict[str, Any]:
+        """从标准化指令中提取参数 - 基类实现"""
+        required_parameters = standardized_instruction.get("required_parameters", {})
+        parameters = {}
+
+        for param_name, param_info in required_parameters.items():
+            if isinstance(param_info, dict) and "value" in param_info:
+                parameters[param_name] = param_info["value"]
+            else:
+                parameters[param_name] = param_info
+
+        return parameters
+
+    def _extract_and_map_parameters(
+        self, func: callable, standardized_instruction: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """统一的参数提取和映射方法"""
+        parameters = self._extract_parameters(standardized_instruction)
+        if self.parameter_mapping_service:
+            context = {
+                "task_type": standardized_instruction.get("task_type"),
+                "action": standardized_instruction.get("action"),
+                "function_name": func.__name__,
+            }
+            return self.parameter_mapping_service.map_parameters(func, parameters, context)
+        return parameters
 
 
 class ParameterizedFunctionStrategy(ExecutionStrategy):
@@ -165,19 +195,6 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
 
         return None
 
-    def _extract_parameters(self, standardized_instruction: Dict[str, Any]) -> Dict[str, Any]:
-        """从标准化指令中提取参数"""
-        required_parameters = standardized_instruction.get("required_parameters", {})
-        parameters = {}
-
-        for param_name, param_info in required_parameters.items():
-            if isinstance(param_info, dict) and "value" in param_info:
-                parameters[param_name] = param_info["value"]
-            else:
-                parameters[param_name] = param_info
-
-        return parameters
-
     def _try_multiple_call_strategies(
         self, func, param_values: Dict, func_param_names: List[str]
     ) -> Any:
@@ -245,30 +262,17 @@ class DirectResultStrategy(ExecutionStrategy):
     def get_priority(self) -> int:
         return 50
 
-    def _extract_parameters(self, standardized_instruction: Dict[str, Any]) -> Dict[str, Any]:
-        """从标准化指令中提取参数"""
-        required_parameters = standardized_instruction.get("required_parameters", {})
-        parameters = {}
-
-        for param_name, param_info in required_parameters.items():
-            if isinstance(param_info, dict) and "value" in param_info:
-                parameters[param_name] = param_info["value"]
-            else:
-                parameters[param_name] = param_info
-
-        return parameters
-
     def _try_invoke_result_function(self, func: callable, parameters: Dict[str, Any]) -> Any:
         """尝试调用结果函数"""
         try:
-            sig = inspect.signature(func)
-            func_params = list(sig.parameters.keys())
-
-            # 映射参数
-            mapped_params = {}
-            for param_name in func_params:
-                if param_name in parameters:
-                    mapped_params[param_name] = parameters[param_name]
+            # 使用统一的参数提取和映射方法
+            if self.parameter_mapping_service:
+                mapped_params = self.parameter_mapping_service.map_parameters(func, parameters)
+            else:
+                # 回退到简单映射
+                sig = inspect.signature(func)
+                func_params = list(sig.parameters.keys())
+                mapped_params = {k: v for k, v in parameters.items() if k in func_params}
 
             if mapped_params:
                 return func(**mapped_params)
@@ -335,30 +339,17 @@ class ClassInstantiationStrategy(ExecutionStrategy):
                     continue
         return None
 
-    def _extract_parameters(self, standardized_instruction: Dict[str, Any]) -> Dict[str, Any]:
-        """从标准化指令中提取参数"""
-        required_parameters = standardized_instruction.get("required_parameters", {})
-        parameters = {}
-
-        for param_name, param_info in required_parameters.items():
-            if isinstance(param_info, dict) and "value" in param_info:
-                parameters[param_name] = param_info["value"]
-            else:
-                parameters[param_name] = param_info
-
-        return parameters
-
     def _invoke_with_parameters(self, func: callable, parameters: Dict[str, Any]) -> Any:
         """使用参数调用函数"""
         try:
-            sig = inspect.signature(func)
-            func_params = list(sig.parameters.keys())
-
-            # 映射参数
-            mapped_params = {}
-            for param_name in func_params:
-                if param_name in parameters:
-                    mapped_params[param_name] = parameters[param_name]
+            # 使用统一的参数提取和映射方法
+            if self.parameter_mapping_service:
+                mapped_params = self.parameter_mapping_service.map_parameters(func, parameters)
+            else:
+                # 回退到简单映射
+                sig = inspect.signature(func)
+                func_params = list(sig.parameters.keys())
+                mapped_params = {k: v for k, v in parameters.items() if k in func_params}
 
             if mapped_params:
                 return func(**mapped_params)
@@ -384,8 +375,8 @@ class ExecutionStrategyManager:
         parameter_mapping_service = self.components.get("parameter_mapping_service")
 
         self.register_strategy(ParameterizedFunctionStrategy(parameter_mapping_service))
-        self.register_strategy(ClassInstantiationStrategy())
-        self.register_strategy(DirectResultStrategy())
+        self.register_strategy(ClassInstantiationStrategy(parameter_mapping_service))
+        self.register_strategy(DirectResultStrategy(parameter_mapping_service))
 
     def register_strategy(self, strategy: ExecutionStrategy):
         """注册执行策略"""

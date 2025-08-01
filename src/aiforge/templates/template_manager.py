@@ -24,10 +24,11 @@ class TemplateType(Enum):
 class TemplateManager:
     """模板管理器 - 负责模板的注册、发现和统一调用"""
 
-    def __init__(self):
+    def __init__(self, parameter_mapping_service=None):
         self._templates: Dict[str, Dict[str, Any]] = {}
         self._template_configs: Dict[str, Dict[str, Any]] = {}
         self._initialized = False
+        self.parameter_mapping_service = parameter_mapping_service
 
     def initialize(self):
         """初始化模板管理器，自动发现和注册模板"""
@@ -41,6 +42,19 @@ class TemplateManager:
         # self._register_other_templates()
 
         self._initialized = True
+
+    def _validate_and_map_parameters(self, template: Dict[str, Any], kwargs: Dict[str, Any]):
+        """使用参数映射服务进行参数验证和映射"""
+        if self.parameter_mapping_service and template.get("func"):
+            # 使用参数映射服务进行智能参数映射
+            mapped_params = self.parameter_mapping_service.map_parameters(template["func"], kwargs)
+            kwargs.update(mapped_params)
+
+        # 原有的验证逻辑
+        parameters = template.get("parameters", {})
+        for param_name, param_info in parameters.items():
+            if param_info.get("required", False) and param_name not in kwargs:
+                raise ValueError(f"缺少必需参数: {param_name}")
 
     def _register_search_templates(self):
         """注册搜索相关模板"""
@@ -161,7 +175,7 @@ class TemplateManager:
 
         try:
             # 验证参数
-            self._validate_parameters(template, kwargs)
+            self._validate_and_map_parameters(template, kwargs)
 
             # 调用模板函数
             result = template["func"](**kwargs)
@@ -181,7 +195,7 @@ class TemplateManager:
 
         try:
             # 验证参数
-            self._validate_parameters(template, kwargs)
+            self._validate_and_map_parameters(template, kwargs)
 
             # 直接执行模板函数
             result = template["func"](**kwargs)
@@ -189,20 +203,6 @@ class TemplateManager:
 
         except Exception as e:
             raise RuntimeError(f"模板 {template_id} 执行失败: {e}")
-
-    def _validate_parameters(self, template: Dict[str, Any], kwargs: Dict[str, Any]):
-        """验证模板参数"""
-        parameters = template.get("parameters", {})
-
-        # 检查必需参数
-        for param_name, param_info in parameters.items():
-            if param_info.get("required", False) and param_name not in kwargs:
-                raise ValueError(f"缺少必需参数: {param_name}")
-
-        # 添加默认值
-        for param_name, param_info in parameters.items():
-            if param_name not in kwargs and "default" in param_info:
-                kwargs[param_name] = param_info["default"]
 
     def list_templates(self, template_type: Optional[TemplateType] = None) -> List[Dict[str, Any]]:
         """列出所有模板"""

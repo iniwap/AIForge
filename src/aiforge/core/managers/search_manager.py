@@ -2,7 +2,6 @@ from typing import Dict, Any, Optional
 import time
 from ..helpers.cache_helper import CacheHelper
 from ...strategies.semantic_field_strategy import SemanticFieldStrategy, FieldProcessorManager
-from ...strategies.search_template_strategy import SearchParameterExtractor
 
 
 class AIForgeSearchManager:
@@ -11,7 +10,7 @@ class AIForgeSearchManager:
     def __init__(self, components: Dict[str, Any]):
         self.components = components
         self.processor_manager = FieldProcessorManager()
-        self.parameter_extractor = SearchParameterExtractor()
+        self.parameter_mapping_service = components.get("parameter_mapping_service")
 
     def is_search_task(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为搜索类任务"""
@@ -39,7 +38,7 @@ class AIForgeSearchManager:
         """第一层：直接调用 search_web 函数"""
         try:
             # 提取搜索参数
-            search_params = self.parameter_extractor.extract_search_params(
+            search_params = self.parameter_mapping_service.extract_search_parameters(
                 standardized_instruction, original_instruction
             )
 
@@ -126,7 +125,7 @@ class AIForgeSearchManager:
         """第三层：使用 get_template_guided_search_instruction"""
         try:
             # 提取搜索参数
-            search_params = self.parameter_extractor.extract_search_params(
+            search_params = self.parameter_mapping_service.extract_search_parameters(
                 standardized_instruction, original_instruction
             )
 
@@ -191,7 +190,7 @@ class AIForgeSearchManager:
         """第四层：使用 get_free_form_ai_search_instruction"""
         try:
             # 提取搜索参数
-            search_params = self.parameter_extractor.extract_search_params(
+            search_params = self.parameter_mapping_service.extract_search_parameters(
                 standardized_instruction, original_instruction
             )
 
@@ -377,12 +376,11 @@ class AIForgeSearchManager:
         # 第一层：直接调用 search_web
         print("[DEBUG] 第一层：尝试直接调用 search_web")
 
-        """
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
             print("[DEBUG] 第一层搜索成功，直接返回")
             return direct_result
-        """
+
         # 第二层：使用缓存中的搜索函数
         print("[DEBUG] 第二层：尝试使用缓存搜索")
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)

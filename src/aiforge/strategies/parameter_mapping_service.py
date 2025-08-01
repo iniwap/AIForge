@@ -10,6 +10,15 @@ class ParameterMappingService:
         self.strategies = []
         self._register_default_strategies()
 
+    def _extract_with_strategy(self, param_name: str, available_params: Dict[str, Any]) -> Any:
+        """使用策略提取参数值"""
+        for strategy in self.strategies:
+            if strategy.can_handle(param_name):
+                result = strategy.map_parameter(param_name, available_params)
+                if result is not None:
+                    return result
+        return None
+
     def _register_default_strategies(self):
         """注册默认映射策略"""
         self.register_strategy(SearchParameterMappingStrategy())
@@ -69,6 +78,58 @@ class ParameterMappingService:
 
         return system_defaults.get(param_name)
 
+    def extract_search_parameters(
+        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    ) -> Dict[str, Any]:
+        """专门用于搜索参数提取的方法"""
+        parameters = standardized_instruction.get("required_parameters", {})
+        expected_output = standardized_instruction.get("expected_output", {})
+
+        # 使用现有的映射策略
+        search_query = (
+            self._extract_with_strategy("search_query", parameters) or original_instruction
+        )
+
+        # 只有AI明确分析出 max_results 相关参数时才提取，否则使用默认值
+        max_results = 10  # 默认值
+        max_results_candidates = [
+            "max_results",
+            "max_limit",
+            "max_count",
+            "max_size",
+        ]
+        for candidate in max_results_candidates:
+            if candidate in parameters:
+                param_value = parameters[candidate]
+                if isinstance(param_value, dict) and "value" in param_value:
+                    max_results = param_value["value"]
+                else:
+                    max_results = param_value
+                break
+
+        # min_items 从 num_results, count 等参数或 validation_rules 获取
+        min_items = self._extract_with_strategy("min_items", parameters) or 1
+
+        # 如果没有从参数中提取到 min_items，从 validation_rules 获取
+        if min_items == 1:
+            validation_rules = expected_output.get("validation_rules", {})
+            if "min_items" in validation_rules:
+                try:
+                    min_items = max(1, int(validation_rules["min_items"]))
+                except (ValueError, TypeError):
+                    pass
+
+        # 确保 max_results 至少等于 min_items
+        max_results = max(max_results, min_items)
+
+        return {
+            "search_query": search_query,
+            "max_results": max_results,
+            "min_items": min_items,
+            "min_abstract_len": self._extract_with_strategy("min_abstract_len", parameters) or 300,
+            "max_abstract_len": self._extract_with_strategy("max_abstract_len", parameters) or 500,
+        }
+
 
 class ParameterMappingStrategy(ABC):
     """参数映射策略接口"""
@@ -113,8 +174,14 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
         mappings = {
             "search_query": ["query", "keyword", "q"],
             "query": ["search_query", "keyword"],
-            "max_results": ["limit", "max_count", "size"],  # 注意：不包含 quantity/count
-            "min_items": ["quantity", "count", "min_count"],  # quantity/count 映射到 min_items
+            "max_results": ["max_results", "max_limit", "max_count", "max_size"],
+            "min_items": [
+                "quantity",
+                "count",
+                "min_count",
+                "num_results",
+                "num_results",
+            ],  # quantity/count 映射到 min_items
         }
 
         candidates = mappings.get(param_name, [])

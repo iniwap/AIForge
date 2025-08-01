@@ -6,7 +6,6 @@ from .semantic_field_strategy import (
 from .search_template_strategy import (
     StandardTemplateStrategy,
     TemplateGenerationStrategy,
-    SearchParameterExtractor,
 )
 from .validation_strategy import (
     ValidationStrategy,
@@ -14,6 +13,7 @@ from .validation_strategy import (
     GeneralValidationStrategy,
     ValidationStrategyManager,
 )
+from .parameter_mapping_service import ParameterMappingService
 
 __all__ = [
     "FieldProcessorStrategy",
@@ -25,5 +25,5 @@ __all__ = [
     "ValidationStrategy",
     "DataFetchValidationStrategy",
     "GeneralValidationStrategy",
-    "SearchParameterExtractor",
+    "ParameterMappingService",
 ]

@@ -72,8 +72,9 @@ class AIForgeComponentManager:
 
     def _init_template_manager(self):
         """初始化模板管理器"""
-        template_manager = TemplateManager()
-        template_manager.initialize()  # 触发模板的自动注册
+        parameter_mapping_service = self.components.get("parameter_mapping_service")
+        template_manager = TemplateManager(parameter_mapping_service)
+        template_manager.initialize()
         self.components["template_manager"] = template_manager
 
     def _init_runner(self):
