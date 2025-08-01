@@ -118,7 +118,7 @@ class AIForgeComponentManager:
 
     def _init_executors(self):
         """初始化执行器"""
-        unified_executor = UnifiedParameterizedExecutor()
+        unified_executor = UnifiedParameterizedExecutor(self.components)
 
         # 可以注册自定义策略
         # unified_executor.register_custom_strategy(CustomSearchStrategy())

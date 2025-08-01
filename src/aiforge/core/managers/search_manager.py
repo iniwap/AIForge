@@ -376,11 +376,12 @@ class AIForgeSearchManager:
         # 第一层：直接调用 search_web
         print("[DEBUG] 第一层：尝试直接调用 search_web")
 
+        """
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
             print("[DEBUG] 第一层搜索成功，直接返回")
             return direct_result
-
+        """
         # 第二层：使用缓存中的搜索函数
         print("[DEBUG] 第二层：尝试使用缓存搜索")
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)

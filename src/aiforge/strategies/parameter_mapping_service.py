@@ -43,20 +43,19 @@ class ParameterMappingService:
 
         mapped_params = {}
 
-        # 1. 精确匹配
+        # 1. 使用策略进行智能映射（优先级提高）
         for param_name in func_params:
-            if param_name in available_params:
-                mapped_params[param_name] = available_params[param_name]
+            for strategy in self.strategies:
+                if strategy.can_handle(param_name, context):
+                    mapped_value = strategy.map_parameter(param_name, available_params, context)
+                    if mapped_value is not None:
+                        mapped_params[param_name] = mapped_value
+                        break
 
-        # 2. 使用策略进行智能映射
+        # 2. 精确匹配（仅对未映射的参数）
         for param_name in func_params:
-            if param_name not in mapped_params:
-                for strategy in self.strategies:
-                    if strategy.can_handle(param_name, context):
-                        mapped_value = strategy.map_parameter(param_name, available_params, context)
-                        if mapped_value is not None:
-                            mapped_params[param_name] = mapped_value
-                            break
+            if param_name not in mapped_params and param_name in available_params:
+                mapped_params[param_name] = available_params[param_name]
 
         # 3. 应用默认值
         for param_name in func_params:
@@ -180,14 +179,15 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
                 "count",
                 "min_count",
                 "num_results",
-                "num_results",
-            ],  # quantity/count 映射到 min_items
+            ],
         }
 
         candidates = mappings.get(param_name, [])
+
         for candidate in candidates:
             if candidate in available_params:
-                return available_params[candidate]
+                result = available_params[candidate]
+                return result
 
         return None
 
