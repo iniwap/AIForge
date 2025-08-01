@@ -302,6 +302,20 @@ class AIForgeExecutionManager:
                         standardized_instruction=standardized_instruction,
                     )
                     if result:
+                        expected_output = standardized_instruction.get("expected_output")
+                        if expected_output and expected_output.get("required_fields"):
+                            from ...strategies.semantic_field_strategy import SemanticFieldStrategy
+
+                            processor = SemanticFieldStrategy()
+
+                            # 处理数据字段映射
+                            data = result.get("data", [])
+                            if isinstance(data, list):
+                                processed_data = processor.process_fields(
+                                    data, expected_output["required_fields"]
+                                )
+                                result["data"] = processed_data
+
                         # 对缓存执行结果进行严格验证
                         is_valid = AIForgeResult.validate_cached_result(
                             result, standardized_instruction

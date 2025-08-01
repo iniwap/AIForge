@@ -19,6 +19,7 @@ from ...execution.executor_interface import CachedModuleExecutor
 from ...extensions.template_extension import DomainTemplateExtension
 from ...templates.template_manager import TemplateManager
 from .config_manager import AIForgeConfigManager
+from ...strategies.parameter_mapping_service import ParameterMappingService
 
 
 class AIForgeComponentManager:
@@ -38,6 +39,7 @@ class AIForgeComponentManager:
         self._init_runner()
         self._init_instruction_analyzer()
         self._init_cache()
+        self._init_parameter_mapping_service()
         self._init_executors()
         self._init_adapters()
         self._init_execution_manager()
@@ -109,11 +111,18 @@ class AIForgeComponentManager:
             self.components["code_cache"] = None
             self.components["task_type_manager"] = None
 
+    def _init_parameter_mapping_service(self):
+        """初始化参数映射服务"""
+        self.components["parameter_mapping_service"] = ParameterMappingService()
+
     def _init_executors(self):
         """初始化执行器"""
-        self.components["module_executors"] = [
-            UnifiedParameterizedExecutor(),
-        ]
+        unified_executor = UnifiedParameterizedExecutor()
+
+        # 可以注册自定义策略
+        # unified_executor.register_custom_strategy(CustomSearchStrategy())
+
+        self.components["module_executors"] = [unified_executor]
 
     def _init_adapters(self):
         """初始化适配器"""

@@ -1,8 +1,8 @@
 from typing import Dict, Any, Optional
 import time
 from ..helpers.cache_helper import CacheHelper
-from ...strategies.field_processor_manager import FieldProcessorManager
-from ...strategies.field_processor import SemanticFieldStrategy
+from ...strategies.semantic_field_strategy import SemanticFieldStrategy, FieldProcessorManager
+from ...strategies.search_template_strategy import SearchParameterExtractor
 
 
 class AIForgeSearchManager:
@@ -11,6 +11,7 @@ class AIForgeSearchManager:
     def __init__(self, components: Dict[str, Any]):
         self.components = components
         self.processor_manager = FieldProcessorManager()
+        self.parameter_extractor = SearchParameterExtractor()
 
     def is_search_task(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为搜索类任务"""
@@ -38,7 +39,7 @@ class AIForgeSearchManager:
         """第一层：直接调用 search_web 函数"""
         try:
             # 提取搜索参数
-            search_params = self._extract_search_params(
+            search_params = self.parameter_extractor.extract_search_params(
                 standardized_instruction, original_instruction
             )
 
@@ -125,7 +126,7 @@ class AIForgeSearchManager:
         """第三层：使用 get_template_guided_search_instruction"""
         try:
             # 提取搜索参数
-            search_params = self._extract_search_params(
+            search_params = self.parameter_extractor.extract_search_params(
                 standardized_instruction, original_instruction
             )
 
@@ -190,7 +191,7 @@ class AIForgeSearchManager:
         """第四层：使用 get_free_form_ai_search_instruction"""
         try:
             # 提取搜索参数
-            search_params = self._extract_search_params(
+            search_params = self.parameter_extractor.extract_search_params(
                 standardized_instruction, original_instruction
             )
 
@@ -248,70 +249,6 @@ class AIForgeSearchManager:
 
             print(f"[DEBUG] 自由形式搜索失败: {e}")
             return None, False
-
-    def _extract_search_params(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
-    ) -> Dict[str, Any]:
-        """提取搜索参数"""
-        # 默认参数
-        default_params = {
-            "search_query": "",
-            "max_results": 10,
-            "min_items": 1,
-            "min_abstract_len": 300,
-            "max_abstract_len": 500,
-        }
-
-        parameters = standardized_instruction.get("required_parameters", {})
-        expected_output = standardized_instruction.get("expected_output", {})
-
-        # 提取搜索查询
-        search_query = self._extract_search_query(standardized_instruction, original_instruction)
-        default_params["search_query"] = search_query
-
-        # 提取 min_items (最小要求) - 优先从 count 参数获取
-        for param_name in ["count", "min_count", "min_items"]:
-            if param_name in parameters:
-                try:
-                    value = (
-                        parameters[param_name].get("value", 1)
-                        if isinstance(parameters[param_name], dict)
-                        else parameters[param_name]
-                    )
-                    default_params["min_items"] = max(1, int(value))
-                    break
-                except (ValueError, TypeError, AttributeError):
-                    continue
-
-        # 如果没有从参数中找到，从 validation_rules 获取
-        if default_params["min_items"] == 1:  # 仍是默认值
-            validation_rules = expected_output.get("validation_rules", {})
-            if "min_items" in validation_rules:
-                try:
-                    default_params["min_items"] = max(1, int(validation_rules["min_items"]))
-                except (ValueError, TypeError):
-                    pass
-
-        # 提取 max_results (最大限制)
-        for param_name in ["max_results", "limit", "max_count"]:
-            if param_name in parameters:
-                try:
-                    value = (
-                        parameters[param_name].get("value", 10)
-                        if isinstance(parameters[param_name], dict)
-                        else parameters[param_name]
-                    )
-                    default_params["max_results"] = max(1, min(int(value), 50))
-                    break
-                except (ValueError, TypeError, AttributeError):
-                    continue
-
-        # 确保 max_results 至少等于 min_items
-        default_params["max_results"] = max(
-            default_params["max_results"], default_params["min_items"]
-        )
-
-        return default_params
 
     def _extract_search_query(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
@@ -440,11 +377,12 @@ class AIForgeSearchManager:
         # 第一层：直接调用 search_web
         print("[DEBUG] 第一层：尝试直接调用 search_web")
 
+        """
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
             print("[DEBUG] 第一层搜索成功，直接返回")
             return direct_result
-
+        """
         # 第二层：使用缓存中的搜索函数
         print("[DEBUG] 第二层：尝试使用缓存搜索")
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)

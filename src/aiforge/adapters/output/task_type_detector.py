@@ -97,7 +97,7 @@ class TaskTypeDetector:
             if isinstance(data.get("data"), list):
                 items = data["data"]
                 if items and isinstance(items[0], dict):
-                    from ...strategies.field_processor import SemanticFieldStrategy
+                    from ...strategies.semantic_field_strategy import SemanticFieldStrategy
 
                     field_processor = SemanticFieldStrategy()
                     return field_processor.can_handle(items)

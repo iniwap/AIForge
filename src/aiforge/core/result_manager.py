@@ -226,21 +226,14 @@ class AIForgeResult:
     def strict_expected_output_validation(
         result: Dict[str, Any], expected_output: Dict[str, Any]
     ) -> bool:
-        """严格的预期输出验证 - 统一数据格式版本"""
-        # 统一从标准位置获取数据
+        """严格的预期输出验证"""
+        from ..strategies.semantic_field_strategy import SemanticFieldStrategy
+
         data = result.get("data", [])
-
-        # 验证 data 必须是列表
-        if not isinstance(data, list):
-            print("[DEBUG] 严格验证失败：data字段必须是列表格式")
-            return False
-
-        # 先检查是否有数据
-        if len(data) == 0:
+        if not isinstance(data, list) or len(data) == 0:
             print("[DEBUG] 严格验证失败：data字段为空，未获取到有效数据")
             return False
 
-        # 验证数据项的必需字段
         required_fields = expected_output.get("required_fields", [])
         if required_fields and len(data) > 0:
             first_item = data[0]
@@ -248,25 +241,36 @@ class AIForgeResult:
                 print("[DEBUG] 严格验证失败：数据项必须是字典格式")
                 return False
 
+            # 使用语义字段策略进行字段映射验证
+            field_processor = SemanticFieldStrategy()
             for field in required_fields:
-                if field not in first_item:
-                    print(f"[DEBUG] 严格验证失败：数据项缺少必需字段 {field}")
+                # 查找语义匹配的字段
+                matched_field = field_processor._find_best_source_field(first_item, field)
+                if matched_field not in first_item:
+                    print(
+                        f"[DEBUG] 严格验证失败：数据项缺少必需字段 {field} (尝试匹配: {matched_field})"
+                    )
                     return False
 
         # 验证非空字段
         validation_rules = expected_output.get("validation_rules", {})
         non_empty_fields = validation_rules.get("non_empty_fields", [])
+        field_processor = SemanticFieldStrategy()
+
         for item in data:
             if isinstance(item, dict):
                 for field in non_empty_fields:
-                    if field in item:
-                        value = item[field]
+                    matched_field = field_processor._find_best_source_field(item, field)
+                    if matched_field in item:
+                        value = item[matched_field]
                         if (
                             value is None
                             or value == ""
                             or (isinstance(value, (list, dict)) and len(value) == 0)
                         ):
-                            print(f"[DEBUG] 严格验证失败：字段 {field} 为空")
+                            print(
+                                f"[DEBUG] 严格验证失败：字段 {field} (匹配: {matched_field}) 为空"
+                            )
                             return False
 
         return True
