@@ -114,7 +114,8 @@ class AIForgeComponentManager:
 
     def _init_parameter_mapping_service(self):
         """初始化参数映射服务"""
-        self.components["parameter_mapping_service"] = ParameterMappingService()
+        cache_dir = self.config.get_workdir() / "cache" if self.config else None
+        self.components["parameter_mapping_service"] = ParameterMappingService(cache_dir)
 
     def _init_executors(self):
         """初始化执行器"""

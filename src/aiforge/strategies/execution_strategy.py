@@ -26,7 +26,7 @@ class ExecutionStrategy(ABC):
         pass
 
     def _extract_parameters(self, standardized_instruction: Dict[str, Any]) -> Dict[str, Any]:
-        """从标准化指令中提取参数 - 基类实现"""
+        """从标准化指令中提取参数"""
         required_parameters = standardized_instruction.get("required_parameters", {})
         parameters = {}
 
@@ -38,26 +38,81 @@ class ExecutionStrategy(ABC):
 
         return parameters
 
-    def _extract_and_map_parameters(
-        self, func: callable, standardized_instruction: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """统一的参数提取和映射方法"""
-        parameters = self._extract_parameters(standardized_instruction)
-        if self.parameter_mapping_service:
-            context = {
-                "task_type": standardized_instruction.get("task_type"),
-                "action": standardized_instruction.get("action"),
-                "function_name": func.__name__,
-            }
-            return self.parameter_mapping_service.map_parameters(func, parameters, context)
-        return parameters
+    def _invoke_with_parameters_base(
+        self,
+        func: callable,
+        parameters: Dict[str, Any],
+        standardized_instruction: Dict[str, Any] = None,
+        use_advanced_mapping: bool = True,
+    ) -> Any:
+        """基础参数映射和调用逻辑"""
+        try:
+            if use_advanced_mapping and self.parameter_mapping_service and standardized_instruction:
+                # 使用高级参数映射服务
+                context = {
+                    "task_type": standardized_instruction.get("task_type"),
+                    "action": standardized_instruction.get("action"),
+                    "function_name": func.__name__,
+                }
+
+                mapped_params = self.parameter_mapping_service.map_parameters(
+                    func, parameters, context
+                )
+
+                # 使用反馈机制执行
+                result, success = self._execute_with_feedback(func, mapped_params, context)
+                if success:
+                    return result
+
+            # 回退到基础参数映射
+            return self._basic_parameter_mapping_and_call(func, parameters)
+
+        except Exception as e:
+            print(f"[DEBUG] 参数化调用失败: {e}")
+            return None
+
+    def _execute_with_feedback(self, func, mapped_params, context=None):
+        """执行函数并反馈映射成功率"""
+        try:
+            result = func(**mapped_params)
+            # 执行成功，更新映射成功率
+            if self.parameter_mapping_service:
+                self.parameter_mapping_service.update_mapping_success(True)
+            return result, True
+        except Exception:
+            # 执行失败，更新映射失败率
+            if self.parameter_mapping_service:
+                self.parameter_mapping_service.update_mapping_success(False)
+            return None, False
+
+    def _basic_parameter_mapping_and_call(self, func: callable, parameters: Dict[str, Any]) -> Any:
+        """基础参数映射和调用 - 通用实现"""
+        try:
+            sig = inspect.signature(func)
+            func_params = list(sig.parameters.keys())
+
+            # 映射参数
+            mapped_params = {}
+            for param_name in func_params:
+                if param_name in parameters:
+                    mapped_params[param_name] = parameters[param_name]
+
+            if mapped_params:
+                return func(**mapped_params)
+            else:
+                return func()
+        except Exception:
+            try:
+                return func()
+            except Exception:
+                return None
 
 
 class ParameterizedFunctionStrategy(ExecutionStrategy):
     """参数化函数执行策略"""
 
     def __init__(self, parameter_mapping_service=None):
-        self.parameter_mapping_service = parameter_mapping_service
+        super().__init__(parameter_mapping_service)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         return hasattr(module, "execute_task") or self._has_callable_functions(module)
@@ -73,48 +128,29 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
         # 提取参数
         parameters = self._extract_parameters(standardized_instruction)
 
-        # 使用参数映射服务进行智能参数映射和调用
-        return self._invoke_with_parameters(target_func, parameters, standardized_instruction)
+        # 使用基类的通用参数映射和调用方法
+        result = self._invoke_with_parameters_base(
+            target_func, parameters, standardized_instruction, use_advanced_mapping=True
+        )
 
-    def _invoke_with_parameters(
-        self, func: callable, parameters: Dict[str, Any], standardized_instruction: Dict[str, Any]
-    ) -> Any:
-        """使用参数映射服务调用函数"""
-        try:
-            # 构建上下文信息
-            context = {
-                "task_type": standardized_instruction.get("task_type"),
-                "action": standardized_instruction.get("action"),
-                "function_name": func.__name__,
-            }
+        if result is not None:
+            return result
 
-            # 使用参数映射服务
-            if self.parameter_mapping_service:
-                mapped_params = self.parameter_mapping_service.map_parameters(
-                    func, parameters, context
+        # 如果基础映射失败，尝试多种调用策略作为最后回退
+        print(f"[DEBUG] 策略执行: 映射后参数 {parameters}")
+
+        # 检查是否为异步函数
+        if asyncio.iscoroutinefunction(target_func):
+            return asyncio.run(
+                self._try_multiple_call_strategies(
+                    target_func, parameters, list(inspect.signature(target_func).parameters.keys())
                 )
-            else:
-                # 回退到简单映射
-                mapped_params = parameters
-
-            print(f"[DEBUG] 策略执行: 映射后参数 {mapped_params}")
-
-            # 检查是否为异步函数
-            if asyncio.iscoroutinefunction(func):
-                return asyncio.run(
-                    self._try_multiple_call_strategies(
-                        func, mapped_params, list(inspect.signature(func).parameters.keys())
-                    )
-                )
-
-            # 尝试多种调用策略
-            return self._try_multiple_call_strategies(
-                func, mapped_params, list(inspect.signature(func).parameters.keys())
             )
 
-        except Exception as e:
-            print(f"[DEBUG] 参数化调用失败: {e}")
-            return None
+        # 尝试多种调用策略
+        return self._try_multiple_call_strategies(
+            target_func, parameters, list(inspect.signature(target_func).parameters.keys())
+        )
 
     def get_priority(self) -> int:
         return 100
@@ -245,6 +281,9 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
 class DirectResultStrategy(ExecutionStrategy):
     """直接结果执行策略"""
 
+    def __init__(self, parameter_mapping_service=None):
+        super().__init__(parameter_mapping_service)
+
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         return hasattr(module, "__result__")
 
@@ -255,38 +294,25 @@ class DirectResultStrategy(ExecutionStrategy):
         # 如果结果是函数，尝试参数化调用
         if callable(result):
             parameters = self._extract_parameters(standardized_instruction)
-            return self._try_invoke_result_function(result, parameters)
+            # 使用基类的通用参数映射方法
+            return self._invoke_with_parameters_base(
+                result,
+                parameters,
+                standardized_instruction,
+                use_advanced_mapping=False,  # 直接结果策略使用基础映射
+            )
 
         return result
 
     def get_priority(self) -> int:
         return 50
 
-    def _try_invoke_result_function(self, func: callable, parameters: Dict[str, Any]) -> Any:
-        """尝试调用结果函数"""
-        try:
-            # 使用统一的参数提取和映射方法
-            if self.parameter_mapping_service:
-                mapped_params = self.parameter_mapping_service.map_parameters(func, parameters)
-            else:
-                # 回退到简单映射
-                sig = inspect.signature(func)
-                func_params = list(sig.parameters.keys())
-                mapped_params = {k: v for k, v in parameters.items() if k in func_params}
-
-            if mapped_params:
-                return func(**mapped_params)
-            else:
-                return func()
-        except Exception:
-            try:
-                return func()
-            except Exception:
-                return None
-
 
 class ClassInstantiationStrategy(ExecutionStrategy):
     """类实例化执行策略"""
+
+    def __init__(self, parameter_mapping_service=None):
+        super().__init__(parameter_mapping_service)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         return self._has_executable_classes(module)
@@ -305,7 +331,13 @@ class ClassInstantiationStrategy(ExecutionStrategy):
             # 调用execute_task方法
             if hasattr(instance, "execute_task"):
                 parameters = self._extract_parameters(standardized_instruction)
-                return self._invoke_with_parameters(instance.execute_task, parameters)
+                # 使用基类的通用参数映射方法
+                return self._invoke_with_parameters_base(
+                    instance.execute_task,
+                    parameters,
+                    standardized_instruction,
+                    use_advanced_mapping=False,  # 类策略使用基础映射
+                )
 
         except Exception as e:
             print(f"[DEBUG] 类实例化执行失败: {e}")
@@ -338,28 +370,6 @@ class ClassInstantiationStrategy(ExecutionStrategy):
                 except Exception:
                     continue
         return None
-
-    def _invoke_with_parameters(self, func: callable, parameters: Dict[str, Any]) -> Any:
-        """使用参数调用函数"""
-        try:
-            # 使用统一的参数提取和映射方法
-            if self.parameter_mapping_service:
-                mapped_params = self.parameter_mapping_service.map_parameters(func, parameters)
-            else:
-                # 回退到简单映射
-                sig = inspect.signature(func)
-                func_params = list(sig.parameters.keys())
-                mapped_params = {k: v for k, v in parameters.items() if k in func_params}
-
-            if mapped_params:
-                return func(**mapped_params)
-            else:
-                return func()
-        except Exception:
-            try:
-                return func()
-            except Exception:
-                return None
 
 
 class ExecutionStrategyManager:

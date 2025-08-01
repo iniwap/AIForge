@@ -17,6 +17,10 @@ class AIForgeSearchManager:
         task_type = standardized_instruction.get("task_type", "")
         action = standardized_instruction.get("action", "")
 
+        execution_mode = standardized_instruction.get("execution_mode", "")
+        if execution_mode == "direct_ai_response":
+            return False
+
         # 检查任务类型和动作
         search_indicators = [
             task_type == "data_fetch",
@@ -376,12 +380,11 @@ class AIForgeSearchManager:
         # 第一层：直接调用 search_web
         print("[DEBUG] 第一层：尝试直接调用 search_web")
 
-        """
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
             print("[DEBUG] 第一层搜索成功，直接返回")
             return direct_result
-        """
+
         # 第二层：使用缓存中的搜索函数
         print("[DEBUG] 第二层：尝试使用缓存搜索")
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)
