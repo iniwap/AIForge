@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, List
 import inspect
 import asyncio
+from .file_operation_strategy import FileOperationStrategy
 
 
 class ExecutionStrategy(ABC):
@@ -387,6 +388,7 @@ class ExecutionStrategyManager:
         self.register_strategy(ParameterizedFunctionStrategy(parameter_mapping_service))
         self.register_strategy(ClassInstantiationStrategy(parameter_mapping_service))
         self.register_strategy(DirectResultStrategy(parameter_mapping_service))
+        self.register_strategy(FileOperationStrategy(parameter_mapping_service))
 
     def register_strategy(self, strategy: ExecutionStrategy):
         """注册执行策略"""

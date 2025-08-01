@@ -291,7 +291,28 @@ class FileOperationMappingStrategy(ParameterMappingStrategy):
     """文件操作参数映射策略"""
 
     def can_handle(self, param_name: str, context: Optional[Dict[str, Any]] = None) -> bool:
-        file_params = ["file_path", "path", "filename", "output_path"]
+        file_params = [
+            "file_path",
+            "path",
+            "filename",
+            "output_path",
+            "source_path",
+            "target_path",
+            "operation",
+            "recursive",
+            "force",
+            "encoding",
+            "dir_path",
+            "directory",
+            "new_name",
+            "extract_to",
+            "content",
+            "mode",
+            "max_size",
+            "format",
+            "file_list",
+            "pattern",
+        ]
         if context:
             task_type = context.get("task_type", "")
             return param_name in file_params and task_type == "file_operation"
@@ -304,9 +325,24 @@ class FileOperationMappingStrategy(ParameterMappingStrategy):
         context: Optional[Dict[str, Any]] = None,
     ) -> Any:
         mappings = {
-            "file_path": ["path", "filename", "file"],
-            "path": ["file_path", "filename"],
-            "output_path": ["output", "target_path", "destination"],
+            "file_path": ["path", "filename", "file", "source_path", "input_file"],
+            "source_path": ["file_path", "path", "filename", "source"],
+            "target_path": ["output_path", "destination", "dest", "target"],
+            "output_path": ["target_path", "destination", "output", "dest"],
+            "operation": ["action", "op", "command"],
+            "recursive": ["recursive", "r", "deep"],
+            "force": ["force", "f", "overwrite"],
+            "encoding": ["encoding", "charset", "enc"],
+            "new_name": ["target_path", "name", "filename"],
+            "dir_path": ["path", "directory", "folder"],
+            "directory": ["dir_path", "path", "folder"],
+            "extract_to": ["target_path", "output_path", "destination"],
+            "content": ["data", "text", "body"],
+            "mode": ["write_mode", "file_mode"],
+            "max_size": ["size_limit", "max_file_size"],
+            "format": ["compression_format", "archive_format", "type"],
+            "file_list": ["files", "file_paths", "sources"],
+            "pattern": ["glob_pattern", "file_pattern", "match_pattern"],
         }
 
         candidates = mappings.get(param_name, [])
@@ -314,7 +350,16 @@ class FileOperationMappingStrategy(ParameterMappingStrategy):
             if candidate in available_params:
                 return available_params[candidate]
 
-        return None
+        # 提供合理的默认值
+        defaults = {
+            "recursive": False,
+            "force": False,
+            "encoding": "utf-8",
+            "mode": "w",
+            "max_size": 10 * 1024 * 1024,  # 10MB
+            "format": "zip",
+        }
+        return defaults.get(param_name)
 
     def get_priority(self) -> int:
         return 90

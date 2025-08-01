@@ -19,7 +19,7 @@ class UITypeRecommender:
                 "web_card": {"score": 6, "conditions": ["simple_summary"]},
                 "web_table": {"score": 7, "conditions": ["tabular_metrics"]},
             },
-            "file_processing": {
+            "file_operation": {
                 "web_table": {"score": 9, "conditions": ["multiple_files", "status_tracking"]},
                 "web_progress": {"score": 8, "conditions": ["batch_processing"]},
                 "mobile_list": {"score": 6, "conditions": ["mobile_friendly"]},

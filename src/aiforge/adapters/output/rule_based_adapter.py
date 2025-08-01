@@ -48,7 +48,7 @@ class RuleBasedAdapter:
                     "fields": ["key_findings", "summary"],
                 },
             },
-            "file_processing": {
+            "file_operation": {
                 "web_table": {
                     "columns": ["file", "status", "size", "operation"],
                     "sortable": ["file", "status", "size"],

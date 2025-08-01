@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import re
 from typing import Dict, Any, List
 from ..llm.llm_client import AIForgeLLMClient
@@ -59,9 +60,60 @@ class AIForgeInstructionAnalyzer:
                     "save",
                     "批量",
                     "batch",
+                    "复制",
+                    "copy",
+                    "移动",
+                    "move",
+                    "删除",
+                    "delete",
+                    "重命名",
+                    "rename",
+                    "压缩",
+                    "compress",
+                    "解压",
+                    "extract",
+                    "创建",
+                    "create",
+                    "目录",
+                    "directory",
+                    "文件夹",
+                    "folder",
                 ],
-                "actions": ["read", "write", "save", "process"],
-                "common_params": ["file_path", "format", "encoding"],
+                "actions": [
+                    "read",
+                    "write",
+                    "save",
+                    "copy",
+                    "move",
+                    "delete",
+                    "rename",
+                    "compress",
+                    "extract",
+                    "create",
+                    "process",
+                ],
+                "common_params": [
+                    "file_path",
+                    "source_path",
+                    "target_path",
+                    "format",
+                    "encoding",
+                    "recursive",
+                    "force",
+                    "operation",
+                ],
+                "exclude_keywords": [
+                    "分析",
+                    "analyze",
+                    "统计",
+                    "statistics",
+                    "计算",
+                    "calculate",
+                    "处理数据",
+                    "process data",
+                    "清洗",
+                    "clean",
+                ],
             },
             "automation": {
                 "keywords": [
@@ -311,11 +363,41 @@ class AIForgeInstructionAnalyzer:
 
         return params
 
+    def _extract_file_pattern(self, parameters: Dict[str, Any]) -> str:
+        """从参数中提取文件路径模式"""
+        # 检查各种可能的文件路径参数
+        file_path_keys = ["file_path", "source_path", "target_path", "path", "filename"]
+
+        for key in file_path_keys:
+            if key in parameters:
+                param_info = parameters[key]
+                if isinstance(param_info, dict) and "value" in param_info:
+                    file_path = param_info["value"]
+                else:
+                    file_path = str(param_info)
+
+                # 提取文件扩展名和基本模式
+                path_obj = Path(file_path)
+                if path_obj.suffix:
+                    return f"{path_obj.suffix.lower()}_file"
+                elif "*" in file_path or "?" in file_path:
+                    return "pattern_match"
+                else:
+                    return "generic_file"
+
+        return "unknown_pattern"
+
     def _generate_semantic_cache_key(
         self, task_type: str, instruction: str, parameters: Dict = None
     ) -> str:
         """基于参数化指令生成语义化缓存键"""
         key_components = [task_type]
+
+        if task_type == "file_operation":
+            # 文件操作的缓存键应该考虑操作类型和文件路径模式
+            operation = parameters.get("operation", "unknown")
+            file_pattern = self._extract_file_pattern(parameters)
+            return f"file_op_{operation}_{file_pattern}_{hash(instruction) % 10000}"
 
         # 优先使用 required_parameters 生成稳定的缓存键
         if parameters:
