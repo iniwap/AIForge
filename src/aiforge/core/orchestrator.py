@@ -3,27 +3,26 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 import importlib
 
-from ...config.config import AIForgeConfig
-from ...llm.llm_manager import AIForgeLLMManager
-from ..task_manager import AIForgeManager
-from .search_manager import AIForgeSearchManager
-from .execution_manager import AIForgeExecutionManager
-from ..runner import AIForgeRunner
-from ...instruction.analyzer import AIForgeInstructionAnalyzer
-from ...cache.enhanced_cache import EnhancedStandardizedCache
-from ..dynamic_task_type_manager import DynamicTaskTypeManager
-from ...adapters.output.enhanced_hybrid_adapter import EnhancedHybridUIAdapter
-from ...adapters.input.input_adapter_manager import InputAdapterManager
-from ...execution.unified_executor import UnifiedParameterizedExecutor
-from ...execution.executor_interface import CachedModuleExecutor
-from ...extensions.template_extension import DomainTemplateExtension
-from ...templates.template_manager import TemplateManager
-from .config_manager import AIForgeConfigManager
-from ...strategies.parameter_mapping_service import ParameterMappingService
+from ..config.config import AIForgeConfig
+from ..llm.llm_manager import AIForgeLLMManager
+from .task.manager import AIForgeTaskManager
+from .managers.search_manager import AIForgeSearchManager
+from .managers.execution_manager import AIForgeExecutionManager
+from .runner import AIForgeRunner
+from ..instruction.analyzer import AIForgeInstructionAnalyzer
+from ..cache.semantic_cache import EnhancedStandardizedCache
+from ..cache.dynamic_task_type_manager import DynamicTaskTypeManager
+from ..adapters.output.enhanced_hybrid_adapter import EnhancedHybridUIAdapter
+from ..adapters.input.input_adapter_manager import InputAdapterManager
+from ..extensions.template_extension import DomainTemplateExtension
+from ..templates.template_manager import TemplateManager
+from .managers.config_manager import AIForgeConfigManager
+from ..strategies.parameter_mapping_service import ParameterMappingService
+from ..execution.engine import AIForgeExecutionEngine
 
 
-class AIForgeComponentManager:
-    """组件管理器 - 负责所有组件的生命周期管理"""
+class AIForgeOrchestrator:
+    """系统组件编排器"""
 
     def __init__(self):
         self.components: Dict[str, Any] = {}
@@ -35,12 +34,12 @@ class AIForgeComponentManager:
 
         self._init_config_manager(config_file, api_key, provider, **kwargs)
         self._init_llm_manager()
+        self._init_execution_engine()
         self._init_task_manager()
         self._init_runner()
         self._init_instruction_analyzer()
         self._init_cache()
         self._init_parameter_mapping_service()
-        self._init_executors()
         self._init_adapters()
         self._init_execution_manager()
         self._init_search_manager()
@@ -61,7 +60,7 @@ class AIForgeComponentManager:
     def _init_task_manager(self):
         """初始化任务管理器"""
         llm_manager = self.components["llm_manager"]
-        self.components["task_manager"] = AIForgeManager(llm_manager)
+        self.components["task_manager"] = AIForgeTaskManager(llm_manager, self.components)
 
     def _init_execution_manager(self):
         self.components["execution_manager"] = AIForgeExecutionManager()
@@ -117,14 +116,11 @@ class AIForgeComponentManager:
         cache_dir = self.config.get_workdir() / "cache" if self.config else None
         self.components["parameter_mapping_service"] = ParameterMappingService(cache_dir)
 
-    def _init_executors(self):
-        """初始化执行器"""
-        unified_executor = UnifiedParameterizedExecutor(self.components)
+    def _init_execution_engine(self):
+        """初始化执行引擎"""
 
-        # 可以注册自定义策略
-        # unified_executor.register_custom_strategy(CustomSearchStrategy())
-
-        self.components["module_executors"] = [unified_executor]
+        execution_engine = AIForgeExecutionEngine(self.components)
+        self.components["execution_engine"] = execution_engine
 
     def _init_adapters(self):
         """初始化适配器"""
@@ -145,11 +141,6 @@ class AIForgeComponentManager:
             if default_client:
                 self.components["ui_adapter"] = EnhancedHybridUIAdapter(default_client)
 
-    def add_module_executor(self, executor: CachedModuleExecutor):
-        """添加自定义模块执行器"""
-        executors = self.components["module_executors"]
-        executors.insert(0, executor)
-
     def register_extension(self, extension_config: Dict[str, Any]) -> bool:
         """注册扩展组件"""
         extension_type = extension_config.get("type")
@@ -168,13 +159,13 @@ class AIForgeComponentManager:
         try:
             if "class" in executor_config:
                 executor_instance = executor_config["class"]()
-                self.add_module_executor(executor_instance)
+                self.components["module_executors"].insert(0, executor_instance)
                 return True
             elif "module_path" in executor_config:
                 module = importlib.import_module(executor_config["module_path"])
                 executor_class = getattr(module, executor_config["class_name"])
                 executor_instance = executor_class()
-                self.add_module_executor(executor_instance)
+                self.components["module_executors"].insert(0, executor_instance)
                 return True
             return False
         except Exception:

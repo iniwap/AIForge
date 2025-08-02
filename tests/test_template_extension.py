@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from aiforge import AIForgeCore
+from aiforge import AIForgeEngine
 from aiforge.extensions.template_extension import FinancialTemplateExtension
 
 
@@ -9,7 +9,7 @@ from aiforge.extensions.template_extension import FinancialTemplateExtension
     "OPENROUTER_API_KEY" not in os.environ, reason="需要设置 OPENROUTER_API_KEY 环境变量"
 )
 def test_direct_register():
-    forge = AIForgeCore(api_key=os.environ["OPENROUTER_API_KEY"])
+    forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"])
     # 方式1: 直接注册扩展类
     financial_extension = FinancialTemplateExtension(
         "financial", {"priority": 100, "data_source": "yahoo_finance"}

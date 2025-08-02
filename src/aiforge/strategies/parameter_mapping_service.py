@@ -171,13 +171,14 @@ class ParameterMappingService:
             self._extract_with_strategy("search_query", parameters) or original_instruction
         )
 
-        # 只有AI明确分析出 max_results 相关参数时才提取，否则使用默认值
+        # 正确提取 max_results
         max_results = 10  # 默认值
         max_results_candidates = [
             "max_results",
             "max_limit",
             "max_count",
             "max_size",
+            "max_num_results",
         ]
         for candidate in max_results_candidates:
             if candidate in parameters:
@@ -188,20 +189,17 @@ class ParameterMappingService:
                     max_results = param_value
                 break
 
-        # min_items 从 num_results, count 等参数或 validation_rules 获取
-        min_items = self._extract_with_strategy("min_items", parameters) or 1
+        # 直接从 validation_rules 获取 min_items
+        validation_rules = expected_output.get("validation_rules", {})
+        min_items = validation_rules.get("min_items", 1)
 
-        # 如果没有从参数中提取到 min_items，从 validation_rules 获取
-        if min_items == 1:
-            validation_rules = expected_output.get("validation_rules", {})
-            if "min_items" in validation_rules:
-                try:
-                    min_items = max(1, int(validation_rules["min_items"]))
-                except (ValueError, TypeError):
-                    pass
-
-        # 确保 max_results 至少等于 min_items
-        max_results = max(max_results, min_items)
+        # 确保都是整数类型再进行比较
+        try:
+            max_results = int(max_results)
+            min_items = int(min_items)
+            max_results = max(max_results, min_items)
+        except (ValueError, TypeError):
+            max_results = 10
 
         return {
             "search_query": search_query,
@@ -273,6 +271,9 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
         for candidate in candidates:
             if candidate in available_params:
                 result = available_params[candidate]
+                # 确保正确提取嵌套字典中的值
+                if isinstance(result, dict) and "value" in result:
+                    return result["value"]
                 return result
 
         # 如果没有找到映射，对于关键参数提供默认值
@@ -290,33 +291,50 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
 class FileOperationMappingStrategy(ParameterMappingStrategy):
     """文件操作参数映射策略"""
 
+    def __init__(self):
+        # 扩展参数映射覆盖范围
+        self.extended_mappings = {
+            "file_path": [
+                "path",
+                "filename",
+                "file",
+                "source_path",
+                "input_file",
+                "src",
+                "filepath",
+            ],
+            "source_path": ["file_path", "path", "filename", "source", "from", "input"],
+            "target_path": ["output_path", "destination", "dest", "target", "to", "output"],
+            "output_path": ["target_path", "destination", "output", "dest", "result_path"],
+            "operation": ["action", "op", "command", "task", "method"],
+            "recursive": ["recursive", "r", "deep", "recurse", "subdirs"],
+            "force": ["force", "f", "overwrite", "replace", "confirm"],
+            "encoding": ["encoding", "charset", "enc", "character_set"],
+            "new_name": ["target_path", "name", "filename", "rename_to", "new_filename"],
+            "dir_path": ["path", "directory", "folder", "dir", "location"],
+            "directory": ["dir_path", "path", "folder", "dir", "location"],
+            "extract_to": ["target_path", "output_path", "destination", "extract_path"],
+            "content": ["data", "text", "body", "contents", "payload"],
+            "mode": ["write_mode", "file_mode", "access_mode", "open_mode"],
+            "max_size": ["size_limit", "max_file_size", "limit", "max_bytes"],
+            "format": ["compression_format", "archive_format", "type", "file_type"],
+            "file_list": ["files", "file_paths", "sources", "file_array", "paths"],
+            "pattern": ["glob_pattern", "file_pattern", "match_pattern", "filter"],
+            # 新增边缘情况参数
+            "backup_dir": ["backup_path", "backup_location", "backup_folder"],
+            "temp_dir": ["temp_path", "temporary_dir", "tmp_dir"],
+            "permissions": ["mode", "chmod", "access_rights", "file_permissions"],
+            "owner": ["user", "uid", "file_owner"],
+            "group": ["gid", "file_group"],
+            "preserve_metadata": ["preserve", "keep_metadata", "maintain_attrs"],
+            "follow_symlinks": ["follow_links", "dereference", "resolve_links"],
+        }
+
     def can_handle(self, param_name: str, context: Optional[Dict[str, Any]] = None) -> bool:
-        file_params = [
-            "file_path",
-            "path",
-            "filename",
-            "output_path",
-            "source_path",
-            "target_path",
-            "operation",
-            "recursive",
-            "force",
-            "encoding",
-            "dir_path",
-            "directory",
-            "new_name",
-            "extract_to",
-            "content",
-            "mode",
-            "max_size",
-            "format",
-            "file_list",
-            "pattern",
-        ]
         if context:
             task_type = context.get("task_type", "")
-            return param_name in file_params and task_type == "file_operation"
-        return param_name in file_params
+            return param_name in self.extended_mappings and task_type == "file_operation"
+        return param_name in self.extended_mappings
 
     def map_parameter(
         self,
@@ -324,45 +342,63 @@ class FileOperationMappingStrategy(ParameterMappingStrategy):
         available_params: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
     ) -> Any:
-        mappings = {
-            "file_path": ["path", "filename", "file", "source_path", "input_file"],
-            "source_path": ["file_path", "path", "filename", "source"],
-            "target_path": ["output_path", "destination", "dest", "target"],
-            "output_path": ["target_path", "destination", "output", "dest"],
-            "operation": ["action", "op", "command"],
-            "recursive": ["recursive", "r", "deep"],
-            "force": ["force", "f", "overwrite"],
-            "encoding": ["encoding", "charset", "enc"],
-            "new_name": ["target_path", "name", "filename"],
-            "dir_path": ["path", "directory", "folder"],
-            "directory": ["dir_path", "path", "folder"],
-            "extract_to": ["target_path", "output_path", "destination"],
-            "content": ["data", "text", "body"],
-            "mode": ["write_mode", "file_mode"],
-            "max_size": ["size_limit", "max_file_size"],
-            "format": ["compression_format", "archive_format", "type"],
-            "file_list": ["files", "file_paths", "sources"],
-            "pattern": ["glob_pattern", "file_pattern", "match_pattern"],
-        }
+        candidates = self.extended_mappings.get(param_name, [])
 
-        candidates = mappings.get(param_name, [])
+        # 优先级映射：精确匹配 > 语义相似 > 默认值
         for candidate in candidates:
             if candidate in available_params:
                 return available_params[candidate]
 
-        # 提供合理的默认值
+        # 语义相似度匹配
+        semantic_match = self._semantic_match(param_name, available_params)
+        if semantic_match is not None:
+            return semantic_match
+
+        # 智能默认值
+        return self._get_intelligent_default(param_name, context)
+
+    def _semantic_match(self, param_name: str, available_params: Dict[str, Any]) -> Any:
+        """语义相似度匹配"""
+        from difflib import SequenceMatcher
+
+        best_match = None
+        best_score = 0.6  # 提高阈值
+
+        for available_param in available_params:
+            score = SequenceMatcher(None, param_name.lower(), available_param.lower()).ratio()
+            if score > best_score:
+                best_score = score
+                best_match = available_params[available_param]
+
+        return best_match
+
+    def _get_intelligent_default(self, param_name: str, context: Optional[Dict[str, Any]]) -> Any:
+        """智能默认值生成"""
         defaults = {
             "recursive": False,
             "force": False,
             "encoding": "utf-8",
             "mode": "w",
-            "max_size": 10 * 1024 * 1024,  # 10MB
+            "max_size": 10 * 1024 * 1024,
             "format": "zip",
+            "preserve_metadata": True,
+            "follow_symlinks": False,
+            "permissions": 0o644,
         }
+
+        # 基于上下文的动态默认值
+        if context:
+            action = context.get("action", "").lower()
+            if "backup" in action:
+                defaults["preserve_metadata"] = True
+                defaults["recursive"] = True
+            elif "temp" in action:
+                defaults["force"] = True
+
         return defaults.get(param_name)
 
     def get_priority(self) -> int:
-        return 90
+        return 95  # 提高优先级
 
 
 class GeneralParameterMappingStrategy(ParameterMappingStrategy):

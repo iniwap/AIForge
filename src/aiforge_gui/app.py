@@ -6,13 +6,13 @@ from textual.app import App, ComposeResult
 from textual.widgets import Static
 from textual.containers import Header, Footer
 
-from aiforge import AIForgeCore
+from aiforge import AIForgeEngine
 
 
 class AIForgeGUI(App):
     def __init__(self):
         super().__init__()
-        self.forge = AIForgeCore()
+        self.forge = AIForgeEngine()
 
     def compose(self) -> ComposeResult:
         yield Header()

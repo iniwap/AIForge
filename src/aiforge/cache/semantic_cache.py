@@ -9,7 +9,7 @@ from pathlib import Path
 
 from ..extensions.extension_manager import ExtensionManager
 from .code_cache import AiForgeCodeCache
-from .semantic_action_matcher import SemanticActionMatcher
+from .action_matcher import SemanticActionMatcher
 
 
 class EnhancedStandardizedCache(AiForgeCodeCache):

@@ -604,7 +604,7 @@ def _search_template(
                         if len(abstract) > 20:
                             break
                 if not abstract and engine_config.get("fallback_abstract"):
-                    abstract_elem = result.find(text=True, recursive=True)
+                    abstract_elem = result.find(string=True, recursive=True)
                     abstract = (
                         utils.clean_text(abstract_elem.strip())[:max_abstract_len]
                         if abstract_elem

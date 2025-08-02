@@ -65,3 +65,24 @@ class CodeBlockManager:
             self.blocks[name].result = result
             self.blocks[name].execution_time = execution_time
             self.blocks[name].success = result.get("success", False)
+
+    def extract_code_blocks(self, text: str) -> List[str]:
+        """从LLM响应中提取代码块"""
+        import re
+
+        # 匹配 ```python...``` 格式
+        pattern = r"```python\s*\n(.*?)\n```"
+        matches = re.findall(pattern, text, re.DOTALL)
+
+        if not matches:
+            # 尝试 ```...``` 格式
+            pattern = r"```\s*\n(.*?)\n```"
+            matches = re.findall(pattern, text, re.DOTALL)
+
+        # 清理每个代码块
+        cleaned_matches = []
+        for match in matches:
+            cleaned_code = match.strip()
+            cleaned_matches.append(cleaned_code)
+
+        return cleaned_matches

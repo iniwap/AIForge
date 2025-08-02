@@ -118,7 +118,10 @@ class ResultValidator:
                     result_content["summary"] = f"找到{valid_count}条有效结果"
                     return True, ""
                 else:
-                    return False, f"虽然获取到{len(data)}条数据，但没有符合质量要求的有效数据"
+                    return (
+                        False,
+                        f"虽然获取到{len(data)}条数据，但不满足最少要获取{min_items}条",
+                    )
 
         # 检查基本结构
         if not isinstance(result_content, dict):

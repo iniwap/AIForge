@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any
 
 
-class AIForgePromptGenerator:
+class AIForgePrompt:
     """AIForge 提示词生成器"""
 
     @staticmethod
@@ -83,11 +83,11 @@ __result__ = {{
     ) -> str:
         """生成带通用参数验证约束的增强系统提示"""
 
-        base_prompt = AIForgePromptGenerator.get_base_aiforge_prompt(optimize_tokens)
+        base_prompt = AIForgePrompt.get_base_aiforge_prompt(optimize_tokens)
 
         execution_guidance = ""
         if parameters:
-            param_analysis = AIForgePromptGenerator._analyze_parameters_for_execution(parameters)
+            param_analysis = AIForgePrompt._analyze_parameters_for_execution(parameters)
 
             execution_guidance = f"""
 ## 🔧 参数化执行指导
@@ -126,7 +126,7 @@ __result__ = execute_task({param_analysis['call_args']})
 
         # 使用AI分析结果生成格式要求，而不是内置格式
         enhanced_prompt += (
-            f"\n\n{AIForgePromptGenerator._get_task_specific_format(task_type, expected_output)}"
+            f"\n\n{AIForgePrompt._get_task_specific_format(task_type, expected_output)}"
         )
 
         return enhanced_prompt
@@ -284,7 +284,7 @@ __result__ = execute_task({param_analysis['call_args']})
             }
 
         # 使用通用增强版提示词生成，传递预期输出规则
-        enhanced_prompt = AIForgePromptGenerator._get_enhanced_aiforge_prompt_with_validation(
+        enhanced_prompt = AIForgePrompt._get_enhanced_aiforge_prompt_with_validation(
             optimize_tokens=optimize_tokens,
             task_type=task_type,
             parameters=parameters,

@@ -1,11 +1,8 @@
 from typing import Dict, Any, Optional, List, Tuple
-import ast
 import time
 
-from ...prompts.prompt_generator import AIForgePromptGenerator
-from ..data_flow_analyzer import DataFlowAnalyzer
+from ..prompt import AIForgePrompt
 from ...adapters.input.input_adapter_manager import InputSource
-from ..result_manager import AIForgeResult
 from ..helpers.cache_helper import CacheHelper
 
 
@@ -159,7 +156,7 @@ class AIForgeExecutionManager:
                     "instruction": {"value": original_instruction, "type": "str", "required": True}
                 },
             }
-            enhanced_prompt = AIForgePromptGenerator.get_enhanced_system_prompt(
+            enhanced_prompt = AIForgePrompt.get_enhanced_system_prompt(
                 temp_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
@@ -167,7 +164,7 @@ class AIForgeExecutionManager:
                 None, enhanced_prompt, "general", basic_expected_output
             )
         else:
-            enhanced_prompt = AIForgePromptGenerator.get_enhanced_system_prompt(
+            enhanced_prompt = AIForgePrompt.get_enhanced_system_prompt(
                 standardized_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
@@ -289,6 +286,7 @@ class AIForgeExecutionManager:
     ) -> Optional[Dict[str, Any]]:
         """尝试执行缓存模块，包含结果验证"""
         code_cache = self.components["code_cache"]
+        execution_engine = self.components.get("execution_engine")
 
         for module_id, file_path, success_count, failure_count in cached_modules:
             try:
@@ -307,8 +305,6 @@ class AIForgeExecutionManager:
                             from ...strategies.semantic_field_strategy import SemanticFieldStrategy
 
                             processor = SemanticFieldStrategy()
-
-                            # 处理数据字段映射
                             data = result.get("data", [])
                             if isinstance(data, list):
                                 processed_data = processor.process_fields(
@@ -316,10 +312,16 @@ class AIForgeExecutionManager:
                                 )
                                 result["data"] = processed_data
 
-                        # 对缓存执行结果进行严格验证
-                        is_valid = AIForgeResult.validate_cached_result(
-                            result, standardized_instruction
-                        )
+                        # 完全通过执行引擎进行结果验证
+                        if execution_engine:
+                            is_valid = execution_engine.validate_cached_result(
+                                result, standardized_instruction
+                            )
+                        else:
+                            # 如果执行引擎不可用，使用基本验证作为回退
+                            is_valid = result.get("status") == "success" and result.get("data")
+                            print("[DEBUG] 执行引擎不可用，使用基本验证")
+
                         if is_valid:
                             print("[DEBUG] 缓存模块执行成功且验证通过")
                             code_cache.update_module_stats(module_id, True)
@@ -428,72 +430,17 @@ class AIForgeExecutionManager:
     def _validate_parameter_usage_with_dataflow(
         self, code: str, standardized_instruction: Dict[str, Any]
     ) -> bool:
-        """使用增强数据流分析的参数验证"""
-        try:
-            tree = ast.parse(code)
+        """通过执行引擎进行参数验证"""
 
-            function_def = None
-            for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef) and node.name == "execute_task":
-                    function_def = node
-                    break
-
-            if not function_def:
-                print("[DEBUG] 未找到execute_task函数")
-                return False
-
-            func_params = [arg.arg for arg in function_def.args.args]
-            required_params = standardized_instruction.get("required_parameters", {})
-
-            # 创建增强的数据流分析器
-            analyzer = DataFlowAnalyzer(func_params)
-            analyzer.visit(function_def)
-
-            # 检查API密钥相关冲突
-            if analyzer.has_parameter_conflicts():
-                conflicts = analyzer.get_conflict_details()
-                for conflict in conflicts:
-                    if conflict["type"] == "api_key_usage":
-                        print(f"[DEBUG] 发现API密钥使用冲突: {conflict}")
-                        return False
-
-            # 检查参数冲突
-            if analyzer.has_parameter_conflicts():
-                conflicts = analyzer.get_conflict_details()
-                for conflict in conflicts:
-                    print(f"[DEBUG] 发现参数冲突: {conflict}")
-                    if (
-                        conflict["type"] == "hardcoded_coordinates"
-                        and conflict["parameter"] == "location"
-                    ):
-                        print("[DEBUG] 检测到硬编码坐标与location参数冲突，拒绝缓存")
-                        return False
-
-            # 原有的参数使用验证
-            meaningful_param_count = 0
-            for param_name in func_params:
-                if param_name in required_params:
-                    if param_name in analyzer.meaningful_uses:
-                        meaningful_param_count += 1
-                        usage_contexts = analyzer.usages.get(param_name, [])
-                        print(f"[DEBUG] 参数 {param_name} 有意义使用: {usage_contexts}")
-                    else:
-                        print(f"[DEBUG] 参数 {param_name} 未被有意义使用")
-
-            total_required = len([p for p in func_params if p in required_params])
-            if total_required == 0:
-                return True
-
-            usage_ratio = meaningful_param_count / total_required
-            print(
-                f"[DEBUG] 参数有意义使用比例: {usage_ratio:.2f} ({meaningful_param_count}/{total_required})"
+        execution_engine = self.components.get("execution_engine")
+        if execution_engine:
+            return execution_engine.validate_parameter_usage_with_dataflow(
+                code, standardized_instruction
             )
 
-            return usage_ratio >= 0.5
-
-        except Exception as e:
-            print(f"[DEBUG] 数据流分析失败: {e}")
-            return False
+        # 如果执行引擎不可用，返回默认值
+        print("[DEBUG] 执行引擎不可用，跳过数据流分析")
+        return True
 
     def generate_and_execute_with_code(
         self,
@@ -566,9 +513,7 @@ class AIForgeExecutionManager:
         is_conversational = action == "chat_ai"
 
         # 构建直接响应提示词
-        system_prompt = AIForgePromptGenerator.get_direct_response_prompt(
-            action, standardized_instruction
-        )
+        system_prompt = AIForgePrompt.get_direct_response_prompt(action, standardized_instruction)
         try:
             # 对话类型自动启用历史记录
             use_history = is_conversational

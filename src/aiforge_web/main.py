@@ -1,9 +1,9 @@
 import time
 from fastapi import FastAPI, Request
-from aiforge import AIForgeCore
+from aiforge import AIForgeEngine
 
 app = FastAPI()
-forge = AIForgeCore()
+forge = AIForgeEngine()
 
 
 @app.get("/")
@@ -20,7 +20,7 @@ def start_web():
 @app.post("/api/extensions/register")
 def register_extension(extension_config: dict):
     """注册扩展组件的 API 端点"""
-    # 调用 AIForgeCore 的扩展注册方法
+    # 调用 AIForgeEngine 的扩展注册方法
     pass
 
 

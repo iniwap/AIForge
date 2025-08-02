@@ -1,6 +1,6 @@
 import os
 import pytest
-from aiforge import AIForgeCore
+from aiforge import AIForgeEngine
 
 
 @pytest.mark.skipif(
@@ -8,8 +8,8 @@ from aiforge import AIForgeCore
 )
 def test_quick_start():
     """方式1：快速启动"""
-    forge = AIForgeCore(api_key=os.environ["OPENROUTER_API_KEY"])
-    result = forge("张馨予何捷结婚七周年")
+    forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"])
+    result = forge("获取5条李嘉诚40万起推售大湾区400套房的新闻")
     print("quick_start result:", result)
     assert result is not None
 
@@ -19,7 +19,7 @@ def test_quick_start():
 )
 def test_provider_deepseek():
     """方式2：指定提供商"""
-    forge = AIForgeCore(api_key=os.environ["DEEPSEEK_API_KEY"], provider="deepseek", max_rounds=3)
+    forge = AIForgeEngine(api_key=os.environ["DEEPSEEK_API_KEY"], provider="deepseek", max_rounds=3)
     result = forge("北京朝阳降雨量下至全国第一相关新闻报导及内容")
     print("deepseek result:", result)
     assert result is not None
@@ -44,7 +44,7 @@ max_tokens = 8192
 """
     config_file = tmp_path / "aiforge.toml"
     config_file.write_text(config_content)
-    forge = AIForgeCore(config_file=str(config_file))
+    forge = AIForgeEngine(config_file=str(config_file))
     # 这里只能测试 run 方法能否被调用，不保证真实 LLM 返回
     try:
         result = forge.run("处理任务", system_prompt="你是专业助手")
@@ -69,7 +69,7 @@ def test_custom_executor(monkeypatch):
         def execute(self, module, instruction, **kwargs):
             return module.custom_function(instruction)
 
-    forge = AIForgeCore(api_key="dummy")
+    forge = AIForgeEngine(api_key="dummy")
     forge.add_module_executor(CustomExecutor())
     dummy = DummyModule()
     result = forge.module_executors[-1].execute(dummy, "test")
@@ -79,7 +79,7 @@ def test_custom_executor(monkeypatch):
 
 def test_switch_provider(monkeypatch):
     """提供商切换与查询"""
-    forge = AIForgeCore(api_key="dummy")
+    forge = AIForgeEngine(api_key="dummy")
     # 假设 switch_provider/list_providers 不依赖真实 LLM
     try:
         forge.switch_provider("deepseek")
@@ -101,3 +101,14 @@ def test_create_config_wizard():
     except Exception as e:
         print("create_config_wizard error:", e)
         assert True  # 只要不抛异常就算通过
+
+
+@pytest.mark.skipif(
+    "OPENROUTER_API_KEY" not in os.environ, reason="需要设置 OPENROUTER_API_KEY 环境变量"
+)
+def test_file_operation():
+    """方式1：快速启动"""
+    forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"])
+    result = forge("在我的桌面文件test下创建文件test.py")
+    print("quick_start result:", result)
+    assert result is not None

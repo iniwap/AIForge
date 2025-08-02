@@ -2,7 +2,7 @@ def create_config_wizard():
     """配置向导"""
     from rich.console import Console
     from rich.prompt import Prompt, Confirm
-    from ..core.core import AIForgeCore
+    from ..core.engine import AIForgeEngine
 
     console = Console()
     console.print("[bold cyan]🔥 AIForge 配置向导[/bold cyan]")
@@ -29,7 +29,7 @@ def create_config_wizard():
 
         try:
             # 创建并测试配置
-            forge = AIForgeCore(api_key=api_key, **kwargs)
+            forge = AIForgeEngine(api_key=api_key, **kwargs)
 
             # 简单测试
             console.print("[dim]正在测试配置...[/dim]")
@@ -111,6 +111,6 @@ def create_full_config(console):
     console.print(f"[green]✅ 配置文件已保存到 {config_file}[/green]")
 
     # 创建AIForgeCore实例
-    from ..core.core import AIForgeCore
+    from ..core.engine import AIForgeEngine
 
-    return AIForgeCore(config_file=config_file)
+    return AIForgeEngine(config_file=config_file)

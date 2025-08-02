@@ -56,10 +56,10 @@ pip install aiforge
   
 ### 一行代码，释放无限可能  
 ```python  
-from aiforge import AIForgeCore  
+from aiforge import AIForgeEngine  
   
 # 唤醒AI引擎  
-forge = AIForgeCore(api_key="your-key")  
+forge = AIForgeEngine(api_key="your-key")  
   
 # 思维即执行  
 result = forge("分析全球股市趋势并生成投资建议")  
@@ -68,7 +68,7 @@ result = forge("分析全球股市趋势并生成投资建议")
 ### 高级配置  
 ```python  
 # 多重AI人格切换  
-forge = AIForgeCore(  
+forge = AIForgeEngine(  
     provider="deepseek",  # 或 "openai", "ollama"  
     max_rounds=5,         # 自我优化轮数  
     cache_enabled=True    # 启用预知缓存  

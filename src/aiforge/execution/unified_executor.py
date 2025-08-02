@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from .executor_interface import CachedModuleExecutor
-from ..strategies.execution_strategy import ExecutionStrategyManager, ExecutionStrategy
+from ..strategies.execution_strategy_manager import ExecutionStrategyManager
+from ..strategies.execution_strategy import ExecutionStrategy
 
 
 class UnifiedParameterizedExecutor(CachedModuleExecutor):

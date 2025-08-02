@@ -1,10 +1,10 @@
 from typing import Dict, Any, Optional, List, Tuple
 
-from .managers.component_manager import AIForgeComponentManager
+from .orchestrator import AIForgeOrchestrator
 
 
-class AIForgeCore:
-    """AIForge核心接口"""
+class AIForgeEngine:
+    """AIForge核心引擎"""
 
     def __init__(
         self,
@@ -14,7 +14,7 @@ class AIForgeCore:
         **kwargs,
     ):
         """
-        初始化AIForge核心
+        初始化AIForge核心引擎
 
         Args:
             config_file: 配置文件路径（可选）
@@ -23,7 +23,7 @@ class AIForgeCore:
             **kwargs: 其他配置参数（max_rounds, workdir等）
         """
         # 初始化组件管理器
-        self.component_manager = AIForgeComponentManager()
+        self.component_manager = AIForgeOrchestrator()
         self.component_manager.initialize_components(config_file, api_key, provider, **kwargs)
 
     def run(self, instruction: str) -> Optional[Dict[str, Any]]:

@@ -6,10 +6,10 @@ from rich.console import Console
 
 from ..validation.result_validator import ResultValidator
 from ..instruction.analyzer import AIForgeInstructionAnalyzer
-from ..formatting.result_formatter import AIForgeResultFormatter
+from .result_formatter import AIForgeResultFormatter
 
 
-class AIForgeResult:
+class AIForgeResultProcessor:
     """AIForge 执行结果处理器"""
 
     def __init__(self, console: Console = None):
@@ -162,13 +162,12 @@ class AIForgeResult:
             return processed_result
         return result_content
 
-    @staticmethod
     def validate_cached_result(
-        result: Dict[str, Any], standardized_instruction: Dict[str, Any]
+        self, result: Dict[str, Any], standardized_instruction: Dict[str, Any]
     ) -> bool:
         """严格的缓存结果验证"""
         # 严格的格式验证
-        if not AIForgeResult.validate_result_format(result):
+        if not AIForgeResultProcessor.validate_result_format(result):
             print("[DEBUG] 缓存结果格式验证失败")
             return False
 
@@ -193,10 +192,10 @@ class AIForgeResult:
         # 严格的预期输出验证
         expected_output = standardized_instruction.get("expected_output")
         if expected_output:
-            return AIForgeResult.strict_expected_output_validation(result, expected_output)
+            return AIForgeResultProcessor.strict_expected_output_validation(result, expected_output)
 
         # 严格的数据完整性检查
-        if not AIForgeResult.strict_data_integrity_check(result):
+        if not AIForgeResultProcessor.strict_data_integrity_check(result):
             print("[DEBUG] 缓存结果数据完整性检查失败")
             return False
 

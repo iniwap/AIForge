@@ -6,7 +6,7 @@ from rich.table import Table
 import json
 from typing import Dict, Any
 
-from aiforge import AIForgeCore
+from aiforge import AIForgeEngine
 
 
 def display_terminal_result(ui_result: Dict[str, Any]):
@@ -63,7 +63,7 @@ def display_terminal_result(ui_result: Dict[str, Any]):
 def main(instruction, config, api_key):
     """AIForge CLI工具"""
     # 初始化核心
-    forge = AIForgeCore(config_file=config, api_key=api_key)
+    forge = AIForgeEngine(config_file=config, api_key=api_key)
 
     if not instruction:
         instruction = click.prompt("请输入指令")

@@ -1,14 +1,14 @@
 import os
 import pytest
 
-from aiforge import AIForgeCore
+from aiforge import AIForgeEngine
 
 
 @pytest.mark.skipif(
     "OPENROUTER_API_KEY" not in os.environ, reason="需要设置 OPENROUTER_API_KEY 环境变量"
 )
 def test_direct_register():
-    forge = AIForgeCore(api_key=os.environ["OPENROUTER_API_KEY"])
+    forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"])
 
     # 执行任务
     result = forge.run("杭州今天的天气怎么样")
