@@ -32,18 +32,29 @@ class AIForgeOrchestrator:
     def initialize_components(self, config_file, api_key, provider, **kwargs) -> Dict[str, Any]:
         """初始化所有组件"""
 
+        # 1. 基础配置和核心服务
         self._init_config_manager(config_file, api_key, provider, **kwargs)
+        self._init_cache()
         self._init_llm_manager()
+
+        # 2. 参数映射服务（必须在依赖它的组件之前初始化）
+        self._init_parameter_mapping_service()
+
+        # 3. 执行相关组件（依赖参数映射服务）
         self._init_execution_engine()
         self._init_task_manager()
         self._init_runner()
+
+        # 4. 分析
         self._init_instruction_analyzer()
-        self._init_cache()
-        self._init_parameter_mapping_service()
+
+        # 5. 适配器
         self._init_adapters()
+
+        # 6. 管理器组件（依赖参数映射服务）
         self._init_execution_manager()
-        self._init_search_manager()
         self._init_template_manager()
+        self._init_search_manager()
 
         self._initialized = True
 

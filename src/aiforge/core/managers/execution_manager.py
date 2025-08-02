@@ -473,13 +473,7 @@ class AIForgeExecutionManager:
     def _execute_cached_module(self, module, instruction: str, **kwargs) -> Any:
         """执行缓存模块"""
         module_executors = self.components["module_executors"]
-        parameter_mapping_service = self.components.get("parameter_mapping_service")
-
         for executor in module_executors:
-            # 确保执行器有参数映射服务
-            if hasattr(executor, "parameter_mapping_service"):
-                executor.parameter_mapping_service = parameter_mapping_service
-
             if executor.can_handle(module):
                 try:
                     result = executor.execute(module, instruction, **kwargs)

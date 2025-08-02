@@ -52,19 +52,20 @@ class ParameterMappingService:
         available_params: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """统一参数映射入口"""
+        """统一参数映射入口 - 返回函数实际参数名的映射"""
         sig = inspect.signature(func)
         func_params = list(sig.parameters.keys())
 
         mapped_params = {}
         self.mapping_records = []  # 重置映射记录
 
-        # 1. 使用策略进行智能映射（优先级提高）
+        # 关键改进：遍历函数的实际参数名，而不是输入参数名
         for param_name in func_params:
             for strategy in self.strategies:
                 if strategy.can_handle(param_name, context):
                     mapped_value = strategy.map_parameter(param_name, available_params, context)
                     if mapped_value is not None:
+                        # 使用函数的实际参数名作为键
                         mapped_params[param_name] = mapped_value
 
                         # 记录增强语义策略的映射信息
@@ -128,9 +129,9 @@ class ParameterMappingService:
         if param_obj.default != inspect.Parameter.empty:
             return param_obj.default
 
-        # 2. 系统级默认值（扩展更多参数）
+        # 2. 系统级默认值
         system_defaults = {
-            "max_results": 10,
+            "max_results": 10,  # 默认最大结果数
             "min_items": 1,
             "timeout": 30,
             "limit": 10,
@@ -138,6 +139,8 @@ class ParameterMappingService:
             "max_abstract_len": 500,
             "page_size": 20,
             "retry_count": 3,
+            "query": "",
+            "search_query": "",
         }
 
         default_value = system_defaults.get(param_name)
@@ -238,13 +241,11 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
     """搜索参数映射策略"""
 
     def can_handle(self, param_name: str, context: Optional[Dict[str, Any]] = None) -> bool:
-        search_params = ["search_query", "query", "max_results", "min_items"]
+        search_params = ["search_query", "query", "keyword", "q", "max_results", "min_items"]
 
-        # 移除严格的task_type检查，允许更灵活的参数处理
         if param_name in search_params:
             return True
 
-        # 如果有上下文，优先处理data_fetch类型的任务
         if context:
             task_type = context.get("task_type", "")
             if task_type == "data_fetch" and param_name in search_params:
@@ -258,25 +259,23 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
         available_params: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
     ) -> Any:
-
         mappings = {
+            "query": ["search_query", "keyword", "q"],  # query 接受 search_query
             "search_query": ["query", "keyword", "q", "search_query"],
-            "query": ["search_query", "keyword"],
-            "max_results": ["max_results", "max_limit", "max_count", "max_size", "max_limit"],
-            "min_items": ["quantity", "count", "min_count", "min_items", "num_results"],
+            # max_results 只接受明确表示"最大"语义的参数，不包括 quantity
+            "max_results": ["max_results", "max_limit", "max_count", "max_size"],
+            "min_items": ["min_items", "min_count", "quantity"],
         }
 
         candidates = mappings.get(param_name, [])
-
         for candidate in candidates:
             if candidate in available_params:
                 result = available_params[candidate]
-                # 确保正确提取嵌套字典中的值
                 if isinstance(result, dict) and "value" in result:
                     return result["value"]
                 return result
 
-        # 如果没有找到映射，对于关键参数提供默认值
+        # 对于 max_results，使用默认值
         if param_name == "max_results":
             return 10
         elif param_name == "min_items":
@@ -472,15 +471,19 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
 
     def __init__(self, cache_dir: Optional[Path] = None):
         self.cache_dir = cache_dir or Path.cwd() / "cache"
-        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
+
+        # 延迟加载语义模型
+        self._semantic_model = None
+        self._model_lock = threading.RLock()
 
         # 复用现有的语义字段策略
         from ..strategies.semantic_field_strategy import SemanticFieldStrategy
 
         self.field_strategy = SemanticFieldStrategy()
 
-        # 初始化数据库（复用code_cache的模式）
+        # 初始化数据库
         self._init_database()
 
         # 上下文相关的语义权重
@@ -495,6 +498,17 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
                 "name_terms": ["name", "filename", "title", "label"],
             },
         }
+
+    @property
+    def semantic_model(self):
+        """延迟加载语义模型"""
+        if self._semantic_model is None:
+            with self._model_lock:
+                if self._semantic_model is None:
+                    from ..models.model_manager import ModelManager
+
+                    self._semantic_model = ModelManager().get_semantic_model()
+        return self._semantic_model
 
     def _init_database(self):
         """初始化Peewee数据库和模型（复用code_cache模式）"""
@@ -637,16 +651,52 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
             # 使用现有的字段语义匹配逻辑
             base_score = self._calculate_field_similarity(target_param, source_param)
 
+            # 特殊处理搜索相关参数的语义匹配
+            semantic_bonus = self._calculate_search_semantic_bonus(target_param, source_param)
+
             # 上下文权重调整
             context_bonus = self._calculate_context_bonus(target_param, source_param, task_type)
 
-            final_score = base_score + context_bonus
+            final_score = base_score + semantic_bonus + context_bonus
 
             if final_score > best_score and final_score > 0.4:
                 best_score = final_score
-                best_match = param_value
+                # 正确提取嵌套字典中的值
+                if isinstance(param_value, dict) and "value" in param_value:
+                    best_match = param_value["value"]
+                else:
+                    best_match = param_value
 
         return best_match
+
+    def _calculate_search_semantic_bonus(self, target_param: str, source_param: str) -> float:
+        """计算搜索相关参数的语义加分"""
+
+        # 只有明确的语义匹配才给高分
+        strong_associations = {
+            ("query", "search_query"): 0.9,
+            ("search_query", "query"): 0.9,
+            # max_results 只与明确表示"最大"的参数关联
+            ("max_results", "max_limit"): 0.9,
+            ("max_results", "max_count"): 0.9,
+            ("max_results", "max_size"): 0.9,
+        }
+
+        key = (target_param.lower(), source_param.lower())
+        if key in strong_associations:
+            return strong_associations[key]
+
+        # 检查包含关系，但更严格
+        target_lower = target_param.lower()
+        source_lower = source_param.lower()
+
+        if "query" in target_lower and "query" in source_lower:
+            return 0.7
+        # 只有明确包含"max"的才与max_results关联
+        if target_lower == "max_results" and "max" in source_lower:
+            return 0.7
+
+        return 0.0
 
     def _calculate_field_similarity(self, target_param: str, source_param: str) -> float:
         """使用现有字段策略计算相似度"""
@@ -676,7 +726,7 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
         return self._calculate_text_similarity(target_param, source_param)
 
     def _calculate_text_similarity(self, str1: str, str2: str) -> float:
-        """基础文本相似度计算（复用现有逻辑）"""
+        """基础文本相似度计算"""
         # 复用GeneralParameterMappingStrategy中的levenshtein_distance算法
         s1 = str1.lower().replace("_", "").replace("-", "")
         s2 = str2.lower().replace("_", "").replace("-", "")

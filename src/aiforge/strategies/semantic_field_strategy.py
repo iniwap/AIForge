@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
+import threading
 
 
 class FieldProcessorStrategy(ABC):
@@ -25,6 +26,9 @@ class SemanticFieldStrategy(FieldProcessorStrategy):
     """基于语义的字段处理策略 - 通用处理所有字段格式"""
 
     def __init__(self):
+        self._model = None
+        self._model_lock = threading.RLock()
+
         # 定义字段语义模式
         self.field_semantics = {
             "title": ["title", "标题", "headline", "subject", "name", "heading", "caption"],
@@ -86,6 +90,33 @@ class SemanticFieldStrategy(FieldProcessorStrategy):
             "content": {"content": 1.0, "abstract": 0.9, "article": 0.8, "summary": 0.7},
             "time": {"pub_time": 1.0, "date": 0.9, "time": 0.8, "timestamp": 0.7},
         }
+
+    @property
+    def model(self):
+        """延迟加载语义模型"""
+        if self._model is None:
+            with self._model_lock:
+                if self._model is None:
+                    from ..models.model_manager import ModelManager
+
+                    self._model = ModelManager().get_semantic_model()
+        return self._model
+
+    def _calculate_semantic_similarity(self, text1: str, text2: str) -> float:
+        """计算语义相似度"""
+        if not self.model:
+            # 如果模型加载失败，回退到字符串匹配
+            return 0.5 if text1.lower() in text2.lower() or text2.lower() in text1.lower() else 0.0
+
+        try:
+            embeddings = self.model.encode([text1, text2])
+            from sklearn.metrics.pairwise import cosine_similarity
+
+            similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+            return float(similarity)
+        except Exception as e:
+            print(f"[DEBUG] 语义相似度计算失败: {e}")
+            return 0.0
 
     def get_strategy_name(self) -> str:
         return "semantic_field_strategy"

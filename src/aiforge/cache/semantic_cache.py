@@ -113,53 +113,41 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             self.semantic_enabled = False
             return
 
-        # 检查是否启用轻量级模式
-        self.use_lightweight_mode = self.config.get("use_lightweight_semantic", True)
-
-        if self.use_lightweight_mode:
-            # 轻量级模式：不需要外部依赖
-            self.semantic_enabled = True
-            self._semantic_model = None
-            self._tfidf = None
-            self.fitted_tfidf = False
-            print("[DEBUG] 轻量级语义匹配组件已启用")
-        else:
-            # 标准模式：延迟加载重型模型
-            self.semantic_enabled = True
-            self._semantic_model = None
-            self._tfidf = None
-            self.fitted_tfidf = False
-            print("[DEBUG] 语义匹配组件已启用（延迟加载模式）")
+        self.semantic_enabled = True
+        self._semantic_model = None
 
     @property
     def semantic_model(self):
         """延迟加载语义模型"""
         if self._semantic_model is None:
             try:
-                print("[DEBUG] 正在加载语义模型...")
-                from sentence_transformers import SentenceTransformer
                 from ..models.model_manager import ModelManager
 
-                # 使用模型管理器获取模型路径
-                model_manager = ModelManager()
-                model_path = model_manager.get_model_path("paraphrase-MiniLM-L6-v2")
-
-                # 加载模型
-                self._semantic_model = SentenceTransformer(
-                    model_path, tokenizer_kwargs={"clean_up_tokenization_spaces": True}
-                )
-                print("[DEBUG] 语义模型加载完成")
-
-            except ImportError:
-                print("[DEBUG] sentence_transformers 未安装，禁用语义匹配")
+                self._semantic_model = ModelManager().get_semantic_model()
+            except Exception:
                 self.semantic_enabled = False
                 return None
-            except Exception as e:
-                print(f"[DEBUG] 语义模型加载失败: {e}")
-                self.semantic_enabled = False
-                return None
-
         return self._semantic_model
+
+    @property
+    def tfidf_vectorizer(self):
+        """获取TF-IDF向量化器"""
+        from ..models.model_manager import ModelManager
+
+        return ModelManager().get_tfidf_vectorizer()
+
+    @property
+    def fitted_tfidf(self):
+        """检查TF-IDF是否已训练"""
+        from ..models.model_manager import ModelManager
+
+        return ModelManager().is_tfidf_fitted()
+
+    def set_tfidf_fitted(self, fitted: bool = True):
+        """设置TF-IDF训练状态"""
+        from ..models.model_manager import ModelManager
+
+        ModelManager().set_tfidf_fitted(fitted=fitted)
 
     def _load_vector_storage(self):
         """加载向量存储"""

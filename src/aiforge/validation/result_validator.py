@@ -120,7 +120,7 @@ class ResultValidator:
                 else:
                     return (
                         False,
-                        f"虽然获取到{len(data)}条数据，但不满足最少要获取{min_items}条",
+                        f"获取到{valid_count}条有效数据，不满足最少要获取{min_items}条",
                     )
 
         # 检查基本结构
