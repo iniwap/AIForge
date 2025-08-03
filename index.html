@@ -76,7 +76,7 @@
                             <span class="control-dot yellow"></span>
                             <span class="control-dot green"></span>
                         </div>
-                        <div class="terminal-title">AIForge 认知引擎 v1.0</div>
+                        <div class="terminal-title">AIForge 认知引擎 v0.0.3</div>
                         <div class="terminal-status">ACTIVE</div>
                     </div>
                     <div class="terminal-body">
@@ -211,7 +211,7 @@
                     <div class="layer-status">PROCESSING</div>
                 </div>
                 <div class="layer-components">
-                    <div class="component-node primary">AIForgeCore</div>
+                    <div class="component-node primary">AIForgeEngine</div>
                     <div class="component-node">指令分析器</div>
                     <div class="component-node">语义引擎</div>
                 </div>
@@ -346,10 +346,10 @@
                 </div>
                 <div class="code-body">
                     <pre><code class="language-python">  
-from aiforge import AIForgeCore  
+from aiforge import AIForgeEngine  
   
 # 唤醒认知引擎  
-forge = AIForgeCore(api_key="your-api-key")  
+forge = AIForgeEngine(api_key="your-api-key")  
   
 # 思维即执行 - 让AI理解并执行复杂任务  
 result = forge("分析全球股市趋势并生成投资建议")  
@@ -367,8 +367,8 @@ workflow = forge("监控服务器状态，异常时发送邮件并重启")
         <div class="install-section">
             <div class="install-command">
                 <span class="command-prefix">$</span>
-                <code>pip install aiforge</code>
-                <button class="copy-btn" onclick="copyToClipboard('pip install aiforge')">
+                <code>pip install aiforge-engine</code>
+                <button class="copy-btn" onclick="copyToClipboard('pip install aiforge-engine')">
                     <span class="copy-icon">📋</span>
                 </button>
             </div>
@@ -445,11 +445,11 @@ workflow = forge("监控服务器状态，异常时发送邮件并重启")
                         <span class="link-icon">⚡</span>
                         <span class="link-text">GitHub 源码</span>
                     </a>
-                    <a href="https://docs.aiforge.dev" class="footer-link">
+                    <a href="https://pypi.org/project/aiforge-engine/0.0.3/" class="footer-link">
                         <span class="link-icon">📚</span>
                         <span class="link-text">开发文档</span>
                     </a>
-                    <a href="https://api.aiforge.dev" class="footer-link">
+                    <a href="https://pypi.org/project/aiforge-engine/0.0.3/" class="footer-link">
                         <span class="link-icon">🔌</span>
                         <span class="link-text">API 参考</span>
                     </a>
@@ -467,7 +467,7 @@ workflow = forge("监控服务器状态，异常时发送邮件并重启")
                         <span class="link-icon">📋</span>
                         <span class="link-text">模板库</span>
                     </a>
-                    <a href="#showcase" class="footer-link">
+                    <a href="https://github.com/iniwap/AIWriteX" class="footer-link">
                         <span class="link-icon">🌟</span>
                         <span class="link-text">案例展示</span>
                     </a>
