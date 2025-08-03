@@ -161,7 +161,7 @@ def search_web(
     max_results=10,
     min_items=1,
     min_abstract_len=300,
-    max_abstract_len=500,
+    max_abstract_len=1000,
     module_type: SearchEngine = SearchEngine.COMBINED,
 ):
     """根据模块类型返回对应的搜索模板，尝试所有搜索引擎直到找到有效结果"""
@@ -490,7 +490,7 @@ def extract_page_content(url, headers=None):
         return None, None
 
 
-def enhance_abstract(abstract, page_soup, min_abstract_len=300, max_abstract_len=500):
+def enhance_abstract(abstract, page_soup, min_abstract_len=300, max_abstract_len=1000):
     """
     增强摘要内容，从原文提取。
     如果 _extract_full_article_content 的内容长度 >= min_abstract_len
@@ -530,7 +530,7 @@ def sort_and_filter_results(results):
 
 
 def _search_template(
-    search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=500
+    search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=1000
 ):
     """通用搜索模板"""
     try:
@@ -998,7 +998,7 @@ ENGINE_CONFIGS = {
 
 # 搜索引擎特定函数
 def template_baidu_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=500
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
 ):
     return _search_template(
         search_query, max_results, ENGINE_CONFIGS["baidu"], min_abstract_len, max_abstract_len
@@ -1006,21 +1006,23 @@ def template_baidu_specific(
 
 
 def template_bing_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=500
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
 ):
     return _search_template(
         search_query, max_results, ENGINE_CONFIGS["bing"], min_abstract_len, max_abstract_len
     )
 
 
-def template_360_specific(search_query, max_results=10, min_abstract_len=300, max_abstract_len=500):
+def template_360_specific(
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
+):
     return _search_template(
         search_query, max_results, ENGINE_CONFIGS["360"], min_abstract_len, max_abstract_len
     )
 
 
 def template_sougou_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=500
+    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
 ):
     return _search_template(
         search_query, max_results, ENGINE_CONFIGS["sogou"], min_abstract_len, max_abstract_len

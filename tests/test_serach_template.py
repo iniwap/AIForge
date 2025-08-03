@@ -22,4 +22,4 @@ def test_search():
 
 
 def test_search_web():
-    print(search_web("五问广西“亮证姐”事件"))
+    print(search_web("全球股市趋势"))

@@ -9,8 +9,8 @@ from aiforge import AIForgeEngine
 def test_quick_start():
     """方式1：快速启动"""
     forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"])
-    result = forge("获取5条长沙一女孩疑被外墙脱落物砸中身亡的报道")
-    print("quick_start result:", result)
+    result = forge("分析全球最新股市趋势并生成投资建议")
+    print("任务执行结果:", result)
     assert result is not None
 
 
@@ -20,7 +20,7 @@ def test_quick_start():
 def test_provider_deepseek():
     """方式2：指定提供商"""
     forge = AIForgeEngine(api_key=os.environ["DEEPSEEK_API_KEY"], provider="deepseek", max_rounds=3)
-    result = forge("北京朝阳降雨量下至全国第一相关新闻报导及内容")
+    result = forge("分析全球股市趋势并生成投资建议")
     print("deepseek result:", result)
     assert result is not None
 

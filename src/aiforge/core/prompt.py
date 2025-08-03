@@ -300,13 +300,13 @@ __result__ = execute_task({param_analysis['call_args']})
     def get_base_prompt_sections() -> Dict[str, str]:
         """构建基础提示词各个部分"""
         return {
-            "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息。",
+            "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息以及预期结果",
             "execution_mode": """
     - 直接响应：AI知识可直接完成，无需最新数据，包括对话延续和情感支持
     - 代码生成：需要外部数据源、实时信息或系统交互
     """,
             "analysis_steps": """
-    - 识别任务类型和执行模式
+    - 识别执行模式和任务类型
     - 提取关键参数和数量要求，设置合适的 min_items
     - 定义必需字段和验证规则
     - "获取/查找/搜索"某类信息的非任务型指令，仅提取一个required_parameters参数search_query=原始指令

@@ -67,7 +67,7 @@ class ResultValidator:
         if isinstance(result_content, dict):
             # 检查状态
             if result_content.get("status") != "success":
-                return False, f"结果状态为错误: {result_content.get('summary', '未知错误')}"
+                return False, f"{result_content.get('summary', '未知错误')}"
 
             # 严格检查data字段
             data = result_content.get("data")
@@ -128,7 +128,7 @@ class ResultValidator:
             return False, "结果内容必须是字典格式"
 
         if result_content.get("status") == "error":
-            return False, result_content.get("summary", "结果状态为错误")
+            return False, result_content.get("summary", "结果状态为error")
 
         # 检查 data 字段
         data = result_content.get("data", [])

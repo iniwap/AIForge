@@ -15,17 +15,11 @@ class AIForgeSearchManager:
 
     def is_search_task(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为搜索类任务"""
-        task_type = standardized_instruction.get("task_type", "")
         action = standardized_instruction.get("action", "")
-
-        execution_mode = standardized_instruction.get("execution_mode", "")
-        if execution_mode == "direct_ai_response":
-            return False
 
         # 检查任务类型和动作
         search_indicators = [
-            task_type == "data_fetch",
-            action in ["search", "fetch", "get"],
+            any(keyword in action.lower() for keyword in ["search", "fetch", "get"]),
             "search" in standardized_instruction.get("target", "").lower(),
         ]
 
@@ -46,7 +40,6 @@ class AIForgeSearchManager:
             search_params = self.parameter_mapping_service.extract_search_parameters(
                 standardized_instruction, original_instruction
             )
-
             if not search_params["search_query"]:
                 return None
 
@@ -229,13 +222,24 @@ class AIForgeSearchManager:
         except Exception:
             return None, False
 
-    def _extract_search_query(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    def extract_search_query(
+        self, standardized_instruction: Dict[str, Any], instruction: str
     ) -> str:
         """提取搜索查询"""
+        if self.parameter_mapping_service:
+            # 使用现有的搜索参数提取服务
+            try:
+                search_params = self.parameter_mapping_service.extract_search_parameters(
+                    standardized_instruction, instruction
+                )
+                return search_params.get("search_query", instruction)
+            except Exception:
+                pass
+
+        # 回退逻辑：直接从参数中提取
         parameters = standardized_instruction.get("required_parameters", {})
 
-        # 尝试从参数中提取
+        # 尝试从参数中提取搜索查询
         for param_name in ["search_query", "query", "keyword"]:
             if param_name in parameters:
                 param_info = parameters[param_name]
@@ -249,8 +253,8 @@ class AIForgeSearchManager:
         if target:
             return target
 
-        # 使用原始指令
-        return original_instruction
+        # 使用原始指令作为最后的回退
+        return instruction
 
     def _convert_search_result_to_aiforge_format(
         self,
@@ -266,7 +270,6 @@ class AIForgeSearchManager:
         success = search_result.get("success", False)
         error = search_result.get("error")
 
-        # 应用字段映射
         expected_output = standardized_instruction.get("expected_output")
         if expected_output and expected_output.get("required_fields"):
             results = self.processor_manager.process_field(
@@ -382,7 +385,7 @@ class AIForgeSearchManager:
             return freeform_result
 
         ProgressIndicator.show_search_process("系统默认")
-        # 所有层级都失败
+        # 所有层级都失败，系统搜索成功率较低
         return {
             "data": [],
             "status": "error",

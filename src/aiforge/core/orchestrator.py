@@ -19,6 +19,7 @@ from ..templates.template_manager import TemplateManager
 from .managers.config_manager import AIForgeConfigManager
 from ..strategies.parameter_mapping_service import ParameterMappingService
 from ..execution.engine import AIForgeExecutionEngine
+from .managers.content_generation_manager import AIForgeContentGenerationManager
 
 
 class AIForgeOrchestrator:
@@ -55,6 +56,7 @@ class AIForgeOrchestrator:
         self._init_execution_manager()
         self._init_template_manager()
         self._init_search_manager()
+        self._init_content_generation_manager()
 
         self._initialized = True
 
@@ -132,6 +134,12 @@ class AIForgeOrchestrator:
 
         execution_engine = AIForgeExecutionEngine(self.components)
         self.components["execution_engine"] = execution_engine
+
+    def _init_content_generation_manager(self):
+        """初始化内容生成管理器"""
+        self.components["content_generation_manager"] = AIForgeContentGenerationManager(
+            self.components
+        )
 
     def _init_adapters(self):
         """初始化适配器"""

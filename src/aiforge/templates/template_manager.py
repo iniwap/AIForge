@@ -46,9 +46,16 @@ class TemplateManager:
     def _validate_and_map_parameters(self, template: Dict[str, Any], kwargs: Dict[str, Any]):
         """使用参数映射服务进行参数验证和映射"""
         if self.parameter_mapping_service and template.get("func"):
+            # 保存用户原始参数
+            original_kwargs = kwargs.copy()
+
             # 使用参数映射服务进行智能参数映射
             mapped_params = self.parameter_mapping_service.map_parameters(template["func"], kwargs)
-            kwargs.update(mapped_params)
+
+            # 合并参数，但保持用户原始参数的优先级
+            for key, value in mapped_params.items():
+                if key not in original_kwargs:  # 只添加用户未提供的参数
+                    kwargs[key] = value
 
         # 原有的验证逻辑
         parameters = template.get("parameters", {})
@@ -123,14 +130,22 @@ class TemplateManager:
                         "default": 10,
                         "description": "最大结果数",
                     },
+                    "min_items": {
+                        "type": "int",
+                        "required": False,
+                        "default": 5,
+                        "description": "最小结果数",
+                    },
                     "min_abstract_len": {
                         "type": "str",
                         "required": False,
+                        "default": 300,
                         "description": "最少摘要字数",
                     },
                     "max_abstract_len": {
                         "type": "str",
                         "required": False,
+                        "default": 500,
                         "description": "最多摘要字数",
                     },
                 },

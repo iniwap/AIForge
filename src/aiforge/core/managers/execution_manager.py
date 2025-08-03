@@ -30,25 +30,14 @@ class AIForgeExecutionManager:
 
     def _run_with_standardized_instruction(self, instruction: str) -> Optional[Dict[str, Any]]:
         """基于标准化指令的统一执行流程"""
-        instruction_analyzer = self.components.get("instruction_analyzer")
-
-        if not instruction_analyzer:
+        if not self.components.get("instruction_analyzer"):
             result, _, _ = self.generate_and_execute_with_code(instruction, None, None)
             return result
 
         # 使用统一的指令分析入口
         standardized_instruction = self._get_final_standardized_instruction(instruction)
 
-        # 委托给搜索管理器处理搜索任务
-        search_manager = self.components.get("search_manager")
-        if search_manager and search_manager.is_search_task(standardized_instruction):
-            result = search_manager.execute_multi_level_search(
-                standardized_instruction, instruction
-            )
-            if result["status"] != "error" and len(result["data"]) != 0:
-                return result
-
-        # 非搜索的执行逻辑...
+        task_type = standardized_instruction.get("task_type", "")
         execution_mode = standardized_instruction.get("execution_mode", "code_generation")
         confidence = standardized_instruction.get("confidence", 0)
 
@@ -62,6 +51,29 @@ class AIForgeExecutionManager:
             return self._handle_direct_response(standardized_instruction, instruction)
         elif execution_mode == "direct_ai_response" and confidence >= 0.6:
             return self._handle_direct_response(standardized_instruction, instruction)
+
+        # 内容生成任务委托给专门的管理器
+        if task_type == "content_generation":
+            content_generation_manager = self.components.get("content_generation_manager")
+            if (
+                content_generation_manager
+                and content_generation_manager.can_handle_content_generation(
+                    standardized_instruction
+                )
+            ):
+                return content_generation_manager.execute_content_generation(
+                    standardized_instruction, instruction
+                )
+
+        # 数据获取任务委托给搜索管理器
+        if task_type == "data_fetch":
+            search_manager = self.components.get("search_manager")
+            if search_manager and search_manager.is_search_task(standardized_instruction):
+                result = search_manager.execute_multi_level_search(
+                    standardized_instruction, instruction
+                )
+                if result["status"] != "error" and len(result["data"]) != 0:
+                    return result
 
         # 其他类型按原有逻辑处理
         code_cache = self.components.get("code_cache")

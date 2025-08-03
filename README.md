@@ -50,7 +50,7 @@ AIForge 是一个**突破性的认知计算引擎**，它消除了自然语言�
   
 ## 🚀 快速启动  
   
-### 安装  
+### 安装（推荐uv）  
 ```bash  
 pip install aiforge-engine  
 ```  

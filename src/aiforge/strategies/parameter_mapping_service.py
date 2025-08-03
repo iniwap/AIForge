@@ -20,6 +20,15 @@ class ParameterMappingService:
 
     def _extract_with_strategy(self, param_name: str, available_params: Dict[str, Any]) -> Any:
         """使用策略提取参数值"""
+
+        # 1. 首先尝试精确匹配
+        if param_name in available_params:
+            param_value = available_params[param_name]
+            if isinstance(param_value, dict) and "value" in param_value:
+                return param_value["value"]
+            return param_value
+
+        # 2. 然后使用策略匹配
         for strategy in self.strategies:
             if strategy.can_handle(param_name):
                 result = strategy.map_parameter(param_name, available_params)
@@ -136,7 +145,7 @@ class ParameterMappingService:
             "timeout": 30,
             "limit": 10,
             "min_abstract_len": 300,
-            "max_abstract_len": 500,
+            "max_abstract_len": 1000,
             "page_size": 20,
             "retry_count": 3,
             "query": "",
@@ -168,7 +177,6 @@ class ParameterMappingService:
         """专门用于搜索参数提取的方法"""
         parameters = standardized_instruction.get("required_parameters", {})
         expected_output = standardized_instruction.get("expected_output", {})
-
         # 使用现有的映射策略
         search_query = (
             self._extract_with_strategy("search_query", parameters) or original_instruction
@@ -209,7 +217,7 @@ class ParameterMappingService:
             "max_results": max_results,
             "min_items": min_items,
             "min_abstract_len": self._extract_with_strategy("min_abstract_len", parameters) or 300,
-            "max_abstract_len": self._extract_with_strategy("max_abstract_len", parameters) or 500,
+            "max_abstract_len": self._extract_with_strategy("max_abstract_len", parameters) or 1000,
         }
 
 
@@ -265,6 +273,15 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
             # max_results 只接受明确表示"最大"语义的参数，不包括 quantity
             "max_results": ["max_results", "max_limit", "max_count", "max_size"],
             "min_items": ["min_items", "min_count", "quantity"],
+            "min_abstract_len": [
+                "min_abstract_len",
+                "min_content_len",
+                "min_article_len",
+                "abstract_len",
+                "content_len",
+                "article_len",
+            ],
+            "max_abstract_len": ["max_abstract_len", "max_content_len", "max_article_len"],
         }
 
         candidates = mappings.get(param_name, [])
