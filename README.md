@@ -15,7 +15,7 @@
 ---  
   
 ## 🎯 什么是 AIForge？  
-![alt text](logo.jpg)  
+![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
 AIForge 是一个**突破性的认知计算引擎**，它消除了自然语言与代码执行之间的壁垒。通过先进的**意图理解算法**和**自适应执行架构**，AIForge 能够：  
   
 - 🧠 **深度理解** - 多维度解析复杂指令，精准捕获用户意图  
