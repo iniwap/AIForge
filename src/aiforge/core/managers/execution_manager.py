@@ -4,6 +4,7 @@ import time
 from ..prompt import AIForgePrompt
 from ...adapters.input.input_adapter_manager import InputSource
 from ..helpers.cache_helper import CacheHelper
+from ...utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeExecutionManager:
@@ -73,7 +74,7 @@ class AIForgeExecutionManager:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """使用通用验证的缓存优先执行策略"""
-        print("[DEBUG] 进入通用验证缓存优先执行策略")
+        ProgressIndicator.show_cache_lookup()
 
         code_cache = self.components["code_cache"]
         cached_modules = code_cache.get_cached_modules_by_standardized_instruction(
@@ -81,28 +82,21 @@ class AIForgeExecutionManager:
         )
 
         if cached_modules:
-            print(f"[DEBUG] 找到 {len(cached_modules)} 个缓存模块，进行验证和执行")
+            ProgressIndicator.show_cache_found(len(cached_modules))
 
             validated_modules = self._final_validation_before_execution(
                 cached_modules, standardized_instruction
             )
 
             if validated_modules:
+                ProgressIndicator.show_cache_execution()
                 cache_result = self.try_execute_cached_modules(
                     validated_modules, standardized_instruction
                 )
                 if cache_result is not None:
-                    print("[DEBUG] 缓存执行成功且验证通过")
                     return cache_result
-                else:
-                    print("[DEBUG] 缓存执行失败或验证不通过，回退到AI生成")
-            else:
-                print("[DEBUG] 所有缓存模块验证失败，走AI生成路径")
-        else:
-            print("[DEBUG] 未找到缓存模块")
-
         # 缓存失败或验证不通过，走AI生成路径
-        print("[DEBUG] 回退到AI生成路径")
+
         return self._execute_with_ai(standardized_instruction, original_instruction, True)
 
     def _final_validation_before_execution(
@@ -112,7 +106,6 @@ class AIForgeExecutionManager:
         validated_modules = []
 
         for module_data in cached_modules:
-            module_id = module_data[0]
 
             # 检查模块代码内容
             try:
@@ -125,14 +118,9 @@ class AIForgeExecutionManager:
                         module_code, standardized_instruction
                     ):
                         validated_modules.append(module_data)
-                        print(f"[DEBUG] 模块 {module_id} 通过通用验证")
-                    else:
-                        print(f"[DEBUG] 模块 {module_id} 参数使用验证失败")
-                else:
-                    print(f"[DEBUG] 模块 {module_id} 意图匹配验证失败")
 
-            except Exception as e:
-                print(f"[DEBUG] 验证模块 {module_id} 时出错: {e}")
+            except Exception:
+                pass
 
         return validated_modules
 
@@ -181,8 +169,6 @@ class AIForgeExecutionManager:
                 CacheHelper.save_standardized_module(
                     self.components, standardized_instruction, code
                 )
-            else:
-                print("[DEBUG] 代码未通过标准化验证，不予缓存")
 
         return result
 
@@ -197,7 +183,6 @@ class AIForgeExecutionManager:
 
         # 核心：只进行参数使用的数据流分析验证
         if not self._validate_parameter_usage_with_dataflow(code, standardized_instruction):
-            print("[DEBUG] 代码未通过数据流参数使用验证，不予缓存")
             return False
 
         # 可以添加其他标准化相关的验证
@@ -206,28 +191,20 @@ class AIForgeExecutionManager:
 
     def _get_final_standardized_instruction(self, instruction: str) -> Dict[str, Any]:
         """获取最终的标准化指令"""
-        print(f"[DEBUG] 输入指令: {instruction}")
 
         instruction_analyzer = self.components["instruction_analyzer"]
 
         # 第一步：本地分析（已包含输出格式）
         local_analysis = instruction_analyzer.local_analyze_instruction(instruction)
-        print(
-            f"[DEBUG] 本地分析结果: task_type={local_analysis.get('task_type')}, confidence={local_analysis.get('confidence')}"  # noqa 501
-        )
 
         # 第二步：如果置信度低，尝试AI分析
         confidence = local_analysis.get("confidence", 0)
         final_analysis = local_analysis
 
         if confidence < 0.6:
-            print(f"[DEBUG] 置信度低({confidence})，尝试AI分析...")
             ai_analysis = self._try_ai_standardization(instruction)
             if ai_analysis and ai_analysis.get("confidence", 0) > confidence:
                 final_analysis = ai_analysis
-                print(f"[DEBUG] AI分析成功: task_type={ai_analysis.get('task_type')}")
-
-        print(f"[DEBUG] 最终标准化指令（含输出格式）: {final_analysis}")
 
         return final_analysis
 
@@ -237,8 +214,6 @@ class AIForgeExecutionManager:
         if not instruction_analyzer:
             return None
 
-        print(f"[DEBUG] 开始AI标准化分析: {instruction}")
-
         try:
             # 使用自适应分析提示词
             analysis_prompt = instruction_analyzer.get_adaptive_analysis_prompt()
@@ -247,7 +222,6 @@ class AIForgeExecutionManager:
             )
 
             ai_analysis = instruction_analyzer.parse_standardized_instruction(response)
-            print(f"[DEBUG] AI分析原始结果: {ai_analysis}")
 
             if instruction_analyzer.is_ai_analysis_valid(ai_analysis):
                 # 检查是否有数量相关的参数，并确保 expected_output 正确设置
@@ -273,10 +247,8 @@ class AIForgeExecutionManager:
                 ai_analysis["confidence"] = 0.9
 
                 return ai_analysis
-            else:
-                print("[DEBUG] AI分析验证失败")
-        except Exception as e:
-            print(f"[DEBUG] AI分析异常: {e}")
+
+        except Exception:
             pass
 
         return None
@@ -290,10 +262,8 @@ class AIForgeExecutionManager:
 
         for module_id, file_path, success_count, failure_count in cached_modules:
             try:
-                print(f"[DEBUG] 尝试加载模块: {module_id}")
                 module = code_cache.load_module(module_id)
                 if module:
-                    print("[DEBUG] 模块加载成功，开始执行")
                     result = self._execute_cached_module(
                         module,
                         standardized_instruction.get("target", ""),
@@ -320,22 +290,15 @@ class AIForgeExecutionManager:
                         else:
                             # 如果执行引擎不可用，使用基本验证作为回退
                             is_valid = result.get("status") == "success" and result.get("data")
-                            print("[DEBUG] 执行引擎不可用，使用基本验证")
 
                         if is_valid:
-                            print("[DEBUG] 缓存模块执行成功且验证通过")
                             code_cache.update_module_stats(module_id, True)
                             return result
                         else:
-                            print("[DEBUG] 缓存模块执行结果验证失败")
                             code_cache.update_module_stats(module_id, False)
                     else:
-                        print("[DEBUG] 模块执行返回None")
                         code_cache.update_module_stats(module_id, False)
-                else:
-                    print("[DEBUG] 模块加载失败")
-            except Exception as e:
-                print(f"[DEBUG] 模块执行异常: {e}")
+            except Exception:
                 code_cache.update_module_stats(module_id, False)
 
         return None
@@ -346,12 +309,10 @@ class AIForgeExecutionManager:
 
         # 通用参数化程度检查
         if not self._validate_parameterization_level(code, required_params):
-            print("[DEBUG] 代码参数化程度不足")
             return False
 
         # 通用功能一致性检查
         if not self._validate_functionality_consistency(code, standardized_instruction):
-            print("[DEBUG] 代码功能一致性验证失败")
             return False
 
         return True
@@ -439,7 +400,6 @@ class AIForgeExecutionManager:
             )
 
         # 如果执行引擎不可用，返回默认值
-        print("[DEBUG] 执行引擎不可用，跳过数据流分析")
         return True
 
     def generate_and_execute_with_code(
@@ -479,8 +439,7 @@ class AIForgeExecutionManager:
                     result = executor.execute(module, instruction, **kwargs)
                     if result is not None:
                         return result
-                except Exception as e:
-                    print(f"[DEBUG] 执行器执行失败: {e}")
+                except Exception:
                     continue
         return None
 

@@ -41,7 +41,6 @@ class AIForgeLLMManager:
             if client and client.is_usable():
                 self.clients[default_provider_name] = client
                 self.current_client = client
-                self.console.print(f"[green]已初始化默认LLM客户端: {default_provider_name}[/green]")
                 return
             else:
                 self.console.print(

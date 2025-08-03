@@ -1,9 +1,10 @@
 version = 1
+revision = 1
 requires-python = ">=3.10"
 
 [[package]]
-name = "aiforge"
-version = "0.0.1"
+name = "aiforge-engine"
+version = "0.0.2"
 source = { editable = "." }
 
 [package.optional-dependencies]
@@ -26,6 +27,7 @@ requires-dist = [
     { name = "textual", marker = "extra == 'gui'" },
     { name = "uvicorn", marker = "extra == 'web'" },
 ]
+provides-extras = ["gui", "web"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "python-dotenv", specifier = ">=1.1.1" }]

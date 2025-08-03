@@ -45,11 +45,9 @@ class SemanticActionMatcher:
         # 对于 AI 生成的动作，保持原始语义
         if source == "ai_analysis":
             standardized_action = action  # 保持原样
-            print(f"[DEBUG] AI生成动作保持原样: '{action}'")
         else:
             # 只对本地分析结果进行标准化
             standardized_action = self._standardize_action_before_clustering(action)
-            print(f"[DEBUG] 本地动作标准化: '{action}' → '{standardized_action}'")
 
         # 生成动作向量（使用标准化后的动作）
         action_vector = self._get_action_vector(standardized_action)
@@ -67,11 +65,9 @@ class SemanticActionMatcher:
         # 如果没有找到合适的聚类，创建新聚类
         if best_cluster is None:
             best_cluster = self._create_new_cluster(standardized_action)
-            print(f"[DEBUG] 创建新聚类: {best_cluster} for '{standardized_action}'")
         else:
             # 将标准化后的动作添加到现有聚类
             self._add_to_cluster(best_cluster, standardized_action)
-            print(f"[DEBUG] 添加到现有聚类: {best_cluster} for '{standardized_action}'")
 
         return best_cluster
 

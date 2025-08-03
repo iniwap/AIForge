@@ -35,8 +35,8 @@ class ClassInstantiationStrategy(ExecutionStrategy):
                     use_advanced_mapping=False,  # 类策略使用基础映射
                 )
 
-        except Exception as e:
-            print(f"[DEBUG] 类实例化执行失败: {e}")
+        except Exception:
+            pass
 
         return None
 

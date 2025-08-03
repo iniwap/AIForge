@@ -3,6 +3,7 @@ import time
 from rich.console import Console
 from typing import Dict, Any
 from .conversation_manager import ConversationManager
+from ..utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeLLMClient:
@@ -47,8 +48,15 @@ class AIForgeLLMClient:
     ) -> str | None:
         """生成代码的核心方法"""
 
+        # 添加进度指示器
+
+        ProgressIndicator.show_llm_request(self.name)
+
         for attempt in range(max_retries):
             try:
+                if attempt == 0:
+                    ProgressIndicator.show_llm_generating()
+
                 headers = {
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
@@ -69,7 +77,6 @@ class AIForgeLLMClient:
                 if instruction:
                     messages.append({"role": "user", "content": instruction})
 
-                print("send messages=>", messages)
                 payload = {
                     "model": self.model,
                     "messages": messages,
@@ -85,6 +92,7 @@ class AIForgeLLMClient:
                 )
 
                 if response.status_code == 200:
+                    ProgressIndicator.show_llm_complete()
                     result = response.json()
                     assistant_response = result["choices"][0]["message"]["content"]
 

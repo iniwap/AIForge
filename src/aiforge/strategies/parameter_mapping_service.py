@@ -633,8 +633,8 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
                     if success_rate > 0.6:
                         return available_params.get(best_mapping.source_param)
 
-            except Exception as e:
-                print(f"[DEBUG] 查询历史映射失败: {e}")
+            except Exception:
+                pass
 
         return None
 
@@ -829,8 +829,8 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
                     mapping_record.last_used = time.time()
                     mapping_record.save()
 
-            except Exception as e:
-                print(f"[DEBUG] 记录映射尝试失败: {e}")
+            except Exception:
+                pass
 
     def update_mapping_success(
         self, target_param: str, source_param: str, context: Optional[Dict[str, Any]], success: bool
@@ -861,9 +861,9 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
                 mapping_record.save()
 
             except self.ParameterMappingStats.DoesNotExist:
-                print(f"[DEBUG] 映射记录不存在: {mapping_id}")
-            except Exception as e:
-                print(f"[DEBUG] 更新映射统计失败: {e}")
+                pass
+            except Exception:
+                pass
 
     def cleanup_low_performance_mappings(self, failure_threshold: float = 0.8):
         """清理低性能映射记录（使用Peewee ORM）"""
@@ -891,9 +891,5 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
                 for mapping in low_performance_mappings:
                     mapping.delete_instance()
                     deleted_count += 1
-
-                if deleted_count > 0:
-                    print(f"[DEBUG] 清理了 {deleted_count} 个低性能映射记录")
-
-            except Exception as e:
-                print(f"[DEBUG] 清理映射记录失败: {e}")
+            except Exception:
+                pass

@@ -236,7 +236,6 @@ class TaskClassifier:
         if not is_builtin:
             # 检查是否与现有类型过于相似
             if self._is_too_similar_to_existing_types(task_type, builtin_types):
-                print(f"[DEBUG] 新任务类型 '{task_type}' 与现有类型过于相似")
                 return False
 
         # 5. 注册新的任务类型和动作（如果有管理器）
@@ -254,10 +253,6 @@ class TaskClassifier:
             # 记录类型使用统计
             builtin_types = list(self.standardized_patterns.keys())
             is_builtin = task_type in builtin_types
-            if is_builtin:
-                print(f"[DEBUG] 使用内置任务类型: {task_type}")
-            else:
-                print(f"[DEBUG] 创建新任务类型: {task_type}")
 
         return True
 

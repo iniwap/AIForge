@@ -151,7 +151,6 @@ class FileOperationConfirmationManager:
             return False
 
         print(confirmation_prompt)
-        print()
 
         max_attempts = 3
         for attempt in range(max_attempts):
@@ -200,8 +199,8 @@ class FileOperationBackupManager:
             try:
                 with open(self.manifest_file, "r", encoding="utf-8") as f:
                     return json.load(f)
-            except Exception as e:
-                print(f"[WARNING] 加载备份清单失败: {e}")
+            except Exception:
+                pass
         return {}
 
     def _save_manifest(self):
@@ -209,8 +208,8 @@ class FileOperationBackupManager:
         try:
             with open(self.manifest_file, "w", encoding="utf-8") as f:
                 json.dump(self.backup_manifest, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"[ERROR] 保存备份清单失败: {e}")
+        except Exception:
+            pass
 
     def create_operation_backup(self, affected_files: List[str]) -> str:
         """为即将操作的文件创建备份"""
@@ -259,8 +258,7 @@ class FileOperationBackupManager:
                 if Path(backup_file).exists():
                     shutil.copy2(backup_file, original_file)
             return True
-        except Exception as e:
-            print(f"[ERROR] 备份恢复失败: {e}")
+        except Exception:
             return False
 
 
@@ -313,8 +311,7 @@ class FileOperationUndoManager:
                 try:
                     Path(target_path).unlink()
                     return True
-                except Exception as e:
-                    print(f"[ERROR] 撤销复制操作失败: {e}")
+                except Exception:
                     return False
 
         return True

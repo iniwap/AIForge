@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 import time
 from ..helpers.cache_helper import CacheHelper
 from ...strategies.semantic_field_strategy import SemanticFieldStrategy, FieldProcessorManager
+from ...utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeSearchManager:
@@ -49,10 +50,7 @@ class AIForgeSearchManager:
             if not search_params["search_query"]:
                 return None
 
-            print(
-                f"[DEBUG] 直接调用search_web: query={search_params['search_query']}, max_results={search_params['max_results']}, min_items={search_params['min_items']}"  # noqa 501
-            )
-
+            ProgressIndicator.show_search_start(search_params["search_query"])
             # 直接调用
             template_manager = self.components.get("template_manager")
             if template_manager:
@@ -68,6 +66,7 @@ class AIForgeSearchManager:
                 return None
 
             if search_result:
+                ProgressIndicator.show_search_complete(len(search_result.get("results", 0)))
                 # 转换为AIForge标准格式
                 return self._convert_search_result_to_aiforge_format(
                     search_result, standardized_instruction, "direct_search_web"
@@ -75,8 +74,7 @@ class AIForgeSearchManager:
 
             return None
 
-        except Exception as e:
-            print(f"[DEBUG] 直接搜索调用失败: {e}")
+        except Exception:
             return None
 
     def _try_cached_search(
@@ -97,7 +95,6 @@ class AIForgeSearchManager:
             )
 
             if cached_modules:
-                print(f"[DEBUG] 找到 {len(cached_modules)} 个搜索缓存模块")
 
                 execution_manager = self.components.get("execution_manager")
                 if not execution_manager:
@@ -119,8 +116,7 @@ class AIForgeSearchManager:
 
             return None
 
-        except Exception as e:
-            print(f"[DEBUG] 缓存搜索失败: {e}")
+        except Exception:
             return None
 
     def _try_template_guided_search(
@@ -135,10 +131,6 @@ class AIForgeSearchManager:
 
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
-
-            print(
-                f"[DEBUG] 模板引导搜索: query={search_params['search_query']}, max_results={search_params['max_results']}"  # noqa 501
-            )
 
             # 生成搜索指令
             template_manager = self.components.get("template_manager")
@@ -172,7 +164,6 @@ class AIForgeSearchManager:
                 )
 
                 CacheHelper.save_standardized_module(self.components, template_instruction, code)
-                print("[DEBUG] 模板引导搜索代码已缓存")
 
                 # 标记执行类型
                 result["metadata"]["execution_type"] = "template_guided_search"
@@ -180,12 +171,7 @@ class AIForgeSearchManager:
 
             return None, False
 
-        except Exception as e:
-            import traceback
-
-            traceback.print_exc()
-
-            print(f"[DEBUG] 模板引导搜索失败: {e}")
+        except Exception:
             return None, False
 
     def _try_free_form_search(
@@ -200,10 +186,6 @@ class AIForgeSearchManager:
 
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
-
-            print(
-                f"[DEBUG] 自由形式搜索: query={search_params['search_query']}, max_results={search_params['max_results']}"  # noqa 501
-            )
 
             # 生成搜索指令
             template_manager = self.components.get("template_manager")
@@ -237,7 +219,6 @@ class AIForgeSearchManager:
                 )
 
                 CacheHelper.save_standardized_module(self.components, freeform_instruction, code)
-                print("[DEBUG] 自由形式搜索代码已缓存")
 
                 # 标记执行类型
                 result["metadata"]["execution_type"] = "free_form_search"
@@ -245,12 +226,7 @@ class AIForgeSearchManager:
 
             return None, False
 
-        except Exception as e:
-            import traceback
-
-            traceback.print_exc()
-
-            print(f"[DEBUG] 自由形式搜索失败: {e}")
+        except Exception:
             return None, False
 
     def _extract_search_query(
@@ -375,45 +351,38 @@ class AIForgeSearchManager:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """执行多层级搜索策略"""
-        print("[DEBUG] 开始多层级搜索策略")
 
         # 第一层：直接调用 search_web
-        print("[DEBUG] 第一层：尝试直接调用 search_web")
-
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
-            print("[DEBUG] 第一层搜索成功，直接返回")
             return direct_result
 
         # 第二层：使用缓存中的搜索函数
-        print("[DEBUG] 第二层：尝试使用缓存搜索")
+        ProgressIndicator.show_search_process("系统缓存")
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)
         if cache_result and self._validate_search_result_quality(
             cache_result, standardized_instruction
         ):
-            print("[DEBUG] 第二层缓存搜索成功，直接返回")
             return cache_result
 
         # 第三层：使用 get_template_guided_search_instruction
-        print("[DEBUG] 第三层：尝试模板引导搜索")
+        ProgressIndicator.show_search_process("AI模板")
         template_result, success = self._try_template_guided_search(
             standardized_instruction, original_instruction
         )
         if success:
-            print("[DEBUG] 第三层模板搜索成功，返回结果")
             return template_result
 
         # 第四层：使用 get_free_form_ai_search_instruction
-        print("[DEBUG] 第四层：尝试自由形式搜索")
+        ProgressIndicator.show_search_process("AI自由")
         freeform_result, success = self._try_free_form_search(
             standardized_instruction, original_instruction
         )
         if success:
-            print("[DEBUG] 第四层自由形式搜索成功，返回结果")
             return freeform_result
 
+        ProgressIndicator.show_search_process("系统默认")
         # 所有层级都失败
-        print("[DEBUG] 所有搜索层级都失败")
         return {
             "data": [],
             "status": "error",

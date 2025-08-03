@@ -114,8 +114,7 @@ class SemanticFieldStrategy(FieldProcessorStrategy):
 
             similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
             return float(similarity)
-        except Exception as e:
-            print(f"[DEBUG] 语义相似度计算失败: {e}")
+        except Exception:
             return 0.0
 
     def get_strategy_name(self) -> str:
@@ -244,11 +243,9 @@ class FieldProcessorManager:
         # 找到能处理当前数据的策略
         for strategy in self.strategies:
             if strategy.can_handle(source_data):
-                print(f"[DEBUG] 使用策略: {strategy.get_strategy_name()}")
                 return strategy.process_fields(source_data, expected_fields)
 
         # 如果没有找到合适的策略，使用默认策略
-        print(f"[DEBUG] 使用默认策略: {self.default_strategy.get_strategy_name()}")
         return self.default_strategy.process_fields(source_data, expected_fields)
 
     def add_strategy(self, strategy: FieldProcessorStrategy):

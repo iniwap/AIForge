@@ -395,8 +395,8 @@ class AIForgeInstructionAnalyzer:
                     builtin_count / total_count if total_count > 0 else 0.0
                 )
 
-            except Exception as e:
-                print(f"[DEBUG] 获取使用统计失败: {e}")
+            except Exception:
+                pass
 
         return stats
 

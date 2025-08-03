@@ -25,12 +25,12 @@ class TestFileOperations(TestAIForgeArchitecture):
 
         # 创建文本文件
         text_file = Path(temp_workspace) / "sample.txt"
-        text_file.write_text("这是一个测试文件\\nHello World!", encoding="utf-8")
+        text_file.write_text("这是一个测试文件\nHello World!", encoding="utf-8")
         files["text_file"] = str(text_file)
 
         # 创建CSV文件
         csv_file = Path(temp_workspace) / "data.csv"
-        csv_file.write_text("name,age,city\\n张三,25,北京\\n李四,30,上海", encoding="utf-8")
+        csv_file.write_text("name,age,city\n张三,25,北京\n李四,30,上海", encoding="utf-8")
         files["csv_file"] = str(csv_file)
 
         # 创建目录结构
@@ -118,7 +118,7 @@ class TestFileOperations(TestAIForgeArchitecture):
     def test_file_write_operation(self, forge, temp_workspace):
         """测试文件写入操作"""
         target_file = os.path.join(temp_workspace, "written.txt")
-        content = "这是通过AIForge写入的内容\\n测试写入功能"
+        content = "这是通过AIForge写入的内容\n测试写入功能"
 
         instruction = f"将内容'{content}'写入文件 {target_file}"
         result = forge(instruction)
@@ -251,7 +251,7 @@ class TestFileOperations(TestAIForgeArchitecture):
         # 创建一个相对较大的文件（1MB）
         with open(large_file, "w", encoding="utf-8") as f:
             for i in range(10000):
-                f.write(f"这是第{i}行内容，用于测试大文件处理能力。\\n")
+                f.write(f"这是第{i}行内容，用于测试大文件处理能力。\n")
 
         instruction = f"读取文件 {large_file} 的前100行"
         result = forge(instruction)

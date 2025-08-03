@@ -49,6 +49,5 @@ class CacheHelper:
             # 调用缓存的保存方法
             result = code_cache.save_standardized_module(standardized_instruction, code, metadata)
             return result
-        except Exception as e:
-            print(f"[DEBUG] 保存缓存失败: {e}")
+        except Exception:
             return None

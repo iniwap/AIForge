@@ -1,20 +1,86 @@
-[project]
-name = "aiforge"
-version = "0.0.1"
-requires-python = ">=3.10"
-description = "AIForge 核心 + 可选 GUI/Web 界面支持"
-
-
-[project.optional-dependencies]
-gui = ["textual"]
-web = ["fastapi", "uvicorn"]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.setuptools.package-data]
-"aiforge.models" = ["sentence_transformers/paraphrase-MiniLM-L6-v2/*"]
+[project]
+name = "aiforge-engine"
+version = "0.0.2"
+description = "Intelligent Intent Adaptive Execution Engine - 智能意图自适应执行引擎"
+readme = "README.md"
+license = { text = "Apache 2.0" }
+requires-python = ">=3.10"
+
+authors = [{ name = "iniwap", email = "iniwaper@gmail.com" }]
+maintainers = [{ name = "iniwap", email = "iniwaper@gmail.com" }]
+
+keywords = [
+    "ai",
+    "automation",
+    "intent",
+    "execution",
+    "engine",
+    "llm",
+    "natural-language",
+    "code-generation",
+    "search",
+    "aipyapp",
+    "crewai",
+    "agent",
+    "ai-agents",
+    "manus",
+    "ai-tools",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache 2.0 License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+]
+
+dependencies = [
+    "requests>=2.25.0",
+    "beautifulsoup4>=4.9.0",
+    "sentence-transformers>=2.0.0",
+    "click>=8.0.0",
+    "tomlkit>=0.10.0",
+]
+
+[project.optional-dependencies]
+gui = ["textual>=0.40.0"]
+web = ["fastapi>=0.100.0", "uvicorn>=0.20.0"]
+dev = ["python-dotenv>=1.0.0", "pytest>=7.0.0"]
+all = ["textual>=0.40.0", "fastapi>=0.100.0", "uvicorn>=0.20.0"]
+
+[project.urls]
+Homepage = "https://github.com/iniwap/AIForge"
+Documentation = "https://iniwap.github.io/AIForge"
+Repository = "https://github.com/iniwap/AIForge"
+"Bug Tracker" = "https://github.com/iniwap/AIForge/issues"
+Changelog = "https://github.com/iniwap/AIForge/releases"
+"Source Code" = "https://github.com/iniwap/AIForge"
+Discord = "https://discord.gg/ksPhVyWz"
+Twitter = "https://twitter.com/iafun_tipixel"
+
+[project.scripts]
+aiforge = "aiforge.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aiforge"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/README.md", "/LICENSE", "/pyproject.toml"]
+
 
 [dependency-groups]
 dev = ["python-dotenv>=1.1.1"]

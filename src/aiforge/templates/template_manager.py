@@ -136,8 +136,8 @@ class TemplateManager:
                 },
             )
 
-        except ImportError as e:
-            print(f"[WARNING] 无法导入搜索模板: {e}")
+        except ImportError:
+            pass
 
     def register_template(
         self,
@@ -268,11 +268,11 @@ class TemplateManager:
                 try:
                     template_module = importlib.import_module(module_name)
                     self._register_module_templates(template_module, py_file.stem)
-                except ImportError as e:
-                    print(f"[WARNING] 无法导入模板模块 {module_name}: {e}")
+                except ImportError:
+                    pass
 
-        except Exception as e:
-            print(f"[WARNING] 模板发现失败: {e}")
+        except Exception:
+            pass
 
     def _register_module_templates(self, module, module_name: str):
         """注册模块中的模板函数"""

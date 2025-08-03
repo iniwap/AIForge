@@ -115,7 +115,6 @@ class AIForgeResultProcessor:
 
         if any(sys_err in error_info for sys_err in system_errors):
             # 系统级错误不发送给 AI，直接记录日志
-            print(f"[SYSTEM ERROR] {error_info}")
             return None
 
         # 构建简化的错误反馈
@@ -168,14 +167,12 @@ class AIForgeResultProcessor:
         """严格的缓存结果验证"""
         # 严格的格式验证
         if not AIForgeResultProcessor.validate_result_format(result):
-            print("[DEBUG] 缓存结果格式验证失败")
             return False
 
         # 严格的状态检查
         if isinstance(result, dict):
             status = result.get("status")
             if status != "success":
-                print(f"[DEBUG] 缓存结果状态不是success: {status}")
                 return False
 
             result_data = result.get("result", {})
@@ -186,7 +183,6 @@ class AIForgeResultProcessor:
                     or "failed" in str(result_data).lower()
                     or "traceback" in str(result_data).lower()
                 ):
-                    print("[DEBUG] 缓存结果包含错误信息")
                     return False
 
         # 严格的预期输出验证
@@ -196,7 +192,6 @@ class AIForgeResultProcessor:
 
         # 严格的数据完整性检查
         if not AIForgeResultProcessor.strict_data_integrity_check(result):
-            print("[DEBUG] 缓存结果数据完整性检查失败")
             return False
 
         return True
@@ -230,14 +225,12 @@ class AIForgeResultProcessor:
 
         data = result.get("data", [])
         if not isinstance(data, list) or len(data) == 0:
-            print("[DEBUG] 严格验证失败：data字段为空，未获取到有效数据")
             return False
 
         required_fields = expected_output.get("required_fields", [])
         if required_fields and len(data) > 0:
             first_item = data[0]
             if not isinstance(first_item, dict):
-                print("[DEBUG] 严格验证失败：数据项必须是字典格式")
                 return False
 
             # 使用语义字段策略进行字段映射验证
@@ -246,9 +239,6 @@ class AIForgeResultProcessor:
                 # 查找语义匹配的字段
                 matched_field = field_processor._find_best_source_field(first_item, field)
                 if matched_field not in first_item:
-                    print(
-                        f"[DEBUG] 严格验证失败：数据项缺少必需字段 {field} (尝试匹配: {matched_field})"
-                    )
                     return False
 
         # 验证非空字段
@@ -267,9 +257,6 @@ class AIForgeResultProcessor:
                             or value == ""
                             or (isinstance(value, (list, dict)) and len(value) == 0)
                         ):
-                            print(
-                                f"[DEBUG] 严格验证失败：字段 {field} (匹配: {matched_field}) 为空"
-                            )
                             return False
 
         return True
@@ -280,28 +267,23 @@ class AIForgeResultProcessor:
         # 统一从标准位置获取数据
         data = result.get("data")
         if data is None:
-            print("[DEBUG] 数据完整性检查失败：缺少data字段")
             return False
 
         if not isinstance(data, list):
-            print("[DEBUG] 数据完整性检查失败：data字段必须是列表")
             return False
 
         if len(data) == 0:
-            print("[DEBUG] 数据完整性检查失败：data字段为空")
             return False
 
         # 检查数据项的完整性
         for i, item in enumerate(data):
             if not isinstance(item, dict):
-                print(f"[DEBUG] 数据完整性检查失败：data[{i}]必须是字典格式")
                 return False
 
             # 检查是否包含错误指示符
             item_str = str(item).lower()
             error_indicators = ["error", "failed", "exception", "traceback"]
             if any(indicator in item_str for indicator in error_indicators):
-                print(f"[DEBUG] 数据完整性检查失败：data[{i}]包含错误信息")
                 return False
 
         return True

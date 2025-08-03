@@ -96,7 +96,7 @@ class AIForgeTask:
                         if not msg.get("metadata", {}).get("is_error_feedback")
                     ]
 
-            self.console.print(f"\\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
+            self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
 
             round_success, round_result, round_code, fail_best = (
                 self.executor.execute_single_round_with_optimization(

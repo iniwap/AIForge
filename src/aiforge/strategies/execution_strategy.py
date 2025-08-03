@@ -66,8 +66,7 @@ class ExecutionStrategy(ABC):
             # 回退到基础参数映射
             return self._basic_parameter_mapping_and_call(func, parameters)
 
-        except Exception as e:
-            print(f"[DEBUG] 参数化调用失败: {e}")
+        except Exception:
             return None
 
     def _execute_with_feedback(self, func, mapped_params, context=None):

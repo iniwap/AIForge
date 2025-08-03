@@ -39,7 +39,6 @@ class ExecutionStrategyManager:
                     result = strategy.execute(module, **kwargs)
                     if result is not None:
                         return result
-                except Exception as e:
-                    print(f"[DEBUG] 策略 {strategy.__class__.__name__} 执行失败: {e}")
+                except Exception:
                     continue
         return None

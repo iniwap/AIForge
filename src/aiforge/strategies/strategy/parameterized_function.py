@@ -34,8 +34,6 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
             return result
 
         # 如果基础映射失败，尝试多种调用策略作为最后回退
-        print(f"[DEBUG] 策略执行: 映射后参数 {parameters}")
-
         # 检查是否为异步函数
         if asyncio.iscoroutinefunction(target_func):
             return asyncio.run(
@@ -135,20 +133,18 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
         # 策略1: 完整参数调用
         if len(param_values) == len(func_param_names) and param_values:
             try:
-                print(f"[DEBUG] 尝试完整参数调用: {param_values}")
                 return func(**param_values)
-            except Exception as e:
-                print(f"[DEBUG] 完整参数调用失败: {e}")
+            except Exception:
+                pass
 
         # 策略2: 部分参数调用（只传递函数需要且我们有的参数）
         if param_values:
             try:
                 filtered_params = {k: v for k, v in param_values.items() if k in func_param_names}
                 if filtered_params:
-                    print(f"[DEBUG] 尝试部分参数调用: {filtered_params}")
                     return func(**filtered_params)
-            except Exception as e:
-                print(f"[DEBUG] 部分参数调用失败: {e}")
+            except Exception:
+                pass
 
         # 策略3: 位置参数调用（按函数参数顺序）
         if param_values:
@@ -161,15 +157,12 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
                         break
 
                 if ordered_values:
-                    print(f"[DEBUG] 尝试位置参数调用: {ordered_values}")
                     return func(*ordered_values)
-            except Exception as e:
-                print(f"[DEBUG] 位置参数调用失败: {e}")
+            except Exception:
+                pass
 
         # 策略4: 无参数调用
         try:
-            print("[DEBUG] 尝试无参数调用")
             return func()
-        except Exception as e:
-            print(f"[DEBUG] 无参数调用失败: {e}")
+        except Exception:
             return None

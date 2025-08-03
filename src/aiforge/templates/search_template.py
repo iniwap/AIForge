@@ -20,6 +20,7 @@ from enum import Enum
 import concurrent.futures
 from ..utils import utils
 from ..strategies.search_template_strategy import StandardTemplateStrategy
+from ..utils.progress_indicator import ProgressIndicator
 
 
 def get_template_guided_search_instruction(
@@ -169,18 +170,22 @@ def search_web(
         for engine in SearchEngine:
             try:
                 if engine == SearchEngine.BAIDU:
+                    ProgressIndicator.show_search_process("百度")
                     search_result = template_baidu_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.BING:
+                    ProgressIndicator.show_search_process("Bing")
                     search_result = template_bing_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.SO_360:
+                    ProgressIndicator.show_search_process("360")
                     search_result = template_360_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.SOUGOU:
+                    ProgressIndicator.show_search_process("搜狗s")
                     search_result = template_sougou_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
@@ -190,7 +195,7 @@ def search_web(
                 # 验证搜索结果质量
                 if validate_search_result(search_result, min_items):
                     return search_result
-            except Exception as e:  # noqa 841
+            except Exception:
                 continue
 
         # 所有搜索引擎都失败，返回 None

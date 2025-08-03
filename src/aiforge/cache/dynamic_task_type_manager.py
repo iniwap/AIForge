@@ -103,7 +103,6 @@ class DynamicTaskTypeManager:
 
         # 保存到文件
         self._save_dynamic_data()
-        print(f"[DEBUG] 注册动态动作: {action} -> {task_type}")
 
     def get_dynamic_action_info(self, action: str) -> Dict[str, Any]:
         """获取动态动作信息"""
@@ -127,8 +126,8 @@ class DynamicTaskTypeManager:
         try:
             with open(dynamic_file, "w", encoding="utf-8") as f:
                 json.dump(dynamic_data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"[DEBUG] 保存动态数据失败: {e}")
+        except Exception:
+            pass
 
     def _load_dynamic_data(self):
         """从文件加载动态数据"""
@@ -140,6 +139,5 @@ class DynamicTaskTypeManager:
                     self.dynamic_types = data.get("dynamic_types", {})
                     self.type_priorities = data.get("type_priorities", {})
                     self.dynamic_actions = data.get("dynamic_actions", {})
-            except Exception as e:
-                print(f"[DEBUG] 加载动态数据失败: {e}")
+            except Exception:
                 self.dynamic_actions = {}

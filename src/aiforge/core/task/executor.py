@@ -195,7 +195,7 @@ class TaskExecutor:
 
                 if optimization_attempt < max_optimization_attempts:
                     self.console.print(
-                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}，发送优化反馈",  # noqa 501
+                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}",
                         style="yellow",
                     )
                     validation_feedback = self.execution_engine.get_validation_feedback(

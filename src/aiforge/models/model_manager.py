@@ -52,14 +52,12 @@ class ModelManager:
         if model_name not in self._loaded_models:
             with self._lock:
                 if model_name not in self._loaded_models:
-                    print(f"[DEBUG] 正在加载语义模型: {model_name}")
                     model_path = self.get_model_path(model_name)
                     from sentence_transformers import SentenceTransformer
 
                     self._loaded_models[model_name] = SentenceTransformer(
                         model_path, tokenizer_kwargs={"clean_up_tokenization_spaces": True}
                     )
-                    print(f"[DEBUG] 语义模型加载完成: {model_name}")
         return self._loaded_models[model_name]
 
     def _get_lightweight_model(self, model_name: str):
@@ -67,10 +65,8 @@ class ModelManager:
         if model_name not in self._lightweight_models:
             with self._lock:
                 if model_name not in self._lightweight_models:
-                    print(f"[DEBUG] 正在初始化轻量级语义模型: {model_name}")
                     lightweight_model = {"tfidf": None, "fitted": False, "type": "lightweight"}
                     self._lightweight_models[model_name] = lightweight_model
-                    print(f"[DEBUG] 轻量级语义模型初始化完成: {model_name}")
         return self._lightweight_models[model_name]
 
     def get_tfidf_vectorizer(self, model_name: str = "paraphrase-MiniLM-L6-v2"):
@@ -86,9 +82,7 @@ class ModelManager:
                 lightweight_model["tfidf"] = TfidfVectorizer(
                     max_features=1000, stop_words="english", ngram_range=(1, 2)
                 )
-                print("[DEBUG] TF-IDF向量化器创建完成")
             except ImportError:
-                print("[DEBUG] scikit-learn未安装，无法使用TF-IDF")
                 return None
         return lightweight_model["tfidf"]
 

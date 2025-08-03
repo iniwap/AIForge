@@ -262,7 +262,6 @@ class AIForgeExecutionEngine:
                     break
 
             if not function_def:
-                print("[DEBUG] 未找到execute_task函数")
                 return False
 
             func_params = [arg.arg for arg in function_def.args.args]
@@ -275,19 +274,16 @@ class AIForgeExecutionEngine:
                 conflicts = security_result.get("conflicts", [])
                 for conflict in conflicts:
                     if conflict["type"] == "api_key_usage":
-                        print(f"[DEBUG] 发现API密钥使用冲突: {conflict}")
                         return False
 
             # 检查参数冲突
             if security_result.get("has_conflicts"):
                 conflicts = security_result.get("conflicts", [])
                 for conflict in conflicts:
-                    print(f"[DEBUG] 发现参数冲突: {conflict}")
                     if (
                         conflict["type"] == "hardcoded_coordinates"
                         and conflict["parameter"] == "location"
                     ):
-                        print("[DEBUG] 检测到硬编码坐标与location参数冲突，拒绝缓存")
                         return False
 
             # 原有的参数使用验证
@@ -298,23 +294,16 @@ class AIForgeExecutionEngine:
                 if param_name in required_params:
                     if param_name in meaningful_uses:
                         meaningful_param_count += 1
-                        print(f"[DEBUG] 参数 {param_name} 有意义使用")
-                    else:
-                        print(f"[DEBUG] 参数 {param_name} 未被有意义使用")
 
             total_required = len([p for p in func_params if p in required_params])
             if total_required == 0:
                 return True
 
             usage_ratio = meaningful_param_count / total_required
-            print(
-                f"[DEBUG] 参数有意义使用比例: {usage_ratio:.2f} ({meaningful_param_count}/{total_required})"
-            )
 
             return usage_ratio >= 0.5
 
-        except Exception as e:
-            print(f"[DEBUG] 数据流分析失败: {e}")
+        except Exception:
             return False
 
     def validate_code_for_caching(
@@ -417,12 +406,10 @@ class AIForgeExecutionEngine:
                                 exec_globals[attr_name] = getattr(module, attr_name)
                     else:
                         exec_globals[name] = getattr(module, import_info["name"])
-            except (ImportError, AttributeError) as e:
+            except (ImportError, AttributeError):
                 fallback_module = self._smart_import_fallback(name, import_info)
                 if fallback_module is not None:
                     exec_globals[name] = fallback_module
-                else:
-                    print(f"[WARNING] 无法导入模块 {name}: {e}")
 
         missing_names = used_names - set(user_imports.keys()) - set(exec_globals.keys())
         for name in missing_names:
@@ -467,7 +454,6 @@ class AIForgeExecutionEngine:
                 smart_module = self._smart_import_missing(name)
                 if smart_module is not None:
                     exec_globals[name] = smart_module
-                    print(f"[INFO] 智能补全导入: {name}")
 
         return exec_globals
 
@@ -594,14 +580,14 @@ class AIForgeExecutionEngine:
 
     def _preprocess_code(self, code: str) -> str:
         """智能代码预处理"""
-        lines = code.split("\\n")
+        lines = code.split("\n")
         processed_lines = []
 
         for line in lines:
             line = line.expandtabs(4)
             processed_lines.append(line)
 
-        return "\\n".join(processed_lines)
+        return "\n".join(processed_lines)
 
     def _extract_result(self, namespace_dict: dict) -> Any:
         """强制验证数组格式的结果提取"""

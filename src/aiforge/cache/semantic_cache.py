@@ -57,7 +57,6 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         if self.config.get("enable_action_clustering", True):
             self.semantic_action_matcher = SemanticActionMatcher(self)
             self._load_action_clusters()
-            print("[DEBUG] 语义动作匹配器已启用")
         else:
             self.semantic_action_matcher = None
 
@@ -73,9 +72,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     self.semantic_action_matcher.action_vectors = cluster_data.get(
                         "action_vectors", {}
                     )
-                print("[DEBUG] 动作聚类数据加载成功")
-            except Exception as e:
-                print(f"[DEBUG] 加载动作聚类数据失败: {e}")
+            except Exception:
+                pass
 
     def _save_action_clusters(self):
         """保存动作聚类数据"""
@@ -87,9 +85,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 }
                 with open(self.action_clusters_path, "wb") as f:
                     pickle.dump(cluster_data, f)
-                print("[DEBUG] 动作聚类数据保存成功")
-            except Exception as e:
-                print(f"[DEBUG] 保存动作聚类数据失败: {e}")
+            except Exception:
+                pass
 
     def _load_builtin_extensions(self):
         """加载内置扩展"""
@@ -159,8 +156,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     self.intent_clusters = vector_data.get("intent_clusters", defaultdict(list))
                     self.param_templates = vector_data.get("param_templates", defaultdict(list))
                     self.usage_stats = vector_data.get("usage_stats", {})
-            except Exception as e:
-                print(f"[DEBUG] 加载向量存储失败: {e}")
+            except Exception:
                 self._init_empty_vectors()
         else:
             self._init_empty_vectors()
@@ -183,8 +179,6 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         task_type = standardized_instruction.get("task_type", "general")
         action = standardized_instruction.get("action", "process")
         source = standardized_instruction.get("source", "unknown")  # 获取来源信息
-
-        print(f"[DEBUG] 通用缓存查找: task_type={task_type}, action={action}, source={source}")
 
         results = []
 
@@ -212,7 +206,6 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             action_matches = self._get_action_similarity_matches(action)
             results.extend([(m, "action_similarity", 0.6) for m in action_matches])
 
-        print(f"[DEBUG] 找到 {len(results)} 个匹配结果")
         return self._rank_and_deduplicate_results(results)
 
     def _get_action_cluster_matches(self, action: str, source: str = "unknown") -> List[Any]:
@@ -225,7 +218,6 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         try:
             # 获取标准化后的动作聚类，传递来源信息
             cluster_id = self.semantic_action_matcher.get_action_cluster(action, source)
-            print(f"[DEBUG] 动作 '{action}' 归属聚类: {cluster_id}")
 
             # 查找同一聚类中的其他动作对应的模块
             if cluster_id in self.semantic_action_matcher.action_clusters:
@@ -238,10 +230,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                             modules = self._find_modules_by_action(cluster_action)
                             matches.extend(modules)
 
-            print(f"[DEBUG] 聚类匹配找到 {len(matches)} 个结果")
-
-        except Exception as e:
-            print(f"[DEBUG] 动作聚类匹配失败: {e}")
+        except Exception:
+            pass
 
         return matches
 
@@ -272,8 +262,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     except Exception:
                         continue
 
-            except Exception as e:
-                print(f"[DEBUG] 根据动作查找模块失败: {e}")
+            except Exception:
+                pass
 
         return matches
 
@@ -322,8 +312,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     (m.module_id, m.file_path, m.success_count, m.failure_count) for m in modules
                 ]
 
-            except Exception as e:
-                print(f"[DEBUG] 任务类型匹配失败: {e}")
+            except Exception:
+                pass
 
         return matches
 
@@ -360,8 +350,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     except Exception:
                         continue
 
-            except Exception as e:
-                print(f"[DEBUG] 动作相似度匹配失败: {e}")
+            except Exception:
+                pass
 
         return matches
 
@@ -613,14 +603,12 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         if self.semantic_action_matcher:
             try:
                 # 获取或创建动作聚类
-                cluster_id = self.semantic_action_matcher.get_action_cluster(action)
-                print(f"[DEBUG] 动作 '{action}' 更新到聚类: {cluster_id}")
 
                 # 保存聚类数据
                 self._save_action_clusters()
 
-            except Exception as e:
-                print(f"[DEBUG] 更新动作聚类失败: {e}")
+            except Exception:
+                pass
 
     def _save_module_record(
         self,
@@ -697,11 +685,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                     standardized_instruction.get("required_parameters", {}),
                 )
 
-            print(f"[DEBUG] 模块保存成功: {module_id}")
             return module_id
 
-        except Exception as e:
-            print(f"[DEBUG] 模块保存失败: {e}")
+        except Exception:
             if file_path.exists():
                 file_path.unlink()
             return None
@@ -728,8 +714,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                         feature_key = hashlib.md5(feature.encode()).hexdigest()
                         self._create_index_record(module_id, feature_key, "semantic_feature")
 
-        except Exception as e:
-            print(f"[DEBUG] 创建索引失败: {e}")
+        except Exception:
+            pass
 
     def _create_index_record(self, module_id: str, index_key: str, index_type: str):
         """创建索引记录的辅助方法"""
@@ -741,8 +727,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
                 {"module_id": module_id, "index_type": index_type, "created_at": time.time()}
             )
 
-        except Exception as e:
-            print(f"[DEBUG] 创建索引记录失败: {e}")
+        except Exception:
+            pass
 
     def _rank_and_deduplicate_results(self, results: List[tuple]) -> List[Any]:
         """对结果进行排序和去重"""
@@ -805,33 +791,27 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             return
 
         try:
-            print(f"[DEBUG] 开始更新向量存储: module_id={module_id}")
 
             if not self.use_lightweight_mode:
                 # 标准模式：生成并存储向量
                 vector = self.semantic_model.encode(target)
                 self.command_vectors[module_id] = vector
-                print("[DEBUG] 向量生成成功")
             else:
                 # 轻量级模式：只存储文本特征
                 features = self._extract_semantic_features(target)
                 self.command_vectors[module_id] = {"text": target, "features": features}
-                print("[DEBUG] 轻量级特征提取成功")
 
             # 更新意图聚类
             if intent_category:
                 if intent_category not in self.intent_clusters:
                     self.intent_clusters[intent_category] = []
                 self.intent_clusters[intent_category].append(module_id)
-                print(f"[DEBUG] 意图聚类更新成功: {intent_category}")
 
             # 更新参数模板
             param_signature = self._generate_param_signature(params)
-            print(f"[DEBUG] 生成参数签名: {param_signature}")
             if param_signature not in self.param_templates:
                 self.param_templates[param_signature] = []
             self.param_templates[param_signature].append(module_id)
-            print("[DEBUG] 参数模板更新成功")
 
             # 初始化使用统计
             self.usage_stats[module_id] = {"hits": 0, "misses": 0, "last_used": time.time()}
@@ -839,8 +819,8 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             # 保存向量存储
             self._save_vector_storage()
 
-        except Exception as e:
-            print(f"[DEBUG] 更新向量存储失败: {e}")
+        except Exception:
+            pass
 
     def _save_vector_storage(self):
         """保存向量存储到文件"""
@@ -855,5 +835,5 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
             with open(self.vector_store_path, "wb") as f:
                 pickle.dump(vector_data, f)
 
-        except Exception as e:
-            print(f"[DEBUG] 保存向量存储失败: {e}")
+        except Exception:
+            pass

@@ -153,8 +153,7 @@ class FileOperationTransactionManager:
 
             return True
 
-        except Exception as e:
-            print(f"[ERROR] 提交事务失败: {e}")
+        except Exception:
             return False
 
     def rollback_transaction(self, transaction_id: str) -> bool:
@@ -193,8 +192,7 @@ class FileOperationTransactionManager:
 
             return True
 
-        except Exception as e:
-            print(f"[ERROR] 回滚事务失败: {e}")
+        except Exception:
             return False
 
     def _execute_rollback_action(self, action: Dict[str, Any]):
@@ -288,8 +286,6 @@ class FileOperationStrategy(ExecutionStrategy):
         standardized_instruction["task_type"] = "data_process"
         standardized_instruction["reclassified"] = True
         standardized_instruction["original_task_type"] = "file_operation"
-
-        print("[DEBUG] 任务已重新分类为 data_process，原任务类型: file_operation")
 
     def get_priority(self) -> int:
         return 95  # 高优先级，仅次于搜索策略
