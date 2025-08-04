@@ -14,8 +14,11 @@ source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "click" },
+    { name = "peewee" },
+    { name = "pydantic" },
     { name = "requests" },
     { name = "tomlkit" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -50,6 +53,8 @@ requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
     { name = "fastapi", marker = "extra == 'all'", specifier = ">=0.100.0" },
     { name = "fastapi", marker = "extra == 'web'", specifier = ">=0.100.0" },
+    { name = "peewee", specifier = ">=3.14.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "python-dotenv", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "requests", specifier = ">=2.25.0" },
@@ -58,6 +63,7 @@ requires-dist = [
     { name = "textual", marker = "extra == 'all'", specifier = ">=0.40.0" },
     { name = "textual", marker = "extra == 'gui'", specifier = ">=0.40.0" },
     { name = "tomlkit", specifier = ">=0.10.0" },
+    { name = "typing-extensions", specifier = ">=4.0.0" },
     { name = "uvicorn", marker = "extra == 'web'", specifier = ">=0.20.0" },
 ]
 provides-extras = ["gui", "web", "dev", "transformers", "all"]
@@ -755,6 +761,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b
 wheels = [
     { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469 },
 ]
+
+[[package]]
+name = "peewee"
+version = "3.18.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/89/76f6f1b744c8608e0d416b588b9d63c2a500ff800065ae610f7c80f532d6/peewee-3.18.2.tar.gz", hash = "sha256:77a54263eb61aff2ea72f63d2eeb91b140c25c1884148e28e4c0f7c4f64996a0", size = 949220 }
 
 [[package]]
 name = "pillow"
