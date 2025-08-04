@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiforge-engine"
-version = "0.0.4"
+version = "0.0.5"
 description = "Intelligent Intent Adaptive Execution Engine - 智能意图自适应执行引擎"
 readme = "README.md"
 license = { text = "Apache 2.0" }
@@ -53,6 +53,9 @@ dependencies = [
     "beautifulsoup4>=4.9.0",
     "click>=8.0.0",
     "tomlkit>=0.10.0",
+    "peewee>=3.14.0",
+    "pydantic>=2.0.0",
+    "typing-extensions>=4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -69,7 +72,7 @@ Repository = "https://github.com/iniwap/AIForge"
 "Bug Tracker" = "https://github.com/iniwap/AIForge/issues"
 Changelog = "https://github.com/iniwap/AIForge/releases"
 "Source Code" = "https://github.com/iniwap/AIForge"
-Discord = "https://discord.gg/ksPhVyWz"
+Discord = "https://discord.gg/Vp35uSBsrw"
 Twitter = "https://twitter.com/iafun_tipixel"
 
 [project.scripts]

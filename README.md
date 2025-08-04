@@ -3,8 +3,8 @@
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg)](https://badge.fury.io/py/aiforge-engine) [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/iniwap/AIForge) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)
- 
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine)](https://pepy.tech/project/aiforge-engine)  [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)
 
 **重新定义人机交互边界，让思维直接转化为执行力**  
   
@@ -15,6 +15,10 @@
 ---  
   
 ## 🎯 什么是 AIForge？  
+> ⚠️ **开发阶段提醒**: 本项目目前处于早期开发阶段（Alpha版本），API可能会发生变化，版本更新频繁。
+
+> 🚧 **项目状态**: 正在积极开发中，欢迎反馈和贡献！
+
 ![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
 AIForge 是一个**突破性的认知计算引擎**，它消除了自然语言与代码执行之间的壁垒。通过先进的**意图理解算法**和**自适应执行架构**，AIForge 能够：  
   
@@ -138,7 +142,7 @@ pytest tests/
 ## 📞 连接未来  
   
 - 🌐 **官网**: [aiforge.dev](https://iniwap.github.io/AIForge)  
-- 💬 **社区**: [Discord](https://discord.gg/ksPhVyWz)  
+- 💬 **社区**: [Discord](https://discord.gg/Vp35uSBsrw)  
 - 📧 **联系**: iniwaper@gmail.com 
 - 🐦 **动态**: [@AIForge](https://twitter.com/iafun_tipixel)  
   
@@ -150,6 +154,6 @@ pytest tests/
   
 *AIForge - Where Intelligence Meets Execution*  
   
-[立即开始](https://github.com/iniwap/AIForge) | [查看文档](https://iniwap.github.io/AIForge) | [加入社区](https://discord.gg/ksPhVyWz)  
+[立即开始](https://badge.fury.io/py/aiforge-engine) | [查看文档](https://iniwap.github.io/AIForge) | [加入社区](https://discord.gg/Vp35uSBsrw)  
   
 </div>
