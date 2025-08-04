@@ -1,107 +1,136 @@
-# 🌟 AIForge - 智能意图自适应执行引擎
+# 🚀 AIForge - 智能意图自适应执行引擎  
   
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine)](https://pepy.tech/project/aiforge-engine)  [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
-[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)
-
-**重新定义人机交互边界，让思维直接转化为执行力**  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
-[🚀 立即体验](#快速启动) • [🧠 核心能力](#核心能力) • [⚡ 快速集成](#安装使用) • [🌐 生态支持](#生态系统)  
+**将自然语言指令转化为可执行代码的AI驱动自动化引擎**  
+  
+[🚀 快速开始](#-快速开始) • [🧠 核心功能](#-核心功能) • [⚡ 联系支持](#-联系与支持) • [🌐 应用场景](#-应用场景)  
   
 </div>  
   
 ---  
   
 ## 🎯 什么是 AIForge？  
-> ⚠️ **开发阶段提醒**: 本项目目前处于早期开发阶段（Alpha版本），API可能会发生变化，版本更新频繁。
-
-> 🚧 **项目状态**: 正在积极开发中，欢迎反馈和贡献！
+  
+> ⚠️ **开发状态**: 本项目目前处于积极开发阶段，版本更新比较频繁，敬请关注。  
+  
+> 🚧 **项目状态**: 正在积极开发中，欢迎反馈和贡献！  
 
 ![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
-AIForge 是一个**突破性的认知计算引擎**，它消除了自然语言与代码执行之间的壁垒。通过先进的**意图理解算法**和**自适应执行架构**，AIForge 能够：  
+AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代码执行之间的壁垒。通过先进的指令分析和自适应执行架构，AIForge 提供：  
   
-- 🧠 **深度理解** - 多维度解析复杂指令，精准捕获用户意图  
-- ⚡ **即时执行** - 快速代码生成，实时环境交互  
-- 🔮 **智能预测** - 基于语义模式的预测性缓存机制  
+- 🧠 **深度理解** - 多维度指令解析，精准捕获意图  
+- ⚡ **即时执行** - 快速代码生成，实时环境交互    
+- 🔮 **智能缓存** - 基于语义相似性的智能代码复用  
 - 🌊 **自我进化** - 持续学习优化，错误自愈能力  
-- 🎭 **多重人格** - 支持多种AI模型的无缝切换  
-  
+- 🎭 **多提供商** - AI模型和提供商的无缝切换  
+ 
 > **核心哲学**: *Thought → Code → Reality* - 让思维直接驱动现实世界  
   
-## ✨ 核心能力  
+## ✨ 核心功能  
   
-### 🧬 认知引擎  
-- **量子级指令解析** - 超越传统NLP的深度语义理解  
-- **自适应学习机制** - 从每次交互中汲取智慧  
-- **多模态融合** - 文本、数据、逻辑的统一处理  
+### 🏗️ 多界面架构  
+- **CLI接口** - 直接执行的命令行工具  
+- **Python API** - 应用程序的编程集成  
+- **Web API** - 基于FastAPI的REST接口  
+- **终端GUI** - 交互式文本用户界面  
   
-### ⚡ 执行矩阵  
-- **零延迟响应** - 毫秒级的思维到执行转换  
-- **沙盒隔离** - 军用级安全的执行环境  
-- **弹性架构** - 自动扩展的计算资源管理  
+### 🤖 LLM提供商支持  
+- **OpenAI** - GPT模型集成  
+- **DeepSeek** - 经济高效的AI提供商  
+- **OpenRouter** - 多模型访问平台  
+- **Ollama** - 本地模型执行  
   
-### 🔮 预知系统  
-- **语义缓存** - 基于意图相似性的智能复用  
-- **模式识别** - 自动发现和优化执行模式  
-- **质量守护** - 多层验证确保输出完美  
+### 🔧 高级执行管理  
+- **语义缓存** - 基于指令相似性的智能代码复用  
+- **模板系统** - 领域特定的执行模板  
+- **搜索集成** - 多引擎搜索能力（百度、Bing、360、搜狗）  
+- **内容生成** - 专业的内容创建工作流  
   
-### 🌐 生态矩阵  
-- **全模型兼容** - 无缝对接主流AI服务  
-- **插件化架构** - 无限扩展的能力边界  
-- **云边协同** - 本地与云端的智能调度  
+### 🛡️ 企业级功能  
+- **沙盒执行** - 安全隔离的代码执行环境  
+- **进度跟踪** - 实时执行状态指示器  
+- **错误处理** - 全面的异常管理和重试逻辑  
+- **配置管理** - 灵活的TOML配置系统  
   
-## 🚀 快速启动  
+## 🚀 快速开始  
   
-### 安装（推荐uv）  
-```bash  
-pip install aiforge-engine  
-```  
+### 安装  
   
-### 一行代码，释放无限可能  
-```python  
-from aiforge import AIForgeEngine  
+    # 基础安装  
+    pip install aiforge-engine  
   
-# 唤醒AI引擎  
-forge = AIForgeEngine(api_key="your-key")  
+    # 包含可选依赖  
+    pip install aiforge-engine[all]  # 所有功能  
+    pip install aiforge-engine[gui]  # 终端GUI支持  
+    pip install aiforge-engine[web]  # Web API支持  
   
-# 思维即执行  
-result = forge("分析全球股市趋势并生成投资建议")  
-```  
+### 基础使用  
+  
+    from aiforge import AIForgeEngine  
+  
+    # 使用API密钥快速开始  
+    forge = AIForgeEngine(api_key="your-api-key")  
+  
+    # 执行自然语言指令  
+    result = forge("分析全球股市趋势并生成投资建议")  
+    print(result)  
   
 ### 高级配置  
-```python  
-# 多重AI人格切换  
-forge = AIForgeEngine(  
-    provider="deepseek",  # 或 "openai", "ollama"  
-    max_rounds=5,         # 自我优化轮数  
-    cache_enabled=True    # 启用预知缓存  
-)  
   
-# 复杂任务分解执行   
-result = forge.run(  
-    "构建实时数据监控系统",  
-    system_prompt="你是顶级架构师"  
-)  
-```  
+    # 提供商特定配置  
+    forge = AIForgeEngine(  
+        api_key="your-deepseek-key",  
+        provider="deepseek",  
+        max_rounds=5,  
+        cache_enabled=True  
+    )  
+  
+    # 复杂任务执行  
+    result = forge.run(  
+        "构建实时数据监控系统",  
+        system_prompt="你是一位高级软件架构师"  
+    )  
+  
+### 配置文件设置  
+  
+    # aiforge.toml  
+    workdir = "aiforge_work"  
+    max_tokens = 4096  
+    max_rounds = 5  
+    default_llm_provider = "openrouter"  
+  
+    [llm.openrouter]  
+    type = "openai"  
+    model = "deepseek/deepseek-chat-v3-0324:free"  
+    api_key = "your-key"  
+    base_url = "https://openrouter.ai/api/v1"  
+    timeout = 30  
+    max_tokens = 8192  
+  
+    # 从配置文件加载  
+    forge = AIForgeEngine(config_file="aiforge.toml")  
   
 ## 🎭 应用场景  
   
 ### 💼 商业智能  
 - **市场分析** - 实时数据挖掘与趋势预测  
 - **风险评估** - 多维度风险模型构建  
-- **决策支持** - 基于数据的智能决策引擎  
+- **决策支持** - 数据驱动的智能决策引擎  
   
-### 🔬 科研创新  
+### 🔬 研究与开发  
 - **数据科学** - 自动化实验设计与分析  
 - **模型训练** - 智能超参数优化  
-- **论文辅助** - 研究数据的可视化呈现  
+- **研究辅助** - 数据可视化与展示  
   
 ### 🛠️ 开发加速  
 - **原型验证** - 快速MVP构建  
 - **API集成** - 智能接口适配  
-- **自动化运维** - 系统监控与维护  
+- **DevOps自动化** - 系统监控与维护  
   
 ### 🎨 创意实现  
 - **内容生成** - 多媒体内容智能创作  
@@ -110,12 +139,12 @@ result = forge.run(
   
 ## 🌟 为什么选择 AIForge？  
   
-| 特性 | 传统方案 | AIForge |  
-|------|----------|---------|  
-| 学习成本 | 数周到数月 | 几分钟上手 |  
+| 特性 | 传统解决方案 | AIForge |  
+|------|-------------|---------|  
+| 学习曲线 | 数周到数月 | 几分钟上手 |  
 | 开发效率 | 线性增长 | 指数级提升 |  
-| 错误处理 | 手动调试 | 自动修复 |  
-| 扩展性 | 有限 | 无限可能 |  
+| 错误处理 | 手动调试 | 自动错误恢复 |  
+| 可扩展性 | 有限 | 无限可能 |  
 | 智能程度 | 静态规则 | 动态学习 |  
   
 ## 🔮 技术前瞻  
@@ -126,25 +155,24 @@ AIForge 不仅是工具，更是通往**认知计算时代**的桥梁：
 - 🌊 **流式思维** - 实时思维流的捕获与执行  
 - 🎯 **意图预测** - 基于上下文的需求预判  
 - 🔄 **自我进化** - 持续学习的智能体系统  
+
+## 🤝 开发与贡献  
   
-## 🤝 加入生态  
+    # 开发者设置  
+    git clone https://github.com/iniwap/AIForge.git  
+    cd AIForge  
+    pip install -e ".[dev]"  
   
-```bash  
-# 开发者模式  
-git clone https://github.com/iniwap/AIForge.git  
-cd AIForge  
-pip install -e ".[dev]"  
+    # 运行测试  
+    pytest tests/  
   
-# 开始贡献   
-pytest tests/  
-```  
-  
-## 📞 连接未来  
+## 📞 联系与支持  
   
 - 🌐 **官网**: [aiforge.dev](https://iniwap.github.io/AIForge)  
 - 💬 **社区**: [Discord](https://discord.gg/Vp35uSBsrw)  
-- 📧 **联系**: iniwaper@gmail.com 
+- 📧 **联系**: iniwaper@gmail.com  
 - 🐦 **动态**: [@AIForge](https://twitter.com/iafun_tipixel)  
+- 📦 **PyPI**: [aiforge-engine](https://pypi.org/project/aiforge-engine/)  
   
 ---  
   
@@ -152,8 +180,8 @@ pytest tests/
   
 **🌟 重新定义可能性的边界 🌟**  
   
-*AIForge - Where Intelligence Meets Execution*  
+*AIForge - 智能与执行的完美结合*  
   
-[立即开始](https://badge.fury.io/py/aiforge-engine) | [查看文档](https://iniwap.github.io/AIForge) | [加入社区](https://discord.gg/Vp35uSBsrw)  
+[立即开始](https://pypi.org/project/aiforge-engine/) | [查看文档](https://iniwap.github.io/AIForge) | [加入社区](https://discord.gg/Vp35uSBsrw)  
   
 </div>

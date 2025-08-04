@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "aiforge-engine"
 version = "0.0.5"
 description = "Intelligent Intent Adaptive Execution Engine - 智能意图自适应执行引擎"
-readme = "README.md"
+readme = "README_EN.md"
 license = { text = "Apache 2.0" }
 requires-python = ">=3.10"
 
@@ -32,7 +32,7 @@ keywords = [
 ]
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 6 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
