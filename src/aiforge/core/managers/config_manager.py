@@ -17,7 +17,7 @@ class AIForgeConfigManager:
         provider: str = "openrouter",
         **kwargs,
     ) -> AIForgeConfig:
-        """初始化配置 - 整合原有的 _init_config 逻辑"""
+        """初始化配置"""
         # 情况3：传入配置文件，以此文件为准
         if config_file:
             self.config = AIForgeConfig(config_file)
@@ -64,12 +64,3 @@ class AIForgeConfigManager:
     def get_optimization_config(self) -> Dict[str, Any]:
         """获取优化配置"""
         return self.config.get_optimization_config()
-
-    def get_llm_config(self, provider_name: str = None) -> Dict[str, Any]:
-        """获取LLM配置"""
-        return self.config.get_llm_config(provider_name)
-
-    def validate_provider_config(self, provider: str) -> bool:
-        """验证提供商配置"""
-        llm_configs = self.config.get("llm", {})
-        return provider in llm_configs and llm_configs[provider].get("enable", True)

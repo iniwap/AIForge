@@ -23,7 +23,7 @@ class FieldProcessorStrategy(ABC):
 
 
 class SemanticFieldStrategy(FieldProcessorStrategy):
-    """基于语义的字段处理策略 - 通用处理所有字段格式"""
+    """基于语义的字段处理策略"""
 
     def __init__(self):
         self._model = None

@@ -76,7 +76,6 @@ def create_full_config(console):
             "base_url": "https://openrouter.ai/api/v1",
             "timeout": 30,
             "max_tokens": 8192,
-            "enable": True,
         }
 
     # 其他提供商配置...

@@ -92,7 +92,13 @@ class AIForgeOrchestrator:
     def _init_runner(self):
         """初始化代码执行器"""
         workdir = str(self.config.get_workdir())
-        self.components["runner"] = AIForgeRunner(workdir)
+
+        # 获取完整的安全配置
+        security_config = self.config.get("security", {})
+
+        # 创建安全执行器并传入所有配置
+        runner = AIForgeRunner(workdir, security_config)
+        self.components["runner"] = runner
 
     def _init_instruction_analyzer(self):
         """初始化指令分析器"""

@@ -116,11 +116,6 @@ class AIForgeEngine:
         llm_manager = self.component_manager.get_component("llm_manager")
         return {name: client.model for name, client in llm_manager.clients.items()}
 
-    def execute_with_runner(self, code: str) -> Dict[str, Any]:
-        """使用runner执行代码"""
-        runner = self.component_manager.get_component("runner")
-        return runner.execute_code(code)
-
     def get_system_info(self) -> Dict[str, Any]:
         """获取系统信息"""
         instruction_analyzer = self.component_manager.get_component("instruction_analyzer")

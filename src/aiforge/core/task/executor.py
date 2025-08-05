@@ -41,7 +41,7 @@ class TaskExecutor:
         )
 
     def process_code_execution(self, code_blocks: List[str]) -> List[Dict[str, Any]]:
-        """处理代码块执行并格式化结果 - 通过执行引擎统一处理"""
+        """处理代码块执行并格式化结果"""
         results = []
 
         for i, code_text in enumerate(code_blocks):
@@ -229,7 +229,7 @@ class TaskExecutor:
         return False, None, "", False
 
     def _get_best_available_result(self):
-        """获取质量最佳的可用结果 - 保持原有逻辑"""
+        """获取质量最佳的可用结果"""
         if not self.task_execution_history:
             return None
 

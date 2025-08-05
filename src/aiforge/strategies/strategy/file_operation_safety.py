@@ -5,6 +5,7 @@ import time
 import sys
 import shutil
 import json
+import os
 
 
 class FileOperationSafetyAnalyzer:
@@ -76,6 +77,13 @@ class FileOperationSafetyAnalyzer:
                         affected_files.append(file_str)
 
         return affected_files
+
+    def _validate_file_access(self, file_path: str) -> bool:
+        """验证文件访问权限"""
+        allowed_dirs = [str(self.workdir), "/tmp", "/var/tmp"]
+
+        abs_path = os.path.abspath(file_path)
+        return any(abs_path.startswith(allowed_dir) for allowed_dir in allowed_dirs)
 
 
 class FileOperationConfirmationManager:

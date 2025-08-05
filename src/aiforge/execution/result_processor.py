@@ -263,7 +263,7 @@ class AIForgeResultProcessor:
 
     @staticmethod
     def strict_data_integrity_check(result: Dict[str, Any]) -> bool:
-        """严格的数据完整性检查 - 统一数据格式版本"""
+        """严格的数据完整性检查"""
         # 统一从标准位置获取数据
         data = result.get("data")
         if data is None:

@@ -88,7 +88,7 @@ class ResultValidator:
     def _local_business_validation(
         self, result: Dict[str, Any], expected: Dict[str, Any], task_type: str
     ) -> Tuple[bool, str]:
-        """业务逻辑验证 - 使用策略模式"""
+        """业务逻辑验证"""
 
         result_content = result.get("result")
         validation_rules = expected.get("validation_rules", {})
@@ -161,7 +161,7 @@ class ResultValidator:
         return True, ""
 
     def _needs_ai_validation(self, result: Dict[str, Any], expected: Dict[str, Any]) -> bool:
-        """判断是否需要AI深度验证 - 考虑数据数量"""
+        """判断是否需要AI深度验证"""
         result_content = result.get("result", {})
         if isinstance(result_content, dict):
             data = result_content.get("data", [])

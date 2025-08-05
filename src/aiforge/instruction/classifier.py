@@ -217,7 +217,7 @@ class TaskClassifier:
         }
 
     def is_ai_analysis_valid(self, ai_analysis: Dict[str, Any]) -> bool:
-        """验证AI分析结果的有效性 - 保持原有逻辑"""
+        """验证AI分析结果的有效性"""
         # 1. 检查必要字段
         required_fields = ["task_type", "action", "target"]
         if not all(field in ai_analysis for field in required_fields):
@@ -257,7 +257,7 @@ class TaskClassifier:
         return True
 
     def _is_too_similar_to_existing_types(self, task_type: str, builtin_types: List[str]) -> bool:
-        """检查是否与现有类型过于相似 - 保持原有逻辑"""
+        """检查是否与现有类型过于相似"""
         try:
             for existing_type in builtin_types:
                 similarity = SequenceMatcher(None, task_type.lower(), existing_type.lower()).ratio()

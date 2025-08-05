@@ -61,7 +61,7 @@ class ParameterMappingService:
         available_params: Dict[str, Any],
         context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """统一参数映射入口 - 返回函数实际参数名的映射"""
+        """统一参数映射入口"""
         sig = inspect.signature(func)
         func_params = list(sig.parameters.keys())
 
@@ -484,7 +484,7 @@ class GeneralParameterMappingStrategy(ParameterMappingStrategy):
 
 
 class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
-    """增强语义映射策略 - 基于Peewee ORM"""
+    """增强语义映射策略"""
 
     def __init__(self, cache_dir: Optional[Path] = None):
         self.cache_dir = cache_dir or Path.cwd() / "cache"

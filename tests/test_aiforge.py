@@ -9,7 +9,7 @@ from aiforge import AIForgeEngine
 def test_quick_start():
     """方式1：快速启动"""
     forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"])
-    result = forge("分析全球最新股市趋势并生成投资建议")
+    result = forge("获取5条名古屋市市长希望与南京恢复交流的报道")
     print("任务执行结果:", result)
     assert result is not None
 

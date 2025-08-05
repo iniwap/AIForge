@@ -4,8 +4,8 @@ from ..strategies.execution_strategy_manager import ExecutionStrategyManager
 from ..strategies.execution_strategy import ExecutionStrategy
 
 
-class UnifiedParameterizedExecutor(CachedModuleExecutor):
-    """重构后的统一参数化执行器"""
+class UnifiedExecutor(CachedModuleExecutor):
+    """统一执行器"""
 
     def __init__(self, components: Dict[str, Any] = None):
         self.strategy_manager = ExecutionStrategyManager(components)

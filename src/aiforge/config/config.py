@@ -81,7 +81,6 @@ class AIForgeConfig:
                             "base_url": "https://openrouter.ai/api/v1",
                             "timeout": 30,
                             "max_tokens": 8192,
-                            "enable": True,
                         },
                         "deepseek": {
                             "type": "deepseek",
@@ -90,7 +89,6 @@ class AIForgeConfig:
                             "base_url": "https://api.deepseek.com",
                             "timeout": 30,
                             "max_tokens": 8192,
-                            "enable": True,
                         },
                         "ollama": {
                             "type": "ollama",
@@ -99,7 +97,6 @@ class AIForgeConfig:
                             "base_url": "http://localhost:11434",
                             "timeout": 30,
                             "max_tokens": 8192,
-                            "enable": True,
                         },
                     },
                     "cache": {
@@ -109,6 +106,8 @@ class AIForgeConfig:
                             "failure_threshold": 0.8,
                             "max_age_days": 30,
                             "cleanup_interval": 10,
+                            "semantic_threshold": 0.6,
+                            "enable_semantic_matching": True,
                         }
                     },
                     "optimization": {
@@ -117,31 +116,17 @@ class AIForgeConfig:
                         "max_feedback_length": 200,
                         "obfuscate_variables": True,
                     },
+                    "security": {
+                        "execution_timeout": 30,
+                        "memory_limit_mb": 512,
+                        "cpu_time_limit": 30,
+                        "file_descriptor_limit": 64,
+                        "max_file_size_mb": 10,
+                        "max_processes": 10,
+                    },
                 }
 
         return AIForgeConfig._cached_default_config.copy()  # 返回副本避免修改
-
-    # 保留原有方法
-    def get_llm_config(self, provider_name: str | None = None):
-        """获取LLM配置"""
-        llm_configs = self.config.get("llm", {})
-
-        if provider_name:
-            return llm_configs.get(provider_name, {})
-
-        # 返回默认或第一个启用的提供商
-        default_provider = self.config.get("default_llm_provider")
-        if default_provider and default_provider in llm_configs:
-            config = llm_configs[default_provider]
-            if config.get("enable", True):
-                return config
-
-        # 查找第一个启用的提供商
-        for name, config in llm_configs.items():
-            if config.get("enable", True):
-                return config
-
-        return {}
 
     def get_workdir(self):
         """获取工作目录"""

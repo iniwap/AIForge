@@ -70,6 +70,14 @@ aggressive_minify = true
 max_feedback_length = 200
 obfuscate_variables = true
 
+# 安全配置 - 进程隔离/基础资源限制
+[security]
+execution_timeout = 30
+memory_limit_mb = 512
+cpu_time_limit = 30
+file_descriptor_limit = 64
+max_file_size_mb = 10
+max_processes = 10
 
 # 在配置文件中添加扩展部分  
 [extensions]

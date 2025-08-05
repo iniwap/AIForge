@@ -36,7 +36,7 @@ class ParameterExtractor:
         return possible_actions[0] if possible_actions else "process"
 
     def extract_target(self, instruction: str) -> str:
-        """提取操作目标 - 保持原有逻辑"""
+        """提取操作目标"""
         return instruction[:100]  # 取前100个字符作为目标描述
 
     def smart_extract_parameters(

@@ -84,7 +84,7 @@ class ExecutionStrategy(ABC):
             return None, False
 
     def _basic_parameter_mapping_and_call(self, func: callable, parameters: Dict[str, Any]) -> Any:
-        """基础参数映射和调用 - 通用实现"""
+        """基础参数映射和调用"""
         try:
             sig = inspect.signature(func)
             func_params = list(sig.parameters.keys())
