@@ -123,6 +123,70 @@ class AIForgeConfig:
                         "file_descriptor_limit": 64,
                         "max_file_size_mb": 10,
                         "max_processes": 10,
+                        "file_access": {
+                            "user_specified_paths": True,
+                            "default_allowed_paths": ["./data", "./output"],
+                            "require_explicit_permission": True,
+                            "max_allowed_paths": 10,
+                        },
+                        "network": {
+                            "disable_network_validation": False,
+                            "block_network_access": False,
+                            "block_network_modules": False,
+                            "restrict_network_access": True,
+                            "max_requests_per_minute": 60,
+                            "max_concurrent_connections": 10,
+                            "request_timeout": 30,
+                            "allowed_protocols": ["http", "https"],
+                            "allowed_ports": [80, 443, 8080, 8443],
+                            "blocked_ports": [22, 23, 3389, 5432, 3306],
+                            "enable_domain_filtering": True,
+                            "domain_whitelist": [
+                                "api.openai.com",
+                                "api.deepseek.com",
+                                "openrouter.ai",
+                                "baidu.com",
+                                "bing.com",
+                                "so.com",
+                                "sogou.com",
+                                "api.x.ai",
+                                "dashscope.aliyuncs.com",
+                                "generativelanguage.googleapis.com",
+                            ],
+                            "domain_blacklist": ["malicious-site.com"],
+                            "task_specific": {
+                                "data_fetch": {
+                                    "disable_domain_filtering": True,
+                                    "extended_domain_whitelist": [
+                                        "sina.com.cn",
+                                        "163.com",
+                                        "qq.com",
+                                        "sohu.com",
+                                        "xinhuanet.com",
+                                        "people.com.cn",
+                                        "chinanews.com",
+                                        "thepaper.cn",
+                                        "36kr.com",
+                                        "ifeng.com",
+                                        "cnbeta.com",
+                                        "zol.com.cn",
+                                        "csdn.net",
+                                        "jianshu.com",
+                                        "zhihu.com",
+                                        "weibo.com",
+                                        "douban.com",
+                                        "bilibili.com",
+                                        "youku.com",
+                                        "iqiyi.com",
+                                        "tencent.com",
+                                        "alibaba.com",
+                                        "jd.com",
+                                        "tmall.com",
+                                        "taobao.com",
+                                    ],
+                                }
+                            },
+                        },
                     },
                 }
 
@@ -168,3 +232,13 @@ class AIForgeConfig:
         """保存配置到文件"""
         with open(file_path, "w", encoding="utf-8") as f:
             tomlkit.dump(self.config, f)
+
+    def get_security_config(self):
+        return self.config.get("security", {})
+
+    def get_security_file_access_config(self):
+        sc = self.get_security_config()
+        if sc:
+            return sc.get("file_access", {})
+        else:
+            return {}

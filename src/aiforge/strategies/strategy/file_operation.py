@@ -1,14 +1,15 @@
+from pathlib import Path
 import time
 import os
 import shutil
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from ..execution_strategy import ExecutionStrategy
 from .file_operation_safety import (
-    FileOperationSafetyAnalyzer,
     FileOperationConfirmationManager,
     FileOperationBackupManager,
     FileOperationUndoManager,
 )
+from ...security.file_operation_safety_analyzer import FileOperationSafetyAnalyzer
 
 
 class FileOperationErrorClassifier:
@@ -217,8 +218,18 @@ class FileOperationTransactionManager:
 class FileOperationStrategy(ExecutionStrategy):
     """文件操作执行策略"""
 
-    def __init__(self, parameter_mapping_service=None):
-        super().__init__(parameter_mapping_service)
+    def __init__(self, parameter_mapping_service=None, config_manager=None):
+        super().__init__(parameter_mapping_service, config_manager)
+        user_allowed_paths = None
+        workdir = "aiforge_work"
+        if self.config_manager:
+            workdir = self.config_manager.get_workdir()
+            security_config = self.config_manager.get_security_file_access_config()
+            file_access_config = security_config.get("file_access", {})
+            default_paths = file_access_config.get("default_allowed_paths", [])
+            user_allowed_paths = default_paths
+
+        self.workdir = Path(workdir) if workdir else Path.cwd()
         self.supported_operations = {
             "copy": self._copy_file,
             "move": self._move_file,
@@ -231,15 +242,22 @@ class FileOperationStrategy(ExecutionStrategy):
             "write": self._write_file,
             "batch": self._batch_operation,
         }
-        self.safety_analyzer = FileOperationSafetyAnalyzer()
+        # 传递workdir和用户允许路径给安全分析器
+        self.safety_analyzer = FileOperationSafetyAnalyzer(
+            workdir=str(self.workdir), user_allowed_paths=user_allowed_paths
+        )
         self.confirmation_manager = FileOperationConfirmationManager()
         self.backup_manager = FileOperationBackupManager()
         self.undo_manager = FileOperationUndoManager()
 
-        # 新增：错误分类器
+        # 错误分类器
         self.error_classifier = FileOperationErrorClassifier()
-        # 新增：事务管理器
+        # 事务管理器
         self.transaction_manager = FileOperationTransactionManager
+
+    def set_user_allowed_paths(self, paths: List[str]):
+        """设置用户允许的路径"""
+        self.safety_analyzer.set_user_allowed_paths(paths)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         task_type = standardized_instruction.get("task_type", "")
@@ -295,20 +313,30 @@ class FileOperationStrategy(ExecutionStrategy):
         operation_id = f"op_{int(time.time())}"
 
         try:
-            # 1. 安全分析
+            # 1. 安全分析（包含路径验证）
             code = self._extract_code_from_module(module)
             risk_analysis = self.safety_analyzer.analyze_operation_risk(
                 code, standardized_instruction.get("parameters", {})
             )
 
-            # 2. 用户确认
+            # 2. 检查路径访问权限
+            if risk_analysis["path_validation"]["invalid_paths"]:
+                return {
+                    "status": "error",
+                    "error_type": "access_denied",
+                    "message": "Access denied to specified paths",
+                    "invalid_paths": risk_analysis["path_validation"]["invalid_paths"],
+                    "access_denied": risk_analysis["path_validation"]["access_denied"],
+                }
+
+            # 3. 用户确认
             if not self.confirmation_manager.require_user_confirmation(risk_analysis):
                 return {"status": "cancelled", "reason": "User cancelled operation"}
 
-            # 3. 开始事务
+            # 4. 开始事务
             self.transaction_manager.begin_transaction(operation_id, risk_analysis)
 
-            # 4. 创建备份
+            # 5. 创建备份
             backup_id = None
             if risk_analysis["backup_required"]:
                 backup_id = self.backup_manager.create_operation_backup(
@@ -316,13 +344,13 @@ class FileOperationStrategy(ExecutionStrategy):
                 )
                 self.transaction_manager.register_backup(operation_id, backup_id)
 
-            # 5. 执行操作
+            # 6. 执行操作
             result = super().execute(module, **kwargs)
 
-            # 6. 提交事务
+            # 7. 提交事务
             self.transaction_manager.commit_transaction(operation_id)
 
-            # 7. 注册撤销操作
+            # 8. 注册撤销操作
             if backup_id:
                 undo_id = self.undo_manager.register_operation(
                     standardized_instruction.get("action", ""), backup_id, standardized_instruction
@@ -453,18 +481,6 @@ class FileOperationStrategy(ExecutionStrategy):
             except Exception:
                 continue
         return False
-
-    def _extract_code_from_module(self, module: Any) -> str:
-        """从模块中提取代码"""
-        if module is None:
-            return ""
-
-        try:
-            import inspect
-
-            return inspect.getsource(module)
-        except Exception:
-            return str(module)
 
     def _find_target_function(
         self, module: Any, standardized_instruction: Dict[str, Any]

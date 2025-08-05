@@ -6,8 +6,8 @@ from ..execution_strategy import ExecutionStrategy
 class DirectResultStrategy(ExecutionStrategy):
     """直接结果执行策略"""
 
-    def __init__(self, parameter_mapping_service=None):
-        super().__init__(parameter_mapping_service)
+    def __init__(self, parameter_mapping_service=None, config_manager=None):
+        super().__init__(parameter_mapping_service, config_manager)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         return hasattr(module, "__result__")
@@ -15,6 +15,10 @@ class DirectResultStrategy(ExecutionStrategy):
     def execute(self, module: Any, **kwargs) -> Optional[Any]:
         standardized_instruction = kwargs.get("standardized_instruction", {})
         result = getattr(module, "__result__")
+
+        network_result = self.perform_network_validation(module, **kwargs)
+        if network_result:
+            return network_result
 
         # 如果结果是函数，尝试参数化调用
         if callable(result):

@@ -64,3 +64,11 @@ class AIForgeConfigManager:
     def get_optimization_config(self) -> Dict[str, Any]:
         """获取优化配置"""
         return self.config.get_optimization_config()
+
+    def get_security_config(self) -> Dict[str, Any]:
+        """获取安全配置"""
+        return self.config.get_security_config()
+
+    def get_security_file_access_config(self) -> Dict[str, Any]:
+        """获取安全-文件配置"""
+        return self.config.get_security_file_access_config()

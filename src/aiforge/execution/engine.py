@@ -10,6 +10,7 @@ from .code_blocks import CodeBlockManager, CodeBlock
 from .unified_executor import UnifiedExecutor
 from .result_formatter import AIForgeResultFormatter
 from .result_processor import AIForgeResultProcessor
+from ..security.network_security import NetworkSecurityAnalyzer
 
 
 class AIForgeExecutionEngine:
@@ -274,17 +275,17 @@ class AIForgeExecutionEngine:
     # === 内部辅助方法 ===
 
     def _analyze_code_security(self, code: str, function_params: List[str]) -> Dict[str, Any]:
-        """使用DataFlowAnalyzer进行安全分析，包含危险函数检测"""
+        """使用DataFlowAnalyzer进行安全分析，包含危险函数检测和网络安全检查"""
         analyzer = DataFlowAnalyzer(function_params)
 
-        # 添加危险函数检测
+        # 现有的危险函数检测
         dangerous_patterns = [
             r"subprocess\.",
             r"os\.system\(",
             r"eval\(",
             r"exec\(",
             r"__import__\(",
-            r'open\([^)]*["\']w["\']',  # 写文件操作
+            r'open\([^)]*["\']w["\']',
             r"shutil\.rmtree\(",
             r"os\.remove\(",
             r"os\.rmdir\(",
@@ -297,34 +298,54 @@ class AIForgeExecutionEngine:
             if re.search(pattern, code):
                 security_issues.append(f"检测到危险函数调用: {pattern}")
 
+        # 网络安全分析
+        network_analyzer = NetworkSecurityAnalyzer(
+            self.components.get("config", {}).get("security", {})
+        )
+        network_analysis = network_analyzer.analyze_network_risk(code, {})
+
+        # 合并网络安全问题
+        if network_analysis["blocked_operations"]:
+            security_issues.extend(
+                [f"网络访问被阻止: {op}" for op in network_analysis["blocked_operations"]]
+            )
+
+        if network_analysis["suspicious_patterns"]:
+            security_issues.extend(
+                [
+                    f"检测到可疑网络模式: {pattern}"
+                    for pattern in network_analysis["suspicious_patterns"]
+                ]
+            )
+
         try:
             tree = ast.parse(code)
             analyzer.visit(tree)
 
-            # 合并原有的安全分析结果和新的危险函数检测结果
             result = {
                 "has_conflicts": len(analyzer.parameter_conflicts) > 0 or len(security_issues) > 0,
                 "conflicts": analyzer.parameter_conflicts,
                 "meaningful_uses": list(analyzer.meaningful_uses),
                 "assignments": analyzer.assignments,
                 "api_calls": analyzer.api_calls,
-                "dangerous_functions": security_issues,  # 新增字段
+                "dangerous_functions": security_issues,
+                "network_analysis": network_analysis,  # 新增网络分析结果
             }
 
-            # 如果检测到危险函数，将其添加到冲突列表中
+            # 如果检测到危险函数或网络安全问题，将其添加到冲突列表中
             if security_issues:
                 for issue in security_issues:
                     result["conflicts"].append(
-                        {"type": "dangerous_function", "description": issue, "severity": "high"}
+                        {"type": "security_violation", "description": issue, "severity": "high"}
                     )
 
             return result
-
         except Exception as e:
             return {
                 "has_conflicts": len(security_issues) > 0,
                 "error": f"安全分析失败: {str(e)}",
                 "dangerous_functions": security_issues,
+                "network_analysis": network_analysis,  # 新增网络分析结果
                 "conflicts": [],
                 "meaningful_uses": [],
                 "assignments": {},

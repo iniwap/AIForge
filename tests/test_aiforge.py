@@ -20,7 +20,7 @@ def test_quick_start():
 def test_provider_deepseek():
     """方式2：指定提供商"""
     forge = AIForgeEngine(api_key=os.environ["DEEPSEEK_API_KEY"], provider="deepseek", max_rounds=3)
-    result = forge("分析全球股市趋势并生成投资建议")
+    result = forge("获取5条名古屋市市长希望与南京恢复交流的报道")
     print("deepseek result:", result)
     assert result is not None
 

@@ -15,24 +15,15 @@ import traceback
 class SecureProcessRunner:
     """安全的进程隔离执行器"""
 
-    def __init__(self, workdir: str = "aiforge_work"):
+    def __init__(self, workdir: str = "aiforge_work", security_config=None):
         self.workdir = Path(workdir)
         self.workdir.mkdir(exist_ok=True)
         self.temp_dir = self.workdir / "tmp"
         self.temp_dir.mkdir(exist_ok=True)
         self.console = Console()
+        self.security_config = security_config
 
-    def execute_code(
-        self,
-        code: str,
-        globals_dict: Dict | None = None,
-        timeout: int = 30,
-        memory_limit_mb: int = 512,
-        cpu_time_limit: int = 30,
-        file_descriptor_limit: int = 64,
-        max_file_size_mb: int = 10,
-        max_processes: int = 10,
-    ) -> Dict[str, Any]:
+    def execute_code(self, code: str, globals_dict: Dict | None = None) -> Dict[str, Any]:
         """在隔离进程中执行代码"""
 
         with tempfile.NamedTemporaryFile(
@@ -41,11 +32,11 @@ class SecureProcessRunner:
             execution_code = self._prepare_execution_code(
                 code,
                 globals_dict,
-                memory_limit_mb,
-                cpu_time_limit,
-                file_descriptor_limit,
-                max_file_size_mb,
-                max_processes,
+                self.security_config.get("memory_limit_mb", 512),
+                self.security_config.get("cpu_time_limit", 30),
+                self.security_config.get("file_descriptor_limit", 64),
+                self.security_config.get("max_file_size_mb", 10),
+                self.security_config.get("max_processes", 10),
             )
             f.write(execution_code)
             temp_file = f.name
@@ -57,27 +48,17 @@ class SecureProcessRunner:
                 text=True,
                 encoding="utf-8",  # 明确指定编码
                 errors="replace",  # 处理编码错误
-                timeout=timeout + 5,
+                timeout=self.security_config.get("execution_timeout", 30) + 5,
                 cwd=self.workdir,
                 env=self._get_restricted_env(),
             )
 
-            # 添加调试输出
-            print(f"DEBUG: 安全执行进程stdout: {result.stdout}")
-            print(f"DEBUG: 安全执行进程stderr: {result.stderr}")
-            print(f"DEBUG: 安全执行进程返回码: {result.returncode}")
-
-            parsed_result = self._parse_execution_result(result)
-            print(f"DEBUG: 解析后的结果: {parsed_result}")
-
-            return parsed_result
-
-            # return self._parse_execution_result(result)
+            return self._parse_execution_result(result)
 
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "error": f"代码执行超时 ({timeout}秒)",
+                "error": f"代码执行超时 ({self.security_config.get("execution_timeout", 30)}秒)",
                 "result": None,
                 "locals": {},
                 "globals": {},
@@ -95,14 +76,44 @@ class SecureProcessRunner:
 
     def _get_restricted_env(self) -> Dict[str, str]:
         """获取受限的环境变量"""
-        return {
+        # 获取网络配置
+        network_config = self.security_config.get("network", {})
+
+        restricted_env = {
             "PATH": os.environ.get("PATH", ""),
             "PYTHONPATH": os.environ.get("PYTHONPATH", ""),
             "HOME": str(self.workdir),
             "TMPDIR": str(self.temp_dir),
-            # "HTTP_PROXY": "127.0.0.1:9999",  # 阻止网络访问
-            # "HTTPS_PROXY": "127.0.0.1:9999",
         }
+
+        if not network_config.get("disable_network_validation", False):
+            # 网络访问控制
+            if network_config.get("block_network_access", False):
+                # 完全阻止网络访问
+                restricted_env.update(
+                    {
+                        "HTTP_PROXY": "127.0.0.1:9999",
+                        "HTTPS_PROXY": "127.0.0.1:9999",
+                        "FTP_PROXY": "127.0.0.1:9999",
+                        "SOCKS_PROXY": "127.0.0.1:9999",
+                        "ALL_PROXY": "127.0.0.1:9999",
+                        "NO_PROXY": "",
+                    }
+                )
+            elif network_config.get("restrict_network_access", True):
+                # 限制性网络访问
+                restricted_env.update(
+                    {
+                        "HTTP_PROXY": "",
+                        "HTTPS_PROXY": "",
+                        "FTP_PROXY": "",
+                        "SOCKS_PROXY": "",
+                        "ALL_PROXY": "",
+                        "NO_PROXY": "localhost,127.0.0.1",
+                    }
+                )
+
+        return restricted_env
 
     def _prepare_execution_code(
         self,
@@ -119,6 +130,10 @@ class SecureProcessRunner:
         encoding_header = "# -*- coding: utf-8 -*-\n"
         encoded_user_code = repr(user_code)
         custom_globals_code = ""
+        network_config = self.security_config.get("network", {})
+        disable_network_validation = network_config.get("disable_network_validation", False)
+        block_network_modules = network_config.get("block_network_modules", False)
+
         if globals_dict:
             safe_globals = {}
             for key, value in globals_dict.items():
@@ -299,21 +314,39 @@ def build_smart_execution_environment(code):
         'importlib.util',
         'runpy',
         'code',
-        'codeop',  
+        'codeop',
     ]  
       
+    if not {disable_network_validation}:
+        # 添加网络相关模块到黑名单  
+        network_modules = [  
+            'socket',  
+            'telnetlib',  
+            'ftplib',  
+            'smtplib',  
+            'poplib',  
+            'imaplib',  
+        ]  
+        dangerous_modules.extend(network_modules)  
+
+        if {block_network_modules}:
+            dangerous_modules.extend(['requests', 'urllib', 'http.client'])
+
     # 危险函数模式检测（函数级安全控制）  
-    dangerous_patterns = [  
-        r'os\.system\(',  
-        r'os\.exec\w*\(',  
-        r'os\.spawn\w*\(',  
-        r'os\.popen\(',  
-        r'subprocess\.',  
-        r'eval\(',  
-        r'exec\(',  
-        r'compile\(',  
-        r'__import__\([^)]*["\\']subprocess["\\']',  
-        r'getattr\([^)]*["\\']system["\\']',  
+    dangerous_patterns = [
+        r'os\.system\(',
+        r'os\.exec\w*\(',
+        r'os\.spawn\w*\(',
+        r'os\.popen\(',
+        r'subprocess\.',
+        r'eval\(',
+        r'exec\(',
+        r'compile\(',
+        r'__import__\([^)]*["\\']subprocess["\\']',
+        r'getattr\([^)]*["\\']system["\\']',
+        r'pickle\.loads?\(',
+        r'shelve\.open\(',
+        r'marshal\.loads?\(',
     ]
       
     # 检查代码中是否包含危险函数调用  
@@ -476,7 +509,7 @@ class AIForgeRunner:
         self.workdir.mkdir(exist_ok=True)
         self.console = Console()
         self.current_task = None
-        self.secure_runner = SecureProcessRunner(workdir)
+        self.secure_runner = SecureProcessRunner(workdir, security_config)
 
         self.default_timeout = security_config.get("execution_timeout", 30)
         self.default_memory_limit = security_config.get("memory_limit_mb", 512)
@@ -485,43 +518,16 @@ class AIForgeRunner:
         self.default_max_file_size_mb = security_config.get("max_file_size_mb", 10)
         self.default_max_processes = security_config.get("max_processes", 10)
 
-    def execute_code(
-        self,
-        code: str,
-        globals_dict: Dict | None = None,
-        timeout: int = None,
-        memory_limit_mb: int = None,
-        cpu_time_limit: int = None,
-        file_descriptor_limit: int = None,
-        max_file_size_mb: int = None,
-        max_processes: int = None,
-    ) -> Dict[str, Any]:
+    def execute_code(self, code: str, globals_dict: Dict | None = None) -> Dict[str, Any]:
         """执行生成的代码"""
-
-        # 使用传入参数或默认值
-        timeout = timeout or self.default_timeout
-        memory_limit_mb = memory_limit_mb or self.default_memory_limit
-        cpu_time_limit = cpu_time_limit or self.default_cpu_time_limit
-        file_descriptor_limit = file_descriptor_limit or self.default_file_descriptor_limit
-        max_file_size_mb = max_file_size_mb or self.default_max_file_size_mb
-        max_processes = max_processes or self.default_max_processes
-
         self.console.print(
-            f"[blue]安全执行: 超时={timeout}s, 内存={memory_limit_mb}MB, CPU={cpu_time_limit}s, "
-            f"文件描述符={file_descriptor_limit}, 文件大小={max_file_size_mb}MB, "
-            f"进程数={max_processes}[/blue]"
+            f"[blue]🔐沙盒运行环境: 超时={self.default_timeout}s, 内存={self.default_memory_limit}MB,"
+            f"CPU={self.default_cpu_time_limit}s, "
+            f"文件描述符={self.default_file_descriptor_limit}, 文件大小={self.default_max_file_size_mb}MB, "
+            f"进程数={self.default_max_processes}[/blue]"
         )
         try:
-            result = self.secure_runner.execute_code(
-                code,
-                globals_dict,
-                timeout,
-                memory_limit_mb,
-                cpu_time_limit,
-                file_descriptor_limit,
-                max_file_size_mb,
-                max_processes,
-            )
+            result = self.secure_runner.execute_code(code, globals_dict)
 
             if not result["success"]:
                 self.console.print(f"[red]执行失败: {result.get('error', 'Unknown error')}[/red]")

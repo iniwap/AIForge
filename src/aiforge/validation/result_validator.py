@@ -160,14 +160,20 @@ class ResultValidator:
 
         return True, ""
 
-    def _needs_ai_validation(self, result: Dict[str, Any], expected: Dict[str, Any]) -> bool:
+    def _needs_ai_validation(
+        self,
+        result: Dict[str, Any],
+        expected: Dict[str, Any],
+        original_instruction: str = None,
+        llm_client=None,
+    ) -> bool:
         """判断是否需要AI深度验证"""
         result_content = result.get("result", {})
         if isinstance(result_content, dict):
             data = result_content.get("data", [])
-            min_items = expected.get("validation_rules", {}).get("min_items", 3)
+            min_items = expected.get("validation_rules", {}).get("min_items", 1)
 
-            # 如果获取到足够数量的数据，且基本格式正确，跳过 AI 验证
+            # 现有的数据质量检查
             if isinstance(data, list) and len(data) >= min_items:
                 valid_items = 0
                 for item in data:
@@ -177,7 +183,15 @@ class ResultValidator:
                         if title and content and len(content) > 20:
                             valid_items += 1
 
-                # 如果有效数据达到要求，跳过 AI 验证
+                # 语义相关性初步检查
+                if valid_items >= min_items and original_instruction and llm_client:
+                    semantic_relevance = self._check_semantic_relevance(
+                        original_instruction, data[:2], llm_client  # 为了节省时间，只检查前2条
+                    )
+                    if semantic_relevance < 0.3:  # 相关性阈值
+                        return True  # 需要AI深度验证
+
+                # 如果有效数据达到要求且语义相关，跳过 AI 验证
                 if valid_items >= min_items:
                     return False
 

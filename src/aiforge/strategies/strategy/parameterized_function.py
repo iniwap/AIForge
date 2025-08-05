@@ -8,14 +8,18 @@ from ..execution_strategy import ExecutionStrategy
 class ParameterizedFunctionStrategy(ExecutionStrategy):
     """参数化函数执行策略"""
 
-    def __init__(self, parameter_mapping_service=None):
-        super().__init__(parameter_mapping_service)
+    def __init__(self, parameter_mapping_service=None, config_manager=None):
+        super().__init__(parameter_mapping_service, config_manager)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         return hasattr(module, "execute_task") or self._has_callable_functions(module)
 
     def execute(self, module: Any, **kwargs) -> Optional[Any]:
         standardized_instruction = kwargs.get("standardized_instruction", {})
+
+        network_result = self.perform_network_validation(module, **kwargs)
+        if network_result:
+            return network_result
 
         # 查找可执行函数
         target_func = self._find_target_function(module, standardized_instruction)

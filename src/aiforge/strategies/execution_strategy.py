@@ -6,7 +6,8 @@ import inspect
 class ExecutionStrategy(ABC):
     """执行策略接口"""
 
-    def __init__(self, parameter_mapping_service=None):
+    def __init__(self, parameter_mapping_service=None, config_manager=None):
+        self.config_manager = config_manager
         self.parameter_mapping_service = parameter_mapping_service
 
     @abstractmethod
@@ -36,6 +37,74 @@ class ExecutionStrategy(ABC):
                 parameters[param_name] = param_info
 
         return parameters
+
+    def perform_network_validation(self, module: Any, **kwargs):
+        if self._should_perform_network_validation(kwargs):
+            network_result = self._validate_network_security(module, **kwargs)
+            if network_result and network_result.get("status") == "error":
+                return network_result
+
+        return None
+
+    def _should_perform_network_validation(self, kwargs: Dict[str, Any]) -> bool:
+        """判断是否需要进行网络验证"""
+        # 检查是否有配置
+        config = kwargs.get("config")
+        if not config:
+            return False
+
+        # 检查网络安全配置是否启用
+        security_config = config.get("security", {})
+        network_config = security_config.get("network", {})
+
+        # 如果明确禁用网络验证，则跳过
+        if network_config.get("disable_network_validation", False):
+            return False
+
+        # 默认启用网络验证
+        return True
+
+    def _validate_network_security(self, module: Any, **kwargs) -> Optional[Dict[str, Any]]:
+        """网络安全验证"""
+        if not self.network_analyzer:
+            from ..security.network_security import NetworkSecurityAnalyzer
+
+            self.network_analyzer = NetworkSecurityAnalyzer(
+                self.config_manager.get_security_config()
+            )
+
+        standardized_instruction = kwargs.get("standardized_instruction", {})
+        task_type = standardized_instruction.get("task_type")  # 提取任务类型
+        code = self._extract_code_from_module(module)
+
+        # 传递任务类型给网络风险分析
+        network_risk = self.network_analyzer.analyze_network_risk(
+            code, standardized_instruction.get("parameters", {}), task_type
+        )
+
+        if network_risk["blocked_operations"]:
+            return {
+                "status": "error",
+                "error_type": "network_access_denied",
+                "message": "Network access blocked",
+                "blocked_operations": network_risk["blocked_operations"],
+                "task_type": task_type,
+                "effective_config": network_risk.get("effective_config"),
+            }
+        return None
+
+    def _extract_code_from_module(self, module):
+        """从模块中提取代码"""
+        import inspect
+
+        try:
+            if hasattr(module, "__code__"):
+                return inspect.getsource(module)
+            elif hasattr(module, "__result__") and callable(module.__result__):
+                return inspect.getsource(module.__result__)
+            return ""
+        except Exception:
+            return ""
 
     def _invoke_with_parameters_base(
         self,

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from .execution_strategy import ExecutionStrategy
 from .strategy.parameterized_function import ParameterizedFunctionStrategy
 from .strategy.file_operation import FileOperationStrategy
@@ -18,16 +18,35 @@ class ExecutionStrategyManager:
         """注册默认策略"""
         parameter_mapping_service = self.components.get("parameter_mapping_service")
 
-        self.register_strategy(ParameterizedFunctionStrategy(parameter_mapping_service))
-        self.register_strategy(ClassInstantiationStrategy(parameter_mapping_service))
-        self.register_strategy(DirectResultStrategy(parameter_mapping_service))
-        self.register_strategy(FileOperationStrategy(parameter_mapping_service))
+        self.register_strategy(
+            ParameterizedFunctionStrategy(
+                parameter_mapping_service, self.components.get("config_manager")
+            )
+        )
+        self.register_strategy(
+            ClassInstantiationStrategy(
+                parameter_mapping_service, self.components.get("config_manager")
+            )
+        )
+        self.register_strategy(
+            DirectResultStrategy(parameter_mapping_service, self.components.get("config_manager"))
+        )
+        self.register_strategy(
+            FileOperationStrategy(parameter_mapping_service, self.components.get("config_manager"))
+        )
 
     def register_strategy(self, strategy: ExecutionStrategy):
         """注册执行策略"""
         self.strategies.append(strategy)
         # 按优先级排序
         self.strategies.sort(key=lambda s: s.get_priority(), reverse=True)
+
+    def update_file_operation_paths(self, user_allowed_paths: List[str]):
+        """更新文件操作策略的允许路径"""
+        for strategy in self.strategies:
+            if isinstance(strategy, FileOperationStrategy):
+                strategy.set_user_allowed_paths(user_allowed_paths)
+                break
 
     def execute_module(self, module: Any, **kwargs) -> Optional[Any]:
         """执行模块，使用最合适的策略"""

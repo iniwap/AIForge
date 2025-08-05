@@ -74,10 +74,74 @@ obfuscate_variables = true
 [security]
 execution_timeout = 30
 memory_limit_mb = 512
-cpu_time_limit = 30
+cpu_time_limit = 60
 file_descriptor_limit = 64
-max_file_size_mb = 10
+max_file_size_mb = 100
 max_processes = 10
+
+# 安全配置 - 文件访问
+[security.file_access]
+user_specified_paths = true
+default_allowed_paths = ["./data", "./output"]
+require_explicit_permission = true
+max_allowed_paths = 10
+
+[security.network]
+disable_network_validation = true
+block_network_access = false
+block_network_modules = false
+restrict_network_access = true
+max_requests_per_minute = 60
+max_concurrent_connections = 10
+request_timeout = 30
+allowed_protocols = ["http", "https"]
+allowed_ports = [80, 443, 8080, 8443]
+blocked_ports = [22, 23, 3389, 5432, 3306]
+enable_domain_filtering = true
+domain_whitelist = [
+    "api.openai.com",
+    "api.deepseek.com",
+    "openrouter.ai",
+    "baidu.com",
+    "bing.com",
+    "so.com",
+    "sogou.com",
+    "api.x.ai",
+    "dashscope.aliyuncs.com",
+    "generativelanguage.googleapis.com",
+]
+domain_blacklist = ["malicious-site.com"]
+
+# 为特定任务类型扩展白名单
+[security.network.task_specific.data_fetch]
+disable_domain_filtering = true
+extended_domain_whitelist = [
+    "sina.com.cn",
+    "163.com",
+    "qq.com",
+    "sohu.com",
+    "xinhuanet.com",
+    "people.com.cn",
+    "chinanews.com",
+    "thepaper.cn",
+    "36kr.com",
+    "ifeng.com",
+    "cnbeta.com",
+    "zol.com.cn",
+    "csdn.net",
+    "jianshu.com",
+    "zhihu.com",
+    "weibo.com",
+    "douban.com",
+    "bilibili.com",
+    "youku.com",
+    "iqiyi.com",
+    "tencent.com",
+    "alibaba.com",
+    "jd.com",
+    "tmall.com",
+    "taobao.com",
+]
 
 # 在配置文件中添加扩展部分  
 [extensions]
