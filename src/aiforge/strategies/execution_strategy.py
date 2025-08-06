@@ -59,7 +59,7 @@ class ExecutionStrategy(ABC):
         strategy_type = self.__class__.__name__
 
         # 使用策略特定的验证
-        validation_result = self._security_middleware.validate_execution_with_cache(
+        validation_result = self._security_middleware.validate_execution(
             module, context, strategy_type
         )
 

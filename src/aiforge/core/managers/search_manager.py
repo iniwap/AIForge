@@ -356,10 +356,11 @@ class AIForgeSearchManager:
         """执行多层级搜索策略"""
 
         # 第一层：直接调用 search_web
-
+        """
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
             return direct_result
+        """
 
         # 第二层：使用缓存中的搜索函数
         ProgressIndicator.show_search_process("系统缓存")

@@ -76,20 +76,46 @@ class SecureProcessRunner:
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
-    def _get_restricted_env(self) -> Dict[str, str]:
-        """获取受限的环境变量"""
-        # 获取网络配置
-        network_config = self.security_config.get("network", {})
+    def _build_policy_config(self, network_config: Dict) -> Dict[str, Any]:
+        """构建策略配置"""
+        generated_code_config = network_config.get("generated_code", {})
+        domain_filtering = network_config.get("domain_filtering", {})
 
+        return {
+            "force_block_modules": generated_code_config.get("force_block_modules", False),
+            "force_block_access": generated_code_config.get("force_block_access", False),
+            "domain_filtering_enabled": domain_filtering.get("enabled", True),
+            "domain_whitelist": domain_filtering.get("whitelist", []),
+            "domain_blacklist": domain_filtering.get("blacklist", []),
+            "max_requests_per_minute": network_config.get("max_requests_per_minute", 60),
+            "allowed_protocols": network_config.get("allowed_protocols", ["http", "https"]),
+            "allowed_ports": network_config.get("allowed_ports", [80, 443, 8080, 8443]),
+            "blocked_ports": network_config.get("blocked_ports", [22, 23, 3389, 5432, 3306]),
+        }
+
+    def _get_restricted_env(self) -> Dict[str, str]:
+        """获取受限的环境变量 - 使用新的策略架构"""
+        from ..security.network_policy import NetworkPolicyFactory
+
+        # 获取网络策略配置
+        network_config = self.security_config.get("network", {})
+        policy_level = network_config.get("policy", "filtered")
+
+        # 创建网络策略
+        policy_config = self._build_policy_config(network_config)
+        network_policy = NetworkPolicyFactory.create_policy(policy_level, policy_config)
+
+        # 基础环境变量
         restricted_env = {
             "PATH": os.environ.get("PATH", ""),
             "PYTHONPATH": os.environ.get("PYTHONPATH", ""),
             "HOME": str(self.workdir),
             "TMPDIR": str(self.temp_dir),
         }
-        # Windows 特定：继承更多系统环境变量以支持网络访问
+
+        # Windows 特定环境变量
         if platform.system() == "Windows":
-            windows_network_vars = [
+            windows_vars = [
                 "SYSTEMROOT",
                 "WINDIR",
                 "COMPUTERNAME",
@@ -100,36 +126,13 @@ class SecureProcessRunner:
                 "TEMP",
                 "TMP",
             ]
-            for var in windows_network_vars:
+            for var in windows_vars:
                 if var in os.environ:
                     restricted_env[var] = os.environ[var]
 
-        if not network_config.get("disable_network_validation", False):
-            # 网络访问控制
-            if network_config.get("block_network_access", False):
-                # 完全阻止网络访问
-                restricted_env.update(
-                    {
-                        "HTTP_PROXY": "http://127.0.0.1:1",
-                        "HTTPS_PROXY": "http://127.0.0.1:1",
-                        "FTP_PROXY": "http://127.0.0.1:1",
-                        "SOCKS_PROXY": "http://127.0.0.1:1",
-                        "ALL_PROXY": "http://127.0.0.1:1",
-                        "NO_PROXY": "",
-                    }
-                )
-            elif network_config.get("restrict_network_access", False):
-                # 限制性网络访问
-                restricted_env.update(
-                    {
-                        "HTTP_PROXY": "",
-                        "HTTPS_PROXY": "",
-                        "FTP_PROXY": "",
-                        "SOCKS_PROXY": "",
-                        "ALL_PROXY": "",
-                        "NO_PROXY": "localhost,127.0.0.1",
-                    }
-                )
+        # 应用网络策略的环境变量
+        network_env = network_policy.get_environment_variables()
+        restricted_env.update(network_env)
 
         return restricted_env
 
@@ -149,14 +152,19 @@ class SecureProcessRunner:
 
         encoded_user_code = repr(user_code)
         custom_globals_code = ""
+
         network_config = self.security_config.get("network", {})
-        disable_network_validation = network_config.get("disable_network_validation", False)
-        block_network_modules = network_config.get("block_network_modules", False)
+        policy_level = network_config.get("policy", "filtered")
+        generated_code_config = network_config.get("generated_code", {})
+        force_block_modules = generated_code_config.get("force_block_modules", False)
+
+        # 保留所有安全常量（包括 DANGEROUS_PATTERNS）
         common_modules = SecurityConstants.COMMON_MODULES
         dangerous_modules = SecurityConstants.DANGEROUS_MODULES
         dangerous_network_modules = SecurityConstants.DANGEROUS_NETWORK_MODULES
         network_modules = SecurityConstants.NETWORK_MODULES
         dangerous_patterns = SecurityConstants.DANGEROUS_PATTERNS
+
         blocked_module_template = """blocked_modules.append({
 "name": name,
 "module": module_name,
@@ -332,14 +340,10 @@ def build_smart_execution_environment(code):
     dangerous_modules = []
     dangerous_modules.extend({dangerous_modules})
       
-    # 三层级网络控制（按控制范围从大到小）  
-    if not {disable_network_validation}:  
-        # 添加基础网络模块到黑名单    
+    if "{policy_level}" != "unrestricted":  
         dangerous_modules.extend({dangerous_network_modules})  
-    
-        # 从最严格到最宽松的控制  
-        if {block_network_modules}:  
-            # 最严格：阻止网络模块导入  
+        
+        if {force_block_modules} or "{policy_level}" == "strict":  
             dangerous_modules.extend({network_modules})
 
     # 首先执行用户代码以定义函数  

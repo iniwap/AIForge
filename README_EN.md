@@ -3,7 +3,7 @@
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=6)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=6)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=7)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=7)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **Transform natural language instructions into executable code with AI-powered automation**  
@@ -44,7 +44,6 @@ AIForge is an **intelligent execution engine** that bridges the gap between natu
 - **Ollama** - Local model execution  
   
 ### 🔧 Advanced Execution Management  
-- **Semantic Caching** - Intelligent code reuse based on instruction similarity  
 - **Template System** - Domain-specific execution templates  
 - **Search Integration** - Multi-engine search capabilities (Baidu, Bing, 360, Sogou)  
 - **Content Generation** - Specialized content creation workflows  
@@ -54,7 +53,15 @@ AIForge is an **intelligent execution engine** that bridges the gap between natu
 - **Progress Tracking** - Real-time execution status indicators  
 - **Error Handling** - Comprehensive exception management and retry logic  
 - **Configuration Management** - Flexible TOML-based configuration system  
+
+## 🔐 Enterprise Security Features  
+AIForge provides multi-layer security for safe AI code execution:  
   
+- **Sandbox Isolation**: Process-level isolation with resource limits  
+- **Network Security**: Four-tier policy control with smart domain filtering  
+- **Code Analysis**: Dangerous pattern detection and safe module imports    
+- **Unified Middleware**: Extensible security validation framework
+
 ## 🚀 Quick Start  
   
 ### Installation  

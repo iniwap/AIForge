@@ -20,7 +20,7 @@ class SecurityMiddleware:
     def validate_execution(
         self, module: Any, context: Dict[str, Any], strategy_type: str = None
     ) -> Dict[str, Any]:
-        """统一的安全验证入口 - 标准格式，无特殊处理"""
+        """统一的安全验证入口"""
         code = self._extract_code_from_module(module)
         cache_key = self._generate_cache_key(code, context, strategy_type or "default")
 

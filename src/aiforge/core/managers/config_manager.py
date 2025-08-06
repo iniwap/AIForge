@@ -73,5 +73,20 @@ class AIForgeConfigManager:
         """获取安全-文件配置"""
         return self.config.get_security_file_access_config()
 
-    def get_security_network_config(self):
-        return self.config.get_security_network_config()
+    def get_network_policy_level(self) -> str:
+        """获取网络策略级别"""
+        return self.config.get_security_network_config().get("policy", "filtered")
+
+    def get_network_policy_config(
+        self, context: str = "execution", task_type: str = None
+    ) -> Dict[str, Any]:
+        """获取特定上下文的网络策略配置"""
+        return self.config.get_network_policy_config(context, task_type)
+
+    def get_generated_code_network_config(self) -> Dict[str, Any]:
+        """获取生成代码专用网络配置"""
+        return self.get_network_policy_config(context="execution")
+
+    def get_cache_validation_network_config(self, task_type: str = None) -> Dict[str, Any]:
+        """获取缓存验证专用网络配置"""
+        return self.get_network_policy_config(context="validation", task_type=task_type)

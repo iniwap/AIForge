@@ -1,7 +1,7 @@
 import tomlkit
 from pathlib import Path
 from rich.console import Console
-from typing import Dict
+from typing import Dict, Any
 import importlib.resources
 
 
@@ -130,61 +130,64 @@ class AIForgeConfig:
                             "max_allowed_paths": 10,
                         },
                         "network": {
-                            "disable_network_validation": True,
-                            "block_network_access": False,
-                            "block_network_modules": False,
-                            "restrict_network_access": False,
+                            "policy": "filtered",
                             "max_requests_per_minute": 60,
                             "max_concurrent_connections": 10,
                             "request_timeout": 30,
                             "allowed_protocols": ["http", "https"],
                             "allowed_ports": [80, 443, 8080, 8443],
                             "blocked_ports": [22, 23, 3389, 5432, 3306],
-                            "enable_domain_filtering": True,
-                            "domain_whitelist": [
-                                "api.openai.com",
-                                "api.deepseek.com",
-                                "openrouter.ai",
-                                "baidu.com",
-                                "bing.com",
-                                "so.com",
-                                "sogou.com",
-                                "api.x.ai",
-                                "dashscope.aliyuncs.com",
-                                "generativelanguage.googleapis.com",
-                            ],
-                            "domain_blacklist": ["malicious-site.com"],
-                            "task_specific": {
-                                "data_fetch": {
-                                    "disable_domain_filtering": True,
-                                    "extended_domain_whitelist": [
-                                        "sina.com.cn",
-                                        "163.com",
-                                        "qq.com",
-                                        "sohu.com",
-                                        "xinhuanet.com",
-                                        "people.com.cn",
-                                        "chinanews.com",
-                                        "thepaper.cn",
-                                        "36kr.com",
-                                        "ifeng.com",
-                                        "cnbeta.com",
-                                        "zol.com.cn",
-                                        "csdn.net",
-                                        "jianshu.com",
-                                        "zhihu.com",
-                                        "weibo.com",
-                                        "douban.com",
-                                        "bilibili.com",
-                                        "youku.com",
-                                        "iqiyi.com",
-                                        "tencent.com",
-                                        "alibaba.com",
-                                        "jd.com",
-                                        "tmall.com",
-                                        "taobao.com",
-                                    ],
-                                }
+                            "generated_code": {
+                                "force_block_modules": False,
+                                "force_block_access": False,
+                            },
+                            "domain_filtering": {
+                                "enabled": True,
+                                "whitelist": [
+                                    "api.openai.com",
+                                    "api.deepseek.com",
+                                    "openrouter.ai",
+                                    "baidu.com",
+                                    "bing.com",
+                                    "so.com",
+                                    "sogou.com",
+                                    "api.x.ai",
+                                    "dashscope.aliyuncs.com",
+                                    "generativelanguage.googleapis.com",
+                                ],
+                                "blacklist": ["malicious-site.com"],
+                                "task_overrides": {
+                                    "data_fetch": {
+                                        "mode": "extended",
+                                        "additional_domains": [
+                                            "sina.com.cn",
+                                            "163.com",
+                                            "qq.com",
+                                            "sohu.com",
+                                            "xinhuanet.com",
+                                            "people.com.cn",
+                                            "chinanews.com",
+                                            "thepaper.cn",
+                                            "36kr.com",
+                                            "ifeng.com",
+                                            "cnbeta.com",
+                                            "zol.com.cn",
+                                            "csdn.net",
+                                            "jianshu.com",
+                                            "zhihu.com",
+                                            "weibo.com",
+                                            "douban.com",
+                                            "bilibili.com",
+                                            "youku.com",
+                                            "iqiyi.com",
+                                            "tencent.com",
+                                            "alibaba.com",
+                                            "jd.com",
+                                            "tmall.com",
+                                            "taobao.com",
+                                        ],
+                                    }
+                                },
                             },
                         },
                     },
@@ -244,8 +247,73 @@ class AIForgeConfig:
             return {}
 
     def get_security_network_config(self):
+        """获取统一的网络安全配置"""
         sc = self.get_security_config()
         if sc:
             return sc.get("network", {})
+        return {}
+
+    def get_network_policy(self):
+        """获取网络策略"""
+        network_config = self.get_security_network_config()
+        return network_config.get("policy", "filtered")
+
+    def get_domain_filtering_config(self):
+        """获取域名过滤配置"""
+        network_config = self.get_security_network_config()
+        return network_config.get("domain_filtering", {})
+
+    def get_generated_code_network_config(self):
+        """获取生成代码网络配置"""
+        network_config = self.get_security_network_config()
+        return network_config.get("generated_code", {})
+
+    def get_network_policy_config(
+        self, context: str = "execution", task_type: str = None
+    ) -> Dict[str, Any]:
+        base_config = self.config.get_security_network_config()
+        policy_level = base_config.get("policy", "filtered")
+
+        # 构建策略配置
+        policy_config = {
+            "policy_level": policy_level,
+            "max_requests_per_minute": base_config.get("max_requests_per_minute", 60),
+            "max_concurrent_connections": base_config.get("max_concurrent_connections", 10),
+            "request_timeout": base_config.get("request_timeout", 30),
+            "allowed_protocols": base_config.get("allowed_protocols", ["http", "https"]),
+            "allowed_ports": base_config.get("allowed_ports", [80, 443, 8080, 8443]),
+            "blocked_ports": base_config.get("blocked_ports", [22, 23, 3389, 5432, 3306]),
+        }
+
+        # 生成代码专用控制
+        if context == "execution":
+            generated_code_config = base_config.get("generated_code", {})
+            policy_config.update(
+                {
+                    "force_block_modules": generated_code_config.get("force_block_modules", False),
+                    "force_block_access": generated_code_config.get("force_block_access", False),
+                }
+            )
+
+        # 域名过滤配置
+        domain_filtering = base_config.get("domain_filtering", {})
+        if domain_filtering.get("enabled", True):
+            whitelist = domain_filtering.get("whitelist", [])
+
+            # 任务特定域名扩展
+            if task_type:
+                task_overrides = domain_filtering.get("task_overrides", {}).get(task_type, {})
+                if task_overrides.get("mode") == "extended":
+                    whitelist = whitelist + task_overrides.get("additional_domains", [])
+
+            policy_config.update(
+                {
+                    "domain_filtering_enabled": True,
+                    "domain_whitelist": whitelist,
+                    "domain_blacklist": domain_filtering.get("blacklist", []),
+                }
+            )
         else:
-            return {}
+            policy_config["domain_filtering_enabled"] = False
+
+        return policy_config

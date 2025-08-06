@@ -3,7 +3,7 @@
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=6)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=6)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=7)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=7)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **将自然语言指令转化为可执行代码的AI驱动自动化引擎**  
@@ -52,11 +52,18 @@ AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代�
 - **内容生成** - 专业的内容创建工作流  
   
 ### 🛡️ 企业级功能  
-- **沙盒执行** - 安全隔离的代码执行环境  
 - **进度跟踪** - 实时执行状态指示器  
 - **错误处理** - 全面的异常管理和重试逻辑  
 - **配置管理** - 灵活的TOML配置系统  
-  
+
+## 🔐 企业级安全特性  
+AIForge提供多层安全保障，确保AI代码安全执行：  
+
+- **沙盒隔离**：进程级隔离执行，完整资源限制  
+- **网络安全**：四级策略控制，智能域名过滤    
+- **代码分析**：危险模式检测，安全模块导入  
+- **统一中间件**：可扩展的安全验证框架
+
 ## 🚀 快速开始  
   
 ### 安装  

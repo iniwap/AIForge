@@ -39,29 +39,68 @@ class NetworkSecurityController:
         ]
 
     def validate_network_access(self, code: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """网络访问验证"""
-        # 检查是否禁用网络验证
-        if self.network_config.get("disable_network_validation", False):
-            return {"allowed": True, "reason": "validation_disabled"}
+        """网络访问验证 - 集成新的策略架构"""
+        task_type = context.get("task_type", "general")
 
-        # 执行完整的网络风险分析
-        task_type = context.get("task_type")
-        parameters = context.get("parameters", {})
+        # 获取网络策略配置
+        if self.config_manager:
+            network_config = self.config_manager.get_cache_validation_network_config(task_type)
+            policy_level = network_config.get("policy_level", "filtered")
 
-        network_analysis = self.analyze_network_risk(code, parameters, task_type)
+            # 根据策略级别进行验证
+            if policy_level == "unrestricted":
+                return {"allowed": True, "reason": "网络验证已禁用"}
+            elif policy_level == "strict":
+                return {"allowed": False, "reason": "严格模式禁止所有网络访问"}
+            elif policy_level == "filtered":
+                return self._validate_domain_filtering(code, network_config, task_type)
+            else:  # open
+                return {"allowed": True, "reason": "开放模式允许所有网络访问"}
 
-        if network_analysis["blocked_operations"]:
-            return {
-                "allowed": False,
-                "status": "error",
-                "error_type": "network_access_denied",
-                "message": "Network access blocked",
-                "blocked_operations": network_analysis["blocked_operations"],
-                "task_type": task_type,
-                "effective_config": network_analysis.get("effective_config"),
-            }
+        # 回退到原有逻辑
+        return {"allowed": True, "reason": "默认允许"}
 
-        return {"allowed": True, "network_analysis": network_analysis}
+    def _validate_domain_filtering(
+        self, code: str, network_config: Dict[str, Any], task_type: str
+    ) -> Dict[str, Any]:
+        """验证域名过滤"""
+        if not network_config.get("domain_filtering_enabled", True):
+            return {"allowed": True, "reason": "域名过滤已禁用"}
+
+        # 从代码中提取域名
+        accessed_domains = self._extract_domains_from_code(code)
+
+        whitelist = network_config.get("domain_whitelist", [])
+        blacklist = network_config.get("domain_blacklist", [])
+
+        for domain in accessed_domains:
+            if any(domain.endswith(blocked) for blocked in blacklist):
+                return {"allowed": False, "reason": f"域名 {domain} 在黑名单中"}
+
+            if not any(domain.endswith(allowed) for allowed in whitelist):
+                return {"allowed": False, "reason": f"域名 {domain} 不在白名单中"}
+
+        return {"allowed": True, "reason": "域名验证通过"}
+
+    def _extract_domains_from_code(self, code: str) -> list:
+        """从代码中提取域名访问"""
+        import re
+
+        domain_pattern = r'https?://([^/\s"\']+)'
+        domains = re.findall(domain_pattern, code)
+
+        bare_domain_pattern = r'["\']([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})["\']'
+        bare_domains = re.findall(bare_domain_pattern, code)
+
+        all_domains = list(set(domains + bare_domains))
+
+        filtered_domains = []
+        for domain in all_domains:
+            if "." in domain and len(domain.split(".")) >= 2:
+                if not re.match(r"^\d+\.\d+\.\d+\.\d+$", domain):
+                    filtered_domains.append(domain)
+
+        return filtered_domains
 
     def analyze_network_risk(
         self, code: str, parameters: Dict[str, Any], task_type: str = None
