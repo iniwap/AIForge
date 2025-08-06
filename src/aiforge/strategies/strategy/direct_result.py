@@ -16,9 +16,9 @@ class DirectResultStrategy(ExecutionStrategy):
         standardized_instruction = kwargs.get("standardized_instruction", {})
         result = getattr(module, "__result__")
 
-        network_result = self.perform_network_validation(module, **kwargs)
-        if network_result:
-            return network_result
+        security_result = self.perform_security_validation(module, **kwargs)
+        if security_result:
+            return security_result
 
         # 如果结果是函数，尝试参数化调用
         if callable(result):

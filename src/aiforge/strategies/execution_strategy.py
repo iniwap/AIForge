@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 import inspect
+from ..security.security_middleware import SecurityMiddleware
 
 
 class ExecutionStrategy(ABC):
@@ -9,6 +10,8 @@ class ExecutionStrategy(ABC):
     def __init__(self, parameter_mapping_service=None, config_manager=None):
         self.config_manager = config_manager
         self.parameter_mapping_service = parameter_mapping_service
+        self._security_middleware = SecurityMiddleware(self.config_manager)
+        self._last_validation_result = None
 
     @abstractmethod
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
@@ -25,6 +28,10 @@ class ExecutionStrategy(ABC):
         """获取策略优先级，数字越大优先级越高"""
         pass
 
+    def set_user_allowed_paths(self, paths: List[str]):
+        """设置用户允许的路径"""
+        self._security_middleware.set_user_allowed_paths(paths)
+
     def _extract_parameters(self, standardized_instruction: Dict[str, Any]) -> Dict[str, Any]:
         """从标准化指令中提取参数"""
         required_parameters = standardized_instruction.get("required_parameters", {})
@@ -38,73 +45,35 @@ class ExecutionStrategy(ABC):
 
         return parameters
 
-    def perform_network_validation(self, module: Any, **kwargs):
-        if self._should_perform_network_validation(kwargs):
-            network_result = self._validate_network_security(module, **kwargs)
-            if network_result and network_result.get("status") == "error":
-                return network_result
-
-        return None
-
-    def _should_perform_network_validation(self, kwargs: Dict[str, Any]) -> bool:
-        """判断是否需要进行网络验证"""
-        # 检查是否有配置
-        config = kwargs.get("config")
-        if not config:
-            return False
-
-        # 检查网络安全配置是否启用
-        security_config = config.get("security", {})
-        network_config = security_config.get("network", {})
-
-        # 如果明确禁用网络验证，则跳过
-        if network_config.get("disable_network_validation", False):
-            return False
-
-        # 默认启用网络验证
-        return True
-
-    def _validate_network_security(self, module: Any, **kwargs) -> Optional[Dict[str, Any]]:
-        """网络安全验证"""
-        if not self.network_analyzer:
-            from ..security.network_security import NetworkSecurityAnalyzer
-
-            self.network_analyzer = NetworkSecurityAnalyzer(
-                self.config_manager.get_security_config()
-            )
+    def perform_security_validation(self, module: Any, **kwargs) -> Optional[Dict[str, Any]]:
+        """策略特定的安全验证入口"""
 
         standardized_instruction = kwargs.get("standardized_instruction", {})
-        task_type = standardized_instruction.get("task_type")  # 提取任务类型
-        code = self._extract_code_from_module(module)
+        context = {
+            "task_type": standardized_instruction.get("task_type"),
+            "action": standardized_instruction.get("action"),
+            "parameters": standardized_instruction.get("parameters", {}),
+        }
 
-        # 传递任务类型给网络风险分析
-        network_risk = self.network_analyzer.analyze_network_risk(
-            code, standardized_instruction.get("parameters", {}), task_type
+        # 获取策略类型
+        strategy_type = self.__class__.__name__
+
+        # 使用策略特定的验证
+        validation_result = self._security_middleware.validate_execution_with_cache(
+            module, context, strategy_type
         )
 
-        if network_risk["blocked_operations"]:
-            return {
-                "status": "error",
-                "error_type": "network_access_denied",
-                "message": "Network access blocked",
-                "blocked_operations": network_risk["blocked_operations"],
-                "task_type": task_type,
-                "effective_config": network_risk.get("effective_config"),
-            }
+        # 存储验证结果
+        self._last_validation_result = validation_result
+
+        # 只有在完全不允许执行时才返回错误
+        if not validation_result["overall_allowed"]:
+            if validation_result.get("network") and not validation_result["network"]["allowed"]:
+                return validation_result["network"]
+            elif validation_result.get("file") and not validation_result["file"]["allowed"]:
+                return validation_result["file"]
+
         return None
-
-    def _extract_code_from_module(self, module):
-        """从模块中提取代码"""
-        import inspect
-
-        try:
-            if hasattr(module, "__code__"):
-                return inspect.getsource(module)
-            elif hasattr(module, "__result__") and callable(module.__result__):
-                return inspect.getsource(module.__result__)
-            return ""
-        except Exception:
-            return ""
 
     def _invoke_with_parameters_base(
         self,

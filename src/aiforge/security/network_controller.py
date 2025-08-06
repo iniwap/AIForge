@@ -5,12 +5,13 @@ from typing import Dict, Any, List
 from urllib.parse import urlparse
 
 
-class NetworkSecurityAnalyzer:
-    """网络访问安全分析器"""
+class NetworkSecurityController:
+    """网络安全控制器"""
 
-    def __init__(self, config: Dict[str, Any] = None):
-        self.config = config or {}
-        self.network_config = self.config.get("network", {})
+    def __init__(self, config_manager):
+        self.config_manager = config_manager
+        self.security_config = config_manager.get_security_config()
+        self.network_config = self.security_config.get("network", {})
 
         # 基础配置
         self.max_requests_per_minute = self.network_config.get("max_requests_per_minute", 60)
@@ -25,7 +26,7 @@ class NetworkSecurityAnalyzer:
         self.domain_blacklist = self.network_config.get("domain_blacklist", [])
         self.enable_domain_filtering = self.network_config.get("enable_domain_filtering", True)
 
-        # 新增：任务类型特定配置
+        # 任务类型特定配置
         self.task_specific_config = self.network_config.get("task_specific", {})
 
         # 私有IP地址范围
@@ -37,10 +38,35 @@ class NetworkSecurityAnalyzer:
             ipaddress.ip_network("169.254.0.0/16"),
         ]
 
+    def validate_network_access(self, code: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """网络访问验证"""
+        # 检查是否禁用网络验证
+        if self.network_config.get("disable_network_validation", False):
+            return {"allowed": True, "reason": "validation_disabled"}
+
+        # 执行完整的网络风险分析
+        task_type = context.get("task_type")
+        parameters = context.get("parameters", {})
+
+        network_analysis = self.analyze_network_risk(code, parameters, task_type)
+
+        if network_analysis["blocked_operations"]:
+            return {
+                "allowed": False,
+                "status": "error",
+                "error_type": "network_access_denied",
+                "message": "Network access blocked",
+                "blocked_operations": network_analysis["blocked_operations"],
+                "task_type": task_type,
+                "effective_config": network_analysis.get("effective_config"),
+            }
+
+        return {"allowed": True, "network_analysis": network_analysis}
+
     def analyze_network_risk(
         self, code: str, parameters: Dict[str, Any], task_type: str = None
     ) -> Dict[str, Any]:
-        """分析网络访问风险，支持任务类型感知"""
+        """完整的网络风险分析"""
         # 根据任务类型调整安全策略
         effective_config = self._get_effective_config_for_task(task_type)
 
@@ -249,26 +275,6 @@ class NetworkSecurityAnalyzer:
                             urls.append(item)
 
         return urls
-
-    def _validate_domain(self, hostname: str) -> Dict[str, Any]:
-        """验证域名访问权限"""
-        if not hostname:
-            return {"allowed": False, "reason": "Empty hostname"}
-
-        # 黑名单检查
-        if self.domain_blacklist:
-            for blocked_domain in self.domain_blacklist:
-                if hostname.endswith(blocked_domain):
-                    return {"allowed": False, "reason": f"Domain in blacklist: {blocked_domain}"}
-
-        # 白名单检查
-        if self.domain_whitelist:
-            for allowed_domain in self.domain_whitelist:
-                if hostname.endswith(allowed_domain):
-                    return {"allowed": True, "reason": f"Domain in whitelist: {allowed_domain}"}
-            return {"allowed": False, "reason": "Domain not in whitelist"}
-
-        return {"allowed": True, "reason": "No domain restrictions"}
 
     def _validate_ip_access(self, hostname: str) -> Dict[str, Any]:
         """验证IP地址访问权限"""

@@ -130,10 +130,10 @@ class AIForgeConfig:
                             "max_allowed_paths": 10,
                         },
                         "network": {
-                            "disable_network_validation": False,
+                            "disable_network_validation": True,
                             "block_network_access": False,
                             "block_network_modules": False,
-                            "restrict_network_access": True,
+                            "restrict_network_access": False,
                             "max_requests_per_minute": 60,
                             "max_concurrent_connections": 10,
                             "request_timeout": 30,
@@ -240,5 +240,12 @@ class AIForgeConfig:
         sc = self.get_security_config()
         if sc:
             return sc.get("file_access", {})
+        else:
+            return {}
+
+    def get_security_network_config(self):
+        sc = self.get_security_config()
+        if sc:
+            return sc.get("network", {})
         else:
             return {}

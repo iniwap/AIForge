@@ -16,9 +16,9 @@ class ClassInstantiationStrategy(ExecutionStrategy):
     def execute(self, module: Any, **kwargs) -> Optional[Any]:
         standardized_instruction = kwargs.get("standardized_instruction", {})
 
-        network_result = self.perform_network_validation(module, **kwargs)
-        if network_result:
-            return network_result
+        security_result = self.perform_security_validation(module, **kwargs)
+        if security_result:
+            return security_result
 
         target_class = self._find_target_class(module)
         if not target_class:

@@ -2,14 +2,13 @@ from pathlib import Path
 import time
 import os
 import shutil
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 from ..execution_strategy import ExecutionStrategy
 from .file_operation_safety import (
     FileOperationConfirmationManager,
     FileOperationBackupManager,
     FileOperationUndoManager,
 )
-from ...security.file_operation_safety_analyzer import FileOperationSafetyAnalyzer
 
 
 class FileOperationErrorClassifier:
@@ -220,16 +219,7 @@ class FileOperationStrategy(ExecutionStrategy):
 
     def __init__(self, parameter_mapping_service=None, config_manager=None):
         super().__init__(parameter_mapping_service, config_manager)
-        user_allowed_paths = None
-        workdir = "aiforge_work"
-        if self.config_manager:
-            workdir = self.config_manager.get_workdir()
-            security_config = self.config_manager.get_security_file_access_config()
-            file_access_config = security_config.get("file_access", {})
-            default_paths = file_access_config.get("default_allowed_paths", [])
-            user_allowed_paths = default_paths
 
-        self.workdir = Path(workdir) if workdir else Path.cwd()
         self.supported_operations = {
             "copy": self._copy_file,
             "move": self._move_file,
@@ -242,10 +232,7 @@ class FileOperationStrategy(ExecutionStrategy):
             "write": self._write_file,
             "batch": self._batch_operation,
         }
-        # 传递workdir和用户允许路径给安全分析器
-        self.safety_analyzer = FileOperationSafetyAnalyzer(
-            workdir=str(self.workdir), user_allowed_paths=user_allowed_paths
-        )
+
         self.confirmation_manager = FileOperationConfirmationManager()
         self.backup_manager = FileOperationBackupManager()
         self.undo_manager = FileOperationUndoManager()
@@ -254,10 +241,6 @@ class FileOperationStrategy(ExecutionStrategy):
         self.error_classifier = FileOperationErrorClassifier()
         # 事务管理器
         self.transaction_manager = FileOperationTransactionManager
-
-    def set_user_allowed_paths(self, paths: List[str]):
-        """设置用户允许的路径"""
-        self.safety_analyzer.set_user_allowed_paths(paths)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         task_type = standardized_instruction.get("task_type", "")
@@ -314,20 +297,12 @@ class FileOperationStrategy(ExecutionStrategy):
 
         try:
             # 1. 安全分析（包含路径验证）
-            code = self._extract_code_from_module(module)
-            risk_analysis = self.safety_analyzer.analyze_operation_risk(
-                code, standardized_instruction.get("parameters", {})
-            )
+            security_result = self.perform_security_validation(module, **kwargs)
+            if security_result:
+                return security_result
 
-            # 2. 检查路径访问权限
-            if risk_analysis["path_validation"]["invalid_paths"]:
-                return {
-                    "status": "error",
-                    "error_type": "access_denied",
-                    "message": "Access denied to specified paths",
-                    "invalid_paths": risk_analysis["path_validation"]["invalid_paths"],
-                    "access_denied": risk_analysis["path_validation"]["access_denied"],
-                }
+            # 2. 获取风险分析（验证已通过，但仍需风险信息）
+            risk_analysis = self._last_validation_result["file"]["risk_analysis"]
 
             # 3. 用户确认
             if not self.confirmation_manager.require_user_confirmation(risk_analysis):
@@ -445,7 +420,6 @@ class FileOperationStrategy(ExecutionStrategy):
         """尝试路径修正"""
         try:
             import os
-            from pathlib import Path
 
             file_path = error_info.get("file_path")
             if file_path:

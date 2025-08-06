@@ -72,3 +72,6 @@ class AIForgeConfigManager:
     def get_security_file_access_config(self) -> Dict[str, Any]:
         """获取安全-文件配置"""
         return self.config.get_security_file_access_config()
+
+    def get_security_network_config(self):
+        return self.config.get_security_network_config()

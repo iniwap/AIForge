@@ -17,9 +17,9 @@ class ParameterizedFunctionStrategy(ExecutionStrategy):
     def execute(self, module: Any, **kwargs) -> Optional[Any]:
         standardized_instruction = kwargs.get("standardized_instruction", {})
 
-        network_result = self.perform_network_validation(module, **kwargs)
-        if network_result:
-            return network_result
+        security_result = self.perform_security_validation(module, **kwargs)
+        if security_result:
+            return security_result
 
         # 查找可执行函数
         target_func = self._find_target_function(module, standardized_instruction)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import platform
 import subprocess
 import tempfile
 import json
@@ -10,6 +11,7 @@ from typing import Dict, Any
 from pathlib import Path
 from rich.console import Console
 import traceback
+from ..security.security_constants import SecurityConstants
 
 
 class SecureProcessRunner:
@@ -25,7 +27,7 @@ class SecureProcessRunner:
 
     def execute_code(self, code: str, globals_dict: Dict | None = None) -> Dict[str, Any]:
         """在隔离进程中执行代码"""
-
+        execution_timeout = self.security_config.get("execution_timeout", 30)
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".py", dir=self.workdir, delete=False, encoding="utf-8"
         ) as f:
@@ -48,7 +50,7 @@ class SecureProcessRunner:
                 text=True,
                 encoding="utf-8",  # 明确指定编码
                 errors="replace",  # 处理编码错误
-                timeout=self.security_config.get("execution_timeout", 30) + 5,
+                timeout=execution_timeout + 5,
                 cwd=self.workdir,
                 env=self._get_restricted_env(),
             )
@@ -58,7 +60,7 @@ class SecureProcessRunner:
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "error": f"代码执行超时 ({self.security_config.get("execution_timeout", 30)}秒)",
+                "error": f"代码执行超时 ({execution_timeout}秒)",
                 "result": None,
                 "locals": {},
                 "globals": {},
@@ -85,6 +87,22 @@ class SecureProcessRunner:
             "HOME": str(self.workdir),
             "TMPDIR": str(self.temp_dir),
         }
+        # Windows 特定：继承更多系统环境变量以支持网络访问
+        if platform.system() == "Windows":
+            windows_network_vars = [
+                "SYSTEMROOT",
+                "WINDIR",
+                "COMPUTERNAME",
+                "USERNAME",
+                "USERPROFILE",
+                "APPDATA",
+                "LOCALAPPDATA",
+                "TEMP",
+                "TMP",
+            ]
+            for var in windows_network_vars:
+                if var in os.environ:
+                    restricted_env[var] = os.environ[var]
 
         if not network_config.get("disable_network_validation", False):
             # 网络访问控制
@@ -92,15 +110,15 @@ class SecureProcessRunner:
                 # 完全阻止网络访问
                 restricted_env.update(
                     {
-                        "HTTP_PROXY": "127.0.0.1:9999",
-                        "HTTPS_PROXY": "127.0.0.1:9999",
-                        "FTP_PROXY": "127.0.0.1:9999",
-                        "SOCKS_PROXY": "127.0.0.1:9999",
-                        "ALL_PROXY": "127.0.0.1:9999",
+                        "HTTP_PROXY": "http://127.0.0.1:1",
+                        "HTTPS_PROXY": "http://127.0.0.1:1",
+                        "FTP_PROXY": "http://127.0.0.1:1",
+                        "SOCKS_PROXY": "http://127.0.0.1:1",
+                        "ALL_PROXY": "http://127.0.0.1:1",
                         "NO_PROXY": "",
                     }
                 )
-            elif network_config.get("restrict_network_access", True):
+            elif network_config.get("restrict_network_access", False):
                 # 限制性网络访问
                 restricted_env.update(
                     {
@@ -128,12 +146,22 @@ class SecureProcessRunner:
         """准备带完整资源限制的执行代码"""
         # 添加编码声明
         encoding_header = "# -*- coding: utf-8 -*-\n"
+
         encoded_user_code = repr(user_code)
         custom_globals_code = ""
         network_config = self.security_config.get("network", {})
         disable_network_validation = network_config.get("disable_network_validation", False)
         block_network_modules = network_config.get("block_network_modules", False)
-
+        common_modules = SecurityConstants.COMMON_MODULES
+        dangerous_modules = SecurityConstants.DANGEROUS_MODULES
+        dangerous_network_modules = SecurityConstants.DANGEROUS_NETWORK_MODULES
+        network_modules = SecurityConstants.NETWORK_MODULES
+        dangerous_patterns = SecurityConstants.DANGEROUS_PATTERNS
+        blocked_module_template = """blocked_modules.append({
+"name": name,
+"module": module_name,
+"reason": "网络安全策略阻止"
+})"""
         if globals_dict:
             safe_globals = {}
             for key, value in globals_dict.items():
@@ -171,21 +199,29 @@ def set_resource_limits():
     except Exception:
         pass
 
-def smart_import_fallback(name, import_info):
-    fallback_mapping = {{
-        'requests': 'urllib.request',
-        'bs4': None,
-        'selenium': None,
-        'feedparser': None,
-    }}
-
-    if name in fallback_mapping:
-        fallback_name = fallback_mapping[name]
-        if fallback_name:
-            try:
-                return importlib.import_module(fallback_name)
-            except ImportError:
-                pass
+def smart_import_fallback(name, import_info, dangerous_modules=None):    
+    if dangerous_modules is None:    
+        dangerous_modules = []    
+            
+    fallback_mapping = {{    
+        'requests': 'urllib.request',    
+        'bs4': None,    
+        'selenium': None,    
+        'feedparser': None,    
+    }}  
+    
+    if name in fallback_mapping:    
+        fallback_name = fallback_mapping[name]    
+        if fallback_name:    
+            # 只在传入危险模块列表时才进行安全检查  
+            if dangerous_modules:  
+                fallback_base = fallback_name.split('.')[0]    
+                if fallback_base in dangerous_modules:    
+                    return None    
+            try:    
+                return importlib.import_module(fallback_name)    
+            except ImportError:    
+                pass    
     return None
 
 def extract_imports_from_code(code):
@@ -232,41 +268,45 @@ def extract_used_names(code):
     except SyntaxError:
         return set()
 
-def smart_import_missing(name):
-    try:
-        common_modules = {{
-            "requests": "requests",
-            "json": "json",
-            "os": "os",
-            "re": "re",
-            "sys": "sys",
-            "time": "time",
-            "random": "random",
-            "datetime": "datetime",
-            "BeautifulSoup": "bs4.BeautifulSoup",
-            "pd": "pandas",
-            "np": "numpy",
-            "plt": "matplotlib.pyplot",
-        }}
-
-        if name in common_modules:
-            module_path = common_modules[name]
-            if "." in module_path:
-                module_name, attr_name = module_path.rsplit(".", 1)
-                module = importlib.import_module(module_name)
-                return getattr(module, attr_name)
-            else:
-                return importlib.import_module(module_path)
-
-        return importlib.import_module(name)
-
-    except Exception:
+def smart_import_missing(name, dangerous_modules=None):  
+    if dangerous_modules is None:  
+        dangerous_modules = []  
+          
+    try:  
+        common_modules = {common_modules}  
+          
+        # 首先检查直接导入是否为危险模块  
+        if name in dangerous_modules:  
+            return None  
+              
+        if name in common_modules:  
+            module_path = common_modules[name]  
+              
+            # 提取基础模块名进行检查  
+            base_module = module_path.split('.')[0]  
+            if base_module in dangerous_modules:  
+                return None  
+  
+            if "." in module_path:  
+                module_name, attr_name = module_path.rsplit(".", 1)  
+                module = importlib.import_module(module_name)  
+                return getattr(module, attr_name)  
+            else:  
+                return importlib.import_module(module_path)  
+          
+        # 对于不在常见模块列表中的模块，也要检查是否危险  
+        if name in dangerous_modules:  
+            return None  
+  
+        return importlib.import_module(name)  
+  
+    except Exception:  
         return None
 
 def build_smart_execution_environment(code):  
     import importlib  
     import re  
-    
+
     safe_builtins = {{  
         'print': print, 'len': len, 'range': range, 'enumerate': enumerate,  
         'str': str, 'int': int, 'float': float, 'bool': bool,  
@@ -288,14 +328,45 @@ def build_smart_execution_environment(code):
         "__builtins__": safe_builtins,  
     }}
     
+    # 危险模块黑名单
+    dangerous_modules = []
+    dangerous_modules.extend({dangerous_modules})
+      
+    # 三层级网络控制（按控制范围从大到小）  
+    if not {disable_network_validation}:  
+        # 添加基础网络模块到黑名单    
+        dangerous_modules.extend({dangerous_network_modules})  
+    
+        # 从最严格到最宽松的控制  
+        if {block_network_modules}:  
+            # 最严格：阻止网络模块导入  
+            dangerous_modules.extend({network_modules})
+
     # 首先执行用户代码以定义函数  
     try:  
         # 只执行函数和类定义，避免执行其他代码  
         tree = ast.parse(code)
         function_defs = []
-        for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Import, ast.ImportFrom)):
-                function_defs.append(node)
+        for node in tree.body:    
+            if isinstance(node, (ast.Import, ast.ImportFrom)):    
+                # 对 import 语句进行安全检查    
+                should_skip = False  
+                if isinstance(node, ast.Import):    
+                    for alias in node.names:    
+                        if alias.name in dangerous_modules:    
+                            should_skip = True  
+                            break  
+                elif isinstance(node, ast.ImportFrom):  
+                    if node.module and any(  
+                        node.module == dangerous or node.module.startswith(dangerous + '.')  
+                        for dangerous in dangerous_modules  
+                    ):  
+                        should_skip = True
+                
+                if should_skip:  
+                    continue  # 跳过整个危险的 import 节点  
+            
+            function_defs.append(node)
 
         if function_defs:
             # 只执行定义部分
@@ -305,101 +376,66 @@ def build_smart_execution_environment(code):
         pass
     
     user_imports = extract_imports_from_code(code)  
-      
-    # 危险模块黑名单
-    dangerous_modules = [
-        'subprocess',
-        'multiprocessing',
-        'ctypes',
-        'importlib.util',
-        'runpy',
-        'code',
-        'codeop',
-    ]  
-      
-    if not {disable_network_validation}:
-        # 添加网络相关模块到黑名单  
-        network_modules = [  
-            'socket',  
-            'telnetlib',  
-            'ftplib',  
-            'smtplib',  
-            'poplib',  
-            'imaplib',  
-        ]  
-        dangerous_modules.extend(network_modules)  
 
-        if {block_network_modules}:
-            dangerous_modules.extend(['requests', 'urllib', 'http.client'])
-
-    # 危险函数模式检测（函数级安全控制）  
-    dangerous_patterns = [
-        r'os\.system\(',
-        r'os\.exec\w*\(',
-        r'os\.spawn\w*\(',
-        r'os\.popen\(',
-        r'subprocess\.',
-        r'eval\(',
-        r'exec\(',
-        r'compile\(',
-        r'__import__\([^)]*["\\']subprocess["\\']',
-        r'getattr\([^)]*["\\']system["\\']',
-        r'pickle\.loads?\(',
-        r'shelve\.open\(',
-        r'marshal\.loads?\(',
-    ]
-      
-    # 检查代码中是否包含危险函数调用  
+    # 危险函数模式检测（函数级安全控制）      
     has_dangerous_calls = any(re.search(pattern, code, re.IGNORECASE)   
-                             for pattern in dangerous_patterns)
+                             for pattern in {dangerous_patterns})
       
-    # 动态导入处理  
-    for name, import_info in user_imports.items():  
-        try:  
-            module_name = import_info["module"]  
-              
-            # 只阻止真正危险的模块  
-            if any(dangerous in module_name for dangerous in dangerous_modules):  
-                continue  
-              
-            # 动态导入（允许大部分标准库模块）  
-            if import_info["type"] == "import":  
-                module = importlib.import_module(module_name)  
-                exec_globals[name] = module  
-            elif import_info["type"] == "from_import":  
-                module = importlib.import_module(module_name)  
-                if import_info["name"] == "*":  
-                    # 通配符导入  
-                    for attr_name in dir(module):  
-                        if not attr_name.startswith("_"):  
-                            exec_globals[attr_name] = getattr(module, attr_name)  
-                else:  
-                    exec_globals[name] = getattr(module, import_info["name"])  
-                      
-        except (ImportError, AttributeError) as e:  
-            # 导入失败时使用回退机制  
-            fallback_module = smart_import_fallback(name, import_info)  
-            if fallback_module is not None:  
-                exec_globals[name] = fallback_module
+    # 动态导入处理
+    blocked_modules = []
+    for name, import_info in user_imports.items():    
+        try:    
+            module_name = import_info["module"]    
+                
+            # 只阻止真正危险的模块    
+            is_dangerous = any(dangerous == module_name or module_name.startswith(dangerous + '.') for dangerous in dangerous_modules)  
+            if is_dangerous:  
+                {blocked_module_template}
+                continue    
+                
+            # 动态导入（允许大部分标准库模块）    
+            if import_info["type"] == "import":    
+                module = importlib.import_module(module_name)    
+                exec_globals[name] = module    
+            elif import_info["type"] == "from_import":    
+                module = importlib.import_module(module_name)    
+                if import_info["name"] == "*":    
+                    # 通配符导入    
+                    for attr_name in dir(module):    
+                        if not attr_name.startswith("_"):    
+                            exec_globals[attr_name] = getattr(module, attr_name)    
+                else:    
+                    exec_globals[name] = getattr(module, import_info["name"])    
+                            
+        except (ImportError, AttributeError) as e:    
+            # 导入失败时使用回退机制    
+            fallback_module = smart_import_fallback(name, import_info, dangerous_modules)    
+            if fallback_module is not None:    
+                exec_globals[name] = fallback_module  
   
-    # 处理缺失的名称（基于原始AIForge逻辑）  
-    used_names = extract_used_names(code)  
-    missing_names = used_names - set(user_imports.keys()) - set(exec_globals.keys())  
-      
-    for name in missing_names:  
-        # 跳过明显的变量名和结果变量  
-        if (name in ["__result__", "result", "data", "output", "response", "content"] or  
-            name.islower() and len(name) <= 3 or  
-            name in ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",  
-                    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]):  
-            continue  
-  
-        # 尝试智能导入常见模块  
-        smart_module = smart_import_missing(name)  
-        if smart_module is not None:  
-            exec_globals[name] = smart_module  
-  
-    return exec_globals
+    # 处理缺失的名称
+    used_names = extract_used_names(code)    
+    missing_names = used_names - set(user_imports.keys()) - set(exec_globals.keys())    
+        
+    for name in missing_names:    
+        # 跳过明显的变量名和结果变量    
+        if (name in ["__result__", "result", "data", "output", "response", "content"] or    
+            name.islower() and len(name) <= 3 or    
+            name in ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",    
+                    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]):    
+            continue    
+    
+        # 尝试智能导入常见模块    
+        smart_module = smart_import_missing(name, dangerous_modules) 
+
+        if smart_module is not None:    
+            exec_globals[name] = smart_module
+        
+    # 清理可能残留的危险模块
+    for dangerous in dangerous_modules:  
+        exec_globals.pop(dangerous, None)
+
+    return exec_globals, blocked_modules
 
 def timeout_handler(signum, frame):
     raise TimeoutError("代码执行超时")
@@ -415,7 +451,7 @@ try:
     user_code_for_analysis = {encoded_user_code} 
 
     # 使用智能环境构建
-    globals_dict = build_smart_execution_environment(user_code_for_analysis)
+    globals_dict ,blocked_modules = build_smart_execution_environment(user_code_for_analysis)
 
     # 合并自定义globals
     {custom_globals_code}
@@ -451,7 +487,7 @@ try:
         "result": result,
         "error": None,
         "locals": clean_locals,
-        "globals": clean_globals
+        "globals": clean_globals,
     }}
     print("__AIFORGE_RESULT__" + json.dumps(output, default=str))
 
@@ -459,15 +495,38 @@ except Exception as e:
     if platform.system() != "Windows":
         signal.alarm(0)
 
+    error_message = str(e)  
     error_output = {{
         "success": False,
         "result": None,
-        "error": str(e),
+        "error": error_message,
         "traceback": traceback.format_exc(),
         "locals": {{}},
         "globals": {{}}
     }}
+
+    # 检查是否是因为安全策略导致的模块缺失  
+    if "is not defined" in error_message:  
+        missing_name = error_message.split("'")[1] if "'" in error_message else ""  
+        if missing_name in [blocked['name'] for blocked in blocked_modules]:  
+            blocked_info = next((b for b in blocked_modules if b['name'] == missing_name), None)  
+            if blocked_info:  
+                error_message = f"模块 '{{missing_name}}' 因安全策略被阻止导入。原因：{{blocked_info['reason']}}。原始模块：{{blocked_info['module']}}"  
+                error_output = {{  
+                    "success": False,  
+                    "result": None,  
+                    "error": error_message,  
+                    "traceback": traceback.format_exc(),
+                    "locals": {{}},
+                    "globals": {{}},
+                    "security_info": {{  
+                        "blocked_modules": blocked_modules,  
+                        "reason": "网络安全策略生效",
+                    }},
+                }}
+                
     print("__AIFORGE_RESULT__" + json.dumps(error_output, default=str))
+
 """  # noqa 501
 
     def _parse_execution_result(self, result: subprocess.CompletedProcess) -> Dict[str, Any]:
@@ -528,9 +587,27 @@ class AIForgeRunner:
         )
         try:
             result = self.secure_runner.execute_code(code, globals_dict)
-
             if not result["success"]:
-                self.console.print(f"[red]执行失败: {result.get('error', 'Unknown error')}[/red]")
+                error_msg = result.get("error", "Unknown error")
+                if "security_info" in result:
+                    security_info = result["security_info"]
+                    if security_info.get("blocked_modules"):
+                        blocked_list = ", ".join(
+                            [
+                                f"{m['name']} ({m['module']})"
+                                for m in security_info["blocked_modules"]
+                            ]
+                        )
+                        error_msg = f"安全策略阻止了以下模块的导入: {blocked_list}。{error_msg}"
+                else:
+                    self.console.print(f"[red]执行失败: {error_msg}[/red]")
+            else:
+                # 检查是否有网络访问被阻止的情况（通过分析结果内容）
+                result_content = result.get("result", {})
+                if isinstance(result_content, dict):
+                    # 检查是否包含网络错误的特征
+                    if self._is_network_blocked_result(result_content):
+                        self.console.print("[yellow]ℹ️  网络访问已被安全策略阻止[/yellow]")
 
             return result
 
@@ -545,6 +622,29 @@ class AIForgeRunner:
             }
             self.console.print(f"[red]Runner错误: {e}[/red]")
             return error_result
+
+    def _is_network_blocked_result(self, result_content: dict) -> bool:
+        """检测结果是否表明网络访问被阻止"""
+        # 检查常见的网络阻止错误模式
+        error_patterns = [
+            "ProxyError",
+            "Connection refused",
+            "积极拒绝",
+            "Unable to connect to proxy",
+            "127.0.0.1:1",  # 我们设置的代理地址
+        ]
+
+        # 递归检查结果中的所有字符串值
+        def check_dict_for_patterns(obj):
+            if isinstance(obj, dict):
+                return any(check_dict_for_patterns(v) for v in obj.values())
+            elif isinstance(obj, list):
+                return any(check_dict_for_patterns(item) for item in obj)
+            elif isinstance(obj, str):
+                return any(pattern in obj for pattern in error_patterns)
+            return False
+
+        return check_dict_for_patterns(result_content)
 
     def set_current_task(self, task):
         self.current_task = task

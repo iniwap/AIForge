@@ -1,40 +1,26 @@
-from pathlib import Path
-import re
 from typing import Dict, Any, List
+import re
+from pathlib import Path
 import os
 
 
-class FileOperationSafetyAnalyzer:
-    """文件操作安全分析器"""
+class FileSecurityController:
+    """文件安全控制器"""
 
-    def __init__(self, workdir: str = None, user_allowed_paths: List[str] = None):
-        """初始化安全分析器
+    def __init__(self, config_manager):
+        self.config_manager = config_manager
+        self.file_config = config_manager.get_security_file_access_config()
 
-        Args:
-            workdir: 工作目录
-            user_allowed_paths: 用户指定的允许访问路径列表
-        """
-        self.workdir = Path(workdir) if workdir else Path.cwd()
-        self.user_allowed_paths = user_allowed_paths or []
+        # 初始化工作目录和允许路径
+        self.workdir = Path(str(config_manager.get_workdir()))
+        self.user_allowed_paths = self.file_config.get("default_allowed_paths", [])
 
-    def analyze_operation_risk(self, code: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """分析文件操作风险等级"""
-        risk_analysis = {
-            "risk_level": "low",
-            "destructive_operations": [],
-            "affected_files": self._extract_affected_files(parameters),
-            "backup_required": False,
-            "confirmation_required": False,
-            "path_validation": self._validate_operation_paths(parameters),  # 新增路径验证
-        }
+        # 初始化文件操作检测模式
+        self._init_file_patterns()
 
-        # 检查路径访问权限
-        if risk_analysis["path_validation"]["invalid_paths"]:
-            risk_analysis["risk_level"] = "high"
-            risk_analysis["confirmation_required"] = True
-
-        # 修复正则表达式
-        destructive_patterns = [
+    def _init_file_patterns(self):
+        """初始化文件操作检测模式"""
+        self.destructive_patterns = [
             r"\.delete\(\)",
             r"os\.remove\(",
             r"shutil\.rmtree\(",
@@ -43,7 +29,58 @@ class FileOperationSafetyAnalyzer:
             r"\.truncate\(",
         ]
 
-        for pattern in destructive_patterns:
+        self.file_operation_patterns = [
+            r"open\s*\(",
+            r"with\s+open\s*\(",
+            r"shutil\.",
+            r"os\.remove",
+            r"os\.rmdir",
+            r"os\.unlink",
+            r"pathlib\.Path",
+            r"\.unlink\(\)",
+            r"\.rmdir\(\)",
+            r"\.write_text\(",
+            r"\.write_bytes\(",
+        ]
+
+    def validate_file_access(self, code: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        """文件访问验证"""
+        parameters = context.get("parameters", {})
+
+        # 执行完整的文件操作风险分析
+        risk_analysis = self.analyze_operation_risk(code, parameters)
+
+        # 检查路径访问权限
+        if risk_analysis["path_validation"]["invalid_paths"]:
+            return {
+                "allowed": False,
+                "status": "error",
+                "error_type": "access_denied",
+                "message": "Access denied to specified paths",
+                "invalid_paths": risk_analysis["path_validation"]["invalid_paths"],
+                "access_denied": risk_analysis["path_validation"]["access_denied"],
+            }
+
+        return {"allowed": True, "risk_analysis": risk_analysis}
+
+    def analyze_operation_risk(self, code: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """完整的文件操作风险分析"""
+        risk_analysis = {
+            "risk_level": "low",
+            "destructive_operations": [],
+            "affected_files": self._extract_affected_files(parameters),
+            "backup_required": False,
+            "confirmation_required": False,
+            "path_validation": self._validate_operation_paths(parameters),
+        }
+
+        # 检查路径访问权限
+        if risk_analysis["path_validation"]["invalid_paths"]:
+            risk_analysis["risk_level"] = "high"
+            risk_analysis["confirmation_required"] = True
+
+        # 检查破坏性操作模式
+        for pattern in self.destructive_patterns:
             if re.search(pattern, code):
                 risk_analysis["risk_level"] = "high"
                 risk_analysis["confirmation_required"] = True
@@ -91,7 +128,7 @@ class FileOperationSafetyAnalyzer:
         return affected_files
 
     def _validate_file_access(self, file_path: str, additional_paths: List[str] = None) -> bool:
-        """验证文件访问权限，支持用户指定的允许路径"""
+        """验证文件访问权限"""
         # 默认允许的目录
         allowed_dirs = [str(self.workdir), "/tmp", "/var/tmp"]
 
@@ -124,4 +161,4 @@ class FileOperationSafetyAnalyzer:
 
     def set_user_allowed_paths(self, paths: List[str]):
         """设置用户允许的路径"""
-        self.user_allowed_paths = paths or []
+        self.user_allowed_paths = paths
