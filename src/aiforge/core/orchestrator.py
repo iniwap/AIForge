@@ -20,6 +20,8 @@ from .managers.config_manager import AIForgeConfigManager
 from ..strategies.parameter_mapping_service import ParameterMappingService
 from ..execution.engine import AIForgeExecutionEngine
 from .managers.content_generation_manager import AIForgeContentGenerationManager
+from ..i18n.manager import AIForgeI18nManager
+from ..utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeOrchestrator:
@@ -35,6 +37,8 @@ class AIForgeOrchestrator:
 
         # 1. 基础配置和核心服务
         self._init_config_manager(config_file, api_key, provider, **kwargs)
+        self._init_i18n_manager()
+        self._init_progress_indicator()
         self._init_cache()
         self._init_llm_manager()
 
@@ -66,9 +70,17 @@ class AIForgeOrchestrator:
             config_file, api_key, provider, **kwargs
         )
 
+    def _init_progress_indicator(self):
+        progress_indicator = ProgressIndicator.get_instance(self.components)
+        self.components["progress_indicator"] = progress_indicator
+
+    def _init_i18n_manager(self):
+        """初始化国际化管理器"""
+        self.components["i18n_manager"] = AIForgeI18nManager(self.config)
+
     def _init_llm_manager(self):
         """初始化LLM管理器"""
-        self.components["llm_manager"] = AIForgeLLMManager(self.config)
+        self.components["llm_manager"] = AIForgeLLMManager(self.config, self.components)
 
     def _init_task_manager(self):
         """初始化任务管理器"""
@@ -85,7 +97,7 @@ class AIForgeOrchestrator:
     def _init_template_manager(self):
         """初始化模板管理器"""
         parameter_mapping_service = self.components.get("parameter_mapping_service")
-        template_manager = TemplateManager(parameter_mapping_service)
+        template_manager = TemplateManager(parameter_mapping_service, self.components)
         template_manager.initialize()
         self.components["template_manager"] = template_manager
 
@@ -97,15 +109,14 @@ class AIForgeOrchestrator:
         security_config = self.config.get("security", {})
 
         # 创建安全执行器并传入所有配置
-        runner = AIForgeRunner(workdir, security_config)
+        runner = AIForgeRunner(workdir, security_config, self.components)
         self.components["runner"] = runner
 
     def _init_instruction_analyzer(self):
         """初始化指令分析器"""
         llm_manager = self.components["llm_manager"]
-        default_client = llm_manager.get_client()
-        self.components["instruction_analyzer"] = (
-            AIForgeInstructionAnalyzer(default_client) if default_client else None
+        self.components["instruction_analyzer"] = AIForgeInstructionAnalyzer(
+            llm_manager.get_client(), self.components
         )
 
     def _init_cache(self):

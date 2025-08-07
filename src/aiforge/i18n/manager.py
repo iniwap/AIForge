@@ -1,0 +1,197 @@
+import importlib.resources
+import threading
+from typing import Dict, Any, Optional
+from rich.console import Console
+from .formatters.message_formatter import ICUMessageFormatter
+from .detector import LocaleDetector
+from ..config.config import AIForgeConfig
+
+
+class AIForgeI18nManager:
+    _instance = None
+    _lock = threading.RLock()
+    _initialized = False
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, config: AIForgeConfig = None):
+        # 防止重复初始化
+        if self._initialized:
+            return
+
+        self._config = config
+        self.console = Console()
+
+        # 从配置中检测语言设置
+        self.locale, self.fallback_locale = self._detect_locale_from_config()
+
+        self.messages: Dict[str, Dict[str, Any]] = {}
+        self.formatter = ICUMessageFormatter()
+        self._load_all_messages()
+
+        AIForgeI18nManager._initialized = True
+
+    @classmethod
+    def get_instance(cls, config: AIForgeConfig = None):
+        """获取单例实例"""
+        if cls._instance is None:
+            cls._instance = cls(config)
+        return cls._instance
+
+    @classmethod
+    def initialize(cls, config: AIForgeConfig = None, language: str = None):
+        """初始化或重新配置单例"""
+        instance = cls.get_instance(config)
+
+        # 如果提供了新的语言设置，更新配置
+        if language:
+            instance._update_language(language)
+        elif config:
+            instance._update_config(config)
+
+        return instance
+
+    def _update_language(self, language: str):
+        """更新语言设置"""
+        self.locale = language
+        self.fallback_locale = "en"
+        self._load_all_messages()
+
+    def _update_config(self, config: AIForgeConfig):
+        """更新配置"""
+        self._config = config
+        self.locale, self.fallback_locale = self._detect_locale_from_config()
+        self._load_all_messages()
+
+    def _detect_locale_from_config(self) -> tuple[str, str]:
+        # 如果配置中明确指定了locale，直接使用
+        if self._config:
+            config_locale = self._config.get("locale")
+            if config_locale:
+                return config_locale, "en"
+
+        # 否则进行自动检测
+        env_locale = LocaleDetector.detect_from_env()
+        system_locale = LocaleDetector.detect_system_locale()
+
+        detected_locale = env_locale or system_locale or "zh"
+        return detected_locale, "en"
+
+    @property
+    def config(self) -> Optional[AIForgeConfig]:
+        """获取配置"""
+        return self._config
+
+    @config.setter
+    def config(self, value: AIForgeConfig):
+        """设置配置"""
+        if not isinstance(value, AIForgeConfig):
+            raise TypeError("config must be an instance of AIForgeConfig")
+        self._update_config(value)
+
+    def t(self, key: str, **params) -> str:
+        """翻译函数，支持ICU MessageFormat"""
+        message = self._get_message(key)
+        if not message:
+            return key
+
+        return self.formatter.format(message, **params)
+
+    def _get_message(self, key: str) -> Optional[str]:
+        """获取消息，支持嵌套键和回退"""
+        keys = key.split(".")
+
+        # 尝试当前语言
+        current = self.messages.get(self.locale, {})
+        for k in keys:
+            if isinstance(current, dict) and k in current:
+                current = current[k]
+            else:
+                break
+        else:
+            return current if isinstance(current, str) else None
+
+        # 回退到默认语言
+        current = self.messages.get(self.fallback_locale, {})
+        for k in keys:
+            if isinstance(current, dict) and k in current:
+                current = current[k]
+            else:
+                return key
+
+        return current if isinstance(current, str) else key
+
+    def _load_all_messages(self):
+        """加载所有语言的消息文件"""
+        try:
+            # 获取 i18n 资源目录
+            i18n_package = importlib.resources.files("aiforge.i18n")
+            locales_dir = i18n_package / "locales"
+
+            # 加载当前语言的消息
+            self._load_locale_messages(locales_dir, self.locale)
+
+            # 如果当前语言不是回退语言，也加载回退语言的消息
+            if self.locale != self.fallback_locale:
+                self._load_locale_messages(locales_dir, self.fallback_locale)
+
+        except Exception:
+            self._load_default_messages()
+
+    def _load_locale_messages(self, locales_dir, locale: str):
+        """加载指定语言的消息文件"""
+        import json
+
+        locale_dir = locales_dir / locale
+        if not locale_dir.is_dir():
+            return
+
+        # 初始化语言消息字典
+        if locale not in self.messages:
+            self.messages[locale] = {}
+
+        # 加载所有 JSON 文件
+        json_files = ["common.json", "prompts.json", "errors.json", "ui.json"]
+
+        for json_file in json_files:
+            file_path = locale_dir / json_file
+            if file_path.exists():
+                try:
+                    with file_path.open("r", encoding="utf-8") as f:
+                        file_messages = json.load(f)
+                        # 合并到语言消息中
+                        self.messages[locale].update(file_messages)
+                except Exception:
+                    pass
+
+    def _load_default_messages(self):
+        """加载默认消息（硬编码回退）"""
+        self.messages = {
+            "zh": {
+                "system": {
+                    "initializing": "正在初始化...",
+                    "ready": "系统就绪",
+                    "error": "系统错误",
+                },
+                "prompts": {
+                    "base_role": "你是 AIForge 智能任务分析器",
+                    "execution_guidance": "执行代码，并将执行结果赋值给 __result__",
+                },
+            },
+            "en": {
+                "system": {
+                    "initializing": "Initializing...",
+                    "ready": "System ready",
+                    "error": "System error",
+                },
+                "prompts": {
+                    "base_role": "You are AIForge intelligent task analyzer",
+                    "execution_guidance": "Execute code and assign result to __result__",
+                },
+            },
+        }

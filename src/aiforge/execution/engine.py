@@ -27,7 +27,7 @@ class AIForgeExecutionEngine:
 
         # 结果格式化器
         self.result_formatter = AIForgeResultFormatter(self.console)
-        self.result_processor = AIForgeResultProcessor(self.console)
+        self.result_processor = AIForgeResultProcessor(self.console, self.components)
 
         # 安全中间件
         self._security_middleware = SecurityMiddleware(self.components.get("config_manager"))

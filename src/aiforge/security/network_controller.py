@@ -8,7 +8,15 @@ from urllib.parse import urlparse
 class NetworkSecurityController:
     """网络安全控制器"""
 
-    def __init__(self, config_manager):
+    def __init__(self, config_manager, components: Dict[str, Any] = None):
+
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ..i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
+
         self.config_manager = config_manager
         self.security_config = config_manager.get_security_config()
         self.network_config = self.security_config.get("network", {})
@@ -49,23 +57,28 @@ class NetworkSecurityController:
 
             # 根据策略级别进行验证
             if policy_level == "unrestricted":
-                return {"allowed": True, "reason": "网络验证已禁用"}
+                unrestricted_message = self._i18n_manager.t("network.validation_disabled")
+                return {"allowed": True, "reason": unrestricted_message}
             elif policy_level == "strict":
-                return {"allowed": False, "reason": "严格模式禁止所有网络访问"}
+                strict_message = self._i18n_manager.t("network.strict_mode_blocks_all")
+                return {"allowed": False, "reason": strict_message}
             elif policy_level == "filtered":
                 return self._validate_domain_filtering(code, network_config, task_type)
             else:  # open
-                return {"allowed": True, "reason": "开放模式允许所有网络访问"}
+                open_message = self._i18n_manager.t("network.open_mode_allows_all")
+                return {"allowed": True, "reason": open_message}
 
         # 回退到原有逻辑
-        return {"allowed": True, "reason": "默认允许"}
+        default_allow_message = self._i18n_manager.t("network.default_allow")
+        return {"allowed": True, "reason": default_allow_message}
 
     def _validate_domain_filtering(
         self, code: str, network_config: Dict[str, Any], task_type: str
     ) -> Dict[str, Any]:
         """验证域名过滤"""
         if not network_config.get("domain_filtering_enabled", True):
-            return {"allowed": True, "reason": "域名过滤已禁用"}
+            filtering_disabled_message = self._i18n_manager.t("network.domain_filtering_disabled")
+            return {"allowed": True, "reason": filtering_disabled_message}
 
         # 从代码中提取域名
         accessed_domains = self._extract_domains_from_code(code)
@@ -75,12 +88,19 @@ class NetworkSecurityController:
 
         for domain in accessed_domains:
             if any(domain.endswith(blocked) for blocked in blacklist):
-                return {"allowed": False, "reason": f"域名 {domain} 在黑名单中"}
+                blacklist_message = self._i18n_manager.t(
+                    "network.domain_in_blacklist", domain=domain
+                )
+                return {"allowed": False, "reason": blacklist_message}
 
             if not any(domain.endswith(allowed) for allowed in whitelist):
-                return {"allowed": False, "reason": f"域名 {domain} 不在白名单中"}
+                not_in_whitelist_message = self._i18n_manager.t(
+                    "network.domain_not_in_whitelist", domain=domain
+                )
+                return {"allowed": False, "reason": not_in_whitelist_message}
 
-        return {"allowed": True, "reason": "域名验证通过"}
+        validation_passed_message = self._i18n_manager.t("network.domain_validation_passed")
+        return {"allowed": True, "reason": validation_passed_message}
 
     def _extract_domains_from_code(self, code: str) -> list:
         """从代码中提取域名访问"""
@@ -277,21 +297,30 @@ class NetworkSecurityController:
     ) -> Dict[str, Any]:
         """使用有效配置验证域名访问权限"""
         if not hostname:
-            return {"allowed": False, "reason": "Empty hostname"}
+            empty_hostname_message = self._i18n_manager.t("network.empty_hostname")
+            return {"allowed": False, "reason": empty_hostname_message}
 
         # 黑名单检查
         for blocked_domain in effective_config["domain_blacklist"]:
             if hostname.endswith(blocked_domain):
-                return {"allowed": False, "reason": f"Domain in blacklist: {blocked_domain}"}
+                domain_blacklisted_message = self._i18n_manager.t(
+                    "network.domain_blacklisted", domain=blocked_domain
+                )
+                return {"allowed": False, "reason": domain_blacklisted_message}
 
         # 白名单检查
         if effective_config["domain_whitelist"]:
             for allowed_domain in effective_config["domain_whitelist"]:
                 if hostname.endswith(allowed_domain):
-                    return {"allowed": True, "reason": f"Domain in whitelist: {allowed_domain}"}
-            return {"allowed": False, "reason": "Domain not in whitelist"}
+                    domain_whitelisted_message = self._i18n_manager.t(
+                        "network.domain_whitelisted", domain=allowed_domain
+                    )
+                    return {"allowed": True, "reason": domain_whitelisted_message}
+            domain_not_whitelisted_message = self._i18n_manager.t("network.domain_not_whitelisted")
+            return {"allowed": False, "reason": domain_not_whitelisted_message}
 
-        return {"allowed": True, "reason": "No domain restrictions"}
+        no_restrictions_message = self._i18n_manager.t("network.no_domain_restrictions")
+        return {"allowed": True, "reason": no_restrictions_message}
 
     def _extract_urls(self, parameters: Dict[str, Any]) -> List[str]:
         """从参数中提取URL"""
@@ -318,7 +347,8 @@ class NetworkSecurityController:
     def _validate_ip_access(self, hostname: str) -> Dict[str, Any]:
         """验证IP地址访问权限"""
         if not hostname:
-            return {"allowed": True, "reason": "No hostname"}
+            no_hostname_message = self._i18n_manager.t("network.no_hostname")
+            return {"allowed": True, "reason": no_hostname_message}
 
         try:
             # 尝试解析IP地址
@@ -327,9 +357,13 @@ class NetworkSecurityController:
             # 检查是否在阻止的IP范围内
             for blocked_range in self.blocked_ip_ranges:
                 if ip in blocked_range:
-                    return {"allowed": False, "reason": f"IP in blocked range: {blocked_range}"}
+                    ip_blocked_message = self._i18n_manager.t(
+                        "network.ip_in_blocked_range", range=str(blocked_range)
+                    )
+                    return {"allowed": False, "reason": ip_blocked_message}
 
-            return {"allowed": True, "reason": "IP address allowed"}
+            ip_allowed_message = self._i18n_manager.t("network.ip_address_allowed")
+            return {"allowed": True, "reason": ip_allowed_message}
 
         except ValueError:
             # 不是IP地址，可能是域名
@@ -340,12 +374,16 @@ class NetworkSecurityController:
 
                 for blocked_range in self.blocked_ip_ranges:
                     if ip in blocked_range:
-                        return {
-                            "allowed": False,
-                            "reason": f"Resolved IP {resolved_ip} in blocked range: {blocked_range}",  # noqa 501
-                        }
+                        resolved_ip_blocked_message = self._i18n_manager.t(
+                            "network.resolved_ip_blocked", ip=resolved_ip, range=str(blocked_range)
+                        )
+                        return {"allowed": False, "reason": resolved_ip_blocked_message}
 
-                return {"allowed": True, "reason": f"Resolved IP {resolved_ip} allowed"}
+                resolved_ip_allowed_message = self._i18n_manager.t(
+                    "network.resolved_ip_allowed", ip=resolved_ip
+                )
+                return {"allowed": True, "reason": resolved_ip_allowed_message}
 
             except (socket.gaierror, ValueError):
-                return {"allowed": True, "reason": "Cannot resolve hostname"}
+                cannot_resolve_message = self._i18n_manager.t("network.cannot_resolve_hostname")
+                return {"allowed": True, "reason": cannot_resolve_message}

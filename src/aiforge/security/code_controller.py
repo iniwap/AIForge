@@ -6,14 +6,20 @@ from .security_constants import SecurityConstants
 
 
 class CodeSecurityController:
-    """代码安全控制器 - 只处理代码安全，不掺入网络验证"""
+    """代码安全控制器"""
 
-    def __init__(self, config_manager):
+    def __init__(self, config_manager, components: Dict[str, Any] = None):
         self.config_manager = config_manager
         self.security_config = config_manager.get_security_config()
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ..i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
 
     def validate_code_access(self, code: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """代码安全验证入口 - 只做代码相关的安全检查"""
+        """代码安全验证入口"""
         function_params = context.get("function_params", [])
         analyzer = DataFlowAnalyzer(function_params)
 
@@ -21,7 +27,10 @@ class CodeSecurityController:
         security_issues = []
         for pattern in SecurityConstants.DANGEROUS_PATTERNS:
             if re.search(pattern, code):
-                security_issues.append(f"检测到危险函数调用: {pattern}")
+                dangerous_function_message = self._i18n_manager.t(
+                    "security.dangerous_function_detected", pattern=pattern
+                )
+                security_issues.append(dangerous_function_message)
 
         try:
             tree = ast.parse(code)
@@ -47,10 +56,11 @@ class CodeSecurityController:
             return result
 
         except Exception as e:
+            analysis_failed_message = self._i18n_manager.t("security.analysis_failed", error=str(e))
             return {
                 "allowed": len(security_issues) == 0,
                 "has_conflicts": len(security_issues) > 0,
-                "error": f"安全分析失败: {str(e)}",
+                "error": analysis_failed_message,
                 "dangerous_functions": security_issues,
                 "conflicts": [],
                 "meaningful_uses": [],
@@ -63,5 +73,8 @@ class CodeSecurityController:
         detected_issues = []
         for pattern in SecurityConstants.DANGEROUS_PATTERNS:
             if re.search(pattern, code):
-                detected_issues.append(f"检测到危险函数调用: {pattern}")
+                dangerous_function_message = self._i18n_manager.t(
+                    "security.dangerous_function_detected", pattern=pattern
+                )
+                detected_issues.append(dangerous_function_message)
         return detected_issues

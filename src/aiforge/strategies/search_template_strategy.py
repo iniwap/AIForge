@@ -22,8 +22,14 @@ class TemplateGenerationStrategy(ABC):
 class StandardTemplateStrategy(TemplateGenerationStrategy):
     """标准模板生成策略"""
 
-    def __init__(self):
+    def __init__(self, components: Dict[str, Any] = None):
         self.field_processor = SemanticFieldStrategy()
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ..i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
 
     def get_strategy_name(self) -> str:
         return "standard_template_strategy"
@@ -53,14 +59,20 @@ class StandardTemplateStrategy(TemplateGenerationStrategy):
 
     def _get_default_format(self, abstract_len: float, is_free_form: bool) -> str:
         """获取默认格式"""
-        return """{{
-                "title": "标题",
-                "url": "链接",
-                "content": "详细内容（去除空格换行，至少{}字）",
-                "pub_time": "发布时间" + ("（可以为空）" if {} else "")
-            }}""".format(
-            abstract_len, is_free_form
+        title_label = self._i18n_manager.t("template.title_label")
+        url_label = self._i18n_manager.t("template.url_label")
+        content_description = self._i18n_manager.t(
+            "template.content_description", length=abstract_len
         )
+        time_label = self._i18n_manager.t("template.time_label")
+        optional_suffix = self._i18n_manager.t("template.optional_empty") if is_free_form else ""
+
+        return f"""{{
+                    "{title_label}": "{title_label}",
+                    "{url_label}": "{url_label}",
+                    "content": "{content_description}",
+                    "pub_time": "{time_label}{optional_suffix}"
+                }}"""
 
     def _get_field_description(
         self, field_name: str, abstract_len: float, is_free_form: bool
@@ -68,15 +80,19 @@ class StandardTemplateStrategy(TemplateGenerationStrategy):
         """根据字段名获取描述"""
 
         if self.field_processor._matches_semantic(field_name, "title"):
-            return "标题"
+            return self._i18n_manager.t("template.title_label")
         elif self.field_processor._matches_semantic(field_name, "url"):
-            return "链接"
+            return self._i18n_manager.t("template.url_label")
         elif self.field_processor._matches_semantic(field_name, "content"):
-            return f"详细内容（去除空格换行，至少{abstract_len}字）"
+            return self._i18n_manager.t("template.content_description", length=abstract_len)
         elif self.field_processor._matches_semantic(field_name, "time"):
-            return "发布时间" + ("（可以为''）" if is_free_form else "")
+            time_label = self._i18n_manager.t("template.time_label")
+            optional_suffix = (
+                self._i18n_manager.t("template.optional_empty_quotes") if is_free_form else ""
+            )
+            return time_label + optional_suffix
         else:
-            return "对应值"
+            return self._i18n_manager.t("template.corresponding_value")
 
     def _ensure_required_fields(
         self,
@@ -91,18 +107,23 @@ class StandardTemplateStrategy(TemplateGenerationStrategy):
         if not any(
             self.field_processor._matches_semantic(field, "url") for field in expected_fields
         ):
-            result_fields.append('"url": "链接"')
+            url_label = self._i18n_manager.t("template.url_label")
+            result_fields.append(f'"url": "{url_label}"')
 
         # 检查并补充内容字段
         if not any(
             self.field_processor._matches_semantic(field, "content") for field in expected_fields
         ):
-            content_desc = f"详细内容（去除空格换行，至少{abstract_len}字）"
+            content_desc = self._i18n_manager.t("template.content_description", length=abstract_len)
             result_fields.append(f'"content": "{content_desc}"')
 
         # 检查并补充时间字段
         if not any(
             self.field_processor._matches_semantic(field, "time") for field in expected_fields
         ):
-            time_desc = "发布时间" + ("（可以为''）" if is_free_form else "")
+            time_label = self._i18n_manager.t("template.time_label")
+            optional_suffix = (
+                self._i18n_manager.t("template.optional_empty_quotes") if is_free_form else ""
+            )
+            time_desc = time_label + optional_suffix
             result_fields.append(f'"pub_time": "{time_desc}"')

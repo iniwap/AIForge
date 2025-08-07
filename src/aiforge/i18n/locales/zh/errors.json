@@ -1,0 +1,122 @@
+{  
+  "execution": {  
+    "direct_response_error": "直接响应失败: {error}",  
+    "validation_failed": "验证失败",  
+    "execution_timeout": "执行超时",  
+    "module_execution_failed": "模块执行失败",  
+    "parameter_validation_failed": "参数验证失败",  
+    "intent_validation_failed": "意图验证失败",  
+    "functionality_validation_failed": "功能一致性验证失败"  
+  },  
+  "search": {  
+    "search_failed_error": "搜索失败: {error}",  
+    "all_strategies_failed": "所有搜索策略都失败",  
+    "quality_validation_failed": "搜索结果质量验证失败",  
+    "no_valid_results": "未找到有效的搜索结果",
+    "no_search_container": "未找到搜索结果容器"  
+  },  
+  "task": {  
+    "execution_error": "执行错误: {error}"  
+  },  
+  "analyzer": {  
+    "analysis_failed": "统计分析失败: {error}",
+    "api_key_in_url_parameter": "检测到URL中包含API密钥参数",  
+    "api_key_in_url_constant": "检测到URL常量中包含API密钥参数",  
+    "api_key_in_headers": "检测到headers中包含认证信息: {key}",  
+    "possible_api_key_parameter": "检测到可能的API密钥参数: {param}"  
+  },
+  "content_generation": {  
+    "llm_manager_unavailable": "LLM管理器不可用",  
+    "llm_client_unavailable": "LLM客户端不可用",  
+    "llm_manager_error_summary": "内容生成失败：LLM管理器不可用",  
+    "llm_client_error_summary": "内容生成失败：LLM客户端不可用",  
+    "generation_error": "内容生成出错：{error}",  
+    "generation_failed": "内容生成失败：{error}"  
+  },
+  "template": {  
+    "missing_required_parameter": "缺少必需参数: {param_name}",  
+    "template_not_found": "未找到模板: {template_id}",  
+    "execution_failed": "模板 {template_id} 执行失败: {error}"  
+  },
+  "llm_client": {  
+    "server_error_retry": "{name} 服务器错误: {status_code}, 第 {attempt} 次重试，等待 {wait_time} 秒...",  
+    "client_error": "{name} 客户端错误: {status_code}",  
+    "network_error_retry": "{name} 网络异常: {error}, 第 {attempt} 次重试",  
+    "request_failed": "{name} 请求失败: {error}"  
+  },
+  "llm_manager": {  
+    "default_client_unavailable": "默认LLM客户端 '{provider}' 不可用或创建失败",  
+    "config_missing": "配置文件中未指定默认LLM客户端或配置不存在: {provider}",  
+    "no_available_client": "没有找到可用的LLM客户端",  
+    "unsupported_type": "不支持的LLM类型: {client_type}",  
+    "client_unavailable": "LLM客户端 '{name}' 不可用",  
+    "create_failed": "创建LLM客户端 {name} 失败: {error}",  
+    "switch_failed": "切换失败，客户端 '{name}' 不可用"  
+  },
+  "validation": {  
+    "local_basic_failed": "本地验证失败",  
+    "business_logic_failed": "业务逻辑验证失败",  
+    "ai_validation_failed": "AI验证失败",  
+    "llm_client_none": "llm_client 为None",  
+    "code_execution_failed": "代码执行失败: {error}",  
+    "unknown_error": "未知错误",  
+    "execution_result_none": "执行结果为None",  
+    "data_field_empty": "data字段为空列表，未获取到有效数据",  
+    "data_field_none": "data字段为None",  
+    "missing_data_field": "缺少data字段",  
+    "execution_result_empty": "执行结果为空",  
+    "result_must_be_dict": "结果内容必须是字典格式",  
+    "result_status_error": "结果状态为error",  
+    "data_must_be_array": "data 字段必须是数组格式",  
+    "data_array_empty": "数据数组为空",  
+    "data_item_must_be_dict": "数据项必须是字典格式",  
+    "data_item_missing_required_fields": "数据项缺少必需字段",  
+    "insufficient_data_quantity": "数据量不足: 需要至少{min_items}条，实际{actual}条",  
+    "insufficient_valid_data": "获取到{valid_count}条有效数据，不满足最少要获取{min_items}条",  
+    "result_not_meet_requirements": "结果不满足任务要求",  
+    "ai_response_parse_failed": "AI响应格式无法解析",  
+    "ai_response_format_error": "AI验证响应格式错误"  
+  },
+  "runner": {  
+    "code_execution_timeout": "代码执行超时 ({timeout}秒)",  
+    "process_execution_error": "进程执行错误: {error}",  
+    "result_parse_error": "结果解析错误: {error}",  
+    "network_security_blocked": "网络安全策略阻止",  
+    "module_blocked_security_template": "模块 '{missing_name}' 因安全策略被阻止导入。原因：{reason}。原始模块：{original_module}",  
+    "code_execution_timeout_handler": "代码执行超时",  
+    "security_policy_active": "网络安全策略生效",  
+    "unknown_error": "未知错误",  
+    "security_blocked_modules": "安全策略阻止了以下模块的导入: {blocked_list}。{error}",  
+    "execution_failed": "执行失败: {error}",  
+    "runner_error": "Runner错误: {error}"  
+  },
+  "config": {  
+    "file_not_exists": "配置文件 {file} 不存在",  
+    "load_failed": "加载配置文件失败: {error}"  
+  },
+  "executor": {  
+    "no_llm_response": "第 {optimization_attempt} 次尝试：LLM 未返回响应",  
+    "no_code_blocks_found": "第 {optimization_attempt} 次尝试：未找到可执行的代码块",  
+    "code_execution_failed": "第 {optimization_attempt} 次尝试：代码执行失败",  
+    "code_execution_error": "第 {optimization_attempt} 次尝试：代码执行出错",  
+    "validation_failed": "第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}",  
+    "final_validation_failed": "第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}，已达到最大优化次数",  
+    "all_attempts_failed": "单轮内 {max_optimization_attempts} 次优化尝试全部失败"  
+  },
+  "security": {  
+    "dangerous_function_detected": "检测到危险函数调用: {pattern}",  
+    "analysis_failed": "安全分析失败: {error}"  
+  },
+  "network": {  
+    "strict_mode_blocks_all": "严格模式禁止所有网络访问",  
+    "domain_in_blacklist": "域名 {domain} 在黑名单中",  
+    "domain_not_in_whitelist": "域名 {domain} 不在白名单中",  
+    "empty_hostname": "主机名为空",  
+    "domain_blacklisted": "域名在黑名单中: {domain}",  
+    "domain_not_whitelisted": "域名不在白名单中",  
+    "ip_in_blocked_range": "IP在被阻止的范围内: {range}",  
+    "resolved_ip_blocked": "解析的IP {ip} 在被阻止的范围内: {range}",  
+    "cannot_resolve_hostname": "无法解析主机名",
+    "unknown_policy_level": "未知的网络策略级别: {policy_level}" 
+  }
+}

@@ -1,0 +1,37 @@
+{  
+  "common": {  
+    "status": {  
+      "success": "成功",  
+      "error": "错误",   
+      "pending": "处理中",  
+      "cancelled": "已取消"  
+    },  
+    "actions": {  
+      "confirm": "确认",  
+      "cancel": "取消",  
+      "retry": "重试",  
+      "skip": "跳过"  
+    },
+    "time_units": {  
+      "seconds": "秒",  
+      "minutes": "分钟",   
+      "hours": "小时"  
+    },  
+    "quantity": {  
+      "items": "项",  
+      "count": "个",  
+      "total": "总计"  
+    },
+    "labels": {  
+      "name": "名称",  
+      "type": "类型",  
+      "description": "描述",  
+      "timestamp": "时间戳"
+    },  
+    "placeholders": {  
+      "loading": "加载中...",
+      "no_data": "暂无数据", 
+      "unknown": "未知"
+    }
+  }  
+}

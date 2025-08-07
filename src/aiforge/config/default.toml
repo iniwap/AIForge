@@ -3,6 +3,8 @@ max_tokens = 4096
 max_rounds = 2
 max_optimization_attempts = 3
 default_llm_provider = "openrouter"
+# locale = "zh" 
+
 
 [llm.openrouter]
 type = "openai"

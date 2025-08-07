@@ -1,11 +1,11 @@
 import ast
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Any
 
 
 class DataFlowAnalyzer(ast.NodeVisitor):
     """数据流分析器，用于追踪参数的使用链"""
 
-    def __init__(self, function_params: List[str]):
+    def __init__(self, function_params: List[str], components: Dict[str, Any] = None):
         self.function_params: Set[str] = set(function_params)
         self.assignments: Dict[str, List[str]] = {}  # 变量赋值关系 {target: source_vars}
         self.usages: Dict[str, List[str]] = {}  # 变量使用情况 {var: [usage_contexts]}
@@ -14,6 +14,13 @@ class DataFlowAnalyzer(ast.NodeVisitor):
         self.hardcoded_values = {}
         self.api_calls = []
         self.parameter_conflicts = []
+
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ..i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
 
     def visit_Assign(self, node):
         """处理赋值语句"""
@@ -72,7 +79,9 @@ class DataFlowAnalyzer(ast.NodeVisitor):
                             {
                                 "type": "api_key_in_url",
                                 "context": "url_parameter",
-                                "message": "检测到URL中包含API密钥参数",
+                                "message": self._i18n_manager.t(
+                                    "analyzer.api_key_in_url_parameter"
+                                ),
                             }
                         )
         elif isinstance(url_node, ast.Constant):
@@ -83,7 +92,7 @@ class DataFlowAnalyzer(ast.NodeVisitor):
                     {
                         "type": "api_key_in_url",
                         "context": "constant_url",
-                        "message": "检测到URL常量中包含API密钥参数",
+                        "message": self._i18n_manager.t("analyzer.api_key_in_url_constant"),
                     }
                 )
 
@@ -105,7 +114,9 @@ class DataFlowAnalyzer(ast.NodeVisitor):
                                 "type": "api_key_in_headers",
                                 "parameter": key_str,
                                 "context": "headers_dict",
-                                "message": f"检测到headers中包含认证信息: {key_str}",
+                                "message": self._i18n_manager.t(
+                                    "analyzer.api_key_in_headers", key=key_str
+                                ),
                             }
                         )
 
@@ -120,7 +131,9 @@ class DataFlowAnalyzer(ast.NodeVisitor):
                         "type": "api_key_parameter",
                         "parameter": keyword.arg,
                         "context": "function_parameter",
-                        "message": f"检测到可能的API密钥参数: {keyword.arg}",
+                        "message": self._i18n_manager.t(
+                            "analyzer.possible_api_key_parameter", param=keyword.arg
+                        ),
                     }
                 )
 

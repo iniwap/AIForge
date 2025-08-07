@@ -1,71 +1,96 @@
+from typing import Dict, Any
+
+
 class ProgressIndicator:
-    _show_progress = True
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, components: Dict[str, Any] = None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, components: Dict[str, Any] = None):
+        if not self._initialized and components:
+            self.components = components
+            self._i18n_manager = self.components.get("i18n_manager")
+            self._show_progress = True
+            ProgressIndicator._initialized = True
 
     @classmethod
-    def set_show_progress(cls, show: bool):
-        cls._show_progress = show
+    def get_instance(cls, components: Dict[str, Any] = None):
+        """获取单例实例"""
+        if cls._instance is None:
+            cls._instance = cls(components)
+        return cls._instance
 
-    @staticmethod
-    def show_llm_request(provider: str = ""):
-        if ProgressIndicator._show_progress:
-            print(f"🤖 [AIForge]正在连接AI服务{f'({provider})' if provider else ''}...")
+    def set_show_progress(self, show: bool):
+        self._show_progress = show
 
-    @staticmethod
-    def show_llm_generating():
-        if ProgressIndicator._show_progress:
-            print("💭 [AIForge]正在等待AI回复...")
+    def show_llm_request(self, provider: str = ""):
+        if self._show_progress:
+            message = self._i18n_manager.t(
+                "progress.connecting_ai", provider=f"({provider})" if provider else ""
+            )
+            print(message)
 
-    @staticmethod
-    def show_llm_complete():
-        if ProgressIndicator._show_progress:
-            print("✅ [AIForge]收到AI回复，正在处理...")
+    def show_llm_generating(self):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.waiting_response")
+            print(message)
 
-    @staticmethod
-    def show_search_start(query: str):
-        if ProgressIndicator._show_progress:
-            print(f"🔍 [AIForge]正在搜索: {query[:50]}{'...' if len(query) > 50 else ''}")
+    def show_llm_complete(self):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.processing_response")
+            print(message)
 
-    @staticmethod
-    def show_search_process(search_type):
-        if ProgressIndicator._show_progress:
-            print(f"🔍 [AIForge]正在尝试{search_type}搜索...")
+    def show_search_start(self, query: str):
+        if self._show_progress:
+            truncated_query = query[:50] + ("..." if len(query) > 50 else "")
+            message = self._i18n_manager.t("progress.searching", query=truncated_query)
+            print(message)
 
-    @staticmethod
-    def show_search_complete(count: int):
-        if ProgressIndicator._show_progress:
-            print(f"✅ [AIForge]搜索完成，找到 {count} 条结果")
+    def show_search_process(self, search_type):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.search_process", search_type=search_type)
+            print(message)
 
-    @staticmethod
-    def show_cache_lookup():
-        if ProgressIndicator._show_progress:
-            print("🔍 [AIForge]正在查找缓存...")
+    def show_search_complete(self, count: int):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.search_complete", count=count)
+            print(message)
 
-    @staticmethod
-    def show_cache_found(count: int):
-        if ProgressIndicator._show_progress:
-            print(f"📦 [AIForge]找到 {count} 个缓存模块，正在验证...")
+    def show_cache_lookup(self):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.cache_lookup")
+            print(message)
 
-    @staticmethod
-    def show_cache_execution():
-        if ProgressIndicator._show_progress:
-            print("⚡ [AIForge]正在执行缓存代码...")
+    def show_cache_found(self, count: int):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.cache_found", count=count)
+            print(message)
 
-    @staticmethod
-    def show_code_execution(count: int = 1):
-        if ProgressIndicator._show_progress:
-            print(f"⚡ [AIForge]正在执行 {count} 个代码块...")
+    def show_cache_execution(self):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.cache_execution")
+            print(message)
 
-    @staticmethod
-    def show_round_start(current: int, total: int):
-        if ProgressIndicator._show_progress:
-            print(f"🔄 [AIForge]开始第 {current}/{total} 轮执行...")
+    def show_code_execution(self, count: int = 1):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.code_execution", count=count)
+            print(message)
 
-    @staticmethod
-    def show_round_success(round_num: int):
-        if ProgressIndicator._show_progress:
-            print(f"🎉 [AIForge]第 {round_num} 轮执行成功！")
+    def show_round_start(self, current: int, total: int):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.round_start", current=current, total=total)
+            print(message)
 
-    @staticmethod
-    def show_round_retry(round_num: int):
-        if ProgressIndicator._show_progress:
-            print(f"⚠️[AIForge] 第 {round_num} 轮失败，准备重试...")
+    def show_round_success(self, round_num: int):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.round_success", round_num=round_num)
+            print(message)
+
+    def show_round_retry(self, round_num: int):
+        if self._show_progress:
+            message = self._i18n_manager.t("progress.round_retry", round_num=round_num)
+            print(message)

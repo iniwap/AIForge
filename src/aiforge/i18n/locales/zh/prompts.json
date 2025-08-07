@@ -1,0 +1,134 @@
+{  
+  "base": {  
+    "header": "# AIForge：Python 代码生成和执行助手",  
+    "code_generation_header": "# 代码生成规范",  
+    "execution_header": "# 执行规范",  
+    "execution_guidance": "执行代码，并将执行结果赋值给 __result__ ，结果禁止使用模拟或占位符数据"  
+  },  
+  "code_rules": {  
+    "executable": "- 生成的代码必须能在标准 Python 环境中直接执行",  
+    "format": "- 使用标准 Markdown 代码块格式：```python ... ```，不要输出任何解释性文字",  
+    "error_handling": "- 实现完整的错误处理和异常捕获",  
+    "minimal": "- 生成极简代码，无注释，无空行",  
+    "variables": "- 使用最短变量名(a,b,c,d等)，函数的参数名不得压缩"  
+  },  
+  "output_format": {  
+    "default": "# 输出格式要求：\n__result__ = {\n    \"data\": [{\"字段1\": \"值1\", ...},...],\n    \"status\": \"success或error\",\n    \"summary\": \"结果摘要\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",  
+    "status_note": "# 重要提示：status 应该反映代码执行状态，而不是数据获取结果（即使data=[],status=success）",  
+    "ai_analysis_header": "# 基于AI分析的输出格式要求：",  
+    "required_fields_label": "# 必需字段：",  
+    "non_empty_fields_label": "# 非空字段："  
+  },  
+  "format_templates": {  
+    "status_success_error": "success或error",  
+    "summary_placeholder": "任务完成描述",  
+    "task_requirements_label": "输出要求:",  
+    "related_params_label": "相关参数:",  
+    "special_requirements_label": "特殊要求:",  
+    "task_details_header": "## 任务详情",  
+    "original_instruction_supplement": "# 原始指令补充"  
+  },  
+  "analyzer_output_format": {  
+    "task_type": "任务类型",  
+    "action": "具体动作",  
+    "target": "任务描述",  
+    "execution_mode": "direct_ai_response或code_generation",  
+    "confidence": "置信度",  
+    "param_value_placeholder": "提取的值或None",  
+    "param_type": "参数类型",  
+    "required_true_false": "true/false",  
+    "min_items": "最小结果条数",  
+    "non_empty_fields": "必要的结果数据字段"  
+  },  
+  "parameterized": {  
+    "header": "## 🔧 参数化执行指导",  
+    "analysis_function": "根据任务分析生成函数：",  
+    "param_description": "# 参数说明：",  
+    "call_instruction": "# 必须立即调用：",  
+    "usage_rules_header": "## 📋 参数使用规范：",  
+    "usage_rules": [  
+      "1. 每个参数必须在函数体内被实际使用，影响执行路径或结果",  
+      "2. 禁止硬编码可通过参数获取的值",  
+      "3. 参数应用于：控制行为、作为数据源、影响输出、配置执行"  
+    ],  
+    "avoid_patterns_header": "## ❌ 避免模式：",  
+    "avoid_patterns": [  
+      "- 定义但不使用的参数",  
+      "- 参数仅用于显示而不影响核心逻辑",  
+      "- 忽略参数而使用硬编码值"  
+    ],  
+    "docstring_template": "执行任务，使用提供的参数: {params}"  
+  },  
+  "direct_response": {  
+    "answer": "你是一个知识助手，请直接回答用户的问题。要求准确、简洁、有用。",  
+    "respond": "你是一个知识助手，请直接回答用户的问题。要求准确、简洁、有用。",  
+    "create": "你是一个内容创作助手，请根据用户要求创作内容。注意风格和格式要求。",  
+    "translate": "你是一个翻译助手，请准确翻译用户提供的内容。保持原意和语言风格。",  
+    "summarize": "你是一个文本分析助手，请总结和分析用户提供的文本内容。",  
+    "suggest": "你是一个咨询顾问，请根据用户需求提供建议和意见。",  
+    "chat_ai": "你是一个友好、专业且体贴的AI助手，请根据对话情境提供合适的回应。",  
+    "default": "你是一个AI助手，请直接响应用户的需求。",  
+    "task_target_label": "任务目标",  
+    "output_requirements": {  
+      "text": "以纯文本形式回答",  
+      "markdown": "使用Markdown格式，包含适当的标题、列表和强调",  
+      "structured_text": "使用结构化的文本格式，包含清晰的段落和要点"  
+    },  
+    "task_specific_guidance": {  
+      "direct_response": "专注于直接回答，避免冗余信息",  
+      "content_generation": "注重创意和原创性",  
+      "data_process": "提供清晰的分析思路"  
+    },  
+    "limitations": "\n\n## 重要限制\n- 直接提供最终答案，不要生成代码\n- 如果任务需要实时数据或文件操作，请说明无法完成\n- 保持回答的专业性和准确性"  
+  },  
+  "analyzer": {  
+    "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息以及预期结果",  
+    "execution_modes": "- 直接响应：AI知识可直接完成，无需最新数据，包括对话延续和情感支持\n- 代码生成：需要外部数据源、实时信息或系统交互",  
+    "analysis_steps": "- 识别执行模式和任务类型\n- 提取关键参数和数量要求，设置合适的 min_items\n- 定义必需字段和验证规则\n- \"获取/查找/搜索\"某类信息的非任务型指令，仅提取一个required_parameters参数search_query=原始指令\n- 智能识别对话延续和情感支持类指令，自动设置为直接响应模式",  
+    "action_vocabulary": "- 数据获取 → fetch_{task_type_suffix}\n- 数据处理 → process_{task_type_suffix}\n- 内容生成 → generate_{task_type_suffix}\n- 文件操作 → transform_{task_type_suffix}\n- 直接响应 → respond_{task_type_suffix}\n- 对话延续和情感支持 → chat_ai",  
+    "guidance": {  
+      "default_strength": "优先考虑",  
+      "strong_recommendation": "强烈推荐",  
+      "consider": "可以考虑",  
+      "too_many_dynamic_types": "\n注意：系统已有{count}个动态类型，建议优先使用内置类型以提高性能。",  
+      "task_type_template": "\n# 任务类型指导\n{strength}使用以下经过验证的内置任务类型：\n{types}\n\n这些内置类型具有以下优势：\n{advantages}\n\n{creation_rule}{additional_info}",  
+      "builtin_advantages": "- 更高的缓存命中率和执行效率\n- 经过充分测试和优化的执行路径\n- 更稳定的性能表现和错误处理",  
+      "creation_rule": "仅当用户任务确实属于全新领域且无法归类到现有类型时，才创建新的task_type。"  
+    },  
+    "prompt": {  
+      "role_header": "# 角色定义",  
+      "execution_mode_header": "# 执行模式判断",  
+      "action_vocabulary_header": "# 动作命名规范",  
+      "analysis_requirements_header": "# 分析要求",  
+      "output_format_header": "# 输出格式",  
+      "strict_json_note": "请严格按照JSON格式返回分析结果。"  
+    },  
+    "user_instruction_label": "用户指令: "  
+  },
+  "content_generation": {  
+    "direct_generation_template": "请根据用户要求：{instruction}，生成文章内容。",  
+    "search_enhanced_template": "请基于以下搜索到的最新数据内容：",  
+    "task_requirement": "和用户任务要求：{instruction}，生成文章内容。",  
+    "format_requirement": "输出格式要求",  
+    "style_requirement": "样式要求",  
+    "tone_requirement": "语调",  
+    "language_requirement": "语言",  
+    "special_notes_header": "特别注意",  
+    "format_strict_note": "严格按照{format}格式输出",  
+    "structure_note": "确保内容结构清晰，格式规范",  
+    "logic_note": "内容要有逻辑性和可读性",  
+    "tone_maintain_note": "保持{tone}的语调",  
+    "date_note": "文章中的日期必须采用搜索结果的日期",  
+    "data_based_note": "基于搜索结果的真实数据进行分析和创作"  
+  },
+  "validation": {  
+    "ai_validation_prompt_template": "请判断以下代码执行结果是否真正完成了用户的任务目标：\n\n原始用户指令：{original_instruction}\n任务类型：{task_type}\n预期输出要求：{expected_output}\n\n实际执行结果\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",  
+    "analysis_dimensions": "请从以下角度分析：\n1. 结果是否包含用户所需的核心信息\n2. 数据质量是否满足实际使用需求\n3. 是否存在明显的逻辑错误或遗漏\n4. 结果格式是否便于后续处理",  
+    "json_format_instruction": "请返回JSON格式的验证结果：\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"具体失败原因（如果失败）\",\n    \"improvement_suggestions\": [\"改进建议1\", \"改进建议2\"],\n    \"core_issues\": [\"核心问题1\", \"核心问题2\"]\n}"  
+  },
+  "search": {  
+    "guided_instruction_template": "请生成一个搜索函数（不要任何注释、打印日志），获取最新相关信息，参考以下配置：\n\n# 搜索引擎URL模式：\n- 百度: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- 搜狗: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# 关键CSS选择器：\n百度结果容器: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\n百度标题: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\n百度摘要: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing结果容器: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing标题: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing摘要: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360结果容器: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360标题: [\"h3.res-title\", \"h3\", \".res-title\"]\n360摘要: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\n搜狗结果容器: [\"div.vrwrap\", \"div.results\", \"div.result\"]\n搜狗标题: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\n搜狗摘要: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# 重要处理逻辑：\n1. 按优先级依次尝试四个搜索引擎（不要使用API密钥方式）\n2. 优先使用摘要内容作为content，如果不满足，使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容\n3. 从页面提取发布时间，遵从以下策略：\n    - 优先meta标签：article:published_time、datePublished、pubdate、publishdate等\n    - 备选方案：time标签、日期相关class、页面文本匹配\n    - 有效的日期格式：标准格式、中文格式、相对时间（如\"昨天\"、\"1天前\"、\"1小时前\"等）、英文时间（如\"yesterday\"等）\n4. 按发布时间排序，优先最近7天内容\n5. 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码\n\n# 返回数据格式（严格遵守）：\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success或error\",\n    \"summary\": f\"搜索完成，找到 len(data) 条结果\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# 立即执行函数，并赋值给 __result__\n __result__ = search_web(\"{search_query}\", {max_results})",  
+      
+    "free_form_instruction_template": "请创新性地生成搜索函数（不要任何注释、打印日志），获取最新相关信息。\n\n# 可选搜索策略：\n1. 依次尝试不同搜索引擎（百度、Bing、360、搜狗）\n2. 使用新闻聚合API（如NewsAPI、RSS源）\n3. 尝试社交媒体平台搜索\n4. 使用学术搜索引擎\n\n# 核心要求：\n- 函数名为search_web，参数search_query和max_results\n- 实现多重容错机制，至少尝试2-3种不同方法\n- 对每个结果访问原始页面提取完整信息\n- 优先获取最近7天内的新鲜内容，按发布时间排序\n- 摘要长度至少{min_abstract_len}字，包含关键信息\n- 不能使用需要API密钥的方式\n- 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码\n\n# 时间提取策略：\n- 优先meta标签：article:published_time、datePublished、pubdate、publishdate等\n- 备选方案：time标签、日期相关class、页面文本匹配\n- 有效的日期格式：标准格式、中文格式、相对时间（如\"昨天\"、\"1天前\"、\"1小时前\"等）、英文时间（如\"yesterday\"等）\n\n# 返回数据格式（严格遵守）：\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"搜索完成\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# 立即执行函数，并赋值给 __result__\n __result__ = search_web(\"{search_query}\", {max_results})"  
+  }  
+}

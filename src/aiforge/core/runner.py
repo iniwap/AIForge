@@ -17,13 +17,17 @@ from ..security.security_constants import SecurityConstants
 class SecureProcessRunner:
     """安全的进程隔离执行器"""
 
-    def __init__(self, workdir: str = "aiforge_work", security_config=None):
+    def __init__(
+        self, workdir: str = "aiforge_work", security_config=None, components: Dict[str, Any] = None
+    ):
         self.workdir = Path(workdir)
         self.workdir.mkdir(exist_ok=True)
         self.temp_dir = self.workdir / "tmp"
         self.temp_dir.mkdir(exist_ok=True)
         self.console = Console()
         self.security_config = security_config
+        self.components = components or {}
+        self._i18n_manager = self.components.get("i18n_manager")
 
     def execute_code(self, code: str, globals_dict: Dict | None = None) -> Dict[str, Any]:
         """在隔离进程中执行代码"""
@@ -48,8 +52,8 @@ class SecureProcessRunner:
                 [sys.executable, temp_file],
                 capture_output=True,
                 text=True,
-                encoding="utf-8",  # 明确指定编码
-                errors="replace",  # 处理编码错误
+                encoding="utf-8",
+                errors="replace",
                 timeout=execution_timeout + 5,
                 cwd=self.workdir,
                 env=self._get_restricted_env(),
@@ -58,17 +62,21 @@ class SecureProcessRunner:
             return self._parse_execution_result(result)
 
         except subprocess.TimeoutExpired:
+            timeout_error = self._i18n_manager.t(
+                "runner.code_execution_timeout", timeout=execution_timeout
+            )
             return {
                 "success": False,
-                "error": f"代码执行超时 ({execution_timeout}秒)",
+                "error": timeout_error,
                 "result": None,
                 "locals": {},
                 "globals": {},
             }
         except Exception as e:
+            process_error = self._i18n_manager.t("runner.process_execution_error", error=str(e))
             return {
                 "success": False,
-                "error": f"进程执行错误: {str(e)}",
+                "error": process_error,
                 "result": None,
                 "locals": {},
                 "globals": {},
@@ -165,11 +173,18 @@ class SecureProcessRunner:
         network_modules = SecurityConstants.NETWORK_MODULES
         dangerous_patterns = SecurityConstants.DANGEROUS_PATTERNS
 
-        blocked_module_template = """blocked_modules.append({
+        reason_text = self._i18n_manager.t("runner.network_security_blocked")
+        module_blocked_template = self._i18n_manager.t("runner.module_blocked_security_template")
+        timeout_message = self._i18n_manager.t("runner.code_execution_timeout_handler")
+        security_policy_active = self._i18n_manager.t("runner.security_policy_active")
+
+        # 然后在模板中使用
+        blocked_module_template = f"""blocked_modules.append({{
 "name": name,
 "module": module_name,
-"reason": "网络安全策略阻止"
-})"""
+"reason": "{reason_text}"
+}})"""
+
         if globals_dict:
             safe_globals = {}
             for key, value in globals_dict.items():
@@ -442,7 +457,7 @@ def build_smart_execution_environment(code):
     return exec_globals, blocked_modules
 
 def timeout_handler(signum, frame):
-    raise TimeoutError("代码执行超时")
+    raise TimeoutError("{timeout_message}")
 
 try:
     set_resource_limits()
@@ -514,8 +529,12 @@ except Exception as e:
         missing_name = error_message.split("'")[1] if "'" in error_message else ""  
         if missing_name in [blocked['name'] for blocked in blocked_modules]:  
             blocked_info = next((b for b in blocked_modules if b['name'] == missing_name), None)  
-            if blocked_info:  
-                error_message = f"模块 '{{missing_name}}' 因安全策略被阻止导入。原因：{{blocked_info['reason']}}。原始模块：{{blocked_info['module']}}"  
+            if blocked_info:
+                error_message = "{module_blocked_template}".format(  
+                    missing_name=missing_name,  
+                    reason=blocked_info['reason'],  
+                    original_module=blocked_info['module']  
+                )  
                 error_output = {{  
                     "success": False,  
                     "result": None,  
@@ -525,7 +544,7 @@ except Exception as e:
                     "globals": {{}},
                     "security_info": {{  
                         "blocked_modules": blocked_modules,  
-                        "reason": "网络安全策略生效",
+                        "reason": "{security_policy_active}", 
                     }},
                 }}
                 
@@ -555,10 +574,11 @@ except Exception as e:
             }
 
         except Exception as e:
+            parse_error_message = self._i18n_manager.t("runner.result_parse_error", error=str(e))
             return {
                 "success": False,
                 "result": None,
-                "error": f"结果解析错误: {str(e)}",
+                "error": parse_error_message,
                 "locals": {},
                 "globals": {},
             }
@@ -567,12 +587,19 @@ except Exception as e:
 class AIForgeRunner:
     """AIForge安全任务运行器"""
 
-    def __init__(self, workdir: str = "aiforge_work", security_config: dict = {}):
+    def __init__(
+        self,
+        workdir: str = "aiforge_work",
+        security_config: dict = {},
+        components: Dict[str, Any] = None,
+    ):
         self.workdir = Path(workdir)
         self.workdir.mkdir(exist_ok=True)
         self.console = Console()
         self.current_task = None
-        self.secure_runner = SecureProcessRunner(workdir, security_config)
+        self.components = components or {}
+        self._i18n_manager = self.components.get("i18n_manager")
+        self.secure_runner = SecureProcessRunner(workdir, security_config, self.components)
 
         self.default_timeout = security_config.get("execution_timeout", 30)
         self.default_memory_limit = security_config.get("memory_limit_mb", 512)
@@ -583,16 +610,22 @@ class AIForgeRunner:
 
     def execute_code(self, code: str, globals_dict: Dict | None = None) -> Dict[str, Any]:
         """执行生成的代码"""
-        self.console.print(
-            f"[blue]🔐沙盒运行环境: 超时={self.default_timeout}s, 内存={self.default_memory_limit}MB,"
-            f"CPU={self.default_cpu_time_limit}s, "
-            f"文件描述符={self.default_file_descriptor_limit}, 文件大小={self.default_max_file_size_mb}MB, "
-            f"进程数={self.default_max_processes}[/blue]"
+        sandbox_info = self._i18n_manager.t(
+            "runner.sandbox_info",
+            timeout=self.default_timeout,
+            memory=self.default_memory_limit,
+            cpu=self.default_cpu_time_limit,
+            fd=self.default_file_descriptor_limit,
+            file_size=self.default_max_file_size_mb,
+            processes=self.default_max_processes,
         )
+
+        self.console.print(f"[blue]🔐{sandbox_info}[/blue]")
+
         try:
             result = self.secure_runner.execute_code(code, globals_dict)
             if not result["success"]:
-                error_msg = result.get("error", "Unknown error")
+                error_msg = result.get("error", self._i18n_manager.t("runner.unknown_error"))
                 if "security_info" in result:
                     security_info = result["security_info"]
                     if security_info.get("blocked_modules"):
@@ -602,29 +635,41 @@ class AIForgeRunner:
                                 for m in security_info["blocked_modules"]
                             ]
                         )
-                        error_msg = f"安全策略阻止了以下模块的导入: {blocked_list}。{error_msg}"
+                        security_blocked_message = self._i18n_manager.t(
+                            "runner.security_blocked_modules",
+                            blocked_list=blocked_list,
+                            error=error_msg,
+                        )
+                        error_msg = security_blocked_message
                 else:
-                    self.console.print(f"[red]执行失败: {error_msg}[/red]")
+                    execution_failed_message = self._i18n_manager.t(
+                        "runner.execution_failed", error=error_msg
+                    )
+                    self.console.print(f"[red]{execution_failed_message}[/red]")
             else:
                 # 检查是否有网络访问被阻止的情况（通过分析结果内容）
                 result_content = result.get("result", {})
                 if isinstance(result_content, dict):
                     # 检查是否包含网络错误的特征
                     if self._is_network_blocked_result(result_content):
-                        self.console.print("[yellow]ℹ️  网络访问已被安全策略阻止[/yellow]")
+                        network_blocked_message = self._i18n_manager.t(
+                            "runner.network_blocked_info"
+                        )
+                        self.console.print(f"[yellow]ℹ️  {network_blocked_message}[/yellow]")
 
             return result
 
         except Exception as e:
+            runner_error_message = self._i18n_manager.t("runner.runner_error", error=str(e))
             error_result = {
                 "success": False,
                 "result": None,
-                "error": f"Runner错误: {str(e)}",
+                "error": runner_error_message,
                 "traceback": traceback.format_exc(),
                 "locals": {},
                 "globals": globals_dict or {},
             }
-            self.console.print(f"[red]Runner错误: {e}[/red]")
+            self.console.print(f"[red]{runner_error_message}[/red]")
             return error_result
 
     def _is_network_blocked_result(self, result_content: dict) -> bool:
@@ -666,5 +711,5 @@ class AIForgeRunner:
         try:
             for file in self.workdir.glob("*.tmp"):
                 file.unlink()
-        except Exception as e:
-            self.console.print(f"[yellow]清理警告: {e}[/yellow]")
+        except Exception:
+            pass

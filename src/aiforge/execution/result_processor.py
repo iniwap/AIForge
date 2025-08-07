@@ -12,9 +12,10 @@ from .result_formatter import AIForgeResultFormatter
 class AIForgeResultProcessor:
     """AIForge 执行结果处理器"""
 
-    def __init__(self, console: Console = None):
+    def __init__(self, console: Console = None, components: Dict[str, Any] = None):
+        self.components = components or {}
         self.formatter = AIForgeResultFormatter(console) if console else None
-        self.result_validator = ResultValidator()
+        self.result_validator = ResultValidator(self.components)
         self.expected_output = None
 
     def set_expected_output(self, expected_output: Dict[str, Any]):

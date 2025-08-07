@@ -1,0 +1,37 @@
+{  
+  "common": {  
+    "status": {  
+      "success": "Success",  
+      "error": "Error",  
+      "pending": "Processing",  
+      "cancelled": "Cancelled"  
+    },  
+    "actions": {  
+      "confirm": "Confirm",  
+      "cancel": "Cancel",  
+      "retry": "Retry",  
+      "skip": "Skip"  
+    },  
+    "time_units": {  
+      "seconds": "seconds",  
+      "minutes": "minutes",  
+      "hours": "hours"  
+    },  
+    "quantity": {  
+      "items": "items",  
+      "count": "count",  
+      "total": "total"  
+    },  
+    "labels": {  
+      "name": "Name",  
+      "type": "Type",  
+      "description": "Description",  
+      "timestamp": "Timestamp"  
+    },  
+    "placeholders": {  
+      "loading": "Loading...",  
+      "no_data": "No data",  
+      "unknown": "Unknown"  
+    }  
+  }  
+}

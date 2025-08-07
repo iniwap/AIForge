@@ -4,7 +4,6 @@ import time
 from ..prompt import AIForgePrompt
 from ...adapters.input.input_adapter_manager import InputSource
 from ..helpers.cache_helper import CacheHelper
-from ...utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeExecutionManager:
@@ -14,12 +13,17 @@ class AIForgeExecutionManager:
         self.components: Dict[str, Any] = {}
         self.config = None
         self._initialized = False
+        self._i18n_manager = None
+        self._ai_forgePrompt = None
 
     def initialize(self, components: Dict[str, Any], config):
         """初始化执行管理器"""
         self.components = components
         self.config = config
         self._initialized = True
+        self._i18n_manager = components.get("i18n_manager")
+        self._ai_forgePrompt = AIForgePrompt(self.components)
+        self._progress_indicator = self.components.get("progress_indicator")
 
     def execute_instruction(self, instruction: str) -> Optional[Dict[str, Any]]:
         """统一执行入口"""
@@ -86,7 +90,7 @@ class AIForgeExecutionManager:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """使用通用验证的缓存优先执行策略"""
-        ProgressIndicator.show_cache_lookup()
+        self._progress_indicator.show_cache_lookup()
 
         code_cache = self.components["code_cache"]
         cached_modules = code_cache.get_cached_modules_by_standardized_instruction(
@@ -94,14 +98,14 @@ class AIForgeExecutionManager:
         )
 
         if cached_modules:
-            ProgressIndicator.show_cache_found(len(cached_modules))
+            self._progress_indicator.show_cache_found(len(cached_modules))
 
             validated_modules = self._final_validation_before_execution(
                 cached_modules, standardized_instruction
             )
 
             if validated_modules:
-                ProgressIndicator.show_cache_execution()
+                self._progress_indicator.show_cache_execution()
                 cache_result = self.try_execute_cached_modules(
                     validated_modules, standardized_instruction
                 )
@@ -141,7 +145,6 @@ class AIForgeExecutionManager:
     ) -> Optional[Dict[str, Any]]:
         """使用通用验证的AI生成"""
         confidence = standardized_instruction.get("confidence", 0)
-
         # 使用通用增强的标准化指令生成代码
         if confidence < 0.6:
             # 处理低置信度情况
@@ -156,7 +159,7 @@ class AIForgeExecutionManager:
                     "instruction": {"value": original_instruction, "type": "str", "required": True}
                 },
             }
-            enhanced_prompt = AIForgePrompt.get_enhanced_system_prompt(
+            enhanced_prompt = self._ai_forgePrompt.get_enhanced_system_prompt(
                 temp_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
@@ -164,7 +167,7 @@ class AIForgeExecutionManager:
                 None, enhanced_prompt, "general", basic_expected_output
             )
         else:
-            enhanced_prompt = AIForgePrompt.get_enhanced_system_prompt(
+            enhanced_prompt = self._ai_forgePrompt.get_enhanced_system_prompt(
                 standardized_instruction,
                 self.config.get_optimization_config().get("optimize_tokens", True),
             )
@@ -229,8 +232,9 @@ class AIForgeExecutionManager:
         try:
             # 使用自适应分析提示词
             analysis_prompt = instruction_analyzer.get_adaptive_analysis_prompt()
+            user_instruction_label = self._i18n_manager.t("execution.user_instruction_label")
             response = instruction_analyzer.llm_client.generate_code(
-                f"{analysis_prompt}\n\n用户指令: {instruction}", ""
+                f"{analysis_prompt}\n\n{user_instruction_label}{instruction}", ""
             )
 
             ai_analysis = instruction_analyzer.parse_standardized_instruction(response)
@@ -473,45 +477,51 @@ class AIForgeExecutionManager:
             return None
 
         action = standardized_instruction.get("action", "respond")
-
-        # 检查是否是对话类型任务
         is_conversational = action == "chat_ai"
 
-        # 构建直接响应提示词
-        system_prompt = AIForgePrompt.get_direct_response_prompt(action, standardized_instruction)
+        # 使用统一的提示词生成器实例方法
+        system_prompt = self._ai_forgePrompt.get_direct_response_prompt(
+            action, standardized_instruction
+        )
+
         try:
-            # 对话类型自动启用历史记录
-            use_history = is_conversational
             response = client.generate_code(
-                original_instruction, system_prompt, use_history=use_history
+                original_instruction, system_prompt, use_history=is_conversational
             )
 
-            # 添加时间戳以符合标准格式
+            # 使用 i18n 的消息模板
+            summary = self._i18n_manager.t(
+                "execution.direct_response_success",
+                action=action,
+                instruction=original_instruction[:50],
+            )
+
             return {
                 "data": {
                     "content": response,
                     "response_type": action,
                     "direct_response": True,
                     "is_conversational": is_conversational,
-                    "conversation_active": use_history,  # 标记会话状态
+                    "conversation_active": is_conversational,
                 },
                 "status": "success",
-                "summary": f"直接响应: {action} - {original_instruction[:50]}...",
+                "summary": summary,
                 "metadata": {
                     "timestamp": time.time(),
                     "task_type": "direct_response",
                     "execution_type": "direct_ai_response",
                     "action": action,
                     "no_code_generation": True,
-                    "conversation_mode": use_history,
+                    "conversation_mode": is_conversational,
                 },
             }
         except Exception as e:
+            error_summary = self._i18n_manager.t("execution.direct_response_error", error=str(e))
 
             return {
                 "data": None,
                 "status": "error",
-                "summary": f"直接响应失败: {str(e)}",
+                "summary": error_summary,
                 "metadata": {
                     "timestamp": time.time(),
                     "task_type": "direct_response",

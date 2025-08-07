@@ -3,7 +3,7 @@
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=7)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=7)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=8)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=8)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **Transform natural language instructions into executable code with AI-powered automation**  
@@ -49,7 +49,6 @@ AIForge is an **intelligent execution engine** that bridges the gap between natu
 - **Content Generation** - Specialized content creation workflows  
   
 ### 🛡️ Enterprise-Ready Features  
-- **Sandboxed Execution** - Secure isolated code execution environment  
 - **Progress Tracking** - Real-time execution status indicators  
 - **Error Handling** - Comprehensive exception management and retry logic  
 - **Configuration Management** - Flexible TOML-based configuration system  
@@ -78,11 +77,11 @@ AIForge provides multi-layer security for safe AI code execution:
   
     from aiforge import AIForgeEngine  
   
-    # Quick start with API key  
-    forge = AIForgeEngine(api_key="your-api-key")  
+    # Quick start with API key (OpenRouter default)
+    forge = AIForgeEngine(api_key="your-openrouter-apikey")  
   
     # Execute natural language instruction  
-    result = forge("Analyze global stock market trends and generate investment recommendations")  
+    result = forge("Analyze newest global stock market trends and generate investment recommendations")  
     print(result)  
   
 ### Advanced Configuration  

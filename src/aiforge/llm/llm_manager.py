@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from .llm_client import AIForgeLLMClient, AIForgeOllamaClient
 from ..config.config import AIForgeConfig
 from rich.console import Console
@@ -7,9 +7,12 @@ from rich.console import Console
 class AIForgeLLMManager:
     """LLM客户端管理器"""
 
-    def __init__(self, config: AIForgeConfig):
+    def __init__(self, config: AIForgeConfig, components: Dict[str, Any] = None):
         self._config = config
         self.console = Console()
+        self.components = components or {}
+        self._i18n_manager = self.components.get("i18n_manager")
+
         self.clients = {}  # 缓存已创建的客户端
         self.current_client = None
         self._init_default_client()
@@ -25,7 +28,8 @@ class AIForgeLLMManager:
         if not isinstance(value, AIForgeConfig):
             raise TypeError("config must be an instance of AIForgeConfig")
         self._config = value
-        self.console.print("[green]配置已更新[/green]")
+        config_updated_message = self._i18n_manager.t("llm_manager.config_updated")
+        self.console.print(f"[green]{config_updated_message}[/green]")
         # 重新初始化默认客户端
         self._init_default_client()
 
@@ -43,15 +47,18 @@ class AIForgeLLMManager:
                 self.current_client = client
                 return
             else:
-                self.console.print(
-                    f"[red]默认LLM客户端 '{default_provider_name}' 不可用或创建失败[/red]"
+                error_message = self._i18n_manager.t(
+                    "llm_manager.default_client_unavailable", provider=default_provider_name
                 )
+                self.console.print(f"[red]{error_message}[/red]")
         else:
-            self.console.print(
-                f"[yellow]配置文件中未指定默认LLM客户端或配置不存在: {default_provider_name}[/yellow]"
+            config_missing_message = self._i18n_manager.t(
+                "llm_manager.config_missing", provider=default_provider_name
             )
+            self.console.print(f"[yellow]{config_missing_message}[/yellow]")
 
-        self.console.print("[red]没有找到可用的LLM客户端[/red]")
+        no_client_message = self._i18n_manager.t("llm_manager.no_available_client")
+        self.console.print(f"[red]{no_client_message}[/red]")
 
     def _create_client(self, name: str, config: Dict) -> Optional[AIForgeLLMClient]:
         """创建LLM客户端"""
@@ -65,7 +72,8 @@ class AIForgeLLMManager:
                 model=config.get("model"),
                 timeout=config.get("timeout", 30),
                 max_tokens=config.get("max_tokens", 8192),
-                client_type=client_type,  # 确保client_type被传递
+                client_type=client_type,
+                components=self.components,
             )
         elif client_type == "ollama":
             return AIForgeOllamaClient(
@@ -74,9 +82,13 @@ class AIForgeLLMManager:
                 model=config.get("model"),
                 timeout=config.get("timeout", 30),
                 max_tokens=config.get("max_tokens", 8192),
+                components=self.components,  # 添加 components 参数
             )
         else:
-            self.console.print(f"[yellow]不支持的LLM类型: {client_type}[/yellow]")
+            unsupported_message = self._i18n_manager.t(
+                "llm_manager.unsupported_type", client_type=client_type
+            )
+            self.console.print(f"[yellow]{unsupported_message}[/yellow]")
             return None
 
     def get_client(self, name: str | None = None) -> Optional[AIForgeLLMClient]:
@@ -93,29 +105,39 @@ class AIForgeLLMManager:
         llm_configs = self._config.config.get("llm", {})
         if name in llm_configs:
             llm_config = llm_configs[name]
-            # 移除对 'enable' 参数的检查
             try:
                 client = self._create_client(name, llm_config)
                 if client and client.is_usable():
                     self.clients[name] = client
-                    self.console.print(f"[green]懒加载创建LLM客户端: {name}[/green]")
+                    lazy_load_message = self._i18n_manager.t(
+                        "llm_manager.lazy_load_create", name=name
+                    )
+                    self.console.print(f"[green]{lazy_load_message}[/green]")
                     return client
                 else:
-                    self.console.print(f"[yellow]LLM客户端 '{name}' 不可用[/yellow]")
+                    unavailable_message = self._i18n_manager.t(
+                        "llm_manager.client_unavailable", name=name
+                    )
+                    self.console.print(f"[yellow]{unavailable_message}[/yellow]")
             except Exception as e:
-                self.console.print(f"[red]创建LLM客户端 {name} 失败: {e}[/red]")
+                create_failed_message = self._i18n_manager.t(
+                    "llm_manager.create_failed", name=name, error=str(e)
+                )
+                self.console.print(f"[red]{create_failed_message}[/red]")
 
         return None
 
     def switch_client(self, name: str) -> bool:
         """切换当前客户端"""
-        client = self.get_client(name)  # 使用懒加载获取客户端
+        client = self.get_client(name)
         if client:
             self.current_client = client
-            self.console.print(f"[green]已切换到LLM客户端: {name}[/green]")
+            switch_success_message = self._i18n_manager.t("llm_manager.switch_success", name=name)
+            self.console.print(f"[green]{switch_success_message}[/green]")
             return True
         else:
-            self.console.print(f"[red]切换失败，客户端 '{name}' 不可用[/red]")
+            switch_failed_message = self._i18n_manager.t("llm_manager.switch_failed", name=name)
+            self.console.print(f"[red]{switch_failed_message}[/red]")
             return False
 
     def list_available_providers(self) -> Dict[str, str]:
@@ -146,4 +168,7 @@ class AIForgeLLMManager:
         if self.current_client:
             current_name = self.current_client.name
             self.clients = {current_name: self.current_client}
-            self.console.print(f"[green]已清理未使用的客户端，保留: {current_name}[/green]")
+            cleanup_message = self._i18n_manager.t(
+                "llm_manager.cleanup_unused", current_name=current_name
+            )
+            self.console.print(f"[green]{cleanup_message}[/green]")

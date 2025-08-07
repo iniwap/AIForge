@@ -10,7 +10,7 @@ class AIForgeContentGenerationManager:
         self.components = components
         self.field_processor = SemanticFieldStrategy()
         self.parameter_mapping_service = components.get("parameter_mapping_service")
-
+        self._i18n_manager = self.components.get("i18n_manager")
         # 扩展语义字段定义，支持格式相关参数
         if hasattr(self.field_processor, "field_semantics"):
             self.field_processor.field_semantics.update(
@@ -118,24 +118,73 @@ class AIForgeContentGenerationManager:
         output_format = self._extract_output_format_with_mapping(standardized_instruction)
         style_params = self._extract_style_parameters(standardized_instruction)
 
+        # 使用 i18n 的提示词模板
+        base_template = self._i18n_manager.t("content_generation.direct_generation_template")
+        format_requirement = self._i18n_manager.t("content_generation.format_requirement")
+        style_requirement = self._i18n_manager.t("content_generation.style_requirement")
+        tone_requirement = self._i18n_manager.t("content_generation.tone_requirement")
+        language_requirement = self._i18n_manager.t("content_generation.language_requirement")
+
+        special_notes_header = self._i18n_manager.t("content_generation.special_notes_header")
+        format_strict_note = self._i18n_manager.t("content_generation.format_strict_note")
+        structure_note = self._i18n_manager.t("content_generation.structure_note")
+        logic_note = self._i18n_manager.t("content_generation.logic_note")
+        tone_maintain_note = self._i18n_manager.t("content_generation.tone_maintain_note")
+
         enhanced_instruction = f"""
-        请根据用户要求：{instruction}，生成文章内容。
+        {base_template.format(instruction=instruction)}
 
-        输出格式要求：{output_format}
-        样式要求：{style_params.get('style', '专业')}
-        语调：{style_params.get('tone', '客观')}
-        语言：{style_params.get('language', '中文')}
+        {format_requirement}：{output_format}
+        {style_requirement}：{style_params.get('style', '专业')}
+        {tone_requirement}：{style_params.get('tone', '客观')}
+        {language_requirement}：{style_params.get('language', '中文')}
 
-        特别注意：
-        1. 严格按照{output_format}格式输出
-        2. 确保内容结构清晰，格式规范
-        3. 内容要有逻辑性和可读性
-        4. 保持{style_params.get('tone', '客观')}的语调
+        {special_notes_header}：
+        1. {format_strict_note.format(format=output_format)}
+        2. {structure_note}
+        3. {logic_note}
+        4. {tone_maintain_note.format(tone=style_params.get('tone', '客观'))}
         """
 
         return self._call_llm_for_content(
             enhanced_instruction, output_format, standardized_instruction
         )
+
+    def _get_format_and_style_requirements(
+        self, output_format: str, style_params: Dict[str, str]
+    ) -> str:
+        """获取格式和样式要求"""
+        format_requirement = self._i18n_manager.t("content_generation.format_requirement")
+        style_requirement = self._i18n_manager.t("content_generation.style_requirement")
+        tone_requirement = self._i18n_manager.t("content_generation.tone_requirement")
+        language_requirement = self._i18n_manager.t("content_generation.language_requirement")
+
+        return f"""
+        {format_requirement}：{output_format}
+        {style_requirement}：{style_params.get('style', '专业')}
+        {tone_requirement}：{style_params.get('tone', '客观')}
+        {language_requirement}：{style_params.get('language', '中文')}
+        """
+
+    def _get_search_enhanced_special_notes(
+        self, output_format: str, style_params: Dict[str, str]
+    ) -> str:
+        """获取搜索增强的特殊注意事项"""
+        special_notes_header = self._i18n_manager.t("content_generation.special_notes_header")
+        date_note = self._i18n_manager.t("content_generation.date_note")
+        format_strict_note = self._i18n_manager.t("content_generation.format_strict_note")
+        structure_note = self._i18n_manager.t("content_generation.structure_note")
+        data_based_note = self._i18n_manager.t("content_generation.data_based_note")
+        tone_maintain_note = self._i18n_manager.t("content_generation.tone_maintain_note")
+
+        return f"""
+        {special_notes_header}：
+        1. {date_note}
+        2. {format_strict_note.format(format=output_format)}
+        3. {structure_note}
+        4. {data_based_note}
+        5. {tone_maintain_note.format(tone=style_params.get('tone', '客观'))}
+        """
 
     def _generate_content_with_search_result(
         self,
@@ -148,36 +197,44 @@ class AIForgeContentGenerationManager:
         output_format = self._extract_output_format_with_mapping(standardized_instruction)
         style_params = self._extract_style_parameters(standardized_instruction)
 
-        # 格式化搜索结果
+        # 使用 i18n 格式化搜索结果
         if len(search_data) > 0:
-            formatted = f"关于'{instruction}'的搜索结果：\n\n"
+            search_results_header = self._i18n_manager.t("content_generation.search_results_header")
+            result_label = self._i18n_manager.t("content_generation.result_label")
+            title_label = self._i18n_manager.t("content_generation.title_label")
+            publish_time_label = self._i18n_manager.t("content_generation.publish_time_label")
+            abstract_label = self._i18n_manager.t("content_generation.abstract_label")
+            content_label = self._i18n_manager.t("content_generation.content_label")
+            no_title = self._i18n_manager.t("content_generation.no_title")
+            unknown_time = self._i18n_manager.t("content_generation.unknown_time")
+            no_abstract = self._i18n_manager.t("content_generation.no_abstract")
+
+            formatted = f"{search_results_header.format(instruction=instruction)}：\n\n"
             for i, result in enumerate(search_data, 1):
-                formatted += f"## 结果 {i}\n"
-                formatted += f"**标题**: {result.get('title', '无标题')}\n"
-                formatted += f"**发布时间**: {result.get('pub_time', '未知时间')}\n"
-                formatted += f"**摘要**: {result.get('abstract', '无摘要')}\n"
-                formatted += f"**内容**: {result.get('content', '')}...\n"
+                formatted += f"## {result_label} {i}\n"
+                formatted += f"**{title_label}**: {result.get('title', no_title)}\n"
+                formatted += f"**{publish_time_label}**: {result.get('pub_time', unknown_time)}\n"
+                formatted += f"**{abstract_label}**: {result.get('abstract', no_abstract)}\n"
+                formatted += f"**{content_label}**: {result.get('content', '')}...\n"
                 formatted += "\n"
         else:
-            formatted = "未找到相关搜索结果，请基于已有知识生成内容。"
+            formatted = self._i18n_manager.t("content_generation.no_search_results_fallback")
+
+        # 使用 i18n 的搜索增强模板
+        search_enhanced_template = self._i18n_manager.t(
+            "content_generation.search_enhanced_template"
+        )
+        task_requirement = self._i18n_manager.t("content_generation.task_requirement")
 
         enhanced_instruction = f"""
-        请基于以下搜索到的最新数据内容：
+        {search_enhanced_template}
         {formatted}
 
-        和用户任务要求：{instruction}，生成文章内容。
+        {task_requirement.format(instruction=instruction)}
 
-        输出格式要求：{output_format}
-        样式要求：{style_params.get('style', '专业')}
-        语调：{style_params.get('tone', '客观')}
-        语言：{style_params.get('language', '中文')}
+        {self._get_format_and_style_requirements(output_format, style_params)}
 
-        特别注意：
-        1. 文章中的日期必须采用搜索结果的日期
-        2. 严格按照{output_format}格式输出
-        3. 确保内容结构清晰，格式规范
-        4. 基于搜索结果的真实数据进行分析和创作
-        5. 保持{style_params.get('tone', '客观')}的语调
+        {self._get_search_enhanced_special_notes(output_format, style_params)}
         """
 
         return self._call_llm_for_content(
@@ -295,21 +352,34 @@ class AIForgeContentGenerationManager:
         """调用LLM生成内容"""
         llm_manager = self.components.get("llm_manager")
         if not llm_manager:
+            error_content = self._i18n_manager.t("content_generation.llm_manager_unavailable")
+            error_summary = self._i18n_manager.t("content_generation.llm_manager_error_summary")
             return {
-                "data": {"content": "LLM管理器不可用"},
+                "data": {"content": error_content},
                 "status": "error",
-                "summary": "内容生成失败：LLM管理器不可用",
+                "summary": error_summary,
             }
 
         client = llm_manager.get_client()
         if not client:
+            error_content = self._i18n_manager.t("content_generation.llm_client_unavailable")
+            error_summary = self._i18n_manager.t("content_generation.llm_client_error_summary")
             return {
-                "data": {"content": "LLM客户端不可用"},
+                "data": {"content": error_content},
                 "status": "error",
-                "summary": "内容生成失败：LLM客户端不可用",
+                "summary": error_summary,
             }
         try:
             content = client.generate_code(enhanced_instruction, None, use_history=False)
+
+            success_summary = self._i18n_manager.t(
+                "content_generation.generation_success", format=output_format
+            )
+            if search_results_count > 0:
+                search_based_suffix = self._i18n_manager.t(
+                    "content_generation.search_based_suffix", count=search_results_count
+                )
+                success_summary += search_based_suffix
 
             return {
                 "data": {
@@ -318,8 +388,7 @@ class AIForgeContentGenerationManager:
                     "content_type": self._get_content_type(output_format),
                 },
                 "status": "success",
-                "summary": f"成功生成{output_format}格式内容"
-                + (f"（基于{search_results_count}条搜索结果）" if search_results_count > 0 else ""),
+                "summary": success_summary,
                 "metadata": {
                     "timestamp": time.time(),
                     "task_type": "content_generation",
@@ -331,24 +400,17 @@ class AIForgeContentGenerationManager:
                 },
             }
         except Exception as e:
+            error_content = self._i18n_manager.t(
+                "content_generation.generation_error", error=str(e)
+            )
+            error_summary = self._i18n_manager.t(
+                "content_generation.generation_failed", error=str(e)
+            )
             return {
-                "data": {"content": f"内容生成出错：{str(e)}"},
+                "data": {"content": error_content},
                 "status": "error",
-                "summary": f"内容生成失败：{str(e)}",
+                "summary": error_summary,
             }
-
-    def _get_content_type(self, output_format: str) -> str:
-        """根据格式返回内容类型"""
-        format_mapping = {
-            "markdown": "text/markdown",
-            "html": "text/html",
-            "json": "application/json",
-            "xml": "application/xml",
-            "pdf": "application/pdf",
-            "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "txt": "text/plain",
-        }
-        return format_mapping.get(output_format, "text/plain")
 
     def get_supported_formats(self) -> list:
         """获取支持的输出格式列表"""

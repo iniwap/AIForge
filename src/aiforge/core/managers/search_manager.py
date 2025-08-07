@@ -2,7 +2,6 @@ from typing import Dict, Any, Optional
 import time
 from ..helpers.cache_helper import CacheHelper
 from ...strategies.semantic_field_strategy import SemanticFieldStrategy, FieldProcessorManager
-from ...utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeSearchManager:
@@ -10,8 +9,10 @@ class AIForgeSearchManager:
 
     def __init__(self, components: Dict[str, Any]):
         self.components = components
+        self._i18n_manager = components.get("i18n_manager")
         self.processor_manager = FieldProcessorManager()
         self.parameter_mapping_service = components.get("parameter_mapping_service")
+        self._progress_indicator = self.components.get("progress_indicator")
 
     def is_search_task(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为搜索类任务"""
@@ -43,7 +44,7 @@ class AIForgeSearchManager:
             if not search_params["search_query"]:
                 return None
 
-            ProgressIndicator.show_search_start(search_params["search_query"])
+            self._progress_indicator.show_search_start(search_params["search_query"])
             # 直接调用
             template_manager = self.components.get("template_manager")
             if template_manager:
@@ -59,7 +60,7 @@ class AIForgeSearchManager:
                 return None
 
             if search_result:
-                ProgressIndicator.show_search_complete(len(search_result.get("results", 0)))
+                self._progress_indicator.show_search_complete(len(search_result.get("results", 0)))
                 # 转换为AIForge标准格式
                 return self._convert_search_result_to_aiforge_format(
                     search_result, standardized_instruction, "direct_search_web"
@@ -82,11 +83,9 @@ class AIForgeSearchManager:
             # 查找搜索相关的缓存模块
             search_instruction = standardized_instruction.copy()
             search_instruction.update({"task_type": "data_fetch", "action": "search"})
-
             cached_modules = code_cache.get_cached_modules_by_standardized_instruction(
                 search_instruction
             )
-
             if cached_modules:
 
                 execution_manager = self.components.get("execution_manager")
@@ -276,11 +275,17 @@ class AIForgeSearchManager:
                 results, expected_output["required_fields"]
             )
 
+        # 使用 i18n 的消息模板
+        if success:
+            summary = self._i18n_manager.t("search.search_complete_success", count=len(results))
+        else:
+            summary = self._i18n_manager.t("search.search_failed_error", error=error)
+
         # 转换为AIForge标准格式
         aiforge_result = {
             "data": results,
             "status": "success" if success and results else "error",
-            "summary": f"搜索完成，找到 {len(results)} 条结果" if success else f"搜索失败: {error}",
+            "summary": summary,
             "metadata": {
                 "timestamp": time.time(),
                 "task_type": "data_fetch",
@@ -356,13 +361,14 @@ class AIForgeSearchManager:
         """执行多层级搜索策略"""
 
         # 第一层：直接调用 search_web
-
         direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
         if direct_result:
             return direct_result
 
         # 第二层：使用缓存中的搜索函数
-        ProgressIndicator.show_search_process("系统缓存")
+        self._progress_indicator.show_search_process(
+            self._i18n_manager.t("search.process_system_cache")
+        )
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)
         if cache_result and self._validate_search_result_quality(
             cache_result, standardized_instruction
@@ -370,7 +376,9 @@ class AIForgeSearchManager:
             return cache_result
 
         # 第三层：使用 get_template_guided_search_instruction
-        ProgressIndicator.show_search_process("AI模板")
+        self._progress_indicator.show_search_process(
+            self._i18n_manager.t("search.process_ai_template")
+        )
         template_result, success = self._try_template_guided_search(
             standardized_instruction, original_instruction
         )
@@ -378,19 +386,21 @@ class AIForgeSearchManager:
             return template_result
 
         # 第四层：使用 get_free_form_ai_search_instruction
-        ProgressIndicator.show_search_process("AI自由")
+        self._progress_indicator.show_search_process(self._i18n_manager.t("search.process_ai_free"))
         freeform_result, success = self._try_free_form_search(
             standardized_instruction, original_instruction
         )
         if success:
             return freeform_result
 
-        ProgressIndicator.show_search_process("系统默认")
+        self._progress_indicator.show_search_process(
+            self._i18n_manager.t("search.process_system_default")
+        )
         # 所有层级都失败，系统搜索成功率较低
         return {
             "data": [],
             "status": "error",
-            "summary": "所有搜索策略都失败",
+            "summary": self._i18n_manager.t("search.all_strategies_failed"),
             "metadata": {
                 "timestamp": time.time(),
                 "task_type": "data_fetch",

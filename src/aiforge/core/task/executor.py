@@ -20,6 +20,13 @@ class TaskExecutor:
         self.client = llm_client
         self.console = Console()
 
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ...i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
+
         # 通过components获取执行引擎，如果没有则创建新的
         if components and "execution_engine" in components:
             self.execution_engine = components["execution_engine"]
@@ -50,7 +57,10 @@ class TaskExecutor:
 
             # 通过执行引擎创建和管理代码块
             block_name = f"block_{i+1}"
-            self.console.print(f"⚡ 开始执行代码块: {block_name}", style="dim white")
+            start_execution_message = self._i18n_manager.t(
+                "executor.start_execution_block", block_name=block_name
+            )
+            self.console.print(f"⚡ {start_execution_message}", style="dim white")
 
             start_time = time.time()
             result = self.execution_engine.execute_python_code(code_text)
@@ -69,7 +79,7 @@ class TaskExecutor:
                 "block_name": block_name,
                 "timestamp": time.time(),
                 "execution_time": execution_time,
-                "success": self.execution_engine.basic_execution_check(result),  # 通过执行引擎检查
+                "success": self.execution_engine.basic_execution_check(result),
             }
             self.task_execution_history.append(execution_record)
 
@@ -98,11 +108,15 @@ class TaskExecutor:
         optimization_attempt = 1
 
         while optimization_attempt <= max_optimization_attempts:
-            self.console.print(
-                f"🔄 第 {round_num} 轮，第 {optimization_attempt} 次尝试", style="dim cyan"
+            round_attempt_message = self._i18n_manager.t(
+                "executor.round_attempt",
+                round_num=round_num,
+                optimization_attempt=optimization_attempt,
             )
+            self.console.print(f"🔄 {round_attempt_message}", style="dim cyan")
 
-            self.console.print("🤖 正在生成代码...", style="dim white")
+            generating_code_message = self._i18n_manager.t("executor.generating_code")
+            self.console.print(f"🤖 {generating_code_message}", style="dim white")
 
             if optimization_attempt == 1:
                 # 首次生成，不使用历史
@@ -116,26 +130,36 @@ class TaskExecutor:
                 )
 
             if not response:
-                self.console.print(f"[red]第 {optimization_attempt} 次尝试：LLM 未返回响应[/red]")
+                no_response_message = self._i18n_manager.t(
+                    "executor.no_llm_response", optimization_attempt=optimization_attempt
+                )
+                self.console.print(f"[red]{no_response_message}[/red]")
                 optimization_attempt += 1
                 continue
 
             # 通过执行引擎提取代码块
             code_blocks = self.execution_engine.extract_code_blocks(response)
             if not code_blocks:
-                self.console.print(
-                    f"[yellow]第 {optimization_attempt} 次尝试：未找到可执行的代码块[/yellow]"
+                no_code_blocks_message = self._i18n_manager.t(
+                    "executor.no_code_blocks_found", optimization_attempt=optimization_attempt
                 )
+                self.console.print(f"[yellow]{no_code_blocks_message}[/yellow]")
                 optimization_attempt += 1
                 continue
 
-            self.console.print(f"📝 找到 {len(code_blocks)} 个代码块")
+            found_blocks_message = self._i18n_manager.t(
+                "executor.found_code_blocks", count=len(code_blocks)
+            )
+            self.console.print(f"📝 {found_blocks_message}")
 
             # 处理代码块执行
             self.process_code_execution(code_blocks)
 
             if not self.task_execution_history:
-                self.console.print(f"[red]第 {optimization_attempt} 次尝试：代码执行失败[/red]")
+                execution_failed_message = self._i18n_manager.t(
+                    "executor.code_execution_failed", optimization_attempt=optimization_attempt
+                )
+                self.console.print(f"[red]{execution_failed_message}[/red]")
                 optimization_attempt += 1
                 continue
 
@@ -150,7 +174,10 @@ class TaskExecutor:
                     )
                     self.client.send_feedback(feedback)
 
-                self.console.print(f"[red]第 {optimization_attempt} 次尝试：代码执行出错[/red]")
+                execution_error_message = self._i18n_manager.t(
+                    "executor.code_execution_error", optimization_attempt=optimization_attempt
+                )
+                self.console.print(f"[red]{execution_error_message}[/red]")
                 optimization_attempt += 1
                 continue
 
@@ -181,9 +208,10 @@ class TaskExecutor:
                             history_entry["success"] = True
                             break
 
-                self.console.print(
-                    f"✅ 第 {optimization_attempt} 次尝试验证通过！", style="bold green"
+                validation_passed_message = self._i18n_manager.t(
+                    "executor.validation_passed", optimization_attempt=optimization_attempt
                 )
+                self.console.print(f"✅ {validation_passed_message}", style="bold green")
                 return (
                     True,
                     last_execution["result"].get("result"),
@@ -194,19 +222,26 @@ class TaskExecutor:
                 last_execution["success"] = False
 
                 if optimization_attempt < max_optimization_attempts:
-                    self.console.print(
-                        f"⚠️ 第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}",
-                        style="yellow",
+                    validation_failed_message = self._i18n_manager.t(
+                        "executor.validation_failed",
+                        optimization_attempt=optimization_attempt,
+                        validation_type=validation_type,
+                        failure_reason=failure_reason,
                     )
+                    self.console.print(f"⚠️ {validation_failed_message}", style="yellow")
                     validation_feedback = self.execution_engine.get_validation_feedback(
                         failure_reason, validation_details
                     )
                     self.client.send_feedback(validation_feedback)
                     optimization_attempt += 1
                 else:
-                    self.console.print(
-                        f"❌ 第 {optimization_attempt} 次尝试验证失败（{validation_type}）: {failure_reason}，已达到最大优化次数",  # noqa 501
+                    final_validation_failed_message = self._i18n_manager.t(
+                        "executor.final_validation_failed",
+                        optimization_attempt=optimization_attempt,
+                        validation_type=validation_type,
+                        failure_reason=failure_reason,
                     )
+                    self.console.print(f"❌ {final_validation_failed_message}")
 
                     # 尝试返回最佳可用结果
                     best_result = self._get_best_available_result()
@@ -225,7 +260,10 @@ class TaskExecutor:
                     return False, None, "", False
 
         # 所有优化尝试都失败
-        self.console.print(f"❌ 单轮内 {max_optimization_attempts} 次优化尝试全部失败", style="red")
+        all_attempts_failed_message = self._i18n_manager.t(
+            "executor.all_attempts_failed", max_optimization_attempts=max_optimization_attempts
+        )
+        self.console.print(f"❌ {all_attempts_failed_message}", style="red")
         return False, None, "", False
 
     def _get_best_available_result(self):
@@ -261,10 +299,13 @@ class TaskExecutor:
                                 if title and content and len(content) > 20:
                                     valid_data.append(item)
 
+                        best_result_summary = self._i18n_manager.t(
+                            "executor.best_result_summary", count=len(valid_data)
+                        )
                         best_result = {
                             "data": valid_data,
                             "status": "success",
-                            "summary": f"返回{len(valid_data)}条最佳结果",
+                            "summary": best_result_summary,
                             "metadata": result.get("metadata", {}),
                         }
 

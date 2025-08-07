@@ -1,0 +1,154 @@
+{  
+  "task": {  
+    "template_code_generation": "基于模板生成代码",  
+    "system_prompt_generation": "请根据系统提示生成代码",  
+    "processing_start": "开始处理任务指令，最大尝试轮数{max_rounds}，单轮最大优化次数{max_optimization}",  
+    "round_execution": "第 {round} 轮执行",  
+    "all_rounds_failed_best_result": "全部轮次执行失败，返回最佳结果，执行结束！",  
+    "round_success_completed": "第 {round} 轮执行成功，任务完成！",  
+    "all_rounds_failed_no_result": "全部轮次执行失败，未获取到有效结果，执行结束！",  
+    "round_failed_continue": "第 {round} 轮执行失败，进入下一轮重新开始",  
+    "execution_summary": "任务 {task_id} 执行摘要",  
+    "status": {  
+      "created": "已创建",  
+      "running": "运行中",  
+      "completed": "已完成",  
+      "failed": "失败",  
+      "cancelled": "已取消",  
+      "unknown": "未知状态"  
+    }  
+  },  
+  "execution": {  
+    "direct_response_success": "直接响应: {action} - {instruction}...",  
+    "cache_lookup": "正在查找缓存...",  
+    "cache_found": "找到 {count} 个缓存模块",  
+    "cache_execution": "正在执行缓存模块...",  
+    "ai_generation": "正在生成新代码...",  
+    "cache_validation_passed": "缓存验证通过"  
+  },  
+  "search": {  
+    "search_complete_success": "搜索完成，找到 {count} 条结果",  
+    "process_system_cache": "系统缓存",  
+    "process_ai_template": "AI模板",  
+    "process_ai_free": "AI自由",  
+    "process_system_default": "系统默认",
+    "engine_baidu": "百度",  
+    "engine_bing": "Bing",   
+    "engine_360": "360",  
+    "engine_sogou": "搜狗"  
+  },  
+  "analyzer": {  
+    "recommendations": {  
+      "enhance_builtin_guidance": "建议增强内置类型引导，当前内置类型使用率较低",  
+      "relax_creation_conditions": "内置类型使用率很高，可以考虑适当放宽新类型创建条件",  
+      "too_many_dynamic": "动态类型过多({count}个)，建议清理低优先级类型",  
+      "low_priority_types": "发现{count}个低优先级动态类型，建议考虑移除",  
+      "unused_builtin": "内置类型 {types} 使用率为0，可能需要优化关键词匹配",  
+      "all_good": "任务类型使用情况良好，无需特殊优化"  
+    },  
+    "adaptive": {  
+      "task_type_guidance_header": "# 任务类型指导",  
+      "system_status_header": "# 系统状态：",  
+      "current_guidance_strength": "当前引导强度",  
+      "builtin_usage_rate": "内置类型使用率",  
+      "efficiency_note": "这些内置类型具有更高的缓存命中率和执行效率。",  
+      "use_builtin_types": "使用以下经过验证的内置任务类型"  
+    },  
+    "priority_label": "优先级",  
+    "use_cases": {  
+      "data_fetch": ["搜索网页内容", "获取API数据", "爬取新闻信息"],  
+      "data_process": ["数据分析", "统计计算", "格式转换"],  
+      "file_operation": ["读写文件", "批量处理", "文档操作"],  
+      "automation": ["定时任务", "系统监控", "自动化流程"],  
+      "content_generation": ["文档生成", "报告创建", "内容创作"],  
+      "direct_response": ["知识问答", "文本创作", "翻译总结"]  
+    }
+  },
+  "content_generation": {  
+    "generation_success": "成功生成{format}格式内容",  
+    "search_based_suffix": "（基于{count}条搜索结果）",  
+    "search_results_header": "关于'{instruction}'的搜索结果",  
+    "result_label": "结果",  
+    "title_label": "标题",  
+    "publish_time_label": "发布时间",   
+    "abstract_label": "摘要",  
+    "content_label": "内容",  
+    "no_title": "无标题",  
+    "unknown_time": "未知时间",  
+    "no_abstract": "无摘要",  
+    "no_search_results_fallback": "未找到相关搜索结果，请基于已有知识生成内容。"  
+  },
+  "progress": {  
+    "connecting_ai": "🤖 [AIForge]正在连接AI服务{provider}...",  
+    "waiting_response": "💭 [AIForge]正在等待AI回复...",  
+    "processing_response": "✅ [AIForge]收到AI回复，正在处理...",  
+    "searching": "🔍 [AIForge]正在搜索: {query}",  
+    "search_process": "🔍 [AIForge]正在尝试{search_type}搜索...",  
+    "search_complete": "✅ [AIForge]搜索完成，找到 {count} 条结果",  
+    "cache_lookup": "🔍 [AIForge]正在查找缓存...",  
+    "cache_found": "📦 [AIForge]找到 {count} 个缓存模块，正在验证...",  
+    "cache_execution": "⚡ [AIForge]正在执行缓存代码...",  
+    "code_execution": "⚡ [AIForge]正在执行 {count} 个代码块...",  
+    "round_start": "🔄 [AIForge]开始第 {current}/{total} 轮执行...",  
+    "round_success": "🎉 [AIForge]第 {round_num} 轮执行成功！",  
+    "round_retry": "⚠️[AIForge] 第 {round_num} 轮失败，准备重试..."  
+  },
+  "llm_manager": {  
+    "config_updated": "配置已更新",  
+    "lazy_load_create": "懒加载创建LLM客户端: {name}",  
+    "switch_success": "已切换到LLM客户端: {name}",  
+    "cleanup_unused": "已清理未使用的客户端，保留: {current_name}"  
+  },
+  "validation": {  
+    "validation_passed": "验证通过",  
+    "found_valid_results": "找到{count}条有效结果",  
+    "ai_validation_exception": "AI验证异常，默认通过: {error}"  
+  },
+  "runner": {  
+    "sandbox_info": "沙盒运行环境: 超时={timeout}s, 内存={memory}MB,CPU={cpu}s, 文件描述符={fd}, 文件大小={file_size}MB, 进程数={processes}",  
+    "network_blocked_info": "网络访问已被安全策略阻止",  
+    "cleanup_warning": "清理警告: {error}"  
+  },
+  "formatter": {  
+    "code_placeholder": "见上方代码块...",  
+    "execution_result_title": "代码执行结果",  
+    "structured_feedback_message": "以下是运行环境按执行顺序自动返回的代码块执行结果",  
+    "execution_summary_title": "执行总结",  
+    "item_column": "项目",  
+    "value_column": "值",  
+    "total_rounds_label": "总轮数",  
+    "history_label": "历史记录",  
+    "task_status_label": "任务状态",  
+    "history_count_text": "{count} 条",  
+    "completed_text": "完成",  
+    "incomplete_text": "未完成",  
+    "operation_completed": "操作完成"  
+  },
+  "executor": {  
+    "start_execution_block": "开始执行代码块: {block_name}",  
+    "round_attempt": "第 {round_num} 轮，第 {optimization_attempt} 次尝试",  
+    "generating_code": "正在生成代码...",  
+    "found_code_blocks": "找到 {count} 个代码块",  
+    "validation_passed": "第 {optimization_attempt} 次尝试验证通过！",  
+    "best_result_summary": "返回{count}条最佳结果"  
+  },
+  "network": {  
+    "validation_disabled": "网络验证已禁用",  
+    "open_mode_allows_all": "开放模式允许所有网络访问",  
+    "default_allow": "默认允许",  
+    "domain_filtering_disabled": "域名过滤已禁用",  
+    "domain_validation_passed": "域名验证通过",  
+    "ip_address_allowed": "IP地址允许访问",  
+    "no_hostname": "无主机名",  
+    "no_domain_restrictions": "无域名限制"  
+  },
+  "template": {  
+    "title_label": "标题",  
+    "url_label": "链接",  
+    "content_description": "详细内容（去除空格换行，至少{length}字）",  
+    "time_label": "发布时间",  
+    "optional_empty": "（可以为空）",  
+    "optional_empty_quotes": "（可以为''）",  
+    "corresponding_value": "对应值"  
+  }
+}

@@ -9,10 +9,12 @@ from .extractor import ParameterExtractor
 class AIForgeInstructionAnalyzer:
     """指令分析器"""
 
-    def __init__(self, llm_client: AIForgeLLMClient):
+    def __init__(self, llm_client: AIForgeLLMClient, components: Dict[str, Any] = None):
         self.llm_client = llm_client
         self.task_type_manager = None
-
+        self.components = components or {}
+        self._ai_forgePrompt = AIForgePrompt(self.components)
+        self._i18n_manager = self.components.get("i18n_manager")
         # 初始化子组件
         self.parser = InstructionParser(llm_client)
         self.classifier = TaskClassifier()
@@ -283,71 +285,84 @@ class AIForgeInstructionAnalyzer:
 
     def _build_task_type_guidance(self, builtin_types: List[str]) -> str:
         """构建任务类型引导信息"""
-        # 获取动态类型统计（如果有任务类型管理器）
-        guidance_strength = "优先考虑"
+        guidance_strength = self._i18n_manager.t("analyzer.guidance.default_strength")
         additional_info = ""
 
         if hasattr(self, "task_type_manager") and self.task_type_manager:
             try:
-                # 获取动态类型数量
                 dynamic_types = getattr(self.task_type_manager, "dynamic_types", {})
                 dynamic_count = len(dynamic_types) if dynamic_types else 0
 
-                # 如果动态类型过多，增强内置类型引导
                 if dynamic_count > 10:
-                    guidance_strength = "强烈推荐"
-                    additional_info = f"\n注意：系统已有{dynamic_count}个动态类型，建议优先使用内置类型以提高性能。"
+                    guidance_strength = self._i18n_manager.t(
+                        "analyzer.guidance.strong_recommendation"
+                    )
+                    additional_info = self._i18n_manager.t(
+                        "analyzer.guidance.too_many_dynamic_types", count=dynamic_count
+                    )
 
                 # 获取高优先级类型
                 high_priority_types = []
                 for task_type in builtin_types:
                     priority = self.task_type_manager.get_task_type_priority(task_type)
-                    if priority > 80:  # 高优先级阈值
-                        high_priority_types.append(f"{task_type}(优先级:{priority})")
+                    if priority > 80:
+                        high_priority_types.append(
+                            f"{task_type}({self._i18n_manager.t('analyzer.priority_label')}:{priority})"  # noqa 501
+                        )
 
                 if high_priority_types:
-                    additional_info += f"\n高优先级类型：{', '.join(high_priority_types)}"
+                    additional_info += self._i18n_manager.t(
+                        "analyzer.guidance.high_priority_types",
+                        types=", ".join(high_priority_types),
+                    )
 
             except Exception:
-                # 如果获取统计信息失败，使用默认设置
                 pass
 
-        return f"""
-# 任务类型指导
-{guidance_strength}使用以下经过验证的内置任务类型：
-{builtin_types}
+        guidance_template = self._i18n_manager.t("analyzer.guidance.task_type_template")
+        advantages = self._i18n_manager.t("analyzer.guidance.builtin_advantages")
+        creation_rule = self._i18n_manager.t("analyzer.guidance.creation_rule")
 
-这些内置类型具有以下优势：
-- 更高的缓存命中率和执行效率
-- 经过充分测试和优化的执行路径
-- 更稳定的性能表现和错误处理
-
-仅当用户任务确实属于全新领域且无法归类到现有类型时，才创建新的task_type。{additional_info}
-"""
+        return guidance_template.format(
+            strength=guidance_strength,
+            types=builtin_types,
+            advantages=advantages,
+            creation_rule=creation_rule,
+            additional_info=additional_info,
+        )
 
     def _assemble_prompt_with_guidance(
         self, base_sections: Dict[str, str], guidance_info: str
     ) -> str:
         """组装包含引导信息的提示词"""
+        role_header = self._i18n_manager.t("analyzer.prompt.role_header")
+        execution_mode_header = self._i18n_manager.t("analyzer.prompt.execution_mode_header")
+        action_vocabulary_header = self._i18n_manager.t("analyzer.prompt.action_vocabulary_header")
+        analysis_requirements_header = self._i18n_manager.t(
+            "analyzer.prompt.analysis_requirements_header"
+        )
+        output_format_header = self._i18n_manager.t("analyzer.prompt.output_format_header")
+        strict_json_note = self._i18n_manager.t("analyzer.prompt.strict_json_note")
+
         return f"""
-# 角色定义
+{role_header}
 {base_sections["role"]}
 
 {guidance_info}
 
-# 执行模式判断
+{execution_mode_header}
 {base_sections["execution_mode"]}
 
-# 动作命名规范
+{action_vocabulary_header}
 {base_sections["action_vocabulary"]}
 
-# 分析要求
+{analysis_requirements_header}
 {base_sections["analysis_steps"]}
 
-# 输出格式
+{output_format_header}
 {base_sections["output_format"]}
 
-请严格按照JSON格式返回分析结果。
+{strict_json_note}
 """
 
     def parse_standardized_instruction(self, response: str) -> Dict[str, Any]:
@@ -409,15 +424,22 @@ class AIForgeInstructionAnalyzer:
             builtin_rate = stats["builtin_usage_rate"]
 
             if builtin_rate < 0.6:
-                recommendations.append("建议增强内置类型引导，当前内置类型使用率较低")
+                recommendations.append(
+                    self._i18n_manager.t("analyzer.recommendations.enhance_builtin_guidance")
+                )
 
             if builtin_rate > 0.9:
-                recommendations.append("内置类型使用率很高，可以考虑适当放宽新类型创建条件")
+                recommendations.append(
+                    self._i18n_manager.t("analyzer.recommendations.relax_creation_conditions")
+                )
 
-            # 检查动态类型数量
             dynamic_count = len(stats["dynamic_types_usage"])
             if dynamic_count > 15:
-                recommendations.append(f"动态类型过多({dynamic_count}个)，建议清理低优先级类型")
+                recommendations.append(
+                    self._i18n_manager.t(
+                        "analyzer.recommendations.too_many_dynamic", count=dynamic_count
+                    )
+                )
 
             # 检查低优先级类型
             low_priority_types = []
@@ -427,7 +449,9 @@ class AIForgeInstructionAnalyzer:
 
             if low_priority_types:
                 recommendations.append(
-                    f"发现{len(low_priority_types)}个低优先级动态类型，建议考虑移除"
+                    self._i18n_manager.t(
+                        "analyzer.recommendations.low_priority_types", count=len(low_priority_types)
+                    )
                 )
 
             # 检查内置类型使用分布
@@ -438,14 +462,18 @@ class AIForgeInstructionAnalyzer:
                 ]
                 if unused_builtin:
                     recommendations.append(
-                        f"内置类型 {unused_builtin} 使用率为0，可能需要优化关键词匹配"
+                        self._i18n_manager.t(
+                            "analyzer.recommendations.unused_builtin", types=unused_builtin
+                        )
                     )
 
             if not recommendations:
-                recommendations.append("任务类型使用情况良好，无需特殊优化")
+                recommendations.append(self._i18n_manager.t("analyzer.recommendations.all_good"))
 
         except Exception as e:
-            recommendations.append(f"统计分析失败: {str(e)}")
+            recommendations.append(
+                self._i18n_manager.t("analyzer.recommendations.analysis_failed", error=str(e))
+            )
 
         return recommendations
 
@@ -456,16 +484,15 @@ class AIForgeInstructionAnalyzer:
             builtin_rate = stats["builtin_usage_rate"]
             dynamic_count = len(stats["dynamic_types_usage"])
 
-            # 根据统计数据调整引导强度
             if builtin_rate < 0.5 or dynamic_count > 20:
-                return "强烈推荐"
+                return self._i18n_manager.t("analyzer.guidance.strong_recommendation")
             elif builtin_rate > 0.8 and dynamic_count < 5:
-                return "可以考虑"
+                return self._i18n_manager.t("analyzer.guidance.consider")
             else:
-                return "优先考虑"
+                return self._i18n_manager.t("analyzer.guidance.default_strength")
 
         except Exception:
-            return "优先考虑"
+            return self._i18n_manager.t("analyzer.guidance.default_strength")
 
     def get_adaptive_analysis_prompt(self) -> str:
         """获取自适应的分析提示词"""
@@ -473,21 +500,39 @@ class AIForgeInstructionAnalyzer:
         guidance_strength = self.adjust_guidance_strength()
 
         # 构建自适应引导信息
+        task_type_guidance_header = self._i18n_manager.t(
+            "analyzer.adaptive.task_type_guidance_header"
+        )
+        system_status_header = self._i18n_manager.t("analyzer.adaptive.system_status_header")
+        current_guidance_strength = self._i18n_manager.t(
+            "analyzer.adaptive.current_guidance_strength"
+        )
+        builtin_usage_rate = self._i18n_manager.t("analyzer.adaptive.builtin_usage_rate")
+        efficiency_note = self._i18n_manager.t("analyzer.adaptive.efficiency_note")
+
         adaptive_guidance = f"""
-# 任务类型指导
-{guidance_strength}使用以下经过验证的内置任务类型：
+{task_type_guidance_header}
+{guidance_strength}{self._i18n_manager.t("analyzer.adaptive.use_builtin_types")}:
 {builtin_types}
 
-# 系统状态：
-- 当前引导强度：{guidance_strength}
-- 内置类型使用率：{self.get_task_type_usage_stats().get('builtin_usage_rate', 0):.1%}
+{system_status_header}
+- {current_guidance_strength}: {guidance_strength}
+- {builtin_usage_rate}: {self.get_task_type_usage_stats().get('builtin_usage_rate', 0):.1%}
 
-这些内置类型具有更高的缓存命中率和执行效率。
-"""
+{efficiency_note}
+    """
 
-        return self._assemble_prompt_with_guidance(
-            AIForgePrompt.get_base_prompt_sections(), adaptive_guidance
-        )
+        # 获取提示词生成器
+        prompt_generator = self.components.get("prompt_generator")
+        if prompt_generator:
+            return self._assemble_prompt_with_guidance(
+                prompt_generator.get_base_prompt_sections(), adaptive_guidance
+            )
+        else:
+            # 回退到硬编码
+            return self._assemble_prompt_with_guidance(
+                AIForgePrompt.get_base_prompt_sections(), adaptive_guidance
+            )
 
     def _get_task_type_recommendations(self) -> Dict[str, Any]:
         """获取任务类型推荐信息"""
@@ -521,15 +566,22 @@ class AIForgeInstructionAnalyzer:
 
     def _get_use_cases_for_type(self, task_type: str) -> List[str]:
         """获取任务类型的常见用例"""
-        use_cases = {
-            "data_fetch": ["搜索网页内容", "获取API数据", "爬取新闻信息"],
-            "data_process": ["数据分析", "统计计算", "格式转换"],
-            "file_operation": ["读写文件", "批量处理", "文档操作"],
-            "automation": ["定时任务", "系统监控", "自动化流程"],
-            "content_generation": ["文档生成", "报告创建", "内容创作"],
-            "direct_response": ["知识问答", "文本创作", "翻译总结"],
-        }
-        return use_cases.get(task_type, [])
+        use_cases_key = f"analyzer.use_cases.{task_type}"
+        use_cases = self._i18n_manager.t(use_cases_key, default=[])
+
+        if not use_cases:
+            # 回退到硬编码
+            fallback_cases = {
+                "data_fetch": ["搜索网页内容", "获取API数据", "爬取新闻信息"],
+                "data_process": ["数据分析", "统计计算", "格式转换"],
+                "file_operation": ["读写文件", "批量处理", "文档操作"],
+                "automation": ["定时任务", "系统监控", "自动化流程"],
+                "content_generation": ["文档生成", "报告创建", "内容创作"],
+                "direct_response": ["知识问答", "文本创作", "翻译总结"],
+            }
+            use_cases = fallback_cases.get(task_type, [])
+
+        return use_cases
 
     @staticmethod
     def get_default_expected_output(

@@ -18,12 +18,13 @@ class AIForgeTask:
         optimization,
         max_optimization_attempts,
         task_manager,
-        components: Dict[str, Any] = None,  # 新增 components 参数
+        components: Dict[str, Any] = None,
     ):
         self.task_id = task_id
         self.task_manager = task_manager
-        self.components = components or {}  # 保存 components 引用
+        self.components = components or {}
         self.console = Console()
+        self._i18n_manager = self.components.get("i18n_manager")
 
         # 使用拆分后的执行器，传递 components 参数
         self.executor = TaskExecutor(
@@ -34,6 +35,7 @@ class AIForgeTask:
         self.system_prompt = None
         self.max_rounds = max_rounds
         self.task_type = None
+        self._ai_forgePrompt = AIForgePrompt(self.components)
 
     def run(
         self,
@@ -49,15 +51,15 @@ class AIForgeTask:
         elif instruction and not system_prompt:
             if "__result__" in instruction:
                 # 用户明确指定生成代码prompt的
-                self.instruction = "基于模板生成代码"
+                self.instruction = self._i18n_manager.t("task.template_code_generation")
                 self.system_prompt = instruction
             else:
                 self.instruction = instruction
-                self.system_prompt = AIForgePrompt.get_base_aiforge_prompt(
+                self.system_prompt = self._ai_forgePrompt.get_base_aiforge_prompt(
                     optimize_tokens=self.executor.optimization.get("optimize_tokens", True)
                 )
         elif not instruction and system_prompt:
-            self.instruction = "请根据系统提示生成代码"
+            self.instruction = self._i18n_manager.t("task.system_prompt_generation")
             self.system_prompt = system_prompt
         elif not instruction and not system_prompt:
             return []
@@ -73,10 +75,13 @@ class AIForgeTask:
 
         max_optimization_attempts = getattr(self.executor, "max_optimization_attempts", 3)
 
-        self.console.print(
-            f"[yellow]开始处理任务指令，最大尝试轮数{self.max_rounds}，单轮最大优化次数{max_optimization_attempts}[/yellow]",  # noqa501
-            style="bold",
+        # 使用 i18n 的任务开始消息
+        start_message = self._i18n_manager.t(
+            "task.processing_start",
+            max_rounds=self.max_rounds,
+            max_optimization=max_optimization_attempts,
         )
+        self.console.print(f"[yellow]{start_message}[/yellow]", style="bold")
 
         rounds = 1
         success = False
@@ -96,7 +101,9 @@ class AIForgeTask:
                         if not msg.get("metadata", {}).get("is_error_feedback")
                     ]
 
-            self.console.print(f"\n[cyan]===== 第 {rounds} 轮执行 =====[/cyan]")
+            # 使用 i18n 的轮次执行消息
+            round_message = self._i18n_manager.t("task.round_execution", round=rounds)
+            self.console.print(f"\n[cyan]===== {round_message} =====[/cyan]")
 
             round_success, round_result, round_code, fail_best = (
                 self.executor.execute_single_round_with_optimization(
@@ -112,21 +119,23 @@ class AIForgeTask:
                 final_result = round_result
                 final_code = round_code
                 if fail_best:
-                    self.console.print(
-                        "🎉 全部轮次执行失败，返回最佳结果，执行结束！", style="bold yellow"
-                    )
+                    best_result_message = self._i18n_manager.t("task.all_rounds_failed_best_result")
+                    self.console.print(f"🎉 {best_result_message}", style="bold yellow")
                 else:
-                    self.console.print(f"🎉 第 {rounds} 轮执行成功，任务完成！", style="bold green")
+                    success_message = self._i18n_manager.t(
+                        "task.round_success_completed", round=rounds
+                    )
+                    self.console.print(f"🎉 {success_message}", style="bold green")
                 break
             else:
                 if rounds >= self.max_rounds:
-                    self.console.print(
-                        "⚠️ 全部轮次执行失败，未获取到有效结果，执行结束！", style="yellow"
-                    )
+                    all_failed_message = self._i18n_manager.t("task.all_rounds_failed_no_result")
+                    self.console.print(f"⚠️ {all_failed_message}", style="yellow")
                 else:
-                    self.console.print(
-                        f"⚠️ 第 {rounds} 轮执行失败，进入下一轮重新开始", style="yellow"
+                    round_failed_message = self._i18n_manager.t(
+                        "task.round_failed_continue", round=rounds
                     )
+                    self.console.print(f"⚠️ {round_failed_message}", style="yellow")
                 if hasattr(self.executor.client, "reset_conversation"):
                     self.executor.client.reset_conversation()
 

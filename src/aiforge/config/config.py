@@ -8,7 +8,7 @@ import importlib.resources
 class AIForgeConfig:
     """AIForge配置管理器"""
 
-    def __init__(self, config_file: str | None = None):
+    def __init__(self, config_file: str | None = None, components: Dict[str, Any] = None):
         self.console = Console()
 
         if config_file:
@@ -17,6 +17,13 @@ class AIForgeConfig:
         else:
             self.config_file = None
             self.config = {}
+
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ..i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
 
     @classmethod
     def from_dict(cls, config_dict: Dict) -> "AIForgeConfig":
@@ -35,17 +42,40 @@ class AIForgeConfig:
             default_config["llm"][provider]["api_key"] = api_key
             default_config["default_llm_provider"] = provider
 
-        # 应用其他参数
+        # 应用所有核心参数
+        core_params = ["max_rounds", "max_tokens", "workdir", "max_optimization_attempts"]
+
         for key, value in kwargs.items():
-            if key in ["max_rounds", "max_tokens", "workdir"]:
+            if key in core_params:
                 default_config[key] = value
+            elif key.startswith("cache_"):
+                # 处理缓存相关参数
+                cache_key = key.replace("cache_", "")
+                if "cache" not in default_config:
+                    default_config["cache"] = {}
+                if "code" not in default_config["cache"]:
+                    default_config["cache"]["code"] = {}
+                default_config["cache"]["code"][cache_key] = value
+            elif key.startswith("security_"):
+                # 处理安全相关参数
+                security_key = key.replace("security_", "")
+                if "security" not in default_config:
+                    default_config["security"] = {}
+                default_config["security"][security_key] = value
+            elif key.startswith("optimization_"):
+                # 处理优化相关参数
+                opt_key = key.replace("optimization_", "")
+                if "optimization" not in default_config:
+                    default_config["optimization"] = {}
+                default_config["optimization"][opt_key] = value
 
         return cls.from_dict(default_config)
 
     def _load_from_file(self) -> Dict:
         """从文件加载配置"""
         if not self.config_file.exists():
-            self.console.print(f"[red]配置文件 {self.config_file} 不存在[/red]")
+            error_message = self._i18n_manager.t("config.file_not_exists", file=self.config_file)
+            self.console.print(f"[red]{error_message}[/red]")
             return {}
 
         try:
@@ -53,7 +83,8 @@ class AIForgeConfig:
                 config = tomlkit.load(f)
             return config
         except Exception as e:
-            self.console.print(f"[red]加载配置文件失败: {e}[/red]")
+            error_message = self._i18n_manager.t("config.load_failed", error=str(e))
+            self.console.print(f"[red]{error_message}[/red]")
             return {}
 
     @staticmethod
@@ -253,11 +284,6 @@ class AIForgeConfig:
             return sc.get("network", {})
         return {}
 
-    def get_network_policy(self):
-        """获取网络策略"""
-        network_config = self.get_security_network_config()
-        return network_config.get("policy", "filtered")
-
     def get_domain_filtering_config(self):
         """获取域名过滤配置"""
         network_config = self.get_security_network_config()
@@ -271,7 +297,7 @@ class AIForgeConfig:
     def get_network_policy_config(
         self, context: str = "execution", task_type: str = None
     ) -> Dict[str, Any]:
-        base_config = self.config.get_security_network_config()
+        base_config = self.get_security_network_config()
         policy_level = base_config.get("policy", "filtered")
 
         # 构建策略配置

@@ -24,11 +24,13 @@ class TemplateType(Enum):
 class TemplateManager:
     """模板管理器 - 负责模板的注册、发现和统一调用"""
 
-    def __init__(self, parameter_mapping_service=None):
+    def __init__(self, parameter_mapping_service=None, components: Dict[str, Any] = None):
         self._templates: Dict[str, Dict[str, Any]] = {}
         self._template_configs: Dict[str, Dict[str, Any]] = {}
         self._initialized = False
         self.parameter_mapping_service = parameter_mapping_service
+        self.components = components or {}
+        self._i18n_manager = self.components.get("i18n_manager")
 
     def initialize(self):
         """初始化模板管理器，自动发现和注册模板"""
@@ -57,11 +59,13 @@ class TemplateManager:
                 if key not in original_kwargs:  # 只添加用户未提供的参数
                     kwargs[key] = value
 
-        # 原有的验证逻辑
         parameters = template.get("parameters", {})
         for param_name, param_info in parameters.items():
             if param_info.get("required", False) and param_name not in kwargs:
-                raise ValueError(f"缺少必需参数: {param_name}")
+                error_message = self._i18n_manager.t(
+                    "template.missing_required_parameter", param_name=param_name
+                )
+                raise ValueError(error_message)
 
     def _register_search_templates(self):
         """注册搜索相关模板"""
@@ -186,7 +190,10 @@ class TemplateManager:
 
         template = self._templates.get(template_id)
         if not template:
-            raise ValueError(f"未找到模板: {template_id}")
+            error_message = self._i18n_manager.t(
+                "template.template_not_found", template_id=template_id
+            )
+            raise ValueError(error_message)
 
         try:
             # 验证参数
@@ -197,7 +204,10 @@ class TemplateManager:
             return result
 
         except Exception as e:
-            raise RuntimeError(f"模板 {template_id} 执行失败: {e}")
+            error_message = self._i18n_manager.t(
+                "template.execution_failed", template_id=template_id, error=str(e)
+            )
+            raise RuntimeError(error_message)
 
     def execute_template(self, template_id: str, **kwargs) -> Any:
         """直接执行模板函数（用于非指令生成类模板）"""
@@ -206,7 +216,10 @@ class TemplateManager:
 
         template = self._templates.get(template_id)
         if not template:
-            raise ValueError(f"未找到模板: {template_id}")
+            error_message = self._i18n_manager.t(
+                "template.template_not_found", template_id=template_id
+            )
+            raise ValueError(error_message)
 
         try:
             # 验证参数
@@ -217,7 +230,10 @@ class TemplateManager:
             return result
 
         except Exception as e:
-            raise RuntimeError(f"模板 {template_id} 执行失败: {e}")
+            error_message = self._i18n_manager.t(
+                "template.execution_failed", template_id=template_id, error=str(e)
+            )
+            raise RuntimeError(error_message)
 
     def list_templates(self, template_type: Optional[TemplateType] = None) -> List[Dict[str, Any]]:
         """列出所有模板"""

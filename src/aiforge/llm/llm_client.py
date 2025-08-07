@@ -3,7 +3,6 @@ import time
 from rich.console import Console
 from typing import Dict, Any
 from .conversation_manager import ConversationManager
-from ..utils.progress_indicator import ProgressIndicator
 
 
 class AIForgeLLMClient:
@@ -18,6 +17,7 @@ class AIForgeLLMClient:
         timeout: int = 30,
         max_tokens: int = 8192,
         client_type: str = "openai",
+        components: Dict[str, Any] = None,
     ):
         self.name = name
         self.api_key = api_key
@@ -31,6 +31,9 @@ class AIForgeLLMClient:
         # 使用智能对话管理器
         self.conversation_manager = ConversationManager()
         self.usage_stats = {"total_tokens": 0, "rounds": 0}
+        self.components = components or {}
+        self._i18n_manager = self.components.get("i18n_manager")
+        self._progress_indicator = self.components.get("progress_indicator")
 
     def is_usable(self) -> bool:
         """检查客户端是否可用"""
@@ -50,12 +53,12 @@ class AIForgeLLMClient:
 
         # 添加进度指示器
 
-        ProgressIndicator.show_llm_request(self.name)
+        self._progress_indicator.show_llm_request(self.name)
 
         for attempt in range(max_retries):
             try:
                 if attempt == 0:
-                    ProgressIndicator.show_llm_generating()
+                    self._progress_indicator.show_llm_generating()
 
                 headers = {
                     "Authorization": f"Bearer {self.api_key}",
@@ -92,7 +95,7 @@ class AIForgeLLMClient:
                 )
 
                 if response.status_code == 200:
-                    ProgressIndicator.show_llm_complete()
+                    self._progress_indicator.show_llm_complete()
                     result = response.json()
                     assistant_response = result["choices"][0]["message"]["content"]
 
@@ -112,23 +115,38 @@ class AIForgeLLMClient:
                     # 只对网络错误进行重试
                     if response.status_code >= 500:  # 服务器错误才重试
                         wait_time = (2**attempt) * 1
-                        self.console.print(
-                            f"[yellow]{self.name} 服务器错误: {response.status_code}, 第 {attempt + 1} 次重试，等待 {wait_time} 秒...[/yellow]"  # noqa 501
+                        error_message = self._i18n_manager.t(
+                            "llm_client.server_error_retry",
+                            name=self.name,
+                            status_code=response.status_code,
+                            attempt=attempt + 1,
+                            wait_time=wait_time,
                         )
+
+                        self.console.print(f"[yellow]{error_message}[/yellow]")
                         time.sleep(wait_time)
                         continue
                     else:
                         # 客户端错误不重试
-                        self.console.print(
-                            f"[red]{self.name} 客户端错误: {response.status_code}[/red]"
+                        error_message = self._i18n_manager.t(
+                            "llm_client.client_error",
+                            name=self.name,
+                            status_code=response.status_code,
                         )
+
+                        self.console.print(f"[red]{error_message}[/red]")
                         return None
 
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
                 # 只对网络异常重试
-                self.console.print(
-                    f"[yellow]{self.name} 网络异常: {e}, 第 {attempt + 1} 次重试[/yellow]"
+                error_message = self._i18n_manager.t(
+                    "llm_client.network_error_retry",
+                    name=self.name,
+                    error=str(e),
+                    attempt=attempt + 1,
                 )
+
+                self.console.print(f"[yellow]{error_message}[/yellow]")
                 if attempt < max_retries - 1:
                     time.sleep(1)
                     continue
@@ -136,7 +154,11 @@ class AIForgeLLMClient:
                     return None
             except Exception as e:
                 # 其他异常不重试
-                self.console.print(f"[red]{self.name} 请求失败: {e}[/red]")
+                error_message = self._i18n_manager.t(
+                    "llm_client.request_failed", name=self.name, error=str(e)
+                )
+
+                self.console.print(f"[red]{error_message}[/red]")
                 return None
 
         return None
@@ -176,9 +198,15 @@ class AIForgeOllamaClient(AIForgeLLMClient):
     """Ollama客户端实现"""
 
     def __init__(
-        self, name: str, base_url: str, model: str, timeout: int = 30, max_tokens: int = 8192
+        self,
+        name: str,
+        base_url: str,
+        model: str,
+        timeout: int = 30,
+        max_tokens: int = 8192,
+        components: Dict[str, Any] = None,
     ):
-        super().__init__(name, "", base_url, model, timeout, max_tokens)
+        super().__init__(name, "", base_url, model, timeout, max_tokens, components=components)
 
     def is_usable(self) -> bool:
         """Ollama不需要API key"""
@@ -223,27 +251,46 @@ class AIForgeOllamaClient(AIForgeLLMClient):
                 else:
                     if response.status_code >= 500:
                         wait_time = (2**attempt) * 1
-                        self.console.print(
-                            f"[yellow]{self.name} 服务器错误: {response.status_code}, 第 {attempt + 1} 次重试，等待 {wait_time} 秒...[/yellow]"  # noqa 501
+                        error_message = self._i18n_manager.t(
+                            "llm_client.server_error_retry",
+                            name=self.name,
+                            status_code=response.status_code,
+                            attempt=attempt + 1,
+                            wait_time=wait_time,
                         )
+
+                        self.console.print(f"[yellow]{error_message}[/yellow]")
                         time.sleep(wait_time)
                         continue
                     else:
-                        self.console.print(
-                            f"[red]{self.name} 客户端错误: {response.status_code}[/red]"
+                        error_message = self._i18n_manager.t(
+                            "llm_client.client_error",
+                            name=self.name,
+                            status_code=response.status_code,
                         )
+
+                        self.console.print(f"[red]{error_message}[/red]")
                         return None
 
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                self.console.print(
-                    f"[yellow]{self.name} 网络异常: {e}, 第 {attempt + 1} 次重试[/yellow]"
+                error_message = self._i18n_manager.t(
+                    "llm_client.network_error_retry",
+                    name=self.name,
+                    error=str(e),
+                    attempt=attempt + 1,
                 )
+
+                self.console.print(f"[yellow]{error_message}[/yellow]")
                 if attempt < max_retries - 1:
                     time.sleep(1)
                     continue
                 else:
                     return None
             except Exception as e:
-                self.console.print(f"[red]{self.name} 请求失败: {e}[/red]")
+                error_message = self._i18n_manager.t(
+                    "llm_client.request_failed", name=self.name, error=str(e)
+                )
+
+                self.console.print(f"[red]{error_message}[/red]")
                 return None
         return None

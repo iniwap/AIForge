@@ -133,4 +133,11 @@ class NetworkPolicyFactory:
         elif policy_level == "permissive":
             return OpenNetworkPolicy(config)
         else:
-            raise ValueError(f"Unknown network policy level: {policy_level}")
+            # 使用单例获取 i18n 管理器
+            from ..i18n.manager import AIForgeI18nManager
+
+            i18n_manager = AIForgeI18nManager.get_instance()
+            error_message = i18n_manager.t(
+                "network.unknown_policy_level", policy_level=policy_level
+            )
+            raise ValueError(error_message)

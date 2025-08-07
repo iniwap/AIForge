@@ -21,6 +21,7 @@ import concurrent.futures
 from ..utils import utils
 from ..strategies.search_template_strategy import StandardTemplateStrategy
 from ..utils.progress_indicator import ProgressIndicator
+from ..i18n.manager import AIForgeI18nManager
 
 
 def get_template_guided_search_instruction(
@@ -32,61 +33,14 @@ def get_template_guided_search_instruction(
     # 动态生成返回格式
     data_format = StandardTemplateStrategy().generate_format(expected_output, min_abstract_len)
 
-    search_instruction = f"""
-        请生成一个搜索函数（不要任何注释、打印日志），获取最新相关信息，参考以下配置：
+    # 获取本地化的搜索指令模板
+    search_instruction_template = AIForgeI18nManager.get_instance().t(
+        "search.guided_instruction_template"
+    )
 
-        # 搜索引擎URL模式：
-        - 百度: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}
-        - Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}
-        - 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}
-        - 搜狗: https://www.sogou.com/web?query={{quote(search_query)}}
-
-        # 关键CSS选择器：
-        百度结果容器: ["div.result", "div.c-container", "div[class*='result']"]
-        百度标题: ["h3", "h3 a", ".t", ".c-title"]
-        百度摘要: ["div.c-abstract", ".c-span9", "[class*='abstract']"]
-
-        Bing结果容器: ["li.b_algo", "div.b_algo", "li[class*='algo']"]
-        Bing标题: ["h2", "h3", "h2 a", ".b_title"]
-        Bing摘要: ["p.b_lineclamp4", "div.b_caption", ".b_snippet"]
-
-        360结果容器: ["li.res-list", "div.result", "li[class*='res']"]
-        360标题: ["h3.res-title", "h3", ".res-title"]
-        360摘要: ["p.res-desc", "div.res-desc", ".res-summary"]
-
-        搜狗结果容器: ["div.vrwrap", "div.results", "div.result"]
-        搜狗标题: ["h3.vr-title", "h3.vrTitle", "a.title", "h3"]
-        搜狗摘要: ["div.str-info", "div.str_info", "p.str-info"]
-
-        # 重要处理逻辑：
-        1. 按优先级依次尝试四个搜索引擎（不要使用API密钥方式）
-        2. 优先使用摘要内容作为content，如果不满足，使用 concurrent.futures.ThreadPoolExecutor 并行访问页面提取详细内容
-        3. 从页面提取发布时间，遵从以下策略：
-            - 优先meta标签：article:published_time、datePublished、pubdate、publishdate等
-            - 备选方案：time标签、日期相关class、页面文本匹配
-            - 有效的日期格式：标准格式、中文格式、相对时间（如"昨天"、"1天前"、"1小时前"等）、英文时间（如"yesterday"等）
-        4. 按发布时间排序，优先最近7天内容
-        5. 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
-
-        # 返回数据格式（严格遵守）：
-        {{
-            "data": [
-                {data_format}
-            ],
-            "status": "success或error",
-            "summary": f"搜索完成，找到 len(data) 条结果",
-            "metadata": {{
-                "timestamp": time.time(),
-                "task_type": "data_fetch",
-                "search_query": "{search_query}",
-                "execution_type": "template_guided_search"
-            }}
-        }}
-
-        # 立即执行函数，并赋值给 __result__
-         __result__ = search_web("{search_query}", {max_results})
-
-        """
+    search_instruction = search_instruction_template.format(
+        data_format=data_format, search_query=search_query, max_results=max_results
+    )
 
     return search_instruction
 
@@ -102,48 +56,17 @@ def get_free_form_ai_search_instruction(
         expected_output, min_abstract_len, is_free_form=True
     )
 
-    search_instruction = f"""
-        请创新性地生成搜索函数（不要任何注释、打印日志），获取最新相关信息。
+    # 获取本地化的自由形式搜索指令模板
+    search_instruction_template = AIForgeI18nManager.get_instance().t(
+        "search.free_form_instruction_template"
+    )
 
-        # 可选搜索策略：
-        1. 依次尝试不同搜索引擎（百度、Bing、360、搜狗）
-        2. 使用新闻聚合API（如NewsAPI、RSS源）
-        3. 尝试社交媒体平台搜索
-        4. 使用学术搜索引擎
-
-        # 核心要求：
-        - 函数名为search_web，参数search_query和max_results
-        - 实现多重容错机制，至少尝试2-3种不同方法
-        - 对每个结果访问原始页面提取完整信息
-        - 优先获取最近7天内的新鲜内容，按发布时间排序
-        - 摘要长度至少{min_abstract_len/4}字，包含关键信息
-        - 不能使用需要API密钥的方式
-        - 过滤掉验证页面和无效内容，正确处理编码，结果不能包含乱码
-
-        # 时间提取策略：
-        - 优先meta标签：article:published_time、datePublished、pubdate、publishdate等
-        - 备选方案：time标签、日期相关class、页面文本匹配
-        - 有效的日期格式：标准格式、中文格式、相对时间（如"昨天"、"1天前"、"1小时前"等）、英文时间（如"yesterday"等）
-
-        # 返回数据格式（严格遵守）：
-        {{
-            "data": [
-                {data_format}
-            ],
-            "status": "success",
-            "summary": "搜索完成",
-            "metadata": {{
-                "timestamp": time.time(),
-                "task_type": "data_fetch",
-                "search_query": "{search_query}",
-                "execution_type": "free_form_search"
-            }}
-        }}
-
-        # 立即执行函数，并赋值给 __result__
-        __result__ = search_web("{search_query}", {max_results})
-
-        """
+    search_instruction = search_instruction_template.format(
+        data_format=data_format,
+        search_query=search_query,
+        max_results=max_results,
+        min_abstract_len=min_abstract_len,
+    )
 
     return search_instruction
 
@@ -164,28 +87,33 @@ def search_web(
     max_abstract_len=1000,
     module_type: SearchEngine = SearchEngine.COMBINED,
 ):
-    """根据模块类型返回对应的搜索模板，尝试所有搜索引擎直到找到有效结果"""
+
+    i18n_manager = AIForgeI18nManager.get_instance()
+
     if module_type == SearchEngine.COMBINED:
-        # 按优先级尝试所有搜索引擎（排除COMBINED）
         for engine in SearchEngine:
             try:
                 if engine == SearchEngine.BAIDU:
-                    ProgressIndicator.show_search_process("百度")
+                    engine_name = i18n_manager.t("search.engine_baidu")
+                    ProgressIndicator.show_search_process(engine_name)
                     search_result = template_baidu_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.BING:
-                    ProgressIndicator.show_search_process("Bing")
+                    engine_name = i18n_manager.t("search.engine_bing")
+                    ProgressIndicator.show_search_process(engine_name)
                     search_result = template_bing_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.SO_360:
-                    ProgressIndicator.show_search_process("360")
+                    engine_name = i18n_manager.t("search.engine_360")
+                    ProgressIndicator.show_search_process(engine_name)
                     search_result = template_360_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.SOUGOU:
-                    ProgressIndicator.show_search_process("搜狗s")
+                    engine_name = i18n_manager.t("search.engine_sogou")
+                    ProgressIndicator.show_search_process(engine_name)
                     search_result = template_sougou_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
@@ -533,6 +461,7 @@ def _search_template(
     search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=1000
 ):
     """通用搜索模板"""
+
     try:
         results = []
         headers = get_common_headers()
@@ -664,7 +593,9 @@ def _search_template(
             "search_query": search_query,
             "results": results,
             "success": bool(results),
-            "error": None if results else "未生成有效结果",
+            "error": (
+                None if results else AIForgeI18nManager.get_instance().t("search.no_valid_results")
+            ),
         }
 
     except Exception as e:
@@ -1031,51 +962,11 @@ def template_sougou_specific(
 
 def extract_full_article_content(page_soup, min_abstract_len=300):
     """提取完整文章内容，过滤无关信息"""
-    # 定义噪声关键词，针对微信公众号和常见无关内容
-    noise_keywords = [
-        "微信扫一扫",
-        "扫描二维码",
-        "分享留言收藏",
-        "轻点两下取消",
-        "继续滑动看下一个",
-        "使用小程序",
-        "知道了",
-        "赞，轻点两下取消赞",
-        "在看，轻点两下取消在看",
-        "意见反馈",
-        "关于我们",
-        "联系我们",
-        "版权所有",
-        "All Rights Reserved",
-        "APP专享",
-        "VIP课程",
-        "海量资讯",
-        "热门推荐",
-        "24小时滚动播报",
-        "粉丝福利",
-        "sinafinance",
-        "预览时标签不可点",
-        "向上滑动看下一个",
-        "阅读原文",
-        "视频小程序",
-        "关注",
-        "粉丝",
-        "分享",
-        "搜索",
-        "关键词",
-        "Copyright",
-        "上一页",
-        "下一页",
-        "回复",
-        "评论",
-        "相关推荐",
-        "相关搜索",
-        "评论区",
-        "发表评论",
-        "查看更多评论",
-        "举报",
-        "热搜",
-    ]
+
+    # 获取本地化的噪声关键词列表
+    noise_keywords = AIForgeI18nManager.get_instance().t("search.noise_keywords", default=[])
+    if isinstance(noise_keywords, str):
+        noise_keywords = noise_keywords.split(",")
 
     # 第一步：移除无关元素
     for elem in page_soup.select(
