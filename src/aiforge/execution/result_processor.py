@@ -17,6 +17,12 @@ class AIForgeResultProcessor:
         self.formatter = AIForgeResultFormatter(console) if console else None
         self.result_validator = ResultValidator(self.components)
         self.expected_output = None
+        if components:
+            self._i18n_manager = components.get("i18n_manager")
+        else:
+            from ..i18n.manager import AIForgeI18nManager
+
+            self._i18n_manager = AIForgeI18nManager.get_instance()
 
     def set_expected_output(self, expected_output: Dict[str, Any]):
         """设置预期输出规则"""
@@ -68,37 +74,45 @@ class AIForgeResultProcessor:
             feedback = {
                 "type": "execution_error",
                 "message": failure_reason,
-                "suggestion": "检查代码语法和逻辑错误",
+                "suggestion": self._i18n_manager.t(
+                    "result_processor.suggestions.check_syntax_logic"
+                ),
             }
-        elif validation_type == "ai_deep":  # 修正：应该是 ai_deep 而不是 ai_validation
+        elif validation_type == "ai_deep":
             feedback = {
                 "type": "ai_validation_failed",
                 "message": failure_reason,
-                "suggestion": "请重新生成代码以更好地满足用户需求。检查数据获取逻辑，确保返回有效的标题和内容字段",
+                "suggestion": self._i18n_manager.t("result_processor.suggestions.regenerate_code"),
             }
         elif validation_type in ["empty_data", "missing_data", "missing_field"]:
             feedback = {
                 "type": "data_validation_failed",
                 "message": failure_reason,
-                "suggestion": "请检查数据获取逻辑，确保返回正确格式的数据",
+                "suggestion": self._i18n_manager.t("result_processor.suggestions.check_data_logic"),
             }
         elif validation_type == "local_basic":
             feedback = {
                 "type": "basic_validation_failed",
                 "message": failure_reason,
-                "suggestion": "检查代码执行和基本数据结构",
+                "suggestion": self._i18n_manager.t(
+                    "result_processor.suggestions.check_execution_structure"
+                ),
             }
         elif validation_type == "local_business":
             feedback = {
                 "type": "business_validation_failed",
                 "message": failure_reason,
-                "suggestion": "检查业务逻辑和必需字段",
+                "suggestion": self._i18n_manager.t(
+                    "result_processor.suggestions.check_business_logic"
+                ),
             }
         else:
             feedback = {
                 "type": "validation_failed",
                 "message": failure_reason,
-                "suggestion": "请检查代码逻辑和输出格式",
+                "suggestion": self._i18n_manager.t(
+                    "result_processor.suggestions.check_code_format"
+                ),
             }
 
         return json.dumps(feedback, ensure_ascii=False)
@@ -109,7 +123,7 @@ class AIForgeResultProcessor:
 
         # 检查是否为系统级错误
         system_errors = [
-            "代码执行超时",
+            self._i18n_manager.t("result_processor.system_errors.execution_timeout"),
             "Permission denied",
             "Access denied",
         ]
@@ -121,8 +135,12 @@ class AIForgeResultProcessor:
         # 构建简化的错误反馈
         feedback = {
             "type": "execution_error",
-            "message": f"代码执行失败: {error_info}",
-            "suggestion": "请检查代码语法、变量定义和逻辑错误",
+            "message": self._i18n_manager.t(
+                "result_processor.messages.execution_failed", error=error_info
+            ),
+            "suggestion": self._i18n_manager.t(
+                "result_processor.suggestions.check_syntax_variables"
+            ),
         }
 
         return json.dumps(feedback, ensure_ascii=False)
@@ -138,7 +156,11 @@ class AIForgeResultProcessor:
             result_content = {
                 "data": result_content,
                 "status": "success",  # 代码执行成功，即使数据为空
-                "summary": "执行完成，但未获取到数据" if is_empty_data else "执行完成",
+                "summary": (
+                    self._i18n_manager.t("result_processor.summaries.no_data")
+                    if is_empty_data
+                    else self._i18n_manager.t("result_processor.summaries.execution_complete")
+                ),
                 "metadata": {
                     "timestamp": datetime.now().isoformat(),
                     "task_type": task_type,
@@ -147,7 +169,9 @@ class AIForgeResultProcessor:
             }
         else:
             result_content.setdefault("status", "success")
-            result_content.setdefault("summary", "操作完成")
+            result_content.setdefault(
+                "summary", self._i18n_manager.t("result_processor.summaries.operation_complete")
+            )
             result_content.setdefault("metadata", {})
             result_content["metadata"].update(
                 {

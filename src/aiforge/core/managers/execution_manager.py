@@ -232,7 +232,7 @@ class AIForgeExecutionManager:
         try:
             # 使用自适应分析提示词
             analysis_prompt = instruction_analyzer.get_adaptive_analysis_prompt()
-            user_instruction_label = self._i18n_manager.t("execution.user_instruction_label")
+            user_instruction_label = self._i18n_manager.t("analyzer.user_instruction_label")
             response = instruction_analyzer.llm_client.generate_code(
                 f"{analysis_prompt}\n\n{user_instruction_label}{instruction}", ""
             )

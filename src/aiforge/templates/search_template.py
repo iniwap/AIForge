@@ -95,25 +95,25 @@ def search_web(
             try:
                 if engine == SearchEngine.BAIDU:
                     engine_name = i18n_manager.t("search.engine_baidu")
-                    ProgressIndicator.show_search_process(engine_name)
+                    ProgressIndicator.get_instance().show_search_process(engine_name)
                     search_result = template_baidu_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.BING:
                     engine_name = i18n_manager.t("search.engine_bing")
-                    ProgressIndicator.show_search_process(engine_name)
+                    ProgressIndicator.get_instance().show_search_process(engine_name)
                     search_result = template_bing_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.SO_360:
                     engine_name = i18n_manager.t("search.engine_360")
-                    ProgressIndicator.show_search_process(engine_name)
+                    ProgressIndicator.get_instance().show_search_process(engine_name)
                     search_result = template_360_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )
                 elif engine == SearchEngine.SOUGOU:
                     engine_name = i18n_manager.t("search.engine_sogou")
-                    ProgressIndicator.show_search_process(engine_name)
+                    ProgressIndicator.get_instance().show_search_process(engine_name)
                     search_result = template_sougou_specific(
                         search_query, max_results, min_abstract_len, max_abstract_len
                     )

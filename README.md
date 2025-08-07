@@ -92,7 +92,8 @@ AIForge提供多层安全保障，确保AI代码安全执行：
     # 提供商特定配置  
     forge = AIForgeEngine(  
         api_key="your-deepseek-key",  
-        provider="deepseek",  
+        provider="deepseek",
+        locale="en",  
         max_rounds=5,  
         cache_enabled=True  
     )  

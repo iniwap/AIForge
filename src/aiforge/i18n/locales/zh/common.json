@@ -1,37 +1,50 @@
-{  
-  "common": {  
-    "status": {  
-      "success": "成功",  
-      "error": "错误",   
-      "pending": "处理中",  
-      "cancelled": "已取消"  
-    },  
-    "actions": {  
-      "confirm": "确认",  
-      "cancel": "取消",  
-      "retry": "重试",  
-      "skip": "跳过"  
+{
+  "common": {
+    "status": {
+      "success": "成功",
+      "error": "错误",
+      "pending": "处理中",
+      "cancelled": "已取消",
+      "completed": "已完成",
+      "failed": "失败",
+      "running": "运行中"
     },
-    "time_units": {  
-      "seconds": "秒",  
-      "minutes": "分钟",   
-      "hours": "小时"  
-    },  
-    "quantity": {  
-      "items": "项",  
-      "count": "个",  
-      "total": "总计"  
+    "actions": {
+      "confirm": "确认",
+      "cancel": "取消",
+      "retry": "重试",
+      "skip": "跳过",
+      "continue": "继续",
+      "start": "开始",
+      "stop": "停止"
     },
-    "labels": {  
-      "name": "名称",  
-      "type": "类型",  
-      "description": "描述",  
-      "timestamp": "时间戳"
-    },  
-    "placeholders": {  
+    "time_units": {
+      "seconds": "秒",
+      "minutes": "分钟",
+      "hours": "小时",
+      "days": "天"
+    },
+    "quantity": {
+      "items": "项",
+      "count": "个",
+      "total": "总计",
+      "found": "找到",
+      "valid": "有效"
+    },
+    "labels": {
+      "name": "名称",
+      "type": "类型",
+      "description": "描述",
+      "timestamp": "时间戳",
+      "status": "状态",
+      "result": "结果"
+    },
+    "placeholders": {
       "loading": "加载中...",
-      "no_data": "暂无数据", 
-      "unknown": "未知"
+      "no_data": "暂无数据",
+      "unknown": "未知",
+      "processing": "处理中...",
+      "waiting": "等待中..."
     }
-  }  
+  }
 }

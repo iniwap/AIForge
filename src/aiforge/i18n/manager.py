@@ -98,6 +98,8 @@ class AIForgeI18nManager:
         """翻译函数，支持ICU MessageFormat"""
         message = self._get_message(key)
         if not message:
+            # 只在翻译失败时输出错误日志
+            print(f"[ERROR] Translation failed for key: {key}")
             return key
 
         return self.formatter.format(message, **params)
@@ -114,7 +116,8 @@ class AIForgeI18nManager:
             else:
                 break
         else:
-            return current if isinstance(current, str) else None
+            if isinstance(current, str):
+                return current
 
         # 回退到默认语言
         current = self.messages.get(self.fallback_locale, {})
@@ -122,9 +125,9 @@ class AIForgeI18nManager:
             if isinstance(current, dict) and k in current:
                 current = current[k]
             else:
-                return key
+                return None
 
-        return current if isinstance(current, str) else key
+        return current if isinstance(current, (str, list)) else None
 
     def _load_all_messages(self):
         """加载所有语言的消息文件"""
@@ -140,7 +143,9 @@ class AIForgeI18nManager:
             if self.locale != self.fallback_locale:
                 self._load_locale_messages(locales_dir, self.fallback_locale)
 
-        except Exception:
+        except Exception as e:
+            # 只在加载失败时输出错误日志
+            print(f"[ERROR] Failed to load i18n messages: {str(e)}")
             self._load_default_messages()
 
     def _load_locale_messages(self, locales_dir, locale: str):
@@ -156,7 +161,7 @@ class AIForgeI18nManager:
             self.messages[locale] = {}
 
         # 加载所有 JSON 文件
-        json_files = ["common.json", "prompts.json", "errors.json", "ui.json"]
+        json_files = ["common.json", "prompts.json", "errors.json", "ui.json", "data.json"]
 
         for json_file in json_files:
             file_path = locale_dir / json_file
@@ -164,10 +169,21 @@ class AIForgeI18nManager:
                 try:
                     with file_path.open("r", encoding="utf-8") as f:
                         file_messages = json.load(f)
-                        # 合并到语言消息中
-                        self.messages[locale].update(file_messages)
-                except Exception:
-                    pass
+                        # 使用深度合并而不是简单的update
+                        self._deep_merge(self.messages[locale], file_messages)
+                except Exception as e:
+                    # 只在文件加载失败时输出错误日志
+                    print(f"[ERROR] Failed to load {json_file} for locale {locale}: {str(e)}")
+
+    def _deep_merge(self, target: dict, source: dict):
+        """深度合并字典，避免覆盖嵌套结构"""
+        for key, value in source.items():
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                # 递归合并嵌套字典
+                self._deep_merge(target[key], value)
+            else:
+                # 直接赋值
+                target[key] = value
 
     def _load_default_messages(self):
         """加载默认消息（硬编码回退）"""

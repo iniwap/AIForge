@@ -1,0 +1,123 @@
+{
+  "execution": {
+    "direct_response_error": "Respuesta directa falló: {error}",
+    "validation_failed": "Validación falló",
+    "execution_timeout": "Tiempo de ejecución agotado",
+    "module_execution_failed": "Ejecución del módulo falló",
+    "parameter_validation_failed": "Validación de parámetros falló",
+    "intent_validation_failed": "Validación de intención falló",
+    "functionality_validation_failed": "Validación de funcionalidad falló"
+  },
+  "search": {
+    "noise_keywords": "escanear código QR,compartir comentarios favoritos,toque dos veces para cancelar,continúe deslizando para ver el siguiente,usar mini programa,entendido,haga clic para ver,ver más,expandir texto completo,contraer,iniciar sesión,registrarse,descargar APP,descargar inmediatamente,descarga gratuita,haga clic para descargar,instalar,actualizar,mejorar,suscribirse,seguir,me gusta,reenviar,comentar,responder,reportar,quejar,servicio al cliente,contáctanos,comentarios,acuerdo de usuario,política de privacidad,descargo de responsabilidad,declaración de derechos de autor,mapa del sitio,enlaces amigos,socios,publicidad,promoción,patrocinio,cooperación comercial,reclutamiento,únete a nosotros,acerca de nosotros,centro de ayuda,preguntas frecuentes,guía de uso,manual de operación,manual de usuario,soporte técnico,servicio al cliente en línea,grupo QQ,grupo WeChat,grupo oficial,grupo de intercambio,grupo de discusión,foro,comunidad,tieba,blog,weibo,círculo de amigos,espacio,dinámico,estado,humor,hablar,diario,álbum,video,música,juego,aplicación,software,herramienta,complemento,extensión,tema,piel,fondo de pantalla,tono de llamada,emoji,pegatina,filtro,efecto especial,belleza,fotografía,grabación,transmisión en vivo,video corto,video largo,película,serie de TV,variedad,anime,documental,noticias,información,titulares,punto caliente,recomendado,seleccionado,popular,más reciente,ranking,lista,clasificación,puntuación,evaluación,comentario,reseña,prueba,experiencia,prueba,sentimientos de uso,experiencia,estrategia,tutorial,guía,técnica,método,paso,proceso,operación,configuración,configurar,instalar,desinstalar,actualizar,mejorar,reparar,falla,problema,solución,preguntas frecuentes,FAQ,ayuda,soporte,servicio,postventa,garantía,reparación,devolución,logística,entrega,mensajería,gastos de envío,envío gratis,descuento,rebaja,promoción,actividad,sorteo,sobre rojo,puntos,miembro,VIP,recarga,pago,compra,pedido,liquidación,pago,caja,carrito de compras,favoritos,lista de deseos,comparar,filtrar,buscar,encontrar,descubrir,recomendar,te puede gustar,recomendado para ti,recomendaciones relacionadas,recomendaciones populares,recomendaciones de calidad,recomendaciones editoriales,recomendaciones de usuarios,recomendaciones de amigos,recomendaciones del sistema,recomendaciones inteligentes,recomendaciones personalizadas,recomendaciones personalizadas,recomendaciones exclusivas,recomendaciones exclusivas,recomendaciones por tiempo limitado,recomendaciones diarias,recomendaciones semanales,recomendaciones mensuales,recomendaciones anuales,mejores recomendaciones,recomendaciones de calidad,recomendaciones seleccionadas,recomendaciones especiales,recomendaciones de ventas calientes,recomendaciones de nuevos productos,recomendaciones de productos populares,recomendaciones de reputación,recomendaciones de buenas críticas,recomendaciones de cinco estrellas,recomendaciones de puntuación perfecta,recomendaciones perfectas,recomendaciones de gran valor,recomendaciones de relación calidad-precio,recomendaciones asequibles,recomendaciones baratas,recomendaciones que valen la pena,recomendaciones que vale la pena comprar,recomendaciones imprescindibles,recomendaciones imprescindibles,recomendaciones de primera opción,recomendaciones de primera opción,recomendaciones seleccionadas,recomendaciones cuidadosamente seleccionadas,recomendaciones estrictamente seleccionadas,seleccionadas cuidadosamente,seleccionadas entre miles,una en un millón,una en cien,único,sin precedentes,sin precedentes,sin precedentes,sin precedentes,sin igual,incomparable,incomparable,inigualable,muy por delante,liderando,ocupando el primer lugar,entre los primeros,el primero,el segundo,contado con los dedos,muy pocos,raro como plumas de fénix y cuernos de unicornio,raro en cien años,oportunidad única en la vida,no se puede perder la oportunidad,el tiempo no espera,se desvanece en un instante,desaparece en un abrir y cerrar de ojos,flor de un día,rápido como un rayo,el tiempo vuela como una flecha,el sol y la luna como una lanzadera,el tiempo pasa,los años fluyen,los años como agua,la juventud se desvanece,la belleza envejece,la belleza en el ocaso,el héroe en el final,el talento se agota,las habilidades se agotan,sin salida,sin municiones ni comida,la lámpara se apaga,al final de sus fuerzas,el sol se pone en el oeste,respirando débilmente,apenas respirando,prolongando la agonía,luchando desesperadamente,último resplandor,cuidados terminales,vida o muerte,vida o muerte,vida o muerte,continuidad o extinción,vida o muerte en una línea,momento crítico,en peligro inminente,en peligro,tambaleándose,tambaleándose en el viento y la lluvia,problemas internos y externos,rodeado de enemigos,atacado por ambos lados,en un dilema,en un dilema,montado en un tigre,en un callejón sin salida,sin salida,montañas pesadas y aguas complejas,sauce oscuro y flores brillantes,escapar de la muerte,resucitar de entre los muertos,convertir el peligro en seguridad,convertir el peligro en seguridad,convertir la mala suerte en buena,convertir la desgracia en bendición,después de la lluvia viene el buen tiempo,las nubes se disipan y sale el sol,mantener las nubes apartadas para ver la luna brillante",
+    "search_failed_error": "Búsqueda falló: {error}",
+    "all_strategies_failed": "Todas las estrategias de búsqueda fallaron",
+    "quality_validation_failed": "Validación de calidad de resultados de búsqueda falló",
+    "no_valid_results": "No se encontraron resultados válidos",
+    "no_search_container": "No se encontró contenedor de resultados de búsqueda"
+  },
+  "task": {
+    "execution_error": "Error de ejecución: {error}"
+  },
+  "analyzer": {
+    "analysis_failed": "Análisis estadístico falló: {error}",
+    "api_key_in_url_parameter": "Se detectó parámetro de clave API en URL",
+    "api_key_in_url_constant": "Se detectó parámetro de clave API en constante de URL",
+    "api_key_in_headers": "Se detectó información de autenticación en headers: {key}",
+    "possible_api_key_parameter": "Se detectó posible parámetro de clave API: {param}"
+  },
+  "content_generation": {
+    "llm_manager_unavailable": "Gestor LLM no disponible",
+    "llm_client_unavailable": "Cliente LLM no disponible",
+    "llm_manager_error_summary": "Generación de contenido falló: Gestor LLM no disponible",
+    "llm_client_error_summary": "Generación de contenido falló: Cliente LLM no disponible",
+    "generation_error": "Error en generación de contenido: {error}",
+    "generation_failed": "Generación de contenido falló: {error}"
+  },
+  "template": {
+    "missing_required_parameter": "Falta parámetro requerido: {param_name}",
+    "template_not_found": "Plantilla no encontrada: {template_id}",
+    "execution_failed": "Ejecución de plantilla {template_id} falló: {error}"
+  },
+  "llm_client": {
+    "server_error_retry": "{name} error del servidor: {status_code}, intento {attempt}, esperando {wait_time} segundos...",
+    "client_error": "{name} error del cliente: {status_code}",
+    "network_error_retry": "{name} excepción de red: {error}, intento {attempt}",
+    "request_failed": "{name} solicitud falló: {error}"
+  },
+  "llm_manager": {
+    "default_client_unavailable": "Cliente LLM predeterminado '{provider}' no disponible o creación falló",
+    "config_missing": "Cliente LLM predeterminado no especificado en archivo de configuración o configuración no existe: {provider}",
+    "no_available_client": "No se encontró cliente LLM disponible",
+    "unsupported_type": "Tipo LLM no soportado: {client_type}",
+    "client_unavailable": "Cliente LLM '{name}' no disponible",
+    "create_failed": "Creación de cliente LLM {name} falló: {error}",
+    "switch_failed": "Cambio falló, cliente '{name}' no disponible"
+  },
+  "validation": {
+    "local_basic_failed": "Validación básica local falló",
+    "business_logic_failed": "Validación de lógica de negocio falló",
+    "ai_validation_failed": "Validación AI falló",
+    "llm_client_none": "llm_client es None",
+    "code_execution_failed": "Ejecución de código falló: {error}",
+    "unknown_error": "Error desconocido",
+    "execution_result_none": "Resultado de ejecución es None",
+    "data_field_empty": "Campo data es lista vacía, no se obtuvieron datos válidos",
+    "data_field_none": "Campo data es None",
+    "missing_data_field": "Falta campo data",
+    "execution_result_empty": "Resultado de ejecución está vacío",
+    "result_must_be_dict": "Contenido del resultado debe estar en formato diccionario",
+    "result_status_error": "Estado del resultado es error",
+    "data_must_be_array": "Campo data debe estar en formato array",
+    "data_array_empty": "Array de datos está vacío",
+    "data_item_must_be_dict": "Elemento de datos debe estar en formato diccionario",
+    "data_item_missing_required_fields": "Elemento de datos falta campos requeridos",
+    "insufficient_data_quantity": "Cantidad de datos insuficiente: necesita al menos {min_items} elementos, actual {actual} elementos",
+    "insufficient_valid_data": "Se obtuvieron {valid_count} elementos de datos válidos, no cumple el requisito mínimo de {min_items} elementos",
+    "result_not_meet_requirements": "Resultado no cumple los requisitos de la tarea",
+    "ai_response_parse_failed": "Formato de respuesta AI no se puede analizar",
+    "ai_response_format_error": "Error de formato de respuesta de validación AI"
+  },
+  "runner": {
+    "code_execution_timeout": "Tiempo de ejecución de código agotado ({timeout} segundos)",
+    "process_execution_error": "Error de ejecución de proceso: {error}",
+    "result_parse_error": "Error de análisis de resultado: {error}",
+    "network_security_blocked": "Bloqueado por política de seguridad de red",
+    "module_blocked_security_template": "Módulo '{missing_name}' bloqueado por política de seguridad. Razón: {reason}. Módulo original: {original_module}",
+    "code_execution_timeout_handler": "Tiempo de ejecución de código agotado",
+    "security_policy_active": "Política de seguridad de red activa",
+    "unknown_error": "Error desconocido",
+    "security_blocked_modules": "Política de seguridad bloqueó la importación de los siguientes módulos: {blocked_list}. {error}",
+    "execution_failed": "Ejecución falló: {error}",
+    "runner_error": "Error del Runner: {error}"
+  },
+  "config": {
+    "file_not_exists": "Archivo de configuración {file} no existe",
+    "load_failed": "Carga de archivo de configuración falló: {error}"
+  },
+  "executor": {
+    "no_llm_response": "Intento {optimization_attempt}: LLM no devolvió respuesta",
+    "no_code_blocks_found": "Intento {optimization_attempt}: No se encontraron bloques de código ejecutables",
+    "code_execution_failed": "Intento {optimization_attempt}: Ejecución de código falló",
+    "code_execution_error": "Intento {optimization_attempt}: Error en ejecución de código",
+    "validation_failed": "Intento {optimization_attempt} validación falló ({validation_type}): {failure_reason}",
+    "final_validation_failed": "Intento {optimization_attempt} validación falló ({validation_type}): {failure_reason}, se alcanzó el máximo de intentos de optimización",
+    "all_attempts_failed": "Todos los {max_optimization_attempts} intentos de optimización fallaron en una sola ronda"
+  },
+  "security": {
+    "dangerous_function_detected": "Se detectó llamada a función peligrosa: {pattern}",
+    "analysis_failed": "Análisis de seguridad falló: {error}"
+  },
+  "network": {
+    "strict_mode_blocks_all": "Modo estricto bloquea todo acceso de red",
+    "domain_in_blacklist": "Dominio {domain} está en lista negra",
+    "domain_not_in_whitelist": "Dominio {domain} no está en lista blanca",
+    "empty_hostname": "Nombre de host vacío",
+    "domain_blacklisted": "Dominio en lista negra: {domain}",
+    "domain_not_whitelisted": "Dominio no está en lista blanca",
+    "ip_in_blocked_range": "IP en rango bloqueado: {range}",
+    "resolved_ip_blocked": "IP resuelta {ip} en rango bloqueado: {range}",
+    "cannot_resolve_hostname": "No se puede resolver nombre de host",
+    "unknown_policy_level": "Nivel de política de red desconocido: {policy_level}"
+  }
+}

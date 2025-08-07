@@ -74,7 +74,7 @@ obfuscate_variables = true
 
 # 安全配置 - 进程隔离/基础资源限制
 [security]
-execution_timeout = 30
+execution_timeout = 60
 memory_limit_mb = 512
 cpu_time_limit = 60
 file_descriptor_limit = 64

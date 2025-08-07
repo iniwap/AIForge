@@ -531,7 +531,7 @@ class AIForgeInstructionAnalyzer:
         else:
             # 回退到硬编码
             return self._assemble_prompt_with_guidance(
-                AIForgePrompt.get_base_prompt_sections(), adaptive_guidance
+                self._ai_forgePrompt.get_base_prompt_sections(), adaptive_guidance
             )
 
     def _get_task_type_recommendations(self) -> Dict[str, Any]:

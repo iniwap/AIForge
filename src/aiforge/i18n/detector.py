@@ -24,9 +24,20 @@ class LocaleDetector:
     def detect_system_locale() -> str:
         """检测系统语言环境"""
         try:
-            system_locale = locale.getdefaultlocale()[0]
-            if system_locale:
-                return system_locale.split("_")[0].lower()
+            # 使用新的推荐方法替代 getdefaultlocale()
+            current_locale = locale.getlocale()
+            if current_locale[0]:
+                return current_locale[0].split("_")[0].lower()
+
+            # 如果 getlocale() 返回 None，尝试设置默认locale并获取
+            try:
+                locale.setlocale(locale.LC_ALL, "")
+                current_locale = locale.getlocale()
+                if current_locale[0]:
+                    return current_locale[0].split("_")[0].lower()
+            except locale.Error:
+                pass
+
         except Exception:
             pass
 

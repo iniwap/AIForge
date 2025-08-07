@@ -18,13 +18,6 @@ class AIForgeConfig:
             self.config_file = None
             self.config = {}
 
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
-
     @classmethod
     def from_dict(cls, config_dict: Dict) -> "AIForgeConfig":
         """从字典创建配置实例"""
@@ -43,7 +36,7 @@ class AIForgeConfig:
             default_config["default_llm_provider"] = provider
 
         # 应用所有核心参数
-        core_params = ["max_rounds", "max_tokens", "workdir", "max_optimization_attempts"]
+        core_params = ["max_rounds", "max_tokens", "workdir", "max_optimization_attempts", "locale"]
 
         for key, value in kwargs.items():
             if key in core_params:
@@ -74,8 +67,7 @@ class AIForgeConfig:
     def _load_from_file(self) -> Dict:
         """从文件加载配置"""
         if not self.config_file.exists():
-            error_message = self._i18n_manager.t("config.file_not_exists", file=self.config_file)
-            self.console.print(f"[red]{error_message}[/red]")
+            self.console.print(f"[red]Configuration file not found: {self.config_file}[/red]")
             return {}
 
         try:
@@ -83,8 +75,7 @@ class AIForgeConfig:
                 config = tomlkit.load(f)
             return config
         except Exception as e:
-            error_message = self._i18n_manager.t("config.load_failed", error=str(e))
-            self.console.print(f"[red]{error_message}[/red]")
+            self.console.print(f"[red]Failed to load configuration: {str(e)}[/red]")
             return {}
 
     @staticmethod

@@ -90,6 +90,7 @@ AIForge provides multi-layer security for safe AI code execution:
     forge = AIForgeEngine(  
         api_key="your-deepseek-key",  
         provider="deepseek",  
+        locale="en",
         max_rounds=5,  
         cache_enabled=True  
     )  
