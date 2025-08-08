@@ -1,155 +1,155 @@
 {
   "base": {
-    "header": "# AIForge: Python Code Generation and Execution Assistant",
-    "code_generation_header": "# Code Generation Specifications",
-    "execution_header": "# Execution Specifications",
-    "execution_guidance": "Execute code and assign result to __result__, no mock or placeholder data allowed"
+    "header": "# AIForge: पायथन कोड जनरेशन और निष्पादन सहायक",
+    "code_generation_header": "# कोड जनरेशन विनिर्देश",
+    "execution_header": "# निष्पादन विनिर्देश",
+    "execution_guidance": "कोड निष्पादित करें, और निष्पादन परिणाम को __result__ को असाइन करें। परिणाम के लिए नकली या प्लेसहोल्डर डेटा का उपयोग करना निषिद्ध है।"
   },
   "code_rules": {
-    "executable": "- Generated code must be executable in standard Python environment",
-    "format": "- Use standard Markdown code block format: ```python ... ```, no explanatory text",
-    "error_handling": "- Implement complete error handling and exception catching",
-    "minimal": "- Generate minimal code, no comments, no blank lines",
-    "variables": "- Use shortest variable names (a,b,c,d etc), function parameter names must not be compressed"
+    "executable": "- जेनरेट किया गया कोड एक मानक पायथन वातावरण में सीधे निष्पादन योग्य होना चाहिए।",
+    "format": "- मानक Markdown कोड ब्लॉक प्रारूप का उपयोग करें: ```python ... ```, कोई व्याख्यात्मक पाठ आउटपुट न करें।",
+    "error_handling": "- पूर्ण त्रुटि प्रबंधन और अपवाद कैप्चर लागू करें।",
+    "minimal": "- न्यूनतम कोड उत्पन्न करें, कोई टिप्पणी नहीं, कोई खाली लाइन नहीं।",
+    "variables": "- सबसे छोटे चर नामों (a,b,c,d, आदि) का उपयोग करें। फ़ंक्शन पैरामीटर नामों को संपीड़ित नहीं किया जाना चाहिए।"
   },
   "output_format": {
-    "default": "# Output Format Requirements:\n__result__ = {\n    \"data\": [{\"field1\": \"value1\", ...},...],\n    \"status\": \"success or error\",\n    \"summary\": \"result summary\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
-    "status_note": "# Important Note: status should reflect code execution status, not data retrieval result (even if data=[], status=success)",
-    "ai_analysis_header": "# AI Analysis Based Output Format Requirements:",
-    "required_fields_label": "# Required fields:",
-    "non_empty_fields_label": "# Non-empty fields:"
+    "default": "# आउटपुट प्रारूप आवश्यकताएं:\n__result__ = {\n    \"data\": [{\"फ़ील्ड1\": \"मान1\", ...},...],\n    \"status\": \"success या error\",\n    \"summary\": \"परिणाम सारांश\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
+    "status_note": "# महत्वपूर्ण नोट: 'status' को कोड निष्पादन स्थिति को प्रतिबिंबित करना चाहिए, न कि डेटा अधिग्रहण परिणाम को (भले ही डेटा=[] हो, स्थिति 'success' हो)।",
+    "ai_analysis_header": "# एआई विश्लेषण पर आधारित आउटपुट प्रारूप आवश्यकताएं:",
+    "required_fields_label": "# आवश्यक फ़ील्ड:",
+    "non_empty_fields_label": "# गैर-रिक्त फ़ील्ड:"
   },
   "format_templates": {
-    "status_success_error": "success or error",
-    "summary_placeholder": "task completion description",
-    "task_requirements_label": "Output requirements:",
-    "related_params_label": "Related parameters:",
-    "special_requirements_label": "Special requirements:",
-    "task_details_header": "## Task Details",
-    "original_instruction_supplement": "# Original Instruction Supplement"
+    "status_success_error": "success या error",
+    "summary_placeholder": "कार्य पूर्णता का विवरण",
+    "task_requirements_label": "आउटपुट आवश्यकताएं:",
+    "related_params_label": "संबंधित पैरामीटर:",
+    "special_requirements_label": "विशेष आवश्यकताएं:",
+    "task_details_header": "## कार्य विवरण",
+    "original_instruction_supplement": "# मूल निर्देश पूरक"
   },
   "analyzer_output_format": {
-    "task_type": "task type",
-    "action": "specific action",
-    "target": "task description",
-    "execution_mode": "direct_ai_response or code_generation",
-    "confidence": "confidence level",
-    "param_value_placeholder": "extracted value or None",
-    "param_type": "parameter type",
+    "task_type": "कार्य का प्रकार",
+    "action": "विशिष्ट कार्रवाई",
+    "target": "कार्य का विवरण",
+    "execution_mode": "direct_ai_response या code_generation",
+    "confidence": "विश्वास",
+    "param_value_placeholder": "निकाला गया मान या None",
+    "param_type": "पैरामीटर प्रकार",
     "required_true_false": "true/false",
-    "min_items": "minimum result count",
-    "non_empty_fields": "required result data fields"
+    "min_items": "न्यूनतम परिणाम आइटम",
+    "non_empty_fields": "आवश्यक परिणाम डेटा फ़ील्ड"
   },
   "parameterized": {
-    "header": "## 🔧 Parameterized Execution Guidance",
-    "analysis_function": "Generate function based on task analysis:",
-    "param_description": "# Parameter description:",
-    "call_instruction": "# Must call immediately:",
-    "usage_rules_header": "## 📋 Parameter Usage Rules:",
+    "header": "## 🔧 पैरामीटरीकृत निष्पादन गाइडेंस",
+    "analysis_function": "कार्य विश्लेषण के आधार पर एक फ़ंक्शन उत्पन्न करें:",
+    "param_description": "# पैरामीटर विवरण:",
+    "call_instruction": "# तुरंत कॉल किया जाना चाहिए:",
+    "usage_rules_header": "## 📋 पैरामीटर उपयोग नियम:",
     "usage_rules": [
-      "1. Each parameter must be actually used in function body, affecting execution path or result",
-      "2. Prohibit hardcoding values that can be obtained through parameters",
-      "3. Parameters should be used for: controlling behavior, as data source, affecting output, configuring execution"
+      "1. प्रत्येक पैरामीटर का वास्तव में फ़ंक्शन बॉडी के भीतर उपयोग किया जाना चाहिए, निष्पादन पथ या परिणाम को प्रभावित करना चाहिए।",
+      "2. पैरामीटर के माध्यम से प्राप्त किए जा सकने वाले मानों को हार्ड-कोड करना निषिद्ध है।",
+      "3. पैरामीटर का उपयोग निम्न के लिए करें: व्यवहार को नियंत्रित करना, डेटा स्रोत के रूप में, आउटपुट को प्रभावित करना, निष्पादन को कॉन्फ़िगर करना।"
     ],
-    "avoid_patterns_header": "## ❌ Avoid Patterns:",
+    "avoid_patterns_header": "## ❌ बचने के पैटर्न:",
     "avoid_patterns": [
-      "- Parameters defined but not used",
-      "- Parameters only used for display without affecting core logic",
-      "- Ignoring parameters and using hardcoded values"
+      "- परिभाषित लेकिन अप्रयुक्त पैरामीटर।",
+      "- पैरामीटर केवल प्रदर्शन के लिए उपयोग किए जाते हैं लेकिन मुख्य तर्क को प्रभावित नहीं करते हैं।",
+      "- पैरामीटर को अनदेखा करना और हार्ड-कोडेड मानों का उपयोग करना।"
     ],
-    "docstring_template": "Execute task using provided parameters: {params}"
+    "docstring_template": "दिए गए पैरामीटर का उपयोग करके कार्य निष्पादित करें: {params}"
   },
   "direct_response": {
-    "answer": "You are a knowledge assistant, please answer user questions directly. Be accurate, concise, and helpful.",
-    "respond": "You are a knowledge assistant, please answer user questions directly. Be accurate, concise, and helpful.",
-    "create": "You are a content creation assistant, please create content according to user requirements. Pay attention to style and format requirements.",
-    "translate": "You are a translation assistant, please accurately translate the content provided by users. Maintain original meaning and language style.",
-    "summarize": "You are a text analysis assistant, please summarize and analyze the text content provided by users.",
-    "suggest": "You are a consulting advisor, please provide suggestions and opinions based on user needs.",
-    "chat_ai": "You are a friendly, professional and considerate AI assistant, please provide appropriate responses according to conversation context.",
-    "default": "You are an AI assistant, please respond directly to user needs.",
-    "task_target_label": "Task objective",
+    "answer": "आप एक ज्ञान सहायक हैं, कृपया सीधे उपयोगकर्ता के प्रश्नों का उत्तर दें। सटीक, संक्षिप्त और उपयोगी होना आवश्यक है।",
+    "respond": "आप एक ज्ञान सहायक हैं, कृपया सीधे उपयोगकर्ता के प्रश्नों का उत्तर दें। सटीक, संक्षिप्त और उपयोगी होना आवश्यक है।",
+    "create": "आप एक सामग्री निर्माण सहायक हैं, कृपया उपयोगकर्ता की आवश्यकताओं के अनुसार सामग्री बनाएं। शैली और प्रारूप आवश्यकताओं पर ध्यान दें।",
+    "translate": "आप एक अनुवाद सहायक हैं, कृपया उपयोगकर्ता द्वारा प्रदान की गई सामग्री का सटीक अनुवाद करें। मूल अर्थ और भाषा शैली बनाए रखें।",
+    "summarize": "आप एक पाठ विश्लेषण सहायक हैं, कृपया उपयोगकर्ता द्वारा प्रदान की गई पाठ सामग्री का सारांश और विश्लेषण करें।",
+    "suggest": "आप एक सलाहकार हैं, कृपया उपयोगकर्ता की आवश्यकताओं के आधार पर सुझाव और राय प्रदान करें।",
+    "chat_ai": "आप एक मिलनसार, पेशेवर और विचारशील एआई सहायक हैं, कृपया संवाद के संदर्भ के अनुसार उपयुक्त प्रतिक्रिया दें।",
+    "default": "आप एक एआई सहायक हैं, कृपया सीधे उपयोगकर्ता की जरूरतों का जवाब दें।",
+    "task_target_label": "कार्य लक्ष्य",
     "output_requirements": {
-      "text": "Answer in plain text format",
-      "markdown": "Use Markdown format with appropriate headings, lists and emphasis",
-      "structured_text": "Use structured text format with clear paragraphs and key points"
+      "text": "सादे पाठ के रूप में उत्तर दें",
+      "markdown": "उपयुक्त शीर्षक, सूचियों और जोर के साथ Markdown प्रारूप का उपयोग करें",
+      "structured_text": "स्पष्ट पैराग्राफ और बुलेट बिंदुओं के साथ संरचित पाठ प्रारूप का उपयोग करें"
     },
     "task_specific_guidance": {
-      "direct_response": "Focus on direct answers, avoid redundant information",
-      "content_generation": "Focus on creativity and originality",
-      "data_process": "Provide clear analysis approach"
+      "direct_response": "सीधे उत्तर पर ध्यान केंद्रित करें, अनावश्यक जानकारी से बचें",
+      "content_generation": "रचनात्मकता और मौलिकता पर ध्यान दें",
+      "data_process": "विश्लेषण के लिए एक स्पष्ट दृष्टिकोण प्रदान करें"
     },
-    "limitations": "\n\n## Important Limitations\n- Provide final answer directly, do not generate code\n- If task requires real-time data or file operations, please indicate inability to complete\n- Maintain professionalism and accuracy in responses"
+    "limitations": "\n\n## महत्वपूर्ण सीमाएं\n- अंतिम उत्तर सीधे प्रदान करें, कोड उत्पन्न न करें।\n- यदि कार्य के लिए वास्तविक समय के डेटा या फ़ाइल संचालन की आवश्यकता है, तो बताएं कि इसे पूरा नहीं किया जा सकता है।\n- उत्तर में व्यावसायिकता और सटीकता बनाए रखें।"
   },
   "analyzer": {
-    "role": "You are AIForge intelligent task analyzer, responsible for understanding user instructions and analyzing necessary information and expected results needed to complete tasks",
-    "execution_modes": "- Direct response: Can be completed directly with AI knowledge, no latest data needed, including conversation continuation and emotional support\n- Code generation: Requires external data sources, real-time information or system interaction",
-    "analysis_steps": "- Identify execution mode and task type\n- Extract key parameters and quantity requirements, set appropriate min_items\n- Define required fields and validation rules\n- For non-task instructions like \"get/find/search\" certain information, only extract one required_parameters parameter search_query=original instruction\n- Intelligently identify conversation continuation and emotional support instructions, automatically set to direct response mode",
-    "action_vocabulary": "- Data acquisition → fetch_{task_type_suffix}\n- Data processing → process_{task_type_suffix}\n- Content generation → generate_{task_type_suffix}\n- File operations → transform_{task_type_suffix}\n- Direct response → respond_{task_type_suffix}\n- Conversation continuation and emotional support → chat_ai",
+    "role": "आप AIForge इंटेलिजेंट टास्क एनालाइजर हैं, जो उपयोगकर्ता के निर्देशों को समझने और कार्य को पूरा करने के लिए आवश्यक जानकारी और अपेक्षित परिणामों का विश्लेषण करने के लिए जिम्मेदार हैं।",
+    "execution_modes": "- सीधी प्रतिक्रिया: एआई ज्ञान के साथ सीधे पूरा किया जा सकता है, नवीनतम डेटा की आवश्यकता नहीं है, इसमें संवाद जारी रखना और भावनात्मक समर्थन शामिल है।\n- कोड जनरेशन: बाहरी डेटा स्रोतों, वास्तविक समय की जानकारी या सिस्टम इंटरैक्शन की आवश्यकता है।",
+    "analysis_steps": "- निष्पादन मोड और कार्य प्रकार की पहचान करें।\n- मुख्य पैरामीटर और मात्रा आवश्यकताओं को निकालें, और एक उपयुक्त 'min_items' सेट करें।\n- आवश्यक फ़ील्ड और सत्यापन नियमों को परिभाषित करें।\n- \"प्राप्त करें/ढूंढें/खोजें\" किसी प्रकार की जानकारी के गैर-कार्य निर्देशों के लिए, केवल एक आवश्यक_पैरामीटर पैरामीटर निकालें: 'search_query' = 'मूल निर्देश'।\n- संवाद जारी रखने और भावनात्मक समर्थन जैसे निर्देशों को बुद्धिमानी से पहचानें, और उन्हें स्वचालित रूप से सीधी प्रतिक्रिया मोड पर सेट करें।",
+    "action_vocabulary": "- डेटा प्राप्त करना → fetch_{task_type_suffix}\n- डेटा प्रोसेसिंग → process_{task_type_suffix}\n- सामग्री निर्माण → generate_{task_type_suffix}\n- फ़ाइल संचालन → transform_{task_type_suffix}\n- सीधी प्रतिक्रिया → respond_{task_type_suffix}\n- संवाद जारी रखना और भावनात्मक समर्थन → chat_ai",
     "guidance": {
-      "default_strength": "prioritize",
-      "strong_recommendation": "strongly recommend",
-      "consider": "consider",
-      "too_many_dynamic_types": "\nNote: System has {count} dynamic types, recommend prioritizing built-in types for better performance.",
-      "task_type_template": "\n# Task Type Guidance\n{strength} using the following verified built-in task types:\n{types}\n\nThese built-in types have the following advantages:\n{advantages}\n\n{creation_rule}{additional_info}",
-      "builtin_advantages": "- Higher cache hit rate and execution efficiency\n- Thoroughly tested and optimized execution paths\n- More stable performance and error handling",
-      "creation_rule": "Only create new task_type when user task truly belongs to a completely new domain and cannot be categorized into existing types."
+      "default_strength": "प्राथमिकता दें",
+      "strong_recommendation": "दृढ़ता से अनुशंसित",
+      "consider": "विचार किया जा सकता है",
+      "too_many_dynamic_types": "\nध्यान दें: सिस्टम में पहले से ही {count} गतिशील प्रकार हैं, प्रदर्शन को बेहतर बनाने के लिए अंतर्निहित प्रकारों को प्राथमिकता देने की सिफारिश की जाती है।",
+      "task_type_template": "\n# कार्य प्रकार गाइडेंस\n{strength} निम्नलिखित सत्यापित अंतर्निहित कार्य प्रकारों का उपयोग करें:\n{types}\n\nइन अंतर्निहित प्रकारों के निम्नलिखित फायदे हैं:\n{advantages}\n\n{creation_rule}{additional_info}",
+      "builtin_advantages": "- उच्च कैश हिट दर और निष्पादन दक्षता\n- पूरी तरह से परीक्षण और अनुकूलित निष्पादन पथ\n- अधिक स्थिर प्रदर्शन और त्रुटि प्रबंधन",
+      "creation_rule": "एक नया 'task_type' तभी बनाएं जब उपयोगकर्ता का कार्य वास्तव में एक नए डोमेन से संबंधित हो और मौजूदा प्रकारों में वर्गीकृत नहीं किया जा सकता हो।"
     },
     "prompt": {
-      "role_header": "# Role Definition",
-      "execution_mode_header": "# Execution Mode Determination",
-      "action_vocabulary_header": "# Action Naming Conventions",
-      "analysis_requirements_header": "# Analysis Requirements",
-      "output_format_header": "# Output Format",
-      "strict_json_note": "Please strictly return analysis results in JSON format."
+      "role_header": "# भूमिका परिभाषा",
+      "execution_mode_header": "# निष्पादन मोड निर्णय",
+      "action_vocabulary_header": "# क्रिया नामकरण परंपराएं",
+      "analysis_requirements_header": "# विश्लेषण आवश्यकताएं",
+      "output_format_header": "# आउटपुट प्रारूप",
+      "strict_json_note": "कृपया विश्लेषण परिणाम को सख्ती से JSON प्रारूप में लौटाएं।"
     },
-    "user_instruction_label": "User instruction: "
+    "user_instruction_label": "उपयोगकर्ता निर्देश: "
   },
   "content_generation": {
-    "direct_generation_template": "Please generate article content according to user requirements: {instruction}.",
-    "search_enhanced_template": "Please create content based on the following latest search data:",
-    "task_requirement": "and user task requirements: {instruction}, generate article content.",
-    "format_requirement": "Output format requirements",
-    "style_requirement": "Style requirements",
-    "tone_requirement": "Tone",
-    "language_requirement": "Language",
-    "special_notes_header": "Special Notes",
-    "format_strict_note": "Strictly output in {format} format",
-    "structure_note": "Ensure clear content structure and standard formatting",
-    "logic_note": "Content should be logical and readable",
-    "tone_maintain_note": "Maintain {tone} tone",
-    "date_note": "Dates in the article must use dates from search results",
-    "data_based_note": "Analyze and create based on real data from search results"
+    "direct_generation_template": "कृपया उपयोगकर्ता की आवश्यकता के अनुसार लेख सामग्री उत्पन्न करें: {instruction}।",
+    "search_enhanced_template": "कृपया निम्नलिखित नवीनतम खोजे गए डेटा सामग्री के आधार पर:",
+    "task_requirement": "और उपयोगकर्ता की कार्य आवश्यकताओं के अनुसार: {instruction}, लेख सामग्री उत्पन्न करें।",
+    "format_requirement": "आउटपुट प्रारूप आवश्यकताएं",
+    "style_requirement": "शैली आवश्यकताएं",
+    "tone_requirement": "स्वर",
+    "language_requirement": "भाषा",
+    "special_notes_header": "विशेष नोट्स",
+    "format_strict_note": "सख्ती से {format} प्रारूप में आउटपुट करें",
+    "structure_note": "सुनिश्चित करें कि सामग्री संरचना स्पष्ट है और प्रारूप मानकीकृत है",
+    "logic_note": "सामग्री में तर्क और पठनीयता होनी चाहिए",
+    "tone_maintain_note": "{tone} स्वर बनाए रखें",
+    "date_note": "लेख में तिथियों को खोज परिणामों की तारीखों का उपयोग करना चाहिए",
+    "data_based_note": "वास्तविक डेटा के आधार पर विश्लेषण और निर्माण करें जो खोज परिणामों से आता है"
   },
   "validation": {
-    "ai_validation_prompt_template": "Please determine whether the following code execution result truly accomplishes the user's task objective:\n\nOriginal user instruction: {original_instruction}\nTask type: {task_type}\nExpected output requirements: {expected_output}\n\nActual execution result\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
-    "analysis_dimensions": "Please analyze from the following perspectives:\n1. Does the result contain the core information users need\n2. Does the data quality meet actual usage requirements\n3. Are there obvious logical errors or omissions\n4. Is the result format convenient for subsequent processing",
-    "json_format_instruction": "Please return validation results in JSON format:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"specific failure reason (if failed)\",\n    \"improvement_suggestions\": [\"suggestion1\", \"suggestion2\"],\n    \"core_issues\": [\"core issue1\", \"core issue2\"]\n}"
+    "ai_validation_prompt_template": "कृपया न्याय करें कि क्या निम्नलिखित कोड निष्पादन परिणाम ने वास्तव में उपयोगकर्ता के कार्य लक्ष्य को पूरा किया है:\n\nमूल उपयोगकर्ता निर्देश: {original_instruction}\nकार्य प्रकार: {task_type}\nअपेक्षित आउटपुट आवश्यकताएं: {expected_output}\n\nवास्तविक निष्पादन परिणाम\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
+    "analysis_dimensions": "कृपया निम्नलिखित दृष्टिकोणों से विश्लेषण करें:\n1. क्या परिणाम में उपयोगकर्ता के लिए आवश्यक मुख्य जानकारी शामिल है?\n2. क्या डेटा गुणवत्ता वास्तविक उपयोग की जरूरतों को पूरा करती है?\n3. क्या कोई स्पष्ट तार्किक त्रुटियां या चूक हैं?\n4. क्या परिणाम प्रारूप बाद के प्रसंस्करण के लिए सुविधाजनक है?",
+    "json_format_instruction": "कृपया JSON प्रारूप में सत्यापन परिणाम लौटाएं:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"विशिष्ट विफलता का कारण (यदि विफल हो)\",\n    \"improvement_suggestions\": [\"सुधार सुझाव 1\", \"सुधार सुझाव 2\"],\n    \"core_issues\": [\"मुख्य समस्या 1\", \"मुख्य समस्या 2\"]\n}"
   },
   "search": {
-    "guided_instruction_template": "Generate a search function (no comments or print logs) to get the latest relevant information, refer to the following configuration:\n\n# Search Engine URL Patterns:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# Key CSS Selectors:\nBaidu result containers: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaidu titles: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu abstracts: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing result containers: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing titles: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing abstracts: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360 result containers: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360 titles: [\"h3.res-title\", \"h3\", \".res-title\"]\n360 abstracts: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou result containers: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogou titles: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou abstracts: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# Important Processing Logic:\n1. Try four search engines in priority order (do not use API key methods)\n2. Prioritize using abstract content as content, if not satisfied, use concurrent.futures.ThreadPoolExecutor to access pages in parallel to extract detailed content\n3. Extract publication time from pages, following these strategies:\n    - Priority meta tags: article:published_time, datePublished, pubdate, publishdate, etc.\n    - Fallback options: time tags, date-related classes, page text matching\n    - Valid date formats: standard formats, Chinese formats, relative time (like \"yesterday\", \"1 day ago\", \"1 hour ago\", etc.), English time (like \"yesterday\", etc.)\n4. Sort by publication time, prioritize content from the last 7 days\n5. Filter out verification pages and invalid content, handle encoding correctly, results must not contain garbled text\n\n# Return Data Format (strictly follow):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success or error\",\n    \"summary\": f\"Search completed, found len(data) results\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# Execute function immediately and assign to __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "free_form_instruction_template": "Creatively generate a search function (no comments or print logs) to get the latest relevant information.\n\n# Optional Search Strategies:\n1. Try different search engines in sequence (Baidu, Bing, 360, Sogou)\n2. Use news aggregation APIs (like NewsAPI, RSS feeds)\n3. Try social media platform searches\n4. Use academic search engines\n\n# Core Requirements:\n- Function name is search_web, parameters search_query and max_results\n- Implement multiple fault tolerance mechanisms, try at least 2-3 different methods\n- Access original pages for each result to extract complete information\n- Prioritize getting fresh content from the last 7 days, sort by publication time\n- Abstract length at least {min_abstract_len} characters, containing key information\n- Cannot use methods requiring API keys\n- Filter out verification pages and invalid content, handle encoding correctly, results must not contain garbled text\n\n# Time Extraction Strategy:\n- Priority meta tags: article:published_time, datePublished, pubdate, publishdate, etc.\n- Fallback options: time tags, date-related classes, page text matching\n- Valid date formats: standard formats, Chinese formats, relative time (like \"yesterday\", \"1 day ago\", \"1 hour ago\", etc.), English time (like \"yesterday\", etc.)\n\n# Return Data Format (strictly follow):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"Search completed\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# Execute function immediately and assign to __result__\n __result__ = search_web(\"{search_query}\", {max_results})"
-  },
-  "result_processor": {
-    "suggestions": {
-      "check_syntax_logic": "Check code syntax and logic errors",
-      "regenerate_code": "Please regenerate code to better meet user requirements. Check data acquisition logic and ensure valid title and content fields are returned",
-      "check_data_logic": "Please check data acquisition logic and ensure correct data format is returned",
-      "check_execution_structure": "Check code execution and basic data structure",
-      "check_business_logic": "Check business logic and required fields",
-      "check_code_format": "Please check code logic and output format",
-      "check_syntax_variables": "Please check code syntax, variable definitions and logic errors"
-    },
-    "system_errors": {
-      "execution_timeout": "Code execution timeout"
-    },
-    "messages": {
-      "execution_failed": "Code execution failed: {error}"
-    },
-    "summaries": {
-      "no_data": "Execution completed but no data retrieved",
-      "execution_complete": "Execution completed",
-      "operation_complete": "Operation completed"
+    "guided_instruction_template": "कृपया एक खोज फ़ंक्शन उत्पन्न करें (कोई टिप्पणी, प्रिंट लॉग नहीं), नवीनतम प्रासंगिक जानकारी प्राप्त करें, निम्नलिखित कॉन्फ़िगरेशन का संदर्भ लें:\n\n# सर्च इंजन URL पैटर्न:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# मुख्य CSS चयनकर्ता:\nBaidu परिणाम कंटेनर: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaidu शीर्षक: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu सारांश: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing परिणाम कंटेनर: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing शीर्षक: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing सारांश: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360 परिणाम कंटेनर: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360 शीर्षक: [\"h3.res-title\", \"h3\", \".res-title\"]\n360 सारांश: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou परिणाम कंटेनर: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogou शीर्षक: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou सारांश: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# महत्वपूर्ण प्रसंस्करण तर्क:\n1. प्राथमिकता के अनुसार चार सर्च इंजनों (API कुंजी का उपयोग न करें) का एक-एक करके प्रयास करें।\n2. 'content' के रूप में सारांश सामग्री का उपयोग करने को प्राथमिकता दें। यदि यह पर्याप्त नहीं है, तो विस्तृत सामग्री निकालने के लिए 'concurrent.futures.ThreadPoolExecutor' का उपयोग करके पृष्ठों तक समानांतर रूप से पहुंचें।\n3. पृष्ठ से प्रकाशन समय निकालें, इस रणनीति का पालन करें:\n    - मेटा टैग को प्राथमिकता दें: article:published_time, datePublished, pubdate, publishdate, आदि।\n    - वैकल्पिक योजनाएं: 'time' टैग, तिथि से संबंधित क्लास, पृष्ठ पाठ मिलान।\n    - मान्य तिथि प्रारूप: मानक प्रारूप, चीनी प्रारूप, सापेक्ष समय (जैसे \"कल\", \"1 दिन पहले\", \"1 घंटा पहले\", आदि), अंग्रेजी समय (जैसे \"yesterday\", आदि)।\n4. प्रकाशन समय के अनुसार सॉर्ट करें, पिछले 7 दिनों की सामग्री को प्राथमिकता दें।\n5. सत्यापन पृष्ठों और अमान्य सामग्री को फ़िल्टर करें, एन्कोडिंग को सही ढंग से संभालें, परिणाम में विकृत वर्ण नहीं होने चाहिए।\n\n# डेटा प्रारूप लौटाएं (सख्ती से पालन करें):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success या error\",\n    \"summary\": f\"खोज पूरी हुई, {len(data)} परिणाम मिले\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# फ़ंक्शन को तुरंत निष्पादित करें, और इसे __result__ को असाइन करें\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "कृपया नवीनतम प्रासंगिक जानकारी प्राप्त करने के लिए एक अभिनव खोज फ़ंक्शन (कोई टिप्पणी, प्रिंट लॉग नहीं) उत्पन्न करें।\n\n# वैकल्पिक खोज रणनीतियाँ:\n1. विभिन्न सर्च इंजनों (Baidu, Bing, 360, Sogou) का एक-एक करके प्रयास करें।\n2. समाचार एकत्रीकरण एपीआई (जैसे NewsAPI, RSS फ़ीड) का उपयोग करें।\n3. सोशल मीडिया प्लेटफॉर्म खोज का प्रयास करें।\n4. अकादमिक सर्च इंजनों का उपयोग करें।\n\n# मुख्य आवश्यकताएं:\n- फ़ंक्शन का नाम 'search_web' है, पैरामीटर 'search_query' और 'max_results' हैं।\n- एक बहु-त्रुटि सहिष्णुता तंत्र को लागू करें, कम से कम 2-3 विभिन्न तरीकों का प्रयास करें।\n- पूरी जानकारी निकालने के लिए प्रत्येक परिणाम के मूल पृष्ठ पर जाएं।\n- पिछले 7 दिनों के भीतर की ताज़ा सामग्री प्राप्त करने को प्राथमिकता दें, प्रकाशन समय के अनुसार सॉर्ट करें।\n- सारांश की लंबाई कम से कम {min_abstract_len} शब्द होनी चाहिए, जिसमें मुख्य जानकारी शामिल हो।\n- एपीआई कुंजी की आवश्यकता वाले तरीकों का उपयोग न करें।\n- सत्यापन पृष्ठों और अमान्य सामग्री को फ़िल्टर करें, एन्कोडिंग को सही ढंग से संभालें, परिणाम में विकृत वर्ण नहीं होने चाहिए।\n\n# समय निकालने की रणनीति:\n- मेटा टैग को प्राथमिकता दें: article:published_time, datePublished, pubdate, publishdate, आदि।\n- वैकल्पिक योजनाएं: 'time' टैग, तिथि से संबंधित क्लास, पृष्ठ पाठ मिलान।\n- मान्य तिथि प्रारूप: मानक प्रारूप, चीनी प्रारूप, सापेक्ष समय (जैसे \"कल\", \"1 दिन पहले\", \"1 घंटा पहले\", आदि), अंग्रेजी समय (जैसे \"yesterday\", आदि)।\n\n# डेटा प्रारूप लौटाएं (सख्ती से पालन करें):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"खोज पूरी हुई\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# फ़ंक्शन को तुरंत निष्पादित करें, और इसे __result__ को असाइन करें\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "result_processor": {
+      "suggestions": {
+        "check_syntax_logic": "कोड सिंटैक्स और तार्किक त्रुटियों की जांच करें",
+        "regenerate_code": "कृपया उपयोगकर्ता की जरूरतों को बेहतर ढंग से पूरा करने के लिए कोड को फिर से जेनरेट करें। डेटा अधिग्रहण तर्क की जांच करें, यह सुनिश्चित करें कि यह वैध शीर्षक और सामग्री फ़ील्ड लौटाता है",
+        "check_data_logic": "कृपया डेटा अधिग्रहण तर्क की जांच करें, यह सुनिश्चित करें कि यह सही प्रारूप में डेटा लौटाता है",
+        "check_execution_structure": "कोड निष्पादन और बुनियादी डेटा संरचना की जांच करें",
+        "check_business_logic": "व्यापार तर्क और आवश्यक फ़ील्ड की जांच करें",
+        "check_code_format": "कृपया कोड तर्क और आउटपुट प्रारूप की जांच करें",
+        "check_syntax_variables": "कृपया कोड सिंटैक्स, चर परिभाषा और तार्किक त्रुटियों की जांच करें"
+      },
+      "system_errors": {
+        "execution_timeout": "कोड निष्पादन का समय समाप्त हो गया"
+      },
+      "messages": {
+        "execution_failed": "कोड निष्पादन विफल: {error}"
+      },
+      "summaries": {
+        "no_data": "निष्पादन पूरा हुआ, लेकिन कोई डेटा प्राप्त नहीं हुआ",
+        "execution_complete": "निष्पादन पूरा हुआ",
+        "operation_complete": "संचालन पूरा हुआ"
+      }
     }
   }
 }

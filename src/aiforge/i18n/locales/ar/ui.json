@@ -1,180 +1,184 @@
 {
   "task": {
-    "template_code_generation": "Generate code based on template",
-    "system_prompt_generation": "Please generate code according to system prompt",
-    "processing_start": "Start processing task instruction, max rounds {max_rounds}, max optimization attempts per round {max_optimization}",
-    "round_execution": "Round {round} execution",
-    "all_rounds_failed_best_result": "All rounds failed, returning best result, execution ended!",
-    "round_success_completed": "Round {round} execution successful, task completed!",
-    "all_rounds_failed_no_result": "All rounds failed, no valid result obtained, execution ended!",
-    "round_failed_continue": "Round {round} execution failed, proceeding to next round",
-    "execution_summary": "Task {task_id} execution summary",
+    "template_code_generation": "توليد كود على أساس قالب",
+    "system_prompt_generation": "يرجى توليد كود على أساس توجيهات النظام",
+    "processing_start": "بدء معالجة تعليمات المهمة، الحد الأقصى لعدد المحاولات هو {max_rounds}، والحد الأقصى للتحسينات في كل محاولة هو {max_optimization}",
+    "round_execution": "تنفيذ المحاولة {round}",
+    "all_rounds_failed_best_result": "فشلت جميع المحاولات، وإرجاع أفضل نتيجة. انتهى التنفيذ!",
+    "round_success_completed": "اكتمل تنفيذ المحاولة {round} بنجاح، وتمت المهمة!",
+    "all_rounds_failed_no_result": "فشلت جميع المحاولات، ولم يتم الحصول على نتائج صالحة. انتهى التنفيذ!",
+    "round_failed_continue": "فشلت المحاولة {round}، والانتقال إلى المحاولة التالية للبدء من جديد",
+    "execution_summary": "ملخص تنفيذ المهمة {task_id}",
     "status": {
-      "created": "Created",
-      "running": "Running",
-      "completed": "Completed",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "unknown": "Unknown status"
+      "created": "تم الإنشاء",
+      "running": "قيد التشغيل",
+      "completed": "مكتمل",
+      "failed": "فشل",
+      "cancelled": "تم الإلغاء",
+      "unknown": "حالة غير معروفة"
     }
   },
   "execution": {
-    "direct_response_success": "Direct response: {action} - {instruction}...",
-    "cache_lookup": "Looking up cache...",
-    "cache_found": "Found {count} cached modules",
-    "cache_execution": "Executing cached modules...",
-    "ai_generation": "Generating new code...",
-    "cache_validation_passed": "Cache validation passed"
+    "direct_response_success": "استجابة مباشرة: {action} - {instruction}...",
+    "cache_lookup": "جارٍ البحث في الذاكرة المؤقتة...",
+    "cache_found": "تم العثور على {count} وحدة ذاكرة مؤقتة",
+    "cache_execution": "جارٍ تنفيذ وحدات الذاكرة المؤقتة...",
+    "ai_generation": "جارٍ توليد كود جديد...",
+    "cache_validation_passed": "تم اجتياز التحقق من الذاكرة المؤقتة"
   },
   "search": {
-    "search_complete_success": "Search completed, found {count} results",
-    "process_system_cache": "System cache",
-    "process_ai_template": "AI template",
-    "process_ai_free": "AI free form",
-    "process_system_default": "System default",
+    "search_complete_success": "اكتمل البحث، تم العثور على {count} نتيجة",
+    "process_system_cache": "ذاكرة التخزين المؤقت للنظام",
+    "process_ai_template": "قالب الذكاء الاصطناعي",
+    "process_ai_free": "ذكاء اصطناعي حر",
+    "process_system_default": "النظام الافتراضي",
     "engine_baidu": "Baidu",
     "engine_bing": "Bing",
     "engine_360": "360",
-    "engine_sogou": "Sogou"
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
   },
   "analyzer": {
     "recommendations": {
-      "enhance_builtin_guidance": "Recommend enhancing built-in type guidance, current built-in type usage rate is low",
-      "relax_creation_conditions": "Built-in type usage rate is very high, consider appropriately relaxing new type creation conditions",
-      "too_many_dynamic": "Too many dynamic types ({count}), recommend cleaning up low-priority types",
-      "low_priority_types": "Found {count} low-priority dynamic types, recommend considering removal",
-      "unused_builtin": "Built-in types {types} have 0% usage rate, may need to optimize keyword matching",
-      "all_good": "Task type usage is good, no special optimization needed"
+      "enhance_builtin_guidance": "يوصى بتعزيز توجيه النوع المدمج، حيث أن معدل استخدام النوع المدمج الحالي منخفض",
+      "relax_creation_conditions": "معدل استخدام النوع المدمج مرتفع جدًا، يمكن النظر في تخفيف شروط إنشاء نوع جديد بشكل مناسب",
+      "too_many_dynamic": "عدد كبير جدًا من الأنواع الديناميكية ({count})، يوصى بتنظيف الأنواع ذات الأولوية المنخفضة",
+      "low_priority_types": "تم العثور على {count} من الأنواع الديناميكية ذات الأولوية المنخفضة، يوصى بالنظر في إزالتها",
+      "unused_builtin": "معدل استخدام النوع المدمج {types} هو 0، قد يتطلب ذلك تحسين مطابقة الكلمات الرئيسية",
+      "all_good": "حالة استخدام نوع المهمة جيدة، ولا حاجة لتحسين خاص"
     },
     "adaptive": {
-      "task_type_guidance_header": "# Task Type Guidance",
-      "system_status_header": "# System Status:",
-      "current_guidance_strength": "Current guidance strength",
-      "builtin_usage_rate": "Built-in type usage rate",
-      "efficiency_note": "These built-in types have higher cache hit rates and execution efficiency.",
-      "use_builtin_types": "use the following verified built-in task types"
+      "task_type_guidance_header": "# إرشادات نوع المهمة",
+      "system_status_header": "# حالة النظام:",
+      "current_guidance_strength": "شدة التوجيه الحالية",
+      "builtin_usage_rate": "معدل استخدام النوع المدمج",
+      "efficiency_note": "تتميز هذه الأنواع المدمجة بمعدل أعلى من إصابات الذاكرة المؤقتة وكفاءة التنفيذ.",
+      "use_builtin_types": "استخدم أنواع المهام المدمجة والموثوقة التالية"
     },
-    "priority_label": "priority",
+    "priority_label": "الأولوية",
     "use_cases": {
       "data_fetch": [
-        "Search web content",
-        "Get API data",
-        "Crawl news information"
+        "البحث في محتوى الويب",
+        "الحصول على بيانات API",
+        "الزحف إلى معلومات الأخبار"
       ],
       "data_process": [
-        "Data analysis",
-        "Statistical calculation",
-        "Format conversion"
+        "تحليل البيانات",
+        "الحساب الإحصائي",
+        "تحويل التنسيق"
       ],
       "file_operation": [
-        "Read/write files",
-        "Batch processing",
-        "Document operations"
+        "قراءة وكتابة الملفات",
+        "المعالجة المجمعة",
+        "عمليات المستندات"
       ],
       "automation": [
-        "Scheduled tasks",
-        "System monitoring",
-        "Automation workflows"
+        "المهام المجدولة",
+        "مراقبة النظام",
+        "سير العمل التلقائي"
       ],
       "content_generation": [
-        "Document generation",
-        "Report creation",
-        "Content creation"
+        "توليد المستندات",
+        "إنشاء التقارير",
+        "إنشاء المحتوى"
       ],
       "direct_response": [
-        "Knowledge Q&A",
-        "Text creation",
-        "Translation and summarization"
+        "أسئلة وأجوبة معرفية",
+        "إنشاء نصوص",
+        "تلخيص الترجمة"
       ]
     }
   },
   "content_generation": {
-    "generation_success": "Successfully generated {format} format content",
-    "search_based_suffix": " (based on {count} search results)",
-    "search_results_header": "Search results for '{instruction}'",
-    "result_label": "Result",
-    "title_label": "Title",
-    "publish_time_label": "Publish Time",
-    "abstract_label": "Abstract",
-    "content_label": "Content",
-    "no_title": "No title",
-    "unknown_time": "Unknown time",
-    "no_abstract": "No abstract",
-    "no_search_results_fallback": "No relevant search results found, please generate content based on existing knowledge."
+    "generation_success": "تم إنشاء المحتوى بتنسيق {format} بنجاح",
+    "search_based_suffix": "(بناءً على {count} من نتائج البحث)",
+    "search_results_header": "نتائج البحث عن '{instruction}'",
+    "result_label": "النتيجة",
+    "title_label": "العنوان",
+    "publish_time_label": "وقت النشر",
+    "abstract_label": "الملخص",
+    "content_label": "المحتوى",
+    "no_title": "لا يوجد عنوان",
+    "unknown_time": "وقت غير معروف",
+    "no_abstract": "لا يوجد ملخص",
+    "no_search_results_fallback": "لم يتم العثور على نتائج بحث ذات صلة، يرجى إنشاء المحتوى بناءً على المعرفة الموجودة."
   },
   "progress": {
-    "connecting_ai": "[AIForge]🤖 Connecting to AI service{provider}...",
-    "waiting_response": "[AIForge]💭 Waiting for AI response...",
-    "processing_response": "[AIForge]✅ Received AI response, processing...",
-    "searching": "[AIForge]🔍 Searching: {query}",
-    "search_process": "[AIForge]🔍 Trying {search_type} search...",
-    "search_complete": "[AIForge]✅ Search completed, found {count} results",
-    "cache_lookup": "[AIForge]🔍 Looking up cache...",
-    "cache_found": "[AIForge]📦 Found {count} cached modules, validating...",
-    "cache_execution": "[AIForge]⚡ Executing cached code...",
-    "code_execution": "[AIForge]⚡ Executing {count} code blocks...",
-    "round_start": "[AIForge]🔄 Starting round {current}/{total} execution...",
-    "round_success": "[AIForge]🎉 Round {round_num} execution successful!",
-    "round_retry": "[AIForge]⚠️ Round {round_num} failed, preparing retry..."
+    "connecting_ai": "[AIForge]🤖 جارٍ الاتصال بخدمة الذكاء الاصطناعي {provider}...",
+    "waiting_response": "[AIForge]💭 جارٍ انتظار رد الذكاء الاصطناعي...",
+    "processing_response": "[AIForge]✅ تم استلام رد الذكاء الاصطناعي، جارٍ المعالجة...",
+    "searching": "[AIForge]🔍 جارٍ البحث: {query}",
+    "search_process": "[AIForge]🔍 جارٍ محاولة البحث من نوع {search_type}...",
+    "search_complete": "[AIForge]✅ اكتمل البحث، تم العثور على {count} نتيجة",
+    "cache_lookup": "[AIForge]🔍 جارٍ البحث في الذاكرة المؤقتة...",
+    "cache_found": "[AIForge]📦 تم العثور على {count} وحدة ذاكرة مؤقتة، جارٍ التحقق...",
+    "cache_execution": "[AIForge]⚡ جارٍ تنفيذ كود الذاكرة المؤقتة...",
+    "code_execution": "[AIForge]⚡ جارٍ تنفيذ {count} من كتل الكود...",
+    "round_start": "[AIForge]🔄 بدء المحاولة {current}/{total}...",
+    "round_success": "[AIForge]🎉 تم تنفيذ المحاولة {round_num} بنجاح!",
+    "round_retry": "[AIForge]⚠️ فشلت المحاولة {round_num}، جارٍ الاستعداد لإعادة المحاولة..."
   },
   "llm_manager": {
-    "config_updated": "Configuration updated",
-    "lazy_load_create": "Lazy loading LLM client: {name}",
-    "switch_success": "Switched to LLM client: {name}",
-    "cleanup_unused": "Cleaned up unused clients, keeping: {current_name}"
+    "config_updated": "تم تحديث الإعدادات",
+    "lazy_load_create": "إنشاء عميل LLM بالتحميل المتأخر: {name}",
+    "switch_success": "تم التبديل إلى عميل LLM: {name}",
+    "cleanup_unused": "تم تنظيف العملاء غير المستخدمين، والاحتفاظ بـ: {current_name}"
   },
   "validation": {
-    "validation_passed": "Validation passed",
-    "found_valid_results": "Found {count} valid results",
-    "ai_validation_exception": "AI validation exception, default pass: {error}"
+    "validation_passed": "تم اجتياز التحقق",
+    "found_valid_results": "تم العثور على {count} نتيجة صالحة",
+    "ai_validation_exception": "استثناء في التحقق من الذكاء الاصطناعي، تم اجتيازه افتراضيًا: {error}"
   },
   "runner": {
-    "sandbox_info": "Sandbox environment: timeout={timeout}s, memory={memory}MB, CPU={cpu}s, file descriptors={fd}, file size={file_size}MB, processes={processes}",
-    "network_blocked_info": "Network access blocked by security policy",
-    "cleanup_warning": "Cleanup warning: {error}"
+    "sandbox_info": "بيئة تشغيل الصندوق الرملي: المهلة={timeout} ثانية، الذاكرة={memory} ميجابايت، وحدة المعالجة المركزية={cpu} ثانية، واصف الملف={fd}، حجم الملف={file_size} ميجابايت، العمليات={processes}",
+    "network_blocked_info": "تم حظر الوصول إلى الشبكة بواسطة سياسة الأمان",
+    "cleanup_warning": "تحذير التنظيف: {error}"
   },
   "formatter": {
-    "code_placeholder": "See code block above...",
-    "execution_result_title": "Code Execution Result",
-    "structured_feedback_message": "The following are code block execution results automatically returned by the runtime environment in execution order",
-    "execution_summary_title": "Execution Summary",
-    "item_column": "Item",
-    "value_column": "Value",
-    "total_rounds_label": "Total Rounds",
-    "history_label": "History",
-    "task_status_label": "Task Status",
-    "history_count_text": "{count} records",
-    "completed_text": "Completed",
-    "incomplete_text": "Incomplete",
-    "operation_completed": "Operation completed"
+    "code_placeholder": "انظر كتلة الكود أعلاه...",
+    "execution_result_title": "نتائج تنفيذ الكود",
+    "structured_feedback_message": "فيما يلي نتائج تنفيذ كتل الكود التي يتم إرجاعها تلقائيًا بواسطة بيئة التشغيل بالترتيب",
+    "execution_summary_title": "ملخص التنفيذ",
+    "item_column": "البند",
+    "value_column": "القيمة",
+    "total_rounds_label": "إجمالي المحاولات",
+    "history_label": "السجل",
+    "task_status_label": "حالة المهمة",
+    "history_count_text": "{count} عنصر",
+    "completed_text": "مكتمل",
+    "incomplete_text": "غير مكتمل",
+    "operation_completed": "اكتملت العملية"
   },
   "executor": {
-    "start_execution_block": "Starting execution of code block: {block_name}",
-    "round_attempt": "Round {round_num}, attempt {optimization_attempt}",
-    "generating_code": "Generating code...",
-    "found_code_blocks": "Found {count} code blocks",
-    "validation_passed": "Attempt {optimization_attempt} validation passed!",
-    "best_result_summary": "Returning {count} best results"
+    "start_execution_block": "بدء تنفيذ كتلة الكود: {block_name}",
+    "round_attempt": "المحاولة {round_num}، محاولة التحسين {optimization_attempt}",
+    "generating_code": "جارٍ توليد الكود...",
+    "found_code_blocks": "تم العثور على {count} من كتل الكود",
+    "validation_passed": "تم اجتياز التحقق من محاولة التحسين {optimization_attempt}!",
+    "best_result_summary": "إرجاع {count} من أفضل النتائج"
   },
   "network": {
-    "validation_disabled": "Network validation disabled",
-    "open_mode_allows_all": "Open mode allows all network access",
-    "default_allow": "Default allow",
-    "domain_filtering_disabled": "Domain filtering disabled",
-    "domain_validation_passed": "Domain validation passed",
-    "domain_whitelisted": "Domain in whitelist: {domain}",
-    "ip_address_allowed": "IP address allowed",
-    "resolved_ip_allowed": "Resolved IP {ip} allowed",
-    "no_hostname": "No hostname",
-    "no_domain_restrictions": "No domain restrictions"
+    "validation_disabled": "تم تعطيل التحقق من الشبكة",
+    "open_mode_allows_all": "الوضع المفتوح يسمح بجميع الوصول إلى الشبكة",
+    "default_allow": "السماح الافتراضي",
+    "domain_filtering_disabled": "تم تعطيل تصفية النطاق",
+    "domain_validation_passed": "تم اجتياز التحقق من النطاق",
+    "domain_whitelisted": "النطاق في القائمة البيضاء: {domain}",
+    "ip_address_allowed": "يُسمح بالوصول إلى عنوان IP",
+    "resolved_ip_allowed": "يُسمح بالوصول إلى IP المُحلل {ip}",
+    "no_hostname": "لا يوجد اسم مضيف",
+    "no_domain_restrictions": "لا توجد قيود على النطاق"
   },
   "template": {
-    "title_label": "Title",
-    "url_label": "URL",
-    "content_description": "Detailed content (remove spaces and line breaks, at least {length} characters)",
-    "time_label": "Publication time",
-    "optional_empty": " (can be empty)",
-    "optional_empty_quotes": " (can be '')",
-    "corresponding_value": "Corresponding value"
+    "title_label": "العنوان",
+    "url_label": "الرابط",
+    "content_description": "محتوى مفصل (إزالة المسافات والأسطر الجديدة، على الأقل {length} كلمة)",
+    "time_label": "وقت النشر",
+    "optional_empty": "(يمكن أن يكون فارغًا)",
+    "optional_empty_quotes": "(يمكن أن يكون '')",
+    "corresponding_value": "القيمة المقابلة"
   }
 }

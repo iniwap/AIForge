@@ -1,155 +1,155 @@
 {
   "base": {
-    "header": "# AIForge: Python Code Generation and Execution Assistant",
-    "code_generation_header": "# Code Generation Specifications",
-    "execution_header": "# Execution Specifications",
-    "execution_guidance": "Execute code and assign result to __result__, no mock or placeholder data allowed"
+    "header": "# AIForge: Asistente de generación y ejecución de código Python",
+    "code_generation_header": "# Especificaciones para la generación de código",
+    "execution_header": "# Especificaciones para la ejecución",
+    "execution_guidance": "Ejecuta el código y asigna el resultado a __result__. Está prohibido usar datos simulados o de marcador de posición."
   },
   "code_rules": {
-    "executable": "- Generated code must be executable in standard Python environment",
-    "format": "- Use standard Markdown code block format: ```python ... ```, no explanatory text",
-    "error_handling": "- Implement complete error handling and exception catching",
-    "minimal": "- Generate minimal code, no comments, no blank lines",
-    "variables": "- Use shortest variable names (a,b,c,d etc), function parameter names must not be compressed"
+    "executable": "- El código generado debe ser directamente ejecutable en un entorno Python estándar",
+    "format": "- Usa el formato de bloque de código Markdown estándar: ```python ... ```, no salgas texto explicativo",
+    "error_handling": "- Implementa un manejo de errores y captura de excepciones completa",
+    "minimal": "- Genera código minimalista, sin comentarios ni líneas vacías",
+    "variables": "- Usa los nombres de variables más cortos (a, b, c, d, etc.), los nombres de los parámetros de las funciones no deben ser comprimidos"
   },
   "output_format": {
-    "default": "# Output Format Requirements:\n__result__ = {\n    \"data\": [{\"field1\": \"value1\", ...},...],\n    \"status\": \"success or error\",\n    \"summary\": \"result summary\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
-    "status_note": "# Important Note: status should reflect code execution status, not data retrieval result (even if data=[], status=success)",
-    "ai_analysis_header": "# AI Analysis Based Output Format Requirements:",
-    "required_fields_label": "# Required fields:",
-    "non_empty_fields_label": "# Non-empty fields:"
+    "default": "# Requisitos del formato de salida:\n__result__ = {\n    \"data\": [{\"campo1\": \"valor1\", ...},...],\n    \"status\": \"success o error\",\n    \"summary\": \"Resumen del resultado\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
+    "status_note": "# Nota importante: el estado ('status') debe reflejar el estado de ejecución del código, no el resultado de la adquisición de datos (incluso si data=[], el estado es 'success')",
+    "ai_analysis_header": "# Requisitos del formato de salida basados en el análisis de IA:",
+    "required_fields_label": "# Campos obligatorios:",
+    "non_empty_fields_label": "# Campos no vacíos:"
   },
   "format_templates": {
-    "status_success_error": "success or error",
-    "summary_placeholder": "task completion description",
-    "task_requirements_label": "Output requirements:",
-    "related_params_label": "Related parameters:",
-    "special_requirements_label": "Special requirements:",
-    "task_details_header": "## Task Details",
-    "original_instruction_supplement": "# Original Instruction Supplement"
+    "status_success_error": "success o error",
+    "summary_placeholder": "Descripción de la finalización de la tarea",
+    "task_requirements_label": "Requisitos de salida:",
+    "related_params_label": "Parámetros relacionados:",
+    "special_requirements_label": "Requisitos especiales:",
+    "task_details_header": "## Detalles de la tarea",
+    "original_instruction_supplement": "# Suplemento de la instrucción original"
   },
   "analyzer_output_format": {
-    "task_type": "task type",
-    "action": "specific action",
-    "target": "task description",
-    "execution_mode": "direct_ai_response or code_generation",
-    "confidence": "confidence level",
-    "param_value_placeholder": "extracted value or None",
-    "param_type": "parameter type",
+    "task_type": "Tipo de tarea",
+    "action": "Acción específica",
+    "target": "Descripción de la tarea",
+    "execution_mode": "direct_ai_response o code_generation",
+    "confidence": "Nivel de confianza",
+    "param_value_placeholder": "Valor extraído o None",
+    "param_type": "Tipo de parámetro",
     "required_true_false": "true/false",
-    "min_items": "minimum result count",
-    "non_empty_fields": "required result data fields"
+    "min_items": "Número mínimo de elementos de resultado",
+    "non_empty_fields": "Campos de datos de resultado necesarios"
   },
   "parameterized": {
-    "header": "## 🔧 Parameterized Execution Guidance",
-    "analysis_function": "Generate function based on task analysis:",
-    "param_description": "# Parameter description:",
-    "call_instruction": "# Must call immediately:",
-    "usage_rules_header": "## 📋 Parameter Usage Rules:",
+    "header": "## 🔧 Guía de ejecución parametrizada",
+    "analysis_function": "Generar una función basada en el análisis de la tarea:",
+    "param_description": "# Descripción de los parámetros:",
+    "call_instruction": "# Debe llamarse inmediatamente:",
+    "usage_rules_header": "## 📋 Reglas de uso de parámetros:",
     "usage_rules": [
-      "1. Each parameter must be actually used in function body, affecting execution path or result",
-      "2. Prohibit hardcoding values that can be obtained through parameters",
-      "3. Parameters should be used for: controlling behavior, as data source, affecting output, configuring execution"
+      "1. Cada parámetro debe ser usado realmente dentro del cuerpo de la función, afectando la ruta de ejecución o el resultado",
+      "2. Está prohibido codificar valores que puedan obtenerse a través de parámetros",
+      "3. Los parámetros se aplican a: controlar el comportamiento, servir como fuente de datos, afectar la salida, configurar la ejecución"
     ],
-    "avoid_patterns_header": "## ❌ Avoid Patterns:",
+    "avoid_patterns_header": "## ❌ Patrones a evitar:",
     "avoid_patterns": [
-      "- Parameters defined but not used",
-      "- Parameters only used for display without affecting core logic",
-      "- Ignoring parameters and using hardcoded values"
+      "- Parámetros definidos pero no utilizados",
+      "- Parámetros que solo se usan para la visualización y no afectan la lógica central",
+      "- Ignorar los parámetros y usar valores codificados"
     ],
-    "docstring_template": "Execute task using provided parameters: {params}"
+    "docstring_template": "Ejecuta la tarea usando los parámetros proporcionados: {params}"
   },
   "direct_response": {
-    "answer": "You are a knowledge assistant, please answer user questions directly. Be accurate, concise, and helpful.",
-    "respond": "You are a knowledge assistant, please answer user questions directly. Be accurate, concise, and helpful.",
-    "create": "You are a content creation assistant, please create content according to user requirements. Pay attention to style and format requirements.",
-    "translate": "You are a translation assistant, please accurately translate the content provided by users. Maintain original meaning and language style.",
-    "summarize": "You are a text analysis assistant, please summarize and analyze the text content provided by users.",
-    "suggest": "You are a consulting advisor, please provide suggestions and opinions based on user needs.",
-    "chat_ai": "You are a friendly, professional and considerate AI assistant, please provide appropriate responses according to conversation context.",
-    "default": "You are an AI assistant, please respond directly to user needs.",
-    "task_target_label": "Task objective",
+    "answer": "Eres un asistente de conocimiento, responde directamente a las preguntas del usuario. Sé preciso, conciso y útil.",
+    "respond": "Eres un asistente de conocimiento, responde directamente a las preguntas del usuario. Sé preciso, conciso y útil.",
+    "create": "Eres un asistente de creación de contenido, crea contenido según los requisitos del usuario. Presta atención al estilo y formato requeridos.",
+    "translate": "Eres un asistente de traducción, traduce con precisión el contenido proporcionado por el usuario. Mantén el significado y el estilo del idioma original.",
+    "summarize": "Eres un asistente de análisis de texto, resume y analiza el contenido de texto proporcionado por el usuario.",
+    "suggest": "Eres un consultor, ofrece consejos y opiniones según las necesidades del usuario.",
+    "chat_ai": "Eres un asistente de IA amigable, profesional y considerado, proporciona una respuesta adecuada según el contexto de la conversación.",
+    "default": "Eres un asistente de IA, responde directamente a las necesidades del usuario.",
+    "task_target_label": "Objetivo de la tarea",
     "output_requirements": {
-      "text": "Answer in plain text format",
-      "markdown": "Use Markdown format with appropriate headings, lists and emphasis",
-      "structured_text": "Use structured text format with clear paragraphs and key points"
+      "text": "Responde en formato de texto plano",
+      "markdown": "Usa el formato Markdown, incluyendo encabezados, listas y énfasis apropiados",
+      "structured_text": "Usa un formato de texto estructurado, con párrafos y puntos claros"
     },
     "task_specific_guidance": {
-      "direct_response": "Focus on direct answers, avoid redundant information",
-      "content_generation": "Focus on creativity and originality",
-      "data_process": "Provide clear analysis approach"
+      "direct_response": "Concéntrate en la respuesta directa, evita la información redundante",
+      "content_generation": "Presta atención a la creatividad y originalidad",
+      "data_process": "Proporciona una línea de pensamiento de análisis clara"
     },
-    "limitations": "\n\n## Important Limitations\n- Provide final answer directly, do not generate code\n- If task requires real-time data or file operations, please indicate inability to complete\n- Maintain professionalism and accuracy in responses"
+    "limitations": "\n\n## Limitaciones importantes\n- Proporciona la respuesta final directamente, no generes código\n- Si la tarea requiere datos en tiempo real u operaciones de archivos, explica que no se puede completar\n- Mantén la profesionalidad y precisión en la respuesta"
   },
   "analyzer": {
-    "role": "You are AIForge intelligent task analyzer, responsible for understanding user instructions and analyzing necessary information and expected results needed to complete tasks",
-    "execution_modes": "- Direct response: Can be completed directly with AI knowledge, no latest data needed, including conversation continuation and emotional support\n- Code generation: Requires external data sources, real-time information or system interaction",
-    "analysis_steps": "- Identify execution mode and task type\n- Extract key parameters and quantity requirements, set appropriate min_items\n- Define required fields and validation rules\n- For non-task instructions like \"get/find/search\" certain information, only extract one required_parameters parameter search_query=original instruction\n- Intelligently identify conversation continuation and emotional support instructions, automatically set to direct response mode",
-    "action_vocabulary": "- Data acquisition → fetch_{task_type_suffix}\n- Data processing → process_{task_type_suffix}\n- Content generation → generate_{task_type_suffix}\n- File operations → transform_{task_type_suffix}\n- Direct response → respond_{task_type_suffix}\n- Conversation continuation and emotional support → chat_ai",
+    "role": "Eres el analizador de tareas inteligente de AIForge, responsable de entender las instrucciones del usuario y analizar la información necesaria y los resultados esperados para completar la tarea.",
+    "execution_modes": "- Respuesta directa: La IA puede completar directamente con su conocimiento, sin necesidad de datos recientes, incluyendo la continuación de la conversación y el apoyo emocional.\n- Generación de código: Requiere fuentes de datos externas, información en tiempo real o interacciones con el sistema.",
+    "analysis_steps": "- Identifica el modo de ejecución y el tipo de tarea\n- Extrae los parámetros clave y los requisitos de cantidad, establece un 'min_items' apropiado\n- Define los campos obligatorios y las reglas de validación\n- Para instrucciones no orientadas a tareas como 'obtener/buscar/encontrar' un tipo de información, extrae un solo parámetro 'required_parameters' 'search_query'='instrucción original'\n- Identifica de forma inteligente las instrucciones de continuación de la conversación y de apoyo emocional, y configúralas automáticamente en modo de respuesta directa.",
+    "action_vocabulary": "- Adquisición de datos → fetch_{task_type_suffix}\n- Procesamiento de datos → process_{task_type_suffix}\n- Generación de contenido → generate_{task_type_suffix}\n- Operación de archivos → transform_{task_type_suffix}\n- Respuesta directa → respond_{task_type_suffix}\n- Continuación de la conversación y apoyo emocional → chat_ai",
     "guidance": {
-      "default_strength": "prioritize",
-      "strong_recommendation": "strongly recommend",
-      "consider": "consider",
-      "too_many_dynamic_types": "\nNote: System has {count} dynamic types, recommend prioritizing built-in types for better performance.",
-      "task_type_template": "\n# Task Type Guidance\n{strength} using the following verified built-in task types:\n{types}\n\nThese built-in types have the following advantages:\n{advantages}\n\n{creation_rule}{additional_info}",
-      "builtin_advantages": "- Higher cache hit rate and execution efficiency\n- Thoroughly tested and optimized execution paths\n- More stable performance and error handling",
-      "creation_rule": "Only create new task_type when user task truly belongs to a completely new domain and cannot be categorized into existing types."
+      "default_strength": "Prioridad",
+      "strong_recommendation": "Fuertemente recomendado",
+      "consider": "Se puede considerar",
+      "too_many_dynamic_types": "\nAtención: El sistema ya tiene {count} tipos dinámicos. Se recomienda dar prioridad al uso de tipos incorporados para mejorar el rendimiento.",
+      "task_type_template": "\n# Guía de tipos de tareas\n{strength} usar los siguientes tipos de tareas integrados y probados:\n{types}\n\nEstos tipos integrados tienen las siguientes ventajas:\n{advantages}\n\n{creation_rule}{additional_info}",
+      "builtin_advantages": "- Mayor tasa de aciertos de caché y eficiencia de ejecución\n- Rutas de ejecución bien probadas y optimizadas\n- Rendimiento más estable y manejo de errores",
+      "creation_rule": "Crea un nuevo 'task_type' solo cuando la tarea del usuario realmente pertenezca a un dominio completamente nuevo y no se pueda clasificar en los tipos existentes."
     },
     "prompt": {
-      "role_header": "# Role Definition",
-      "execution_mode_header": "# Execution Mode Determination",
-      "action_vocabulary_header": "# Action Naming Conventions",
-      "analysis_requirements_header": "# Analysis Requirements",
-      "output_format_header": "# Output Format",
-      "strict_json_note": "Please strictly return analysis results in JSON format."
+      "role_header": "# Definición del rol",
+      "execution_mode_header": "# Juicio del modo de ejecución",
+      "action_vocabulary_header": "# Convención de nombres de acciones",
+      "analysis_requirements_header": "# Requisitos de análisis",
+      "output_format_header": "# Formato de salida",
+      "strict_json_note": "Devuelve estrictamente el resultado del análisis en formato JSON."
     },
-    "user_instruction_label": "User instruction: "
+    "user_instruction_label": "Instrucción del usuario: "
   },
   "content_generation": {
-    "direct_generation_template": "Please generate article content according to user requirements: {instruction}.",
-    "search_enhanced_template": "Please create content based on the following latest search data:",
-    "task_requirement": "and user task requirements: {instruction}, generate article content.",
-    "format_requirement": "Output format requirements",
-    "style_requirement": "Style requirements",
-    "tone_requirement": "Tone",
-    "language_requirement": "Language",
-    "special_notes_header": "Special Notes",
-    "format_strict_note": "Strictly output in {format} format",
-    "structure_note": "Ensure clear content structure and standard formatting",
-    "logic_note": "Content should be logical and readable",
-    "tone_maintain_note": "Maintain {tone} tone",
-    "date_note": "Dates in the article must use dates from search results",
-    "data_based_note": "Analyze and create based on real data from search results"
+    "direct_generation_template": "Según el requisito del usuario: {instruction}, genera el contenido del artículo.",
+    "search_enhanced_template": "Basado en el siguiente contenido de datos recientes buscado:",
+    "task_requirement": "y el requisito de la tarea del usuario: {instruction}, genera el contenido del artículo.",
+    "format_requirement": "Requisitos de formato de salida",
+    "style_requirement": "Requisitos de estilo",
+    "tone_requirement": "Tono",
+    "language_requirement": "Idioma",
+    "special_notes_header": "Notas especiales",
+    "format_strict_note": "Salida estrictamente en formato {format}",
+    "structure_note": "Asegura una estructura de contenido clara y un formato estandarizado",
+    "logic_note": "El contenido debe ser lógico y legible",
+    "tone_maintain_note": "Mantén el tono {tone}",
+    "date_note": "La fecha en el artículo debe usar la fecha del resultado de la búsqueda",
+    "data_based_note": "Realiza el análisis y la creación basados en datos reales de los resultados de la búsqueda"
   },
   "validation": {
-    "ai_validation_prompt_template": "Please determine whether the following code execution result truly accomplishes the user's task objective:\n\nOriginal user instruction: {original_instruction}\nTask type: {task_type}\nExpected output requirements: {expected_output}\n\nActual execution result\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
-    "analysis_dimensions": "Please analyze from the following perspectives:\n1. Does the result contain the core information users need\n2. Does the data quality meet actual usage requirements\n3. Are there obvious logical errors or omissions\n4. Is the result format convenient for subsequent processing",
-    "json_format_instruction": "Please return validation results in JSON format:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"specific failure reason (if failed)\",\n    \"improvement_suggestions\": [\"suggestion1\", \"suggestion2\"],\n    \"core_issues\": [\"core issue1\", \"core issue2\"]\n}"
+    "ai_validation_prompt_template": "Por favor, juzga si el siguiente resultado de ejecución de código realmente ha completado el objetivo de la tarea del usuario:\n\nInstrucción original del usuario: {original_instruction}\nTipo de tarea: {task_type}\nRequisitos de salida esperados: {expected_output}\n\nResultado de la ejecución real\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
+    "analysis_dimensions": "Analiza desde los siguientes ángulos:\n1. ¿Contiene el resultado la información central que el usuario necesita?\n2. ¿La calidad de los datos cumple con las necesidades de uso real?\n3. ¿Hay errores lógicos u omisiones obvias?\n4. ¿Es el formato del resultado fácil de procesar posteriormente?",
+    "json_format_instruction": "Devuelve el resultado de la validación en formato JSON:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"Razón específica del fallo (si falló)\",\n    \"improvement_suggestions\": [\"Sugerencia de mejora 1\", \"Sugerencia de mejora 2\"],\n    \"core_issues\": [\"Problema central 1\", \"Problema central 2\"]\n}"
   },
   "search": {
-    "guided_instruction_template": "Generate a search function (no comments or print logs) to get the latest relevant information, refer to the following configuration:\n\n# Search Engine URL Patterns:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# Key CSS Selectors:\nBaidu result containers: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaidu titles: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu abstracts: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing result containers: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing titles: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing abstracts: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360 result containers: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360 titles: [\"h3.res-title\", \"h3\", \".res-title\"]\n360 abstracts: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou result containers: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogou titles: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou abstracts: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# Important Processing Logic:\n1. Try four search engines in priority order (do not use API key methods)\n2. Prioritize using abstract content as content, if not satisfied, use concurrent.futures.ThreadPoolExecutor to access pages in parallel to extract detailed content\n3. Extract publication time from pages, following these strategies:\n    - Priority meta tags: article:published_time, datePublished, pubdate, publishdate, etc.\n    - Fallback options: time tags, date-related classes, page text matching\n    - Valid date formats: standard formats, Chinese formats, relative time (like \"yesterday\", \"1 day ago\", \"1 hour ago\", etc.), English time (like \"yesterday\", etc.)\n4. Sort by publication time, prioritize content from the last 7 days\n5. Filter out verification pages and invalid content, handle encoding correctly, results must not contain garbled text\n\n# Return Data Format (strictly follow):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success or error\",\n    \"summary\": f\"Search completed, found len(data) results\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# Execute function immediately and assign to __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "free_form_instruction_template": "Creatively generate a search function (no comments or print logs) to get the latest relevant information.\n\n# Optional Search Strategies:\n1. Try different search engines in sequence (Baidu, Bing, 360, Sogou)\n2. Use news aggregation APIs (like NewsAPI, RSS feeds)\n3. Try social media platform searches\n4. Use academic search engines\n\n# Core Requirements:\n- Function name is search_web, parameters search_query and max_results\n- Implement multiple fault tolerance mechanisms, try at least 2-3 different methods\n- Access original pages for each result to extract complete information\n- Prioritize getting fresh content from the last 7 days, sort by publication time\n- Abstract length at least {min_abstract_len} characters, containing key information\n- Cannot use methods requiring API keys\n- Filter out verification pages and invalid content, handle encoding correctly, results must not contain garbled text\n\n# Time Extraction Strategy:\n- Priority meta tags: article:published_time, datePublished, pubdate, publishdate, etc.\n- Fallback options: time tags, date-related classes, page text matching\n- Valid date formats: standard formats, Chinese formats, relative time (like \"yesterday\", \"1 day ago\", \"1 hour ago\", etc.), English time (like \"yesterday\", etc.)\n\n# Return Data Format (strictly follow):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"Search completed\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# Execute function immediately and assign to __result__\n __result__ = search_web(\"{search_query}\", {max_results})"
-  },
-  "result_processor": {
-    "suggestions": {
-      "check_syntax_logic": "Check code syntax and logic errors",
-      "regenerate_code": "Please regenerate code to better meet user requirements. Check data acquisition logic and ensure valid title and content fields are returned",
-      "check_data_logic": "Please check data acquisition logic and ensure correct data format is returned",
-      "check_execution_structure": "Check code execution and basic data structure",
-      "check_business_logic": "Check business logic and required fields",
-      "check_code_format": "Please check code logic and output format",
-      "check_syntax_variables": "Please check code syntax, variable definitions and logic errors"
-    },
-    "system_errors": {
-      "execution_timeout": "Code execution timeout"
-    },
-    "messages": {
-      "execution_failed": "Code execution failed: {error}"
-    },
-    "summaries": {
-      "no_data": "Execution completed but no data retrieved",
-      "execution_complete": "Execution completed",
-      "operation_complete": "Operation completed"
+    "guided_instruction_template": "Genera una función de búsqueda (sin comentarios ni registros de impresión) para obtener la información relevante más reciente, consulta la siguiente configuración:\n\n# Patrones de URL del motor de búsqueda:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# Selectores CSS clave:\nContenedor de resultados de Baidu: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nTítulo de Baidu: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nResumen de Baidu: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nContenedor de resultados de Bing: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nTítulo de Bing: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nResumen de Bing: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\nContenedor de resultados de 360: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\nTítulo de 360: [\"h3.res-title\", \"h3\", \".res-title\"]\nResumen de 360: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nContenedor de resultados de Sogou: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nTítulo de Sogou: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nResumen de Sogou: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# Lógica de procesamiento importante:\n1. Intenta sucesivamente los cuatro motores de búsqueda por prioridad (no uses claves de API)\n2. Usa el contenido del resumen como 'content' preferiblemente; si no es suficiente, usa 'concurrent.futures.ThreadPoolExecutor' para acceder a las páginas en paralelo y extraer el contenido detallado\n3. Extrae la fecha de publicación de la página, siguiendo la siguiente estrategia:\n    - Preferencia por las etiquetas meta: article:published_time, datePublished, pubdate, publishdate, etc.\n    - Alternativa: etiqueta 'time', clases relacionadas con la fecha, coincidencia de texto en la página\n    - Formatos de fecha válidos: formatos estándar, formatos en español, tiempo relativo (como \"ayer\", \"hace 1 día\", \"hace 1 hora\", etc.), tiempo en inglés (como \"yesterday\", etc.)\n4. Ordena por fecha de publicación, priorizando el contenido de los últimos 7 días\n5. Filtra las páginas de verificación y el contenido no válido, maneja correctamente la codificación. El resultado no debe contener texto ilegible\n\n# Formato de datos de retorno (estrictamente obligatorio):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success o error\",\n    \"summary\": f\"Búsqueda completada, se encontraron len(data) resultados\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# Ejecuta la función inmediatamente y asigna a __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "Genera una función de búsqueda de manera innovadora (sin comentarios ni registros de impresión) para obtener la información relevante más reciente.\n\n# Estrategias de búsqueda opcionales:\n1. Intenta diferentes motores de búsqueda sucesivamente (Baidu, Bing, 360, Sogou)\n2. Usa API de agregadores de noticias (como NewsAPI, fuentes RSS)\n3. Intenta buscar en plataformas de redes sociales\n4. Usa motores de búsqueda académicos\n\n# Requisitos principales:\n- La función se llama 'search_web', con parámetros 'search_query' y 'max_results'\n- Implementa un mecanismo de tolerancia a fallos múltiple, intentando al menos 2-3 métodos diferentes\n- Accede a la página original para cada resultado y extrae la información completa\n- Prioriza la obtención de contenido nuevo de los últimos 7 días, ordenado por fecha de publicación\n- La longitud del resumen debe ser de al menos {min_abstract_len} palabras, incluyendo información clave\n- No se permite el uso de métodos que requieran claves de API\n- Filtra las páginas de verificación y el contenido no válido, maneja correctamente la codificación. El resultado no debe contener texto ilegible\n\n# Estrategia de extracción de tiempo:\n- Preferencia por las etiquetas meta: article:published_time, datePublished, pubdate, publishdate, etc.\n- Alternativa: etiqueta 'time', clases relacionadas con la fecha, coincidencia de texto en la página\n- Formatos de fecha válidos: formatos estándar, formatos en español, tiempo relativo (como \"ayer\", \"hace 1 día\", \"hace 1 hora\", etc.), tiempo en inglés (como \"yesterday\", etc.)\n\n# Formato de datos de retorno (estrictamente obligatorio):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"Búsqueda completada\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# Ejecuta la función inmediatamente y asigna a __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "result_processor": {
+      "suggestions": {
+        "check_syntax_logic": "Verifica la sintaxis del código y los errores lógicos",
+        "regenerate_code": "Vuelve a generar el código para satisfacer mejor las necesidades del usuario. Verifica la lógica de adquisición de datos para asegurarte de que se devuelvan campos válidos de título y contenido",
+        "check_data_logic": "Verifica la lógica de adquisición de datos para asegurarte de que se devuelvan los datos en el formato correcto",
+        "check_execution_structure": "Verifica la ejecución del código y la estructura básica de los datos",
+        "check_business_logic": "Verifica la lógica de negocio y los campos obligatorios",
+        "check_code_format": "Verifica la lógica del código y el formato de salida",
+        "check_syntax_variables": "Verifica la sintaxis del código, la definición de variables y los errores lógicos"
+      },
+      "system_errors": {
+        "execution_timeout": "Tiempo de ejecución del código agotado"
+      },
+      "messages": {
+        "execution_failed": "Fallo en la ejecución del código: {error}"
+      },
+      "summaries": {
+        "no_data": "Ejecución completada, pero no se obtuvieron datos",
+        "execution_complete": "Ejecución completada",
+        "operation_complete": "Operación completada"
+      }
     }
   }
 }

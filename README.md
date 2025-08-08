@@ -3,7 +3,7 @@
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=8)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=8)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=9)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=9)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **将自然语言指令转化为可执行代码的AI驱动自动化引擎**  
@@ -50,7 +50,13 @@ AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代�
 - **模板系统** - 领域特定的执行模板  
 - **搜索集成** - 多引擎搜索能力（百度、Bing、360、搜狗）  
 - **内容生成** - 专业的内容创建工作流  
-  
+
+### 🌍 多语言支持  
+- **全球化指令处理** - 支持12种主要语言的自然语言指令识别  
+- **本地化关键词** - 中文、英文、阿拉伯语、德语、西班牙语、法语、印地语、日语、韩语、葡萄牙语、俄语、越南语  
+- **智能语言检测** - 自动识别用户指令语言并匹配相应的关键词库  
+- **跨语言兼容** - 保持英文关键词通用性的同时提供本地化体验
+
 ### 🛡️ 企业级功能  
 - **进度跟踪** - 实时执行状态指示器  
 - **错误处理** - 全面的异常管理和重试逻辑  
@@ -93,9 +99,8 @@ AIForge提供多层安全保障，确保AI代码安全执行：
     forge = AIForgeEngine(  
         api_key="your-deepseek-key",  
         provider="deepseek",
-        locale="en",  
-        max_rounds=5,  
-        cache_enabled=True  
+        locale="en", # ar|de|en|es|fr|hi|ja|ko|pt|ru|vi|zh
+        max_rounds=5,
     )  
   
     # 复杂任务执行  

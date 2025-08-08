@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "成功",
+      "error": "エラー",
+      "pending": "処理中",
+      "cancelled": "キャンセル済み",
+      "completed": "完了",
+      "failed": "失敗",
+      "running": "実行中"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "確認",
+      "cancel": "キャンセル",
+      "retry": "再試行",
+      "skip": "スキップ",
+      "continue": "続行",
+      "start": "開始",
+      "stop": "停止"
     },
     "time_units": {
-      "seconds": "seconds",
-      "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "seconds": "秒",
+      "minutes": "分",
+      "hours": "時間",
+      "days": "日"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
-      "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "items": "項目",
+      "count": "個",
+      "total": "合計",
+      "found": "見つかりました",
+      "valid": "有効"
     },
     "labels": {
-      "name": "Name",
-      "type": "Type",
-      "description": "Description",
-      "timestamp": "Timestamp",
-      "status": "Status",
-      "result": "Result"
+      "name": "名前",
+      "type": "タイプ",
+      "description": "説明",
+      "timestamp": "タイムスタンプ",
+      "status": "ステータス",
+      "result": "結果"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "読み込み中...",
+      "no_data": "データなし",
+      "unknown": "不明",
+      "processing": "処理中...",
+      "waiting": "待機中..."
     }
   }
 }

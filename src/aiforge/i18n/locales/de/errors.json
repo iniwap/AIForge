@@ -1,122 +1,122 @@
 {
   "execution": {
-    "direct_response_error": "Direct response failed: {error}",
-    "validation_failed": "Validation failed",
-    "execution_timeout": "Execution timeout",
-    "module_execution_failed": "Module execution failed",
-    "parameter_validation_failed": "Parameter validation failed",
-    "intent_validation_failed": "Intent validation failed",
-    "functionality_validation_failed": "Functionality consistency validation failed"
+    "direct_response_error": "Direkte Antwort fehlgeschlagen: {error}",
+    "validation_failed": "Validierung fehlgeschlagen",
+    "execution_timeout": "Ausführungs-Timeout",
+    "module_execution_failed": "Modulausführung fehlgeschlagen",
+    "parameter_validation_failed": "Parameter-Validierung fehlgeschlagen",
+    "intent_validation_failed": "Absichts-Validierung fehlgeschlagen",
+    "functionality_validation_failed": "Funktionalitätskonsistenz-Validierung fehlgeschlagen"
   },
   "search": {
-    "search_failed_error": "Search failed: {error}",
-    "all_strategies_failed": "All search strategies failed",
-    "quality_validation_failed": "Search result quality validation failed",
-    "no_valid_results": "No valid search results found",
-    "no_search_container": "No search result container found"
+    "search_failed_error": "Suche fehlgeschlagen: {error}",
+    "all_strategies_failed": "Alle Suchstrategien fehlgeschlagen",
+    "quality_validation_failed": "Validierung der Suchergebnisqualität fehlgeschlagen",
+    "no_valid_results": "Keine gültigen Suchergebnisse gefunden",
+    "no_search_container": "Suchergebniscontainer nicht gefunden"
   },
   "task": {
-    "execution_error": "Execution error: {error}"
+    "execution_error": "Ausführungsfehler: {error}"
   },
   "analyzer": {
-    "analysis_failed": "Statistical analysis failed: {error}",
-    "api_key_in_url_parameter": "Detected API key parameter in URL",
-    "api_key_in_url_constant": "Detected API key parameter in URL constant",
-    "api_key_in_headers": "Detected authentication info in headers: {key}",
-    "possible_api_key_parameter": "Detected possible API key parameter: {param}"
+    "analysis_failed": "Statistische Analyse fehlgeschlagen: {error}",
+    "api_key_in_url_parameter": "API-Schlüsselparameter in der URL erkannt",
+    "api_key_in_url_constant": "API-Schlüsselparameter in der URL-Konstante erkannt",
+    "api_key_in_headers": "Authentifizierungsinformationen in den Headern erkannt: {key}",
+    "possible_api_key_parameter": "Möglicher API-Schlüsselparameter erkannt: {param}"
   },
   "content_generation": {
-    "llm_manager_unavailable": "LLM manager unavailable",
-    "llm_client_unavailable": "LLM client unavailable",
-    "llm_manager_error_summary": "Content generation failed: LLM manager unavailable",
-    "llm_client_error_summary": "Content generation failed: LLM client unavailable",
-    "generation_error": "Content generation error: {error}",
-    "generation_failed": "Content generation failed: {error}"
+    "llm_manager_unavailable": "LLM-Manager nicht verfügbar",
+    "llm_client_unavailable": "LLM-Client nicht verfügbar",
+    "llm_manager_error_summary": "Inhaltsgenerierung fehlgeschlagen: LLM-Manager nicht verfügbar",
+    "llm_client_error_summary": "Inhaltsgenerierung fehlgeschlagen: LLM-Client nicht verfügbar",
+    "generation_error": "Fehler bei der Inhaltsgenerierung: {error}",
+    "generation_failed": "Inhaltsgenerierung fehlgeschlagen: {error}"
   },
   "template": {
-    "missing_required_parameter": "Missing required parameter: {param_name}",
-    "template_not_found": "Template not found: {template_id}",
-    "execution_failed": "Template {template_id} execution failed: {error}"
+    "missing_required_parameter": "Erforderlicher Parameter fehlt: {param_name}",
+    "template_not_found": "Vorlage nicht gefunden: {template_id}",
+    "execution_failed": "Ausführung der Vorlage {template_id} fehlgeschlagen: {error}"
   },
   "llm_client": {
-    "server_error_retry": "{name} server error: {status_code}, retry {attempt}, waiting {wait_time} seconds...",
-    "client_error": "{name} client error: {status_code}",
-    "network_error_retry": "{name} network error: {error}, retry {attempt}",
-    "request_failed": "{name} request failed: {error}"
+    "server_error_retry": "{name} Serverfehler: {status_code}, {attempt}. Wiederholungsversuch, wartet {wait_time} Sekunden...",
+    "client_error": "{name} Client-Fehler: {status_code}",
+    "network_error_retry": "{name} Netzwerkfehler: {error}, {attempt}. Wiederholungsversuch",
+    "request_failed": "{name} Anfrage fehlgeschlagen: {error}"
   },
   "llm_manager": {
-    "default_client_unavailable": "Default LLM client '{provider}' unavailable or creation failed",
-    "config_missing": "Default LLM client not specified in config or config does not exist: {provider}",
-    "no_available_client": "No available LLM client found",
-    "unsupported_type": "Unsupported LLM type: {client_type}",
-    "client_unavailable": "LLM client '{name}' unavailable",
-    "create_failed": "Failed to create LLM client {name}: {error}",
-    "switch_failed": "Switch failed, client '{name}' unavailable"
+    "default_client_unavailable": "Standard-LLM-Client '{provider}' nicht verfügbar oder Erstellung fehlgeschlagen",
+    "config_missing": "Standard-LLM-Client nicht in der Konfigurationsdatei angegeben oder Konfiguration existiert nicht: {provider}",
+    "no_available_client": "Kein verfügbarer LLM-Client gefunden",
+    "unsupported_type": "Nicht unterstützter LLM-Typ: {client_type}",
+    "client_unavailable": "LLM-Client '{name}' nicht verfügbar",
+    "create_failed": "Erstellung des LLM-Clients {name} fehlgeschlagen: {error}",
+    "switch_failed": "Wechsel fehlgeschlagen, Client '{name}' nicht verfügbar"
   },
   "validation": {
-    "local_basic_failed": "Local basic validation failed",
-    "business_logic_failed": "Business logic validation failed",
-    "ai_validation_failed": "AI validation failed",
-    "llm_client_none": "llm_client is None",
-    "code_execution_failed": "Code execution failed: {error}",
-    "unknown_error": "Unknown error",
-    "execution_result_none": "Execution result is None",
-    "data_field_empty": "Data field is empty list, no valid data retrieved",
-    "data_field_none": "Data field is None",
-    "missing_data_field": "Missing data field",
-    "execution_result_empty": "Execution result is empty",
-    "result_must_be_dict": "Result content must be in dictionary format",
-    "result_status_error": "Result status is error",
-    "data_must_be_array": "Data field must be in array format",
-    "data_array_empty": "Data array is empty",
-    "data_item_must_be_dict": "Data item must be in dictionary format",
-    "data_item_missing_required_fields": "Data item missing required fields",
-    "insufficient_data_quantity": "Insufficient data quantity: need at least {min_items} items, actual {actual} items",
-    "insufficient_valid_data": "Retrieved {valid_count} valid data items, does not meet minimum requirement of {min_items} items",
-    "result_not_meet_requirements": "Result does not meet task requirements",
-    "ai_response_parse_failed": "AI response format cannot be parsed",
-    "ai_response_format_error": "AI validation response format error"
+    "local_basic_failed": "Lokale Validierung fehlgeschlagen",
+    "business_logic_failed": "Validierung der Geschäftslogik fehlgeschlagen",
+    "ai_validation_failed": "AI-Validierung fehlgeschlagen",
+    "llm_client_none": "llm_client ist None",
+    "code_execution_failed": "Code-Ausführung fehlgeschlagen: {error}",
+    "unknown_error": "Unbekannter Fehler",
+    "execution_result_none": "Ausführungsergebnis ist None",
+    "data_field_empty": "Das Datenfeld ist eine leere Liste, keine gültigen Daten erfasst",
+    "data_field_none": "Das Datenfeld ist None",
+    "missing_data_field": "Datenfeld fehlt",
+    "execution_result_empty": "Ausführungsergebnis ist leer",
+    "result_must_be_dict": "Der Ergebnisinhalt muss im Wörterbuchformat vorliegen",
+    "result_status_error": "Der Ergebnisstatus ist 'error'",
+    "data_must_be_array": "Das Datenfeld muss im Array-Format vorliegen",
+    "data_array_empty": "Das Daten-Array ist leer",
+    "data_item_must_be_dict": "Das Datenelement muss im Wörterbuchformat vorliegen",
+    "data_item_missing_required_fields": "Datenelement fehlt erforderliche Felder",
+    "insufficient_data_quantity": "Unzureichende Datenmenge: Benötigt werden mindestens {min_items}, tatsächlich sind es {actual}",
+    "insufficient_valid_data": "Es wurden {valid_count} gültige Daten erfasst, was nicht dem erforderlichen Minimum von {min_items} entspricht",
+    "result_not_meet_requirements": "Ergebnis erfüllt die Aufgabenanforderungen nicht",
+    "ai_response_parse_failed": "Das Format der AI-Antwort kann nicht geparst werden",
+    "ai_response_format_error": "Fehler im Format der AI-Validierungsantwort"
   },
   "runner": {
-    "code_execution_timeout": "Code execution timeout ({timeout} seconds)",
-    "process_execution_error": "Process execution error: {error}",
-    "result_parse_error": "Result parsing error: {error}",
-    "network_security_blocked": "Blocked by network security policy",
-    "module_blocked_security_template": "Module '{missing_name}' blocked by security policy. Reason: {reason}. Original module: {original_module}",
-    "code_execution_timeout_handler": "Code execution timeout",
-    "security_policy_active": "Network security policy active",
-    "unknown_error": "Unknown error",
-    "security_blocked_modules": "Security policy blocked the following modules: {blocked_list}. {error}",
-    "execution_failed": "Execution failed: {error}",
-    "runner_error": "Runner error: {error}"
+    "code_execution_timeout": "Code-Ausführungs-Timeout ({timeout} Sekunden)",
+    "process_execution_error": "Prozessausführungsfehler: {error}",
+    "result_parse_error": "Fehler beim Parsen des Ergebnisses: {error}",
+    "network_security_blocked": "Durch Netzwerksicherheitsrichtlinie blockiert",
+    "module_blocked_security_template": "Modul '{missing_name}' wurde aufgrund der Sicherheitsrichtlinie blockiert. Grund: {reason}. Originalmodul: {original_module}",
+    "code_execution_timeout_handler": "Code-Ausführungs-Timeout",
+    "security_policy_active": "Netzwerksicherheitsrichtlinie aktiv",
+    "unknown_error": "Unbekannter Fehler",
+    "security_blocked_modules": "Die Sicherheitsrichtlinie hat den Import der folgenden Module blockiert: {blocked_list}. {error}",
+    "execution_failed": "Ausführung fehlgeschlagen: {error}",
+    "runner_error": "Runner-Fehler: {error}"
   },
   "config": {
-    "file_not_exists": "Configuration file {file} does not exist",
-    "load_failed": "Failed to load configuration file: {error}"
+    "file_not_exists": "Konfigurationsdatei {file} existiert nicht",
+    "load_failed": "Laden der Konfigurationsdatei fehlgeschlagen: {error}"
   },
   "executor": {
-    "no_llm_response": "Attempt {optimization_attempt}: LLM returned no response",
-    "no_code_blocks_found": "Attempt {optimization_attempt}: No executable code blocks found",
-    "code_execution_failed": "Attempt {optimization_attempt}: Code execution failed",
-    "code_execution_error": "Attempt {optimization_attempt}: Code execution error",
-    "validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}",
-    "final_validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}, reached maximum optimization attempts",
-    "all_attempts_failed": "All {max_optimization_attempts} optimization attempts failed within single round"
+    "no_llm_response": "{optimization_attempt}. Versuch: LLM hat keine Antwort zurückgegeben",
+    "no_code_blocks_found": "{optimization_attempt}. Versuch: Keine ausführbaren Codeblöcke gefunden",
+    "code_execution_failed": "{optimization_attempt}. Versuch: Code-Ausführung fehlgeschlagen",
+    "code_execution_error": "{optimization_attempt}. Versuch: Fehler bei der Code-Ausführung",
+    "validation_failed": "Validierung des {optimization_attempt}. Versuchs fehlgeschlagen ({validation_type}): {failure_reason}",
+    "final_validation_failed": "Validierung des {optimization_attempt}. Versuchs fehlgeschlagen ({validation_type}): {failure_reason}, maximale Anzahl an Optimierungen erreicht",
+    "all_attempts_failed": "Alle {max_optimization_attempts} Optimierungsversuche innerhalb einer Runde fehlgeschlagen"
   },
   "security": {
-    "dangerous_function_detected": "Detected dangerous function call: {pattern}",
-    "analysis_failed": "Security analysis failed: {error}"
+    "dangerous_function_detected": "Gefährlicher Funktionsaufruf erkannt: {pattern}",
+    "analysis_failed": "Sicherheitsanalyse fehlgeschlagen: {error}"
   },
   "network": {
-    "strict_mode_blocks_all": "Strict mode blocks all network access",
-    "domain_in_blacklist": "Domain {domain} is in blacklist",
-    "domain_not_in_whitelist": "Domain {domain} is not in whitelist",
-    "empty_hostname": "Empty hostname",
-    "domain_blacklisted": "Domain in blacklist: {domain}",
-    "domain_not_whitelisted": "Domain not in whitelist",
-    "ip_in_blocked_range": "IP in blocked range: {range}",
-    "resolved_ip_blocked": "Resolved IP {ip} in blocked range: {range}",
-    "cannot_resolve_hostname": "Cannot resolve hostname",
-    "unknown_policy_level": "Unknown network policy level: {policy_level}"
+    "strict_mode_blocks_all": "Strenger Modus blockiert jeglichen Netzwerkzugriff",
+    "domain_in_blacklist": "Domain {domain} steht auf der schwarzen Liste",
+    "domain_not_in_whitelist": "Domain {domain} steht nicht auf der weißen Liste",
+    "empty_hostname": "Hostname ist leer",
+    "domain_blacklisted": "Domain steht auf der schwarzen Liste: {domain}",
+    "domain_not_whitelisted": "Domain steht nicht auf der weißen Liste",
+    "ip_in_blocked_range": "IP befindet sich im blockierten Bereich: {range}",
+    "resolved_ip_blocked": "Aufgelöste IP {ip} befindet sich im blockierten Bereich: {range}",
+    "cannot_resolve_hostname": "Hostname kann nicht aufgelöst werden",
+    "unknown_policy_level": "Unbekanntes Netzwerkrichtlinien-Level: {policy_level}"
   }
 }

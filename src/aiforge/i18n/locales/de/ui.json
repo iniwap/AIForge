@@ -1,180 +1,184 @@
 {
   "task": {
-    "template_code_generation": "Generate code based on template",
-    "system_prompt_generation": "Please generate code according to system prompt",
-    "processing_start": "Start processing task instruction, max rounds {max_rounds}, max optimization attempts per round {max_optimization}",
-    "round_execution": "Round {round} execution",
-    "all_rounds_failed_best_result": "All rounds failed, returning best result, execution ended!",
-    "round_success_completed": "Round {round} execution successful, task completed!",
-    "all_rounds_failed_no_result": "All rounds failed, no valid result obtained, execution ended!",
-    "round_failed_continue": "Round {round} execution failed, proceeding to next round",
-    "execution_summary": "Task {task_id} execution summary",
+    "template_code_generation": "Code-Generierung basierend auf Vorlage",
+    "system_prompt_generation": "Bitte Code basierend auf der Systemaufforderung generieren",
+    "processing_start": "Beginne mit der Verarbeitung des Task-Befehls, max. Versuche {max_rounds}, max. Optimierungen pro Runde {max_optimization}",
+    "round_execution": "Ausführung der Runde {round}",
+    "all_rounds_failed_best_result": "Alle Runden fehlgeschlagen, bestes Ergebnis wird zurückgegeben, Ausführung beendet!",
+    "round_success_completed": "Runde {round} erfolgreich abgeschlossen, Task beendet!",
+    "all_rounds_failed_no_result": "Alle Runden fehlgeschlagen, kein gültiges Ergebnis erhalten, Ausführung beendet!",
+    "round_failed_continue": "Runde {round} fehlgeschlagen, beginne nächste Runde neu",
+    "execution_summary": "Zusammenfassung der Ausführung von Task {task_id}",
     "status": {
-      "created": "Created",
-      "running": "Running",
-      "completed": "Completed",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "unknown": "Unknown status"
+      "created": "Erstellt",
+      "running": "Wird ausgeführt",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "cancelled": "Abgebrochen",
+      "unknown": "Unbekannter Status"
     }
   },
   "execution": {
-    "direct_response_success": "Direct response: {action} - {instruction}...",
-    "cache_lookup": "Looking up cache...",
-    "cache_found": "Found {count} cached modules",
-    "cache_execution": "Executing cached modules...",
-    "ai_generation": "Generating new code...",
-    "cache_validation_passed": "Cache validation passed"
+    "direct_response_success": "Direkte Antwort: {action} - {instruction}...",
+    "cache_lookup": "Suche in Cache...",
+    "cache_found": "Es wurden {count} Cache-Module gefunden",
+    "cache_execution": "Führe Cache-Module aus...",
+    "ai_generation": "Generiere neuen Code...",
+    "cache_validation_passed": "Cache-Validierung bestanden"
   },
   "search": {
-    "search_complete_success": "Search completed, found {count} results",
-    "process_system_cache": "System cache",
-    "process_ai_template": "AI template",
-    "process_ai_free": "AI free form",
-    "process_system_default": "System default",
+    "search_complete_success": "Suche abgeschlossen, {count} Ergebnisse gefunden",
+    "process_system_cache": "System-Cache",
+    "process_ai_template": "AI-Vorlage",
+    "process_ai_free": "AI-Frei",
+    "process_system_default": "System-Standard",
     "engine_baidu": "Baidu",
     "engine_bing": "Bing",
     "engine_360": "360",
-    "engine_sogou": "Sogou"
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
   },
   "analyzer": {
     "recommendations": {
-      "enhance_builtin_guidance": "Recommend enhancing built-in type guidance, current built-in type usage rate is low",
-      "relax_creation_conditions": "Built-in type usage rate is very high, consider appropriately relaxing new type creation conditions",
-      "too_many_dynamic": "Too many dynamic types ({count}), recommend cleaning up low-priority types",
-      "low_priority_types": "Found {count} low-priority dynamic types, recommend considering removal",
-      "unused_builtin": "Built-in types {types} have 0% usage rate, may need to optimize keyword matching",
-      "all_good": "Task type usage is good, no special optimization needed"
+      "enhance_builtin_guidance": "Empfehlung: Verstärken Sie die Anleitung für eingebaute Typen, da die aktuelle Nutzungsrate niedrig ist",
+      "relax_creation_conditions": "Die Nutzungsrate eingebauter Typen ist sehr hoch, erwägen Sie eine Lockerung der Bedingungen für die Erstellung neuer Typen",
+      "too_many_dynamic": "Zu viele dynamische Typen ({count}), es wird empfohlen, Typen mit niedriger Priorität zu bereinigen",
+      "low_priority_types": "Es wurden {count} dynamische Typen mit niedriger Priorität gefunden, erwägen Sie deren Entfernung",
+      "unused_builtin": "Die Nutzungsrate des eingebauten Typs {types} beträgt 0, möglicherweise muss die Keyword-Übereinstimmung optimiert werden",
+      "all_good": "Die Nutzung des Aufgabentyps ist gut, keine spezielle Optimierung erforderlich"
     },
     "adaptive": {
-      "task_type_guidance_header": "# Task Type Guidance",
-      "system_status_header": "# System Status:",
-      "current_guidance_strength": "Current guidance strength",
-      "builtin_usage_rate": "Built-in type usage rate",
-      "efficiency_note": "These built-in types have higher cache hit rates and execution efficiency.",
-      "use_builtin_types": "use the following verified built-in task types"
+      "task_type_guidance_header": "# Anleitung für den Aufgabentyp",
+      "system_status_header": "# Systemstatus:",
+      "current_guidance_strength": "Aktuelle Anleitungsstärke",
+      "builtin_usage_rate": "Nutzungsrate eingebauter Typen",
+      "efficiency_note": "Diese eingebauten Typen haben eine höhere Cache-Trefferrate und Ausführungseffizienz.",
+      "use_builtin_types": "Verwenden Sie die folgenden validierten eingebauten Aufgabentypen"
     },
-    "priority_label": "priority",
+    "priority_label": "Priorität",
     "use_cases": {
       "data_fetch": [
-        "Search web content",
-        "Get API data",
-        "Crawl news information"
+        "Webseiteninhalt durchsuchen",
+        "API-Daten abrufen",
+        "Nachrichteninformationen scrapen"
       ],
       "data_process": [
-        "Data analysis",
-        "Statistical calculation",
-        "Format conversion"
+        "Datenanalyse",
+        "Statistische Berechnungen",
+        "Formatkonvertierung"
       ],
       "file_operation": [
-        "Read/write files",
-        "Batch processing",
-        "Document operations"
+        "Dateien lesen und schreiben",
+        "Massenverarbeitung",
+        "Dokumentenoperationen"
       ],
       "automation": [
-        "Scheduled tasks",
-        "System monitoring",
-        "Automation workflows"
+        "Geplante Aufgaben",
+        "Systemüberwachung",
+        "Automatisierte Workflows"
       ],
       "content_generation": [
-        "Document generation",
-        "Report creation",
-        "Content creation"
+        "Dokumentengenerierung",
+        "Berichtserstellung",
+        "Inhaltserstellung"
       ],
       "direct_response": [
-        "Knowledge Q&A",
-        "Text creation",
-        "Translation and summarization"
+        "Wissensfragen und -antworten",
+        "Texterstellung",
+        "Übersetzung und Zusammenfassung"
       ]
     }
   },
   "content_generation": {
-    "generation_success": "Successfully generated {format} format content",
-    "search_based_suffix": " (based on {count} search results)",
-    "search_results_header": "Search results for '{instruction}'",
-    "result_label": "Result",
-    "title_label": "Title",
-    "publish_time_label": "Publish Time",
-    "abstract_label": "Abstract",
-    "content_label": "Content",
-    "no_title": "No title",
-    "unknown_time": "Unknown time",
-    "no_abstract": "No abstract",
-    "no_search_results_fallback": "No relevant search results found, please generate content based on existing knowledge."
+    "generation_success": "Inhalt im Format {format} erfolgreich generiert",
+    "search_based_suffix": "(basierend auf {count} Suchergebnissen)",
+    "search_results_header": "Suchergebnisse zu '{instruction}'",
+    "result_label": "Ergebnis",
+    "title_label": "Titel",
+    "publish_time_label": "Veröffentlichungszeitpunkt",
+    "abstract_label": "Zusammenfassung",
+    "content_label": "Inhalt",
+    "no_title": "Kein Titel",
+    "unknown_time": "Unbekannte Zeit",
+    "no_abstract": "Keine Zusammenfassung",
+    "no_search_results_fallback": "Keine relevanten Suchergebnisse gefunden, bitte generieren Sie den Inhalt basierend auf vorhandenem Wissen."
   },
   "progress": {
-    "connecting_ai": "[AIForge]🤖 Connecting to AI service{provider}...",
-    "waiting_response": "[AIForge]💭 Waiting for AI response...",
-    "processing_response": "[AIForge]✅ Received AI response, processing...",
-    "searching": "[AIForge]🔍 Searching: {query}",
-    "search_process": "[AIForge]🔍 Trying {search_type} search...",
-    "search_complete": "[AIForge]✅ Search completed, found {count} results",
-    "cache_lookup": "[AIForge]🔍 Looking up cache...",
-    "cache_found": "[AIForge]📦 Found {count} cached modules, validating...",
-    "cache_execution": "[AIForge]⚡ Executing cached code...",
-    "code_execution": "[AIForge]⚡ Executing {count} code blocks...",
-    "round_start": "[AIForge]🔄 Starting round {current}/{total} execution...",
-    "round_success": "[AIForge]🎉 Round {round_num} execution successful!",
-    "round_retry": "[AIForge]⚠️ Round {round_num} failed, preparing retry..."
+    "connecting_ai": "[AIForge]🤖 Verbinde mit AI-Dienst {provider}...",
+    "waiting_response": "[AIForge]💭 Warte auf AI-Antwort...",
+    "processing_response": "[AIForge]✅ AI-Antwort erhalten, wird verarbeitet...",
+    "searching": "[AIForge]🔍 Suche nach: {query}",
+    "search_process": "[AIForge]🔍 Versuche {search_type} Suche...",
+    "search_complete": "[AIForge]✅ Suche abgeschlossen, {count} Ergebnisse gefunden",
+    "cache_lookup": "[AIForge]🔍 Suche in Cache...",
+    "cache_found": "[AIForge]📦 {count} Cache-Module gefunden, validiere...",
+    "cache_execution": "[AIForge]⚡ Führe Cache-Code aus...",
+    "code_execution": "[AIForge]⚡ Führe {count} Codeblöcke aus...",
+    "round_start": "[AIForge]🔄 Starte Runde {current}/{total}...",
+    "round_success": "[AIForge]🎉 Runde {round_num} erfolgreich abgeschlossen!",
+    "round_retry": "[AIForge]⚠️ Runde {round_num} fehlgeschlagen, bereite Wiederholung vor..."
   },
   "llm_manager": {
-    "config_updated": "Configuration updated",
-    "lazy_load_create": "Lazy loading LLM client: {name}",
-    "switch_success": "Switched to LLM client: {name}",
-    "cleanup_unused": "Cleaned up unused clients, keeping: {current_name}"
+    "config_updated": "Konfiguration aktualisiert",
+    "lazy_load_create": "Lazy-Load-Erstellung des LLM-Clients: {name}",
+    "switch_success": "Zum LLM-Client gewechselt: {name}",
+    "cleanup_unused": "Unbenutzte Clients bereinigt, behalten: {current_name}"
   },
   "validation": {
-    "validation_passed": "Validation passed",
-    "found_valid_results": "Found {count} valid results",
-    "ai_validation_exception": "AI validation exception, default pass: {error}"
+    "validation_passed": "Validierung bestanden",
+    "found_valid_results": "{count} gültige Ergebnisse gefunden",
+    "ai_validation_exception": "AI-Validierungsfehler, standardmäßig bestanden: {error}"
   },
   "runner": {
-    "sandbox_info": "Sandbox environment: timeout={timeout}s, memory={memory}MB, CPU={cpu}s, file descriptors={fd}, file size={file_size}MB, processes={processes}",
-    "network_blocked_info": "Network access blocked by security policy",
-    "cleanup_warning": "Cleanup warning: {error}"
+    "sandbox_info": "Sandbox-Laufzeitumgebung: Timeout={timeout}s, Speicher={memory}MB, CPU={cpu}s, Dateideskriptoren={fd}, Dateigröße={file_size}MB, Prozesse={processes}",
+    "network_blocked_info": "Netzwerkzugriff durch Sicherheitsrichtlinie blockiert",
+    "cleanup_warning": "Bereinigungswarnung: {error}"
   },
   "formatter": {
-    "code_placeholder": "See code block above...",
-    "execution_result_title": "Code Execution Result",
-    "structured_feedback_message": "The following are code block execution results automatically returned by the runtime environment in execution order",
-    "execution_summary_title": "Execution Summary",
-    "item_column": "Item",
-    "value_column": "Value",
-    "total_rounds_label": "Total Rounds",
-    "history_label": "History",
-    "task_status_label": "Task Status",
-    "history_count_text": "{count} records",
-    "completed_text": "Completed",
-    "incomplete_text": "Incomplete",
-    "operation_completed": "Operation completed"
+    "code_placeholder": "Siehe Codeblock oben...",
+    "execution_result_title": "Ergebnis der Code-Ausführung",
+    "structured_feedback_message": "Im Folgenden sind die Ergebnisse der Codeblock-Ausführung, die von der Laufzeitumgebung automatisch in Ausführungsreihenfolge zurückgegeben werden",
+    "execution_summary_title": "Ausführungszusammenfassung",
+    "item_column": "Element",
+    "value_column": "Wert",
+    "total_rounds_label": "Gesamtzahl der Runden",
+    "history_label": "Verlauf",
+    "task_status_label": "Task-Status",
+    "history_count_text": "{count} Einträge",
+    "completed_text": "Abgeschlossen",
+    "incomplete_text": "Nicht abgeschlossen",
+    "operation_completed": "Vorgang abgeschlossen"
   },
   "executor": {
-    "start_execution_block": "Starting execution of code block: {block_name}",
-    "round_attempt": "Round {round_num}, attempt {optimization_attempt}",
-    "generating_code": "Generating code...",
-    "found_code_blocks": "Found {count} code blocks",
-    "validation_passed": "Attempt {optimization_attempt} validation passed!",
-    "best_result_summary": "Returning {count} best results"
+    "start_execution_block": "Beginne mit der Ausführung des Codeblocks: {block_name}",
+    "round_attempt": "Runde {round_num}, Versuch {optimization_attempt}",
+    "generating_code": "Generiere Code...",
+    "found_code_blocks": "{count} Codeblöcke gefunden",
+    "validation_passed": "Validierung des Versuchs {optimization_attempt} bestanden!",
+    "best_result_summary": "Gebe {count} beste Ergebnisse zurück"
   },
   "network": {
-    "validation_disabled": "Network validation disabled",
-    "open_mode_allows_all": "Open mode allows all network access",
-    "default_allow": "Default allow",
-    "domain_filtering_disabled": "Domain filtering disabled",
-    "domain_validation_passed": "Domain validation passed",
-    "domain_whitelisted": "Domain in whitelist: {domain}",
-    "ip_address_allowed": "IP address allowed",
-    "resolved_ip_allowed": "Resolved IP {ip} allowed",
-    "no_hostname": "No hostname",
-    "no_domain_restrictions": "No domain restrictions"
+    "validation_disabled": "Netzwerkvalidierung deaktiviert",
+    "open_mode_allows_all": "Der offene Modus erlaubt alle Netzwerkzugriffe",
+    "default_allow": "Standardmäßig erlaubt",
+    "domain_filtering_disabled": "Domain-Filterung deaktiviert",
+    "domain_validation_passed": "Domain-Validierung bestanden",
+    "domain_whitelisted": "Domain ist in der Whitelist: {domain}",
+    "ip_address_allowed": "IP-Adresse ist erlaubt",
+    "resolved_ip_allowed": "Aufgelöste IP {ip} ist erlaubt",
+    "no_hostname": "Kein Hostname",
+    "no_domain_restrictions": "Keine Domain-Einschränkungen"
   },
   "template": {
-    "title_label": "Title",
-    "url_label": "URL",
-    "content_description": "Detailed content (remove spaces and line breaks, at least {length} characters)",
-    "time_label": "Publication time",
-    "optional_empty": " (can be empty)",
-    "optional_empty_quotes": " (can be '')",
-    "corresponding_value": "Corresponding value"
+    "title_label": "Titel",
+    "url_label": "Link",
+    "content_description": "Detaillierter Inhalt (Leerzeichen und Zeilenumbrüche entfernt, mindestens {length} Zeichen)",
+    "time_label": "Veröffentlichungszeitpunkt",
+    "optional_empty": "(Kann leer sein)",
+    "optional_empty_quotes": "(Kann '' sein)",
+    "corresponding_value": "Entsprechender Wert"
   }
 }

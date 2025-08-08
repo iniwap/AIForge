@@ -1,0 +1,401 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "buscar": "buscar",  
+      "obtener": "obtener",  
+      "conseguir": "conseguir",  
+      "noticias": "noticias",  
+      "información": "información",  
+      "contenido": "contenido",  
+      "rastrear": "rastrear",  
+      "interfaz": "interfaz"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "analizar": "analizar",  
+      "procesar": "procesar",  
+      "calcular": "calcular",  
+      "estadísticas": "estadísticas",  
+      "transformar": "transformar"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "archivo": "archivo",  
+      "leer": "leer",  
+      "escribir": "escribir",  
+      "guardar": "guardar",  
+      "lote": "lote",  
+      "copiar": "copiar",  
+      "mover": "mover",  
+      "eliminar": "eliminar",  
+      "renombrar": "renombrar",  
+      "comprimir": "comprimir",  
+      "extraer": "extraer",  
+      "crear": "crear",  
+      "directorio": "directorio",  
+      "carpeta": "carpeta",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "analizar": "analizar",  
+        "estadísticas": "estadísticas",  
+        "calcular": "calcular",  
+        "procesar datos": "procesar datos",  
+        "limpiar": "limpiar"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "automatización": "automatización",  
+      "programar": "programar",  
+      "monitorear": "monitorear",  
+      "tarea": "tarea"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "generar": "generar",  
+      "crear": "crear",  
+      "escribir": "escribir",  
+      "informe": "informe"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "qué es": "qué es",  
+      "cómo": "cómo",  
+      "por qué": "por qué",  
+      "explicar": "explicar",  
+      "describir": "describir",  
+      "definir": "definir",  
+      "concepto": "concepto",  
+      "principio": "principio",  
+      "diferencia": "diferencia",  
+      "comparar": "comparar",  
+      "escribir": "escribir",  
+      "redactar": "redactar",  
+      "borrador": "borrador",  
+      "traducir": "traducir",  
+      "convertir a": "convertir a",  
+      "reescribir como": "reescribir como",  
+      "en idioma": "en idioma",  
+      "resumir": "resumir",  
+      "resumen": "resumen",  
+      "esquema": "esquema",  
+      "analizar esto": "analizar esto",  
+      "interpretar": "interpretar",  
+      "sugerir": "sugerir",  
+      "recomendar": "recomendar",  
+      "opinión": "opinión",  
+      "vista": "vista",  
+      "evaluar": "evaluar",  
+      "qué piensas": "qué piensas",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "hoy": "hoy",  
+        "ahora": "ahora",  
+        "último": "último",  
+        "actual": "actual",  
+        "tiempo real": "tiempo real",  
+        "actualmente": "actualmente",  
+        "clima": "clima",  
+        "precio de acciones": "precio de acciones",  
+        "noticias": "noticias",  
+        "tipo de cambio": "tipo de cambio",  
+        "precio": "precio",  
+        "estado": "estado"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "formato": "formato",  
+      "formato de salida": "formato de salida",  
+      "tipo": "tipo",  
+      "extensión": "extensión",  
+      "formato de archivo": "formato de archivo"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "estilo": "estilo",  
+      "tema": "tema",  
+      "plantilla": "plantilla"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "idioma": "idioma",  
+      "lengua": "lengua",  
+      "local": "local",  
+      "internacionalización": "internacionalización"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "tono": "tono",  
+      "estado de ánimo": "estado de ánimo",  
+      "emoción": "emoción"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "lenguaje de marcado"],  
+    "html": ["html", "webpage", "web", "página web", "web"],  
+    "json": ["json", "data format", "formato de datos"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "documento"],  
+    "txt": ["txt", "text", "plain text", "texto", "texto plano"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "buscar", "obtener", "conseguir", "encontrar", "recuperar", "consultar"],  
+    "target_keywords": ["search", "query", "buscar", "consulta"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "consulta de búsqueda", "consulta", "palabra clave", "término de búsqueda", "término", "palabras clave"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "buscar": "buscar",  
+      "encontrar": "encontrar",  
+      "consultar": "consultar",  
+      "localizar": "localizar"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "obtener": "obtener",  
+      "conseguir": "conseguir",  
+      "recuperar": "recuperar",  
+      "adquirir": "adquirir"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "analizar": "analizar",  
+      "examinar": "examinar",  
+      "calcular": "calcular",  
+      "computar": "computar"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "procesar": "procesar",  
+      "transformar": "transformar",  
+      "convertir": "convertir",  
+      "manejar": "manejar"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "generar": "generar",  
+      "crear": "crear",  
+      "producir": "producir",  
+      "hacer": "hacer"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "guardar": "guardar",  
+      "escribir": "escribir",  
+      "almacenar": "almacenar",  
+      "persistir": "persistir"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "responder": "responder",  
+      "contestar": "contestar",  
+      "explicar": "explicar",  
+      "replicar": "replicar"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "traducir": "traducir",  
+      "convertir": "convertir",  
+      "transformar": "transformar",  
+      "interpretar": "interpretar"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "resumir": "resumir",  
+      "abstraer": "abstraer",  
+      "condensar": "condensar",  
+      "esquematizar": "esquematizar"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "sugerir": "sugerir",  
+      "recomendar": "recomendar",  
+      "proponer": "proponer",  
+      "aconsejar": "aconsejar"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "buscar (.+?)(?:\\s|,|\\.|$)",  
+        "encontrar (.+?)(?:\\s|,|\\.|$)",  
+        "buscar por (.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:elementos?|resultados?|entradas?|registros?))",  
+        "(?:como máximo|máximo|max)\\s+(\\d+)",  
+        "(?:primero|primeros|top)\\s+(\\d+)",  
+        "(?:al menos|mínimo|min)\\s+(\\d+)",  
+        "procesar\\s+(\\d+)",  
+        "generar\\s+(\\d+)",  
+        "obtener\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "archivo\\s+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "url": {  
+      "patterns": ["(https?://[^\\s]+)"],  
+      "type": "str"  
+    },  
+    "content": {  
+      "patterns": [  
+        "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "contenido[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "texto[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "style": {  
+      "patterns": [  
+        "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "estilo[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "tema[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    }  
+  }  
+}

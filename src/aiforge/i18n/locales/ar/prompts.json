@@ -1,155 +1,155 @@
 {
   "base": {
-    "header": "# AIForge: Python Code Generation and Execution Assistant",
-    "code_generation_header": "# Code Generation Specifications",
-    "execution_header": "# Execution Specifications",
-    "execution_guidance": "Execute code and assign result to __result__, no mock or placeholder data allowed"
+    "header": "# AIForge: مساعد لتوليد وتنفيذ كود بايثون",
+    "code_generation_header": "# مواصفات توليد الكود",
+    "execution_header": "# مواصفات التنفيذ",
+    "execution_guidance": "قم بتنفيذ الكود، وقم بتعيين نتيجة التنفيذ إلى __result__. يُحظر استخدام بيانات وهمية أو بيانات مؤقتة للنتائج."
   },
   "code_rules": {
-    "executable": "- Generated code must be executable in standard Python environment",
-    "format": "- Use standard Markdown code block format: ```python ... ```, no explanatory text",
-    "error_handling": "- Implement complete error handling and exception catching",
-    "minimal": "- Generate minimal code, no comments, no blank lines",
-    "variables": "- Use shortest variable names (a,b,c,d etc), function parameter names must not be compressed"
+    "executable": "- يجب أن يكون الكود المولد قابلاً للتنفيذ مباشرة في بيئة بايثون قياسية",
+    "format": "- استخدم تنسيق كتل كود Markdown القياسي: ```python ... ```، ولا تُخرج أي نصوص تفسيرية",
+    "error_handling": "- قم بتنفيذ معالجة كاملة للأخطاء والتقاط الاستثناءات",
+    "minimal": "- قم بتوليد كود بسيط جدًا، بدون تعليقات أو أسطر فارغة",
+    "variables": "- استخدم أقصر أسماء للمتغيرات (a,b,c,d, إلخ)، ويجب عدم ضغط أسماء معلمات الدوال"
   },
   "output_format": {
-    "default": "# Output Format Requirements:\n__result__ = {\n    \"data\": [{\"field1\": \"value1\", ...},...],\n    \"status\": \"success or error\",\n    \"summary\": \"result summary\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
-    "status_note": "# Important Note: status should reflect code execution status, not data retrieval result (even if data=[], status=success)",
-    "ai_analysis_header": "# AI Analysis Based Output Format Requirements:",
-    "required_fields_label": "# Required fields:",
-    "non_empty_fields_label": "# Non-empty fields:"
+    "default": "# متطلبات تنسيق الإخراج:\n__result__ = {\n    \"data\": [{\"حقل1\": \"قيمة1\", ...},...],\n    \"status\": \"success أو error\",\n    \"summary\": \"ملخص النتيجة\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
+    "status_note": "# ملاحظة هامة: يجب أن يعكس 'status' حالة تنفيذ الكود، وليس حالة الحصول على البيانات (حتى إذا كانت data=[], فإن status=success)",
+    "ai_analysis_header": "# متطلبات تنسيق الإخراج بناءً على تحليل الذكاء الاصطناعي:",
+    "required_fields_label": "# الحقول المطلوبة:",
+    "non_empty_fields_label": "# الحقول غير الفارغة:"
   },
   "format_templates": {
-    "status_success_error": "success or error",
-    "summary_placeholder": "task completion description",
-    "task_requirements_label": "Output requirements:",
-    "related_params_label": "Related parameters:",
-    "special_requirements_label": "Special requirements:",
-    "task_details_header": "## Task Details",
-    "original_instruction_supplement": "# Original Instruction Supplement"
+    "status_success_error": "success أو error",
+    "summary_placeholder": "وصف إتمام المهمة",
+    "task_requirements_label": "متطلبات الإخراج:",
+    "related_params_label": "المعلمات ذات الصلة:",
+    "special_requirements_label": "متطلبات خاصة:",
+    "task_details_header": "## تفاصيل المهمة",
+    "original_instruction_supplement": "# مكمل للتعليمات الأصلية"
   },
   "analyzer_output_format": {
-    "task_type": "task type",
-    "action": "specific action",
-    "target": "task description",
-    "execution_mode": "direct_ai_response or code_generation",
-    "confidence": "confidence level",
-    "param_value_placeholder": "extracted value or None",
-    "param_type": "parameter type",
+    "task_type": "نوع المهمة",
+    "action": "إجراء محدد",
+    "target": "وصف المهمة",
+    "execution_mode": "direct_ai_response أو code_generation",
+    "confidence": "مستوى الثقة",
+    "param_value_placeholder": "القيمة المستخرجة أو None",
+    "param_type": "نوع المعلمة",
     "required_true_false": "true/false",
-    "min_items": "minimum result count",
-    "non_empty_fields": "required result data fields"
+    "min_items": "الحد الأدنى لعدد النتائج",
+    "non_empty_fields": "حقول بيانات النتائج الضرورية"
   },
   "parameterized": {
-    "header": "## 🔧 Parameterized Execution Guidance",
-    "analysis_function": "Generate function based on task analysis:",
-    "param_description": "# Parameter description:",
-    "call_instruction": "# Must call immediately:",
-    "usage_rules_header": "## 📋 Parameter Usage Rules:",
+    "header": "## 🔧 إرشادات التنفيذ المبرمج",
+    "analysis_function": "توليد دالة بناءً على تحليل المهمة:",
+    "param_description": "# وصف المعلمات:",
+    "call_instruction": "# يجب أن يتم استدعاؤها على الفور:",
+    "usage_rules_header": "## 📋 قواعد استخدام المعلمات:",
     "usage_rules": [
-      "1. Each parameter must be actually used in function body, affecting execution path or result",
-      "2. Prohibit hardcoding values that can be obtained through parameters",
-      "3. Parameters should be used for: controlling behavior, as data source, affecting output, configuring execution"
+      "1. يجب استخدام كل معلمة فعليًا داخل نص الدالة، مما يؤثر على مسار التنفيذ أو النتيجة",
+      "2. يُحظر ترميز القيم التي يمكن الحصول عليها من خلال المعلمات",
+      "3. تُستخدم المعلمات من أجل: التحكم في السلوك، كمصدر للبيانات، التأثير على الإخراج، تهيئة التنفيذ"
     ],
-    "avoid_patterns_header": "## ❌ Avoid Patterns:",
+    "avoid_patterns_header": "## ❌ أنماط يجب تجنبها:",
     "avoid_patterns": [
-      "- Parameters defined but not used",
-      "- Parameters only used for display without affecting core logic",
-      "- Ignoring parameters and using hardcoded values"
+      "- المعلمات التي يتم تعريفها ولكن لا يتم استخدامها",
+      "- المعلمات التي تستخدم فقط للعرض ولا تؤثر على المنطق الأساسي",
+      "- تجاهل المعلمات واستخدام قيم مبرمجة ثابتة"
     ],
-    "docstring_template": "Execute task using provided parameters: {params}"
+    "docstring_template": "تنفيذ المهمة باستخدام المعلمات المقدمة: {params}"
   },
   "direct_response": {
-    "answer": "You are a knowledge assistant, please answer user questions directly. Be accurate, concise, and helpful.",
-    "respond": "You are a knowledge assistant, please answer user questions directly. Be accurate, concise, and helpful.",
-    "create": "You are a content creation assistant, please create content according to user requirements. Pay attention to style and format requirements.",
-    "translate": "You are a translation assistant, please accurately translate the content provided by users. Maintain original meaning and language style.",
-    "summarize": "You are a text analysis assistant, please summarize and analyze the text content provided by users.",
-    "suggest": "You are a consulting advisor, please provide suggestions and opinions based on user needs.",
-    "chat_ai": "You are a friendly, professional and considerate AI assistant, please provide appropriate responses according to conversation context.",
-    "default": "You are an AI assistant, please respond directly to user needs.",
-    "task_target_label": "Task objective",
+    "answer": "أنت مساعد معرفي، يرجى الإجابة مباشرة على أسئلة المستخدم. كن دقيقًا وموجزًا ومفيدًا.",
+    "respond": "أنت مساعد معرفي، يرجى الإجابة مباشرة على أسئلة المستخدم. كن دقيقًا وموجزًا ومفيدًا.",
+    "create": "أنت مساعد لإنشاء المحتوى، يرجى إنشاء محتوى بناءً على متطلبات المستخدم. انتبه إلى متطلبات الأسلوب والتنسيق.",
+    "translate": "أنت مساعد للترجمة، يرجى ترجمة المحتوى الذي يقدمه المستخدم بدقة. حافظ على المعنى الأصلي وأسلوب اللغة.",
+    "summarize": "أنت مساعد لتحليل النصوص، يرجى تلخيص وتحليل محتوى النص الذي يقدمه المستخدم.",
+    "suggest": "أنت مستشار، يرجى تقديم النصائح والآراء بناءً على احتياجات المستخدم.",
+    "chat_ai": "أنت مساعد ذكاء اصطناعي ودود، محترف، ومراعي. يرجى تقديم رد مناسب بناءً على سياق المحادثة.",
+    "default": "أنت مساعد ذكاء اصطناعي، يرجى الاستجابة مباشرة لطلبات المستخدم.",
+    "task_target_label": "هدف المهمة",
     "output_requirements": {
-      "text": "Answer in plain text format",
-      "markdown": "Use Markdown format with appropriate headings, lists and emphasis",
-      "structured_text": "Use structured text format with clear paragraphs and key points"
+      "text": "الرد بصيغة نص عادي",
+      "markdown": "استخدم تنسيق Markdown، بما في ذلك العناوين والقوائم والتمييز المناسب",
+      "structured_text": "استخدم تنسيق نص منظم، بما في ذلك فقرات ونقاط واضحة"
     },
     "task_specific_guidance": {
-      "direct_response": "Focus on direct answers, avoid redundant information",
-      "content_generation": "Focus on creativity and originality",
-      "data_process": "Provide clear analysis approach"
+      "direct_response": "ركز على الإجابة المباشرة، وتجنب المعلومات الزائدة",
+      "content_generation": "ركز على الإبداع والأصالة",
+      "data_process": "قدم طريقة تحليل واضحة"
     },
-    "limitations": "\n\n## Important Limitations\n- Provide final answer directly, do not generate code\n- If task requires real-time data or file operations, please indicate inability to complete\n- Maintain professionalism and accuracy in responses"
+    "limitations": "\n\n## قيود هامة\n- قدم الإجابة النهائية مباشرة، لا تولد كود\n- إذا كانت المهمة تتطلب بيانات في الوقت الفعلي أو عمليات ملفات، يرجى الإشارة إلى أنه لا يمكن إكمالها\n- حافظ على الاحترافية والدقة في الإجابة"
   },
   "analyzer": {
-    "role": "You are AIForge intelligent task analyzer, responsible for understanding user instructions and analyzing necessary information and expected results needed to complete tasks",
-    "execution_modes": "- Direct response: Can be completed directly with AI knowledge, no latest data needed, including conversation continuation and emotional support\n- Code generation: Requires external data sources, real-time information or system interaction",
-    "analysis_steps": "- Identify execution mode and task type\n- Extract key parameters and quantity requirements, set appropriate min_items\n- Define required fields and validation rules\n- For non-task instructions like \"get/find/search\" certain information, only extract one required_parameters parameter search_query=original instruction\n- Intelligently identify conversation continuation and emotional support instructions, automatically set to direct response mode",
-    "action_vocabulary": "- Data acquisition → fetch_{task_type_suffix}\n- Data processing → process_{task_type_suffix}\n- Content generation → generate_{task_type_suffix}\n- File operations → transform_{task_type_suffix}\n- Direct response → respond_{task_type_suffix}\n- Conversation continuation and emotional support → chat_ai",
+    "role": "أنت محلل مهام AIForge الذكي، المسؤول عن فهم تعليمات المستخدم وتحليل المعلومات الضرورية والنتائج المتوقعة لإكمال المهمة",
+    "execution_modes": "- استجابة مباشرة: يمكن للذكاء الاصطناعي إتمامها مباشرة بمعرفته، دون الحاجة إلى أحدث البيانات، بما في ذلك استمرار الحوار والدعم العاطفي\n- توليد الكود: يتطلب مصادر بيانات خارجية، أو معلومات في الوقت الفعلي، أو تفاعلات مع النظام",
+    "analysis_steps": "- تحديد وضع التنفيذ ونوع المهمة\n- استخراج المعلمات الرئيسية ومتطلبات الكمية، وتعيين 'min_items' مناسب\n- تحديد الحقول المطلوبة وقواعد التحقق\n- بالنسبة للتعليمات غير المرتبطة بالمهام مثل 'الحصول على/البحث عن/إيجاد' نوع من المعلومات، استخراج معلمة 'required_parameters' واحدة فقط 'search_query' = 'التعليمات الأصلية'\n- التعرف بذكاء على تعليمات استمرار الحوار والدعم العاطفي، وتعيينها تلقائيًا على وضع الاستجابة المباشرة",
+    "action_vocabulary": "- الحصول على البيانات → fetch_{task_type_suffix}\n- معالجة البيانات → process_{task_type_suffix}\n- توليد المحتوى → generate_{task_type_suffix}\n- عمليات الملفات → transform_{task_type_suffix}\n- استجابة مباشرة → respond_{task_type_suffix}\n- استمرار الحوار والدعم العاطفي → chat_ai",
     "guidance": {
-      "default_strength": "prioritize",
-      "strong_recommendation": "strongly recommend",
-      "consider": "consider",
-      "too_many_dynamic_types": "\nNote: System has {count} dynamic types, recommend prioritizing built-in types for better performance.",
-      "task_type_template": "\n# Task Type Guidance\n{strength} using the following verified built-in task types:\n{types}\n\nThese built-in types have the following advantages:\n{advantages}\n\n{creation_rule}{additional_info}",
-      "builtin_advantages": "- Higher cache hit rate and execution efficiency\n- Thoroughly tested and optimized execution paths\n- More stable performance and error handling",
-      "creation_rule": "Only create new task_type when user task truly belongs to a completely new domain and cannot be categorized into existing types."
+      "default_strength": "اعتبار أولوية",
+      "strong_recommendation": "موصى به بشدة",
+      "consider": "يمكن النظر فيه",
+      "too_many_dynamic_types": "\nتنبيه: يوجد في النظام حاليًا {count} أنواع ديناميكية، يُنصح بإعطاء الأولوية للأنواع المضمنة لتحسين الأداء.",
+      "task_type_template": "\n# إرشادات نوع المهمة\n{strength} استخدام أنواع المهام المضمنة والموثوقة التالية:\n{types}\n\nتتميز هذه الأنواع المضمنة بالمزايا التالية:\n{advantages}\n\n{creation_rule}{additional_info}",
+      "builtin_advantages": "- معدل أعلى لتغطية الذاكرة المؤقتة وكفاءة التنفيذ\n- مسارات تنفيذ تم اختبارها وتحسينها بشكل كامل\n- أداء أكثر استقرارًا ومعالجة أفضل للأخطاء",
+      "creation_rule": "قم بإنشاء 'task_type' جديد فقط عندما تنتمي مهمة المستخدم إلى مجال جديد تمامًا ولا يمكن تصنيفها ضمن الأنواع الحالية."
     },
     "prompt": {
-      "role_header": "# Role Definition",
-      "execution_mode_header": "# Execution Mode Determination",
-      "action_vocabulary_header": "# Action Naming Conventions",
-      "analysis_requirements_header": "# Analysis Requirements",
-      "output_format_header": "# Output Format",
-      "strict_json_note": "Please strictly return analysis results in JSON format."
+      "role_header": "# تعريف الدور",
+      "execution_mode_header": "# تحديد وضع التنفيذ",
+      "action_vocabulary_header": "# قواعد تسمية الإجراءات",
+      "analysis_requirements_header": "# متطلبات التحليل",
+      "output_format_header": "# تنسيق الإخراج",
+      "strict_json_note": "يرجى إرجاع نتيجة التحليل بتنسيق JSON بشكل صارم."
     },
-    "user_instruction_label": "User instruction: "
+    "user_instruction_label": "تعليمات المستخدم: "
   },
   "content_generation": {
-    "direct_generation_template": "Please generate article content according to user requirements: {instruction}.",
-    "search_enhanced_template": "Please create content based on the following latest search data:",
-    "task_requirement": "and user task requirements: {instruction}, generate article content.",
-    "format_requirement": "Output format requirements",
-    "style_requirement": "Style requirements",
-    "tone_requirement": "Tone",
-    "language_requirement": "Language",
-    "special_notes_header": "Special Notes",
-    "format_strict_note": "Strictly output in {format} format",
-    "structure_note": "Ensure clear content structure and standard formatting",
-    "logic_note": "Content should be logical and readable",
-    "tone_maintain_note": "Maintain {tone} tone",
-    "date_note": "Dates in the article must use dates from search results",
-    "data_based_note": "Analyze and create based on real data from search results"
+    "direct_generation_template": "يرجى إنشاء محتوى مقال بناءً على متطلبات المستخدم: {instruction}.",
+    "search_enhanced_template": "بناءً على أحدث محتوى بيانات تم البحث عنه:",
+    "task_requirement": "ومع متطلبات مهمة المستخدم: {instruction}، قم بإنشاء محتوى مقال.",
+    "format_requirement": "متطلبات تنسيق الإخراج",
+    "style_requirement": "متطلبات الأسلوب",
+    "tone_requirement": "النبرة",
+    "language_requirement": "اللغة",
+    "special_notes_header": "ملاحظات خاصة",
+    "format_strict_note": "يجب أن يكون الإخراج بتنسيق {format} بشكل صارم",
+    "structure_note": "تأكد من أن هيكل المحتوى واضح وتنسيقه قياسي",
+    "logic_note": "يجب أن يكون المحتوى منطقيًا وقابلًا للقراءة",
+    "tone_maintain_note": "حافظ على نبرة {tone}",
+    "date_note": "يجب أن تستخدم التواريخ في المقال تواريخ نتائج البحث",
+    "data_based_note": "قم بالتحليل والإنشاء بناءً على البيانات الحقيقية من نتائج البحث"
   },
   "validation": {
-    "ai_validation_prompt_template": "Please determine whether the following code execution result truly accomplishes the user's task objective:\n\nOriginal user instruction: {original_instruction}\nTask type: {task_type}\nExpected output requirements: {expected_output}\n\nActual execution result\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
-    "analysis_dimensions": "Please analyze from the following perspectives:\n1. Does the result contain the core information users need\n2. Does the data quality meet actual usage requirements\n3. Are there obvious logical errors or omissions\n4. Is the result format convenient for subsequent processing",
-    "json_format_instruction": "Please return validation results in JSON format:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"specific failure reason (if failed)\",\n    \"improvement_suggestions\": [\"suggestion1\", \"suggestion2\"],\n    \"core_issues\": [\"core issue1\", \"core issue2\"]\n}"
+    "ai_validation_prompt_template": "يرجى الحكم على ما إذا كانت نتيجة تنفيذ الكود التالية قد أكملت بالفعل هدف مهمة المستخدم:\n\nتعليمات المستخدم الأصلية: {original_instruction}\nنوع المهمة: {task_type}\nمتطلبات الإخراج المتوقعة: {expected_output}\n\nنتيجة التنفيذ الفعلية\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
+    "analysis_dimensions": "يرجى التحليل من الزوايا التالية:\n1. هل تحتوي النتيجة على المعلومات الأساسية التي يحتاجها المستخدم؟\n2. هل جودة البيانات تلبي احتياجات الاستخدام الفعلي؟\n3. هل توجد أخطاء منطقية أو إغفالات واضحة؟\n4. هل تنسيق النتيجة مناسب للمعالجة اللاحقة؟",
+    "json_format_instruction": "يرجى إرجاع نتيجة التحقق بتنسيق JSON:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"السبب المحدد للفشل (إذا فشل)\",\n    \"improvement_suggestions\": [\"اقتراح تحسين 1\", \"اقتراح تحسين 2\"],\n    \"core_issues\": [\"مشكلة أساسية 1\", \"مشكلة أساسية 2\"]\n}"
   },
   "search": {
-    "guided_instruction_template": "Generate a search function (no comments or print logs) to get the latest relevant information, refer to the following configuration:\n\n# Search Engine URL Patterns:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# Key CSS Selectors:\nBaidu result containers: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaidu titles: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu abstracts: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing result containers: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing titles: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing abstracts: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360 result containers: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360 titles: [\"h3.res-title\", \"h3\", \".res-title\"]\n360 abstracts: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou result containers: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogou titles: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou abstracts: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# Important Processing Logic:\n1. Try four search engines in priority order (do not use API key methods)\n2. Prioritize using abstract content as content, if not satisfied, use concurrent.futures.ThreadPoolExecutor to access pages in parallel to extract detailed content\n3. Extract publication time from pages, following these strategies:\n    - Priority meta tags: article:published_time, datePublished, pubdate, publishdate, etc.\n    - Fallback options: time tags, date-related classes, page text matching\n    - Valid date formats: standard formats, Chinese formats, relative time (like \"yesterday\", \"1 day ago\", \"1 hour ago\", etc.), English time (like \"yesterday\", etc.)\n4. Sort by publication time, prioritize content from the last 7 days\n5. Filter out verification pages and invalid content, handle encoding correctly, results must not contain garbled text\n\n# Return Data Format (strictly follow):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success or error\",\n    \"summary\": f\"Search completed, found len(data) results\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# Execute function immediately and assign to __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "free_form_instruction_template": "Creatively generate a search function (no comments or print logs) to get the latest relevant information.\n\n# Optional Search Strategies:\n1. Try different search engines in sequence (Baidu, Bing, 360, Sogou)\n2. Use news aggregation APIs (like NewsAPI, RSS feeds)\n3. Try social media platform searches\n4. Use academic search engines\n\n# Core Requirements:\n- Function name is search_web, parameters search_query and max_results\n- Implement multiple fault tolerance mechanisms, try at least 2-3 different methods\n- Access original pages for each result to extract complete information\n- Prioritize getting fresh content from the last 7 days, sort by publication time\n- Abstract length at least {min_abstract_len} characters, containing key information\n- Cannot use methods requiring API keys\n- Filter out verification pages and invalid content, handle encoding correctly, results must not contain garbled text\n\n# Time Extraction Strategy:\n- Priority meta tags: article:published_time, datePublished, pubdate, publishdate, etc.\n- Fallback options: time tags, date-related classes, page text matching\n- Valid date formats: standard formats, Chinese formats, relative time (like \"yesterday\", \"1 day ago\", \"1 hour ago\", etc.), English time (like \"yesterday\", etc.)\n\n# Return Data Format (strictly follow):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"Search completed\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# Execute function immediately and assign to __result__\n __result__ = search_web(\"{search_query}\", {max_results})"
-  },
-  "result_processor": {
-    "suggestions": {
-      "check_syntax_logic": "Check code syntax and logic errors",
-      "regenerate_code": "Please regenerate code to better meet user requirements. Check data acquisition logic and ensure valid title and content fields are returned",
-      "check_data_logic": "Please check data acquisition logic and ensure correct data format is returned",
-      "check_execution_structure": "Check code execution and basic data structure",
-      "check_business_logic": "Check business logic and required fields",
-      "check_code_format": "Please check code logic and output format",
-      "check_syntax_variables": "Please check code syntax, variable definitions and logic errors"
-    },
-    "system_errors": {
-      "execution_timeout": "Code execution timeout"
-    },
-    "messages": {
-      "execution_failed": "Code execution failed: {error}"
-    },
-    "summaries": {
-      "no_data": "Execution completed but no data retrieved",
-      "execution_complete": "Execution completed",
-      "operation_complete": "Operation completed"
+    "guided_instruction_template": "يرجى إنشاء دالة بحث (بدون أي تعليقات أو سجلات طباعة) للحصول على أحدث المعلومات ذات الصلة، بالرجوع إلى التكوين التالي:\n\n# أنماط URL لمحرك البحث:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# محددات CSS الرئيسية:\nحاوية نتائج Baidu: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nعنوان Baidu: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nملخص Baidu: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nحاوية نتائج Bing: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nعنوان Bing: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nملخص Bing: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\nحاوية نتائج 360: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\nعنوان 360: [\"h3.res-title\", \"h3\", \".res-title\"]\nملخص 360: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nحاوية نتائج Sogou: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nعنوان Sogou: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nملخص Sogou: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# منطق المعالجة الهام:\n1. قم بمحاولة محركات البحث الأربعة على التوالي حسب الأولوية (لا تستخدم طريقة مفتاح API)\n2. قم بإعطاء الأولوية لاستخدام محتوى الملخص كـ 'content'، وإذا لم يكن كافيًا، استخدم 'concurrent.futures.ThreadPoolExecutor' للوصول إلى الصفحات بالتوازي واستخراج المحتوى التفصيلي\n3. استخراج وقت النشر من الصفحة، اتبع الاستراتيجية التالية:\n    - الأولوية للعلامات الوصفية (meta tags): article:published_time، datePublished، pubdate، publishdate، إلخ\n    - البديل: علامة 'time'، الفئات ذات الصلة بالتواريخ، مطابقة النص في الصفحة\n    - تنسيقات التواريخ الصالحة: التنسيقات القياسية، التنسيقات الصينية، الوقت النسبي (مثل \"أمس\"، \"منذ يوم واحد\"، \"منذ ساعة واحدة\"، إلخ)، التوقيت الإنجليزي (مثل \"yesterday\"، إلخ)\n4. قم بالفرز حسب وقت النشر، مع إعطاء الأولوية للمحتوى الذي نُشر في آخر 7 أيام\n5. قم بتصفية صفحات التحقق والمحتوى غير الصالح، وتعامل بشكل صحيح مع الترميز، يجب ألا تحتوي النتائج على رموز مشوهة\n\n# تنسيق بيانات الإرجاع (يجب الالتزام به بشكل صارم):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success أو error\",\n    \"summary\": f\"اكتمل البحث، تم العثور على len(data) نتيجة\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# قم بتنفيذ الدالة فورًا، وقم بتعيينها إلى __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "يرجى توليد دالة بحث بشكل مبتكر (بدون أي تعليقات أو سجلات طباعة) للحصول على أحدث المعلومات ذات الصلة.\n\n# استراتيجيات البحث الاختيارية:\n1. قم بمحاولة محركات بحث مختلفة بالتتابع (Baidu, Bing, 360, Sogou)\n2. استخدم واجهات برمجة تطبيقات مجمّع الأخبار (مثل NewsAPI, مصادر RSS)\n3. حاول البحث في منصات وسائل التواصل الاجتماعي\n4. استخدم محركات البحث الأكاديمية\n\n# المتطلبات الأساسية:\n- اسم الدالة هو 'search_web'، ومعلماتها هي 'search_query' و 'max_results'\n- تنفيذ آلية تحمل أخطاء متعددة، ومحاولة 2-3 طرق مختلفة على الأقل\n- الوصول إلى الصفحة الأصلية لكل نتيجة لاستخراج معلومات كاملة\n- إعطاء الأولوية للحصول على محتوى جديد خلال آخر 7 أيام، والفرز حسب وقت النشر\n- يجب أن يكون طول الملخص على الأقل {min_abstract_len} كلمة، وأن يحتوي على معلومات رئيسية\n- لا يمكن استخدام طريقة تتطلب مفتاح API\n- قم بتصفية صفحات التحقق والمحتوى غير الصالح، وتعامل بشكل صحيح مع الترميز، يجب ألا تحتوي النتائج على رموز مشوهة\n\n# استراتيجية استخراج الوقت:\n- الأولوية للعلامات الوصفية (meta tags): article:published_time، datePublished، pubdate، publishdate، إلخ\n- البديل: علامة 'time'، الفئات ذات الصلة بالتواريخ، مطابقة النص في الصفحة\n- تنسيقات التواريخ الصالحة: التنسيقات القياسية، التنسيقات الصينية، الوقت النسبي (مثل \"أمس\"، \"منذ يوم واحد\"، \"منذ ساعة واحدة\"، إلخ)، التوقيت الإنجليزي (مثل \"yesterday\"، إلخ)\n\n# تنسيق بيانات الإرجاع (يجب الالتزام به بشكل صارم):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"اكتمل البحث\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# قم بتنفيذ الدالة فورًا، وقم بتعيينها إلى __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "result_processor": {
+      "suggestions": {
+        "check_syntax_logic": "تحقق من قواعد بناء الجملة (syntax) للكود والأخطاء المنطقية",
+        "regenerate_code": "يرجى إعادة توليد الكود لتلبية احتياجات المستخدم بشكل أفضل. تحقق من منطق الحصول على البيانات للتأكد من إرجاع حقول العنوان والمحتوى الصالحة",
+        "check_data_logic": "يرجى التحقق من منطق الحصول على البيانات، للتأكد من إرجاع البيانات بالتنسيق الصحيح",
+        "check_execution_structure": "تحقق من تنفيذ الكود وهيكل البيانات الأساسي",
+        "check_business_logic": "تحقق من منطق الأعمال والحقول المطلوبة",
+        "check_code_format": "يرجى التحقق من منطق الكود وتنسيق الإخراج",
+        "check_syntax_variables": "يرجى التحقق من قواعد بناء الجملة (syntax) للكود، وتعريف المتغيرات والأخطاء المنطقية"
+      },
+      "system_errors": {
+        "execution_timeout": "انتهت مهلة تنفيذ الكود"
+      },
+      "messages": {
+        "execution_failed": "فشل تنفيذ الكود: {error}"
+      },
+      "summaries": {
+        "no_data": "اكتمل التنفيذ، ولكن لم يتم الحصول على بيانات",
+        "execution_complete": "اكتمل التنفيذ",
+        "operation_complete": "اكتملت العملية"
+      }
     }
   }
 }

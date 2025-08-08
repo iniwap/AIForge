@@ -1,5 +1,4 @@
 import ast
-import time
 from typing import Dict, Any, List, Optional
 from rich.console import Console
 import traceback
@@ -151,36 +150,6 @@ class AIForgeExecutionEngine:
         """从markdown文本中解析代码块"""
         return self.code_block_manager.parse_markdown_blocks(text)
 
-    def process_code_blocks_execution(
-        self, code_blocks: List[str], llm_client=None
-    ) -> List[Dict[str, Any]]:
-        """处理多个代码块的执行"""
-        results = []
-
-        for i, code_text in enumerate(code_blocks):
-            if not code_text.strip():
-                continue
-
-            block = CodeBlock(code=code_text, name=f"block_{i+1}", version=1)
-            self.console.print(f"⚡ 开始执行代码块: {block.name}", style="dim white")
-
-            start_time = time.time()
-            result = self.execute_python_code(code_text)
-            execution_time = time.time() - start_time
-
-            result["block_name"] = block.name
-            result["execution_time"] = execution_time
-
-            if not result.get("success") and llm_client:
-                feedback = self._generate_intelligent_feedback(result)
-                llm_client.send_feedback(feedback)
-
-            results.append(result)
-            self.code_block_manager.add_block(block)
-            self.code_block_manager.update_block_result(block.name, result, execution_time)
-
-        return results
-
     # === 统一执行器接口 ===
 
     def execute_with_unified_executor(self, module, instruction: str, **kwargs) -> Any:
@@ -200,7 +169,7 @@ class AIForgeExecutionEngine:
     def validate_parameter_usage_with_dataflow(
         self, code: str, standardized_instruction: Dict[str, Any]
     ) -> bool:
-        """重新设计的参数验证 - 分离关注点"""
+        """参数验证"""
         try:
             tree = ast.parse(code)
             function_def = None
@@ -293,7 +262,7 @@ class AIForgeExecutionEngine:
 
     # === 内部辅助方法 ===
     def _analyze_code_security(self, code: str, function_params: List[str]) -> Dict[str, Any]:
-        """重写的代码安全分析 - 适应新的统一架构"""
+        """重写的代码安全分析"""
 
         class VirtualModule:
             def __init__(self, code):
@@ -352,7 +321,7 @@ class AIForgeExecutionEngine:
                     adapted_result["conflicts"].append(
                         {
                             "type": "network_security_violation",
-                            "description": f"网络访问被阻止: {op}",
+                            "description": f"Network access is denied: {op}",
                             "severity": "high",
                         }
                     )
@@ -369,17 +338,6 @@ class AIForgeExecutionEngine:
             processed_lines.append(line)
 
         return "\n".join(processed_lines)
-
-    def _generate_intelligent_feedback(self, result: Dict[str, Any]) -> str:
-        """生成智能反馈"""
-        if not result:
-            return "执行结果为空，请检查代码逻辑"
-
-        error = result.get("error", "")
-        if error:
-            return f"执行出错：{error}。请检查代码语法和逻辑。"
-
-        return "执行完成但可能存在问题，请检查输出结果"
 
     # === 格式化接口 ===
 
@@ -420,9 +378,7 @@ class AIForgeExecutionEngine:
 
     def get_intelligent_feedback(self, result: Dict[str, Any]) -> str:
         """获取智能反馈"""
-        if self.result_processor:
-            return self.result_processor.get_intelligent_feedback(result)
-        return self._generate_intelligent_feedback(result)
+        return self.result_processor.get_intelligent_feedback(result)
 
     def validate_execution_result(
         self, result: Dict[str, Any], instruction: str, task_type: str = None, llm_client=None

@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "Sucesso",
+      "error": "Erro",
+      "pending": "Pendente",
+      "cancelled": "Cancelado",
+      "completed": "Concluído",
+      "failed": "Falhou",
+      "running": "Em execução"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "retry": "Tentar novamente",
+      "skip": "Pular",
+      "continue": "Continuar",
+      "start": "Iniciar",
+      "stop": "Parar"
     },
     "time_units": {
-      "seconds": "seconds",
-      "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "seconds": "segundos",
+      "minutes": "minutos",
+      "hours": "horas",
+      "days": "dias"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
+      "items": "itens",
+      "count": "contagem",
       "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "found": "encontrado",
+      "valid": "válido"
     },
     "labels": {
-      "name": "Name",
-      "type": "Type",
-      "description": "Description",
+      "name": "Nome",
+      "type": "Tipo",
+      "description": "Descrição",
       "timestamp": "Timestamp",
       "status": "Status",
-      "result": "Result"
+      "result": "Resultado"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "Carregando...",
+      "no_data": "Nenhum dado disponível",
+      "unknown": "Desconhecido",
+      "processing": "Processando...",
+      "waiting": "Aguardando..."
     }
   }
 }

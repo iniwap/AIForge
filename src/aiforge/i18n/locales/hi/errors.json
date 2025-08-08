@@ -1,122 +1,122 @@
 {
   "execution": {
-    "direct_response_error": "Direct response failed: {error}",
-    "validation_failed": "Validation failed",
-    "execution_timeout": "Execution timeout",
-    "module_execution_failed": "Module execution failed",
-    "parameter_validation_failed": "Parameter validation failed",
-    "intent_validation_failed": "Intent validation failed",
-    "functionality_validation_failed": "Functionality consistency validation failed"
+    "direct_response_error": "सीधी प्रतिक्रिया विफल: {error}",
+    "validation_failed": "सत्यापन विफल",
+    "execution_timeout": "निष्पादन का समय समाप्त हो गया",
+    "module_execution_failed": "मॉड्यूल निष्पादन विफल",
+    "parameter_validation_failed": "पैरामीटर सत्यापन विफल",
+    "intent_validation_failed": "इरादे का सत्यापन विफल",
+    "functionality_validation_failed": "कार्यक्षमता संगति सत्यापन विफल"
   },
   "search": {
-    "search_failed_error": "Search failed: {error}",
-    "all_strategies_failed": "All search strategies failed",
-    "quality_validation_failed": "Search result quality validation failed",
-    "no_valid_results": "No valid search results found",
-    "no_search_container": "No search result container found"
+    "search_failed_error": "खोज विफल: {error}",
+    "all_strategies_failed": "सभी खोज रणनीतियाँ विफल",
+    "quality_validation_failed": "खोज परिणाम गुणवत्ता सत्यापन विफल",
+    "no_valid_results": "कोई वैध खोज परिणाम नहीं मिला",
+    "no_search_container": "खोज परिणाम कंटेनर नहीं मिला"
   },
   "task": {
-    "execution_error": "Execution error: {error}"
+    "execution_error": "निष्पादन त्रुटि: {error}"
   },
   "analyzer": {
-    "analysis_failed": "Statistical analysis failed: {error}",
-    "api_key_in_url_parameter": "Detected API key parameter in URL",
-    "api_key_in_url_constant": "Detected API key parameter in URL constant",
-    "api_key_in_headers": "Detected authentication info in headers: {key}",
-    "possible_api_key_parameter": "Detected possible API key parameter: {param}"
+    "analysis_failed": "सांख्यिकीय विश्लेषण विफल: {error}",
+    "api_key_in_url_parameter": "URL में API कुंजी पैरामीटर का पता चला",
+    "api_key_in_url_constant": "URL स्थिरांक में API कुंजी पैरामीटर का पता चला",
+    "api_key_in_headers": "हेडर में प्रमाणीकरण जानकारी का पता चला: {key}",
+    "possible_api_key_parameter": "संभावित API कुंजी पैरामीटर का पता चला: {param}"
   },
   "content_generation": {
-    "llm_manager_unavailable": "LLM manager unavailable",
-    "llm_client_unavailable": "LLM client unavailable",
-    "llm_manager_error_summary": "Content generation failed: LLM manager unavailable",
-    "llm_client_error_summary": "Content generation failed: LLM client unavailable",
-    "generation_error": "Content generation error: {error}",
-    "generation_failed": "Content generation failed: {error}"
+    "llm_manager_unavailable": "LLM प्रबंधक अनुपलब्ध है",
+    "llm_client_unavailable": "LLM क्लाइंट अनुपलब्ध है",
+    "llm_manager_error_summary": "सामग्री निर्माण विफल: LLM प्रबंधक अनुपलब्ध है",
+    "llm_client_error_summary": "सामग्री निर्माण विफल: LLM क्लाइंट अनुपलब्ध है",
+    "generation_error": "सामग्री निर्माण में त्रुटि: {error}",
+    "generation_failed": "सामग्री निर्माण विफल: {error}"
   },
   "template": {
-    "missing_required_parameter": "Missing required parameter: {param_name}",
-    "template_not_found": "Template not found: {template_id}",
-    "execution_failed": "Template {template_id} execution failed: {error}"
+    "missing_required_parameter": "आवश्यक पैरामीटर गायब है: {param_name}",
+    "template_not_found": "टेम्पलेट नहीं मिला: {template_id}",
+    "execution_failed": "टेम्पलेट {template_id} निष्पादन विफल: {error}"
   },
   "llm_client": {
-    "server_error_retry": "{name} server error: {status_code}, retry {attempt}, waiting {wait_time} seconds...",
-    "client_error": "{name} client error: {status_code}",
-    "network_error_retry": "{name} network error: {error}, retry {attempt}",
-    "request_failed": "{name} request failed: {error}"
+    "server_error_retry": "{name} सर्वर त्रुटि: {status_code}, {attempt}वाँ पुनः प्रयास, {wait_time} सेकंड प्रतीक्षा...",
+    "client_error": "{name} क्लाइंट त्रुटि: {status_code}",
+    "network_error_retry": "{name} नेटवर्क अपवाद: {error}, {attempt}वाँ पुनः प्रयास",
+    "request_failed": "{name} अनुरोध विफल: {error}"
   },
   "llm_manager": {
-    "default_client_unavailable": "Default LLM client '{provider}' unavailable or creation failed",
-    "config_missing": "Default LLM client not specified in config or config does not exist: {provider}",
-    "no_available_client": "No available LLM client found",
-    "unsupported_type": "Unsupported LLM type: {client_type}",
-    "client_unavailable": "LLM client '{name}' unavailable",
-    "create_failed": "Failed to create LLM client {name}: {error}",
-    "switch_failed": "Switch failed, client '{name}' unavailable"
+    "default_client_unavailable": "डिफ़ॉल्ट LLM क्लाइंट '{provider}' अनुपलब्ध है या बनाने में विफल रहा",
+    "config_missing": "कॉन्फ़िगरेशन फ़ाइल में डिफ़ॉल्ट LLM क्लाइंट निर्दिष्ट नहीं है या कॉन्फ़िगरेशन मौजूद नहीं है: {provider}",
+    "no_available_client": "कोई भी उपलब्ध LLM क्लाइंट नहीं मिला",
+    "unsupported_type": "असमर्थित LLM प्रकार: {client_type}",
+    "client_unavailable": "LLM क्लाइंट '{name}' अनुपलब्ध है",
+    "create_failed": "LLM क्लाइंट {name} बनाने में विफल: {error}",
+    "switch_failed": "स्विच विफल, क्लाइंट '{name}' अनुपलब्ध है"
   },
   "validation": {
-    "local_basic_failed": "Local basic validation failed",
-    "business_logic_failed": "Business logic validation failed",
-    "ai_validation_failed": "AI validation failed",
-    "llm_client_none": "llm_client is None",
-    "code_execution_failed": "Code execution failed: {error}",
-    "unknown_error": "Unknown error",
-    "execution_result_none": "Execution result is None",
-    "data_field_empty": "Data field is empty list, no valid data retrieved",
-    "data_field_none": "Data field is None",
-    "missing_data_field": "Missing data field",
-    "execution_result_empty": "Execution result is empty",
-    "result_must_be_dict": "Result content must be in dictionary format",
-    "result_status_error": "Result status is error",
-    "data_must_be_array": "Data field must be in array format",
-    "data_array_empty": "Data array is empty",
-    "data_item_must_be_dict": "Data item must be in dictionary format",
-    "data_item_missing_required_fields": "Data item missing required fields",
-    "insufficient_data_quantity": "Insufficient data quantity: need at least {min_items} items, actual {actual} items",
-    "insufficient_valid_data": "Retrieved {valid_count} valid data items, does not meet minimum requirement of {min_items} items",
-    "result_not_meet_requirements": "Result does not meet task requirements",
-    "ai_response_parse_failed": "AI response format cannot be parsed",
-    "ai_response_format_error": "AI validation response format error"
+    "local_basic_failed": "स्थानीय सत्यापन विफल",
+    "business_logic_failed": "व्यापार तर्क सत्यापन विफल",
+    "ai_validation_failed": "एआई सत्यापन विफल",
+    "llm_client_none": "llm_client 'None' है",
+    "code_execution_failed": "कोड निष्पादन विफल: {error}",
+    "unknown_error": "अज्ञात त्रुटि",
+    "execution_result_none": "निष्पादन परिणाम 'None' है",
+    "data_field_empty": "डेटा फ़ील्ड खाली सूची है, कोई वैध डेटा प्राप्त नहीं हुआ",
+    "data_field_none": "डेटा फ़ील्ड 'None' है",
+    "missing_data_field": "डेटा फ़ील्ड गायब है",
+    "execution_result_empty": "निष्पादन परिणाम खाली है",
+    "result_must_be_dict": "परिणाम सामग्री एक डिक्शनरी प्रारूप में होनी चाहिए",
+    "result_status_error": "परिणाम स्थिति 'error' है",
+    "data_must_be_array": "डेटा फ़ील्ड एक सरणी प्रारूप में होना चाहिए",
+    "data_array_empty": "डेटा सरणी खाली है",
+    "data_item_must_be_dict": "डेटा आइटम एक डिक्शनरी प्रारूप में होना चाहिए",
+    "data_item_missing_required_fields": "डेटा आइटम में आवश्यक फ़ील्ड गायब हैं",
+    "insufficient_data_quantity": "डेटा मात्रा अपर्याप्त है: कम से कम {min_items} की आवश्यकता है, वास्तविक {actual} हैं",
+    "insufficient_valid_data": "{valid_count} वैध डेटा प्राप्त हुआ, जो कम से कम {min_items} प्राप्त करने की आवश्यकता को पूरा नहीं करता है",
+    "result_not_meet_requirements": "परिणाम कार्य आवश्यकताओं को पूरा नहीं करता है",
+    "ai_response_parse_failed": "एआई प्रतिक्रिया प्रारूप को पार्स नहीं किया जा सकता है",
+    "ai_response_format_error": "एआई सत्यापन प्रतिक्रिया प्रारूप त्रुटि"
   },
   "runner": {
-    "code_execution_timeout": "Code execution timeout ({timeout} seconds)",
-    "process_execution_error": "Process execution error: {error}",
-    "result_parse_error": "Result parsing error: {error}",
-    "network_security_blocked": "Blocked by network security policy",
-    "module_blocked_security_template": "Module '{missing_name}' blocked by security policy. Reason: {reason}. Original module: {original_module}",
-    "code_execution_timeout_handler": "Code execution timeout",
-    "security_policy_active": "Network security policy active",
-    "unknown_error": "Unknown error",
-    "security_blocked_modules": "Security policy blocked the following modules: {blocked_list}. {error}",
-    "execution_failed": "Execution failed: {error}",
-    "runner_error": "Runner error: {error}"
+    "code_execution_timeout": "कोड निष्पादन का समय समाप्त हो गया ({timeout} सेकंड)",
+    "process_execution_error": "प्रक्रिया निष्पादन त्रुटि: {error}",
+    "result_parse_error": "परिणाम पार्स त्रुटि: {error}",
+    "network_security_blocked": "नेटवर्क सुरक्षा नीति द्वारा अवरुद्ध",
+    "module_blocked_security_template": "सुरक्षा नीति के कारण मॉड्यूल '{missing_name}' को आयात करने से रोका गया। कारण: {reason}। मूल मॉड्यूल: {original_module}",
+    "code_execution_timeout_handler": "कोड निष्पादन का समय समाप्त हो गया",
+    "security_policy_active": "नेटवर्क सुरक्षा नीति प्रभावी है",
+    "unknown_error": "अज्ञात त्रुटि",
+    "security_blocked_modules": "सुरक्षा नीति ने निम्नलिखित मॉड्यूल के आयात को रोका है: {blocked_list}। {error}",
+    "execution_failed": "निष्पादन विफल: {error}",
+    "runner_error": "रनर त्रुटि: {error}"
   },
   "config": {
-    "file_not_exists": "Configuration file {file} does not exist",
-    "load_failed": "Failed to load configuration file: {error}"
+    "file_not_exists": "कॉन्फ़िगरेशन फ़ाइल {file} मौजूद नहीं है",
+    "load_failed": "कॉन्फ़िगरेशन फ़ाइल लोड करने में विफल: {error}"
   },
   "executor": {
-    "no_llm_response": "Attempt {optimization_attempt}: LLM returned no response",
-    "no_code_blocks_found": "Attempt {optimization_attempt}: No executable code blocks found",
-    "code_execution_failed": "Attempt {optimization_attempt}: Code execution failed",
-    "code_execution_error": "Attempt {optimization_attempt}: Code execution error",
-    "validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}",
-    "final_validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}, reached maximum optimization attempts",
-    "all_attempts_failed": "All {max_optimization_attempts} optimization attempts failed within single round"
+    "no_llm_response": "{optimization_attempt}वाँ प्रयास: LLM ने कोई प्रतिक्रिया नहीं दी",
+    "no_code_blocks_found": "{optimization_attempt}वाँ प्रयास: कोई भी निष्पादन योग्य कोड ब्लॉक नहीं मिला",
+    "code_execution_failed": "{optimization_attempt}वाँ प्रयास: कोड निष्पादन विफल",
+    "code_execution_error": "{optimization_attempt}वाँ प्रयास: कोड निष्पादन में त्रुटि",
+    "validation_failed": "{optimization_attempt}वाँ प्रयास सत्यापन विफल ({validation_type}): {failure_reason}",
+    "final_validation_failed": "{optimization_attempt}वाँ प्रयास सत्यापन विफल ({validation_type}): {failure_reason}, अधिकतम अनुकूलन प्रयासों तक पहुँच गया है",
+    "all_attempts_failed": "एक ही दौर में {max_optimization_attempts} अनुकूलन प्रयास सभी विफल"
   },
   "security": {
-    "dangerous_function_detected": "Detected dangerous function call: {pattern}",
-    "analysis_failed": "Security analysis failed: {error}"
+    "dangerous_function_detected": "खतरनाक फ़ंक्शन कॉल का पता चला: {pattern}",
+    "analysis_failed": "सुरक्षा विश्लेषण विफल: {error}"
   },
   "network": {
-    "strict_mode_blocks_all": "Strict mode blocks all network access",
-    "domain_in_blacklist": "Domain {domain} is in blacklist",
-    "domain_not_in_whitelist": "Domain {domain} is not in whitelist",
-    "empty_hostname": "Empty hostname",
-    "domain_blacklisted": "Domain in blacklist: {domain}",
-    "domain_not_whitelisted": "Domain not in whitelist",
-    "ip_in_blocked_range": "IP in blocked range: {range}",
-    "resolved_ip_blocked": "Resolved IP {ip} in blocked range: {range}",
-    "cannot_resolve_hostname": "Cannot resolve hostname",
-    "unknown_policy_level": "Unknown network policy level: {policy_level}"
+    "strict_mode_blocks_all": "सख्त मोड सभी नेटवर्क एक्सेस को रोकता है",
+    "domain_in_blacklist": "डोमेन {domain} ब्लैकलिस्ट में है",
+    "domain_not_in_whitelist": "डोमेन {domain} व्हाइटलिस्ट में नहीं है",
+    "empty_hostname": "होस्टनाम खाली है",
+    "domain_blacklisted": "डोमेन ब्लैकलिस्ट में है: {domain}",
+    "domain_not_whitelisted": "डोमेन व्हाइटलिस्ट में नहीं है",
+    "ip_in_blocked_range": "आईपी अवरुद्ध सीमा में है: {range}",
+    "resolved_ip_blocked": "हल किया गया आईपी {ip} अवरुद्ध सीमा में है: {range}",
+    "cannot_resolve_hostname": "होस्टनाम को हल नहीं किया जा सकता है",
+    "unknown_policy_level": "अज्ञात नेटवर्क नीति स्तर: {policy_level}"
   }
 }

@@ -4,89 +4,24 @@ from ..core.prompt import AIForgePrompt
 from .parser import InstructionParser
 from .classifier import TaskClassifier
 from .extractor import ParameterExtractor
+from functools import lru_cache
 
 
 class AIForgeInstructionAnalyzer:
     """指令分析器"""
 
     def __init__(self, llm_client: AIForgeLLMClient, components: Dict[str, Any] = None):
-        self.llm_client = llm_client
-        self.task_type_manager = None
-        self.components = components or {}
-        self._ai_forgePrompt = AIForgePrompt(self.components)
-        self._i18n_manager = self.components.get("i18n_manager")
-        # 初始化子组件
-        self.parser = InstructionParser(llm_client)
-        self.classifier = TaskClassifier()
-        self.extractor = ParameterExtractor()
-
         # 标准化的任务类型定义
         self.standardized_patterns = {
             "data_fetch": {
-                "keywords": [
-                    "搜索",
-                    "search",
-                    "获取",
-                    "fetch",
-                    "查找",
-                    "新闻",
-                    "news",
-                    "api",
-                    "接口",
-                    "爬取",
-                    "crawl",
-                    "信息",
-                    "资讯",
-                    "内容",
-                ],
                 "actions": ["search", "fetch", "get", "crawl"],
                 "common_params": ["query", "topic", "time_range", "date"],
             },
             "data_process": {
-                "keywords": [
-                    "分析",
-                    "analyze",
-                    "处理",
-                    "process",
-                    "计算",
-                    "统计",
-                    "转换",
-                    "transform",
-                ],
                 "actions": ["analyze", "process", "calculate", "transform"],
                 "common_params": ["data_source", "method", "format"],
             },
             "file_operation": {
-                "keywords": [
-                    "文件",
-                    "file",
-                    "读取",
-                    "read",
-                    "写入",
-                    "write",
-                    "保存",
-                    "save",
-                    "批量",
-                    "batch",
-                    "复制",
-                    "copy",
-                    "移动",
-                    "move",
-                    "删除",
-                    "delete",
-                    "重命名",
-                    "rename",
-                    "压缩",
-                    "compress",
-                    "解压",
-                    "extract",
-                    "创建",
-                    "create",
-                    "目录",
-                    "directory",
-                    "文件夹",
-                    "folder",
-                ],
                 "actions": [
                     "read",
                     "write",
@@ -110,125 +45,70 @@ class AIForgeInstructionAnalyzer:
                     "force",
                     "operation",
                 ],
-                "exclude_keywords": [
-                    "分析",
-                    "analyze",
-                    "统计",
-                    "statistics",
-                    "计算",
-                    "calculate",
-                    "处理数据",
-                    "process data",
-                    "清洗",
-                    "clean",
-                ],
             },
             "automation": {
-                "keywords": [
-                    "自动化",
-                    "automation",
-                    "定时",
-                    "schedule",
-                    "监控",
-                    "monitor",
-                    "任务",
-                    "task",
-                ],
                 "actions": ["automate", "schedule", "monitor", "execute"],
                 "common_params": ["interval", "condition", "action"],
             },
             "content_generation": {
-                "keywords": [
-                    "生成",
-                    "generate",
-                    "创建",
-                    "create",
-                    "写作",
-                    "writing",
-                    "报告",
-                    "report",
-                ],
                 "actions": ["generate", "create", "write", "compose"],
                 "common_params": ["template", "content", "style"],
             },
             "direct_response": {
-                "keywords": [
-                    # 问答类
-                    "什么是",
-                    "如何",
-                    "为什么",
-                    "解释",
-                    "介绍",
-                    "定义",
-                    "概念",
-                    "原理",
-                    "区别",
-                    "比较",
-                    "what",
-                    "how",
-                    "why",
-                    "explain",
-                    "describe",
-                    "define",
-                    "concept",
-                    # 创作类
-                    "写一篇",
-                    "写一个",
-                    "创作",
-                    "编写",
-                    "起草",
-                    "写作",
-                    "撰写",
-                    "write",
-                    "compose",
-                    "draft",
-                    "create content",
-                    # 翻译类
-                    "翻译",
-                    "translate",
-                    "转换为",
-                    "改写为",
-                    "用...语言",
-                    # 总结分析类（纯文本）
-                    "总结",
-                    "概括",
-                    "归纳",
-                    "分析这段",
-                    "解读",
-                    "summarize",
-                    "analyze this text",
-                    "interpret",
-                    # 建议咨询类
-                    "建议",
-                    "推荐",
-                    "意见",
-                    "看法",
-                    "评价",
-                    "怎么看",
-                    "suggest",
-                    "recommend",
-                    "opinion",
-                    "advice",
-                ],
-                "exclude_keywords": [
-                    # 时效性关键词
-                    "今天",
-                    "现在",
-                    "最新",
-                    "当前",
-                    "实时",
-                    "目前",
-                    "天气",
-                    "股价",
-                    "新闻",
-                    "汇率",
-                    "价格",
-                    "状态",
-                ],
                 "actions": ["respond", "answer", "create", "translate", "summarize", "suggest"],
                 "common_params": ["content", "style"],
             },
         }
+
+        self.llm_client = llm_client
+        self.task_type_manager = None
+        self.components = components or {}
+        self._ai_forgePrompt = AIForgePrompt(self.components)
+        self._i18n_manager = self.components.get("i18n_manager")
+        # 初始化子组件
+        self.parser = InstructionParser(llm_client)
+        self.classifier = TaskClassifier(components)
+        self.extractor = ParameterExtractor(components)
+        self.initialize_with_locale_detection()
+
+    @lru_cache(maxsize=256)
+    def get_cached_localized_keywords(self, task_type):
+        """缓存本地化关键词以提高性能"""
+        return self.get_task_type_keywords(task_type)
+
+    def initialize_with_locale_detection(self):
+        """根据检测到的语言环境初始化关键词"""
+        # 预加载当前语言环境的关键词
+        for task_type in self.standardized_patterns.keys():
+            self.get_cached_localized_keywords(task_type)
+
+    def get_task_type_keywords(self, task_type):
+        """动态获取任务类型的关键词"""
+        # 从 i18n 配置中获取当前语言的关键词
+        task_keywords = (
+            self._i18n_manager.messages.get(self._i18n_manager.locale, {})
+            .get("keywords", {})
+            .get(task_type, {})
+        )
+
+        # 返回所有关键词（排除 exclude 部分）
+        keywords = []
+        for key, value in task_keywords.items():
+            if key != "exclude":
+                keywords.append(value)
+
+        return keywords
+
+    def get_exclude_keywords(self, task_type):
+        """获取排除关键词"""
+        task_keywords = (
+            self._i18n_manager.messages.get(self._i18n_manager.locale, {})
+            .get("keywords", {})
+            .get(task_type, {})
+        )
+
+        exclude_section = task_keywords.get("exclude", {})
+        return list(exclude_section.values()) if exclude_section else []
 
     def local_analyze_instruction(self, instruction: str) -> Dict[str, Any]:
         """本地指令分析"""
@@ -239,15 +119,20 @@ class AIForgeInstructionAnalyzer:
         best_match_details = {}
 
         for task_type, pattern_data in self.standardized_patterns.items():
+            # 使用统一的关键词获取方法
+            localized_keywords = self.get_task_type_keywords(task_type)
+
             # 检查排除关键词
-            exclude_keywords = pattern_data.get("exclude_keywords", [])
+            exclude_keywords = self.get_exclude_keywords(task_type)
             if any(exclude_keyword in instruction_lower for exclude_keyword in exclude_keywords):
                 continue
 
-            score = sum(1 for keyword in pattern_data["keywords"] if keyword in instruction_lower)
+            score = sum(1 for keyword in localized_keywords if keyword.lower() in instruction_lower)
             if score > 0:
                 type_scores[task_type] = score
-                best_match_details[task_type] = pattern_data
+                pattern_copy = pattern_data.copy()
+                pattern_copy["keywords"] = localized_keywords
+                best_match_details[task_type] = pattern_copy
 
         if not type_scores:
             return self.parser.get_default_analysis(instruction)
@@ -544,8 +429,10 @@ class AIForgeInstructionAnalyzer:
 
         # 添加类型描述
         for task_type, pattern_data in self.standardized_patterns.items():
+            # 动态获取关键词
+            keywords = self.get_task_type_keywords(task_type)
             recommendations["type_descriptions"][task_type] = {
-                "keywords": pattern_data["keywords"][:5],  # 只显示前5个关键词
+                "keywords": keywords[:5],  # 只显示前5个关键词
                 "actions": pattern_data["actions"],
                 "common_use_cases": self._get_use_cases_for_type(task_type),
             }

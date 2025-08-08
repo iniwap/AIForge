@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "نجاح",
+      "error": "خطأ",
+      "pending": "قيد الانتظار",
+      "cancelled": "تم الإلغاء",
+      "completed": "مكتمل",
+      "failed": "فشل",
+      "running": "قيد التشغيل"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "تأكيد",
+      "cancel": "إلغاء",
+      "retry": "إعادة المحاولة",
+      "skip": "تخطي",
+      "continue": "متابعة",
+      "start": "بدء",
+      "stop": "إيقاف"
     },
     "time_units": {
-      "seconds": "seconds",
-      "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "seconds": "ثانية",
+      "minutes": "دقيقة",
+      "hours": "ساعة",
+      "days": "يوم"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
-      "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "items": "عنصر",
+      "count": "عدد",
+      "total": "الإجمالي",
+      "found": "تم العثور على",
+      "valid": "صالح"
     },
     "labels": {
-      "name": "Name",
-      "type": "Type",
-      "description": "Description",
-      "timestamp": "Timestamp",
-      "status": "Status",
-      "result": "Result"
+      "name": "الاسم",
+      "type": "النوع",
+      "description": "الوصف",
+      "timestamp": "الطابع الزمني",
+      "status": "الحالة",
+      "result": "النتيجة"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "جار التحميل...",
+      "no_data": "لا توجد بيانات متاحة",
+      "unknown": "غير معروف",
+      "processing": "جار المعالجة...",
+      "waiting": "قيد الانتظار..."
     }
   }
 }

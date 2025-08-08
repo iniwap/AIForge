@@ -9,7 +9,7 @@ resolution-markers = [
 
 [[package]]
 name = "aiforge-engine"
-version = "0.0.8"
+version = "0..0.9"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },

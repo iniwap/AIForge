@@ -1,0 +1,122 @@
+{
+  "execution": {
+    "direct_response_error": "Phản hồi trực tiếp thất bại: {error}",
+    "validation_failed": "Xác thực thất bại",
+    "execution_timeout": "Hết thời gian thực thi",
+    "module_execution_failed": "Thực thi module thất bại",
+    "parameter_validation_failed": "Xác thực tham số thất bại",
+    "intent_validation_failed": "Xác thực ý định thất bại",
+    "functionality_validation_failed": "Xác thực tính nhất quán chức năng thất bại"
+  },
+  "search": {
+    "search_failed_error": "Tìm kiếm thất bại: {error}",
+    "all_strategies_failed": "Tất cả các chiến lược tìm kiếm đều thất bại",
+    "quality_validation_failed": "Xác thực chất lượng kết quả tìm kiếm thất bại",
+    "no_valid_results": "Không tìm thấy kết quả tìm kiếm hợp lệ",
+    "no_search_container": "Không tìm thấy vùng chứa kết quả tìm kiếm"
+  },
+  "task": {
+    "execution_error": "Lỗi thực thi: {error}"
+  },
+  "analyzer": {
+    "analysis_failed": "Phân tích thống kê thất bại: {error}",
+    "api_key_in_url_parameter": "Phát hiện tham số khóa API trong URL",
+    "api_key_in_url_constant": "Phát hiện tham số khóa API trong hằng số URL",
+    "api_key_in_headers": "Phát hiện thông tin xác thực trong headers: {key}",
+    "possible_api_key_parameter": "Phát hiện tham số khóa API có thể có: {param}"
+  },
+  "content_generation": {
+    "llm_manager_unavailable": "Trình quản lý LLM không khả dụng",
+    "llm_client_unavailable": "LLM client không khả dụng",
+    "llm_manager_error_summary": "Tạo nội dung thất bại: Trình quản lý LLM không khả dụng",
+    "llm_client_error_summary": "Tạo nội dung thất bại: LLM client không khả dụng",
+    "generation_error": "Lỗi tạo nội dung: {error}",
+    "generation_failed": "Tạo nội dung thất bại: {error}"
+  },
+  "template": {
+    "missing_required_parameter": "Thiếu tham số bắt buộc: {param_name}",
+    "template_not_found": "Không tìm thấy template: {template_id}",
+    "execution_failed": "Thực thi template {template_id} thất bại: {error}"
+  },
+  "llm_client": {
+    "server_error_retry": "Lỗi server {name}: {status_code}, đang thử lại lần thứ {attempt}, chờ {wait_time} giây...",
+    "client_error": "Lỗi client {name}: {status_code}",
+    "network_error_retry": "Lỗi mạng {name}: {error}, đang thử lại lần thứ {attempt}",
+    "request_failed": "Yêu cầu {name} thất bại: {error}"
+  },
+  "llm_manager": {
+    "default_client_unavailable": "LLM client mặc định '{provider}' không khả dụng hoặc tạo thất bại",
+    "config_missing": "Trong tệp cấu hình không chỉ định LLM client mặc định hoặc cấu hình không tồn tại: {provider}",
+    "no_available_client": "Không tìm thấy LLM client khả dụng nào",
+    "unsupported_type": "Loại LLM không được hỗ trợ: {client_type}",
+    "client_unavailable": "LLM client '{name}' không khả dụng",
+    "create_failed": "Tạo LLM client {name} thất bại: {error}",
+    "switch_failed": "Chuyển đổi thất bại, client '{name}' không khả dụng"
+  },
+  "validation": {
+    "local_basic_failed": "Xác thực cục bộ thất bại",
+    "business_logic_failed": "Xác thực logic nghiệp vụ thất bại",
+    "ai_validation_failed": "Xác thực AI thất bại",
+    "llm_client_none": "llm_client là None",
+    "code_execution_failed": "Thực thi mã thất bại: {error}",
+    "unknown_error": "Lỗi không xác định",
+    "execution_result_none": "Kết quả thực thi là None",
+    "data_field_empty": "Trường data là danh sách rỗng, không nhận được dữ liệu hợp lệ",
+    "data_field_none": "Trường data là None",
+    "missing_data_field": "Thiếu trường data",
+    "execution_result_empty": "Kết quả thực thi trống",
+    "result_must_be_dict": "Nội dung kết quả phải ở định dạng từ điển",
+    "result_status_error": "Trạng thái kết quả là lỗi",
+    "data_must_be_array": "Trường data phải ở định dạng mảng",
+    "data_array_empty": "Mảng dữ liệu trống",
+    "data_item_must_be_dict": "Mục dữ liệu phải ở định dạng từ điển",
+    "data_item_missing_required_fields": "Mục dữ liệu thiếu các trường bắt buộc",
+    "insufficient_data_quantity": "Số lượng dữ liệu không đủ: Cần ít nhất {min_items} mục, thực tế {actual} mục",
+    "insufficient_valid_data": "Đã nhận được {valid_count} mục dữ liệu hợp lệ, không đáp ứng yêu cầu tối thiểu {min_items} mục",
+    "result_not_meet_requirements": "Kết quả không đáp ứng yêu cầu nhiệm vụ",
+    "ai_response_parse_failed": "Không thể phân tích định dạng phản hồi của AI",
+    "ai_response_format_error": "Lỗi định dạng phản hồi xác thực của AI"
+  },
+  "runner": {
+    "code_execution_timeout": "Hết thời gian thực thi mã ({timeout} giây)",
+    "process_execution_error": "Lỗi thực thi quy trình: {error}",
+    "result_parse_error": "Lỗi phân tích kết quả: {error}",
+    "network_security_blocked": "Chính sách bảo mật mạng đã chặn",
+    "module_blocked_security_template": "Module '{missing_name}' bị chặn nhập do chính sách bảo mật. Nguyên nhân: {reason}. Module gốc: {original_module}",
+    "code_execution_timeout_handler": "Hết thời gian thực thi mã",
+    "security_policy_active": "Chính sách bảo mật mạng có hiệu lực",
+    "unknown_error": "Lỗi không xác định",
+    "security_blocked_modules": "Chính sách bảo mật đã chặn nhập các module sau: {blocked_list}. {error}",
+    "execution_failed": "Thực thi thất bại: {error}",
+    "runner_error": "Lỗi Runner: {error}"
+  },
+  "config": {
+    "file_not_exists": "Tệp cấu hình {file} không tồn tại",
+    "load_failed": "Tải tệp cấu hình thất bại: {error}"
+  },
+  "executor": {
+    "no_llm_response": "Lần thử thứ {optimization_attempt}: LLM không trả về phản hồi",
+    "no_code_blocks_found": "Lần thử thứ {optimization_attempt}: Không tìm thấy khối mã có thể thực thi",
+    "code_execution_failed": "Lần thử thứ {optimization_attempt}: Thực thi mã thất bại",
+    "code_execution_error": "Lần thử thứ {optimization_attempt}: Lỗi thực thi mã",
+    "validation_failed": "Lần thử thứ {optimization_attempt} xác thực thất bại ({validation_type}): {failure_reason}",
+    "final_validation_failed": "Lần thử thứ {optimization_attempt} xác thực thất bại ({validation_type}): {failure_reason}, đã đạt số lần tối ưu hóa tối đa",
+    "all_attempts_failed": "Tất cả {max_optimization_attempts} lần thử tối ưu hóa trong một vòng đều thất bại"
+  },
+  "security": {
+    "dangerous_function_detected": "Phát hiện cuộc gọi hàm nguy hiểm: {pattern}",
+    "analysis_failed": "Phân tích bảo mật thất bại: {error}"
+  },
+  "network": {
+    "strict_mode_blocks_all": "Chế độ nghiêm ngặt chặn tất cả truy cập mạng",
+    "domain_in_blacklist": "Tên miền {domain} nằm trong danh sách đen",
+    "domain_not_in_whitelist": "Tên miền {domain} không nằm trong danh sách trắng",
+    "empty_hostname": "Tên máy chủ trống",
+    "domain_blacklisted": "Tên miền trong danh sách đen: {domain}",
+    "domain_not_whitelisted": "Tên miền không nằm trong danh sách trắng",
+    "ip_in_blocked_range": "IP nằm trong phạm vi bị chặn: {range}",
+    "resolved_ip_blocked": "IP đã phân giải {ip} nằm trong phạm vi bị chặn: {range}",
+    "cannot_resolve_hostname": "Không thể phân giải tên máy chủ",
+    "unknown_policy_level": "Mức chính sách mạng không xác định: {policy_level}"
+  }
+}

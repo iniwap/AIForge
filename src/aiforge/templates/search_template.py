@@ -16,7 +16,6 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 from datetime import datetime, timedelta
-from enum import Enum
 import concurrent.futures
 from ..utils import utils
 from ..strategies.search_template_strategy import StandardTemplateStrategy
@@ -71,86 +70,54 @@ def get_free_form_ai_search_instruction(
     return search_instruction
 
 
-class SearchEngine(Enum):
-    BAIDU = "baidu"
-    BING = "bing"
-    SO_360 = "360"
-    SOUGOU = "sougou"
-    COMBINED = "combined"
+LOCALE_SEARCH_ENGINES = {
+    "zh": ["baidu", "bing", "360", "sogou"],
+    "en": ["google", "bing", "duckduckgo"],
+    "ar": ["google", "bing", "duckduckgo"],
+    "de": ["google", "bing", "startpage"],
+    "es": ["google", "bing", "duckduckgo"],
+    "fr": ["google", "bing", "startpage"],
+    "hi": ["google", "bing", "duckduckgo"],
+    "ja": ["yahoo_japan", "google", "bing"],
+    "ko": ["naver", "google", "bing"],
+    "pt": ["google", "bing", "duckduckgo"],
+    "ru": ["yandex", "google", "bing"],
+    "vi": ["google", "bing", "duckduckgo"],
+}
 
 
 def search_web(
-    search_query,
-    max_results=10,
-    min_items=1,
-    min_abstract_len=300,
-    max_abstract_len=1000,
-    module_type: SearchEngine = SearchEngine.COMBINED,
+    search_query, max_results=10, min_items=1, min_abstract_len=300, max_abstract_len=1000
 ):
 
     i18n_manager = AIForgeI18nManager.get_instance()
+    print(
+        "search_web~~~>", i18n_manager.locale, LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh")
+    )
+    for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
+        try:
+            engine_name = i18n_manager.t(f"search.engine_{engine}")
+            ProgressIndicator.get_instance().show_search_process(engine_name)
 
-    if module_type == SearchEngine.COMBINED:
-        for engine in SearchEngine:
-            try:
-                if engine == SearchEngine.BAIDU:
-                    engine_name = i18n_manager.t("search.engine_baidu")
-                    ProgressIndicator.get_instance().show_search_process(engine_name)
-                    search_result = template_baidu_specific(
-                        search_query, max_results, min_abstract_len, max_abstract_len
-                    )
-                elif engine == SearchEngine.BING:
-                    engine_name = i18n_manager.t("search.engine_bing")
-                    ProgressIndicator.get_instance().show_search_process(engine_name)
-                    search_result = template_bing_specific(
-                        search_query, max_results, min_abstract_len, max_abstract_len
-                    )
-                elif engine == SearchEngine.SO_360:
-                    engine_name = i18n_manager.t("search.engine_360")
-                    ProgressIndicator.get_instance().show_search_process(engine_name)
-                    search_result = template_360_specific(
-                        search_query, max_results, min_abstract_len, max_abstract_len
-                    )
-                elif engine == SearchEngine.SOUGOU:
-                    engine_name = i18n_manager.t("search.engine_sogou")
-                    ProgressIndicator.get_instance().show_search_process(engine_name)
-                    search_result = template_sougou_specific(
-                        search_query, max_results, min_abstract_len, max_abstract_len
-                    )
-                else:
-                    continue
-
-                # 验证搜索结果质量
-                if validate_search_result(search_result, min_items):
-                    return search_result
-            except Exception:
+            search_result = _search_template(
+                search_query,
+                max_results,
+                ENGINE_CONFIGS[engine],
+                min_abstract_len,
+                max_abstract_len,
+            )
+            # 验证搜索结果质量
+            print("search_result++++>", search_result)
+            if validate_search_result(search_result, min_items):
+                return search_result
+            else:
                 continue
+        except Exception as e:
+            print("search_web======>", str(e))
+            continue
 
-        # 所有搜索引擎都失败，返回 None
-        return None
-
-    elif module_type == SearchEngine.BAIDU:
-        result = template_baidu_specific(
-            search_query, max_results, min_abstract_len, max_abstract_len
-        )
-        return result if validate_search_result(result, min_items) else None
-    elif module_type == SearchEngine.BING:
-        result = template_bing_specific(
-            search_query, max_results, min_abstract_len, max_abstract_len
-        )
-        return result if validate_search_result(result, min_items) else None
-    elif module_type == SearchEngine.SO_360:
-        result = template_360_specific(
-            search_query, max_results, min_abstract_len, max_abstract_len
-        )
-        return result if validate_search_result(result, min_items) else None
-    elif module_type == SearchEngine.SOUGOU:
-        result = template_sougou_specific(
-            search_query, max_results, min_abstract_len, max_abstract_len
-        )
-        return result if validate_search_result(result, min_items) else None
-    else:
-        return None
+    # 所有搜索引擎都失败，返回 None
+    return None
 
 
 def validate_search_result(result, min_items=1, search_type="local", min_abstract_len=300):
@@ -451,7 +418,7 @@ def sort_and_filter_results(results):
         result for result in results if utils.is_within_days(result.get("pub_time"), 7)
     ]
     recent_results.sort(
-        key=lambda x: utils.parse_date_to_timestamp(x.get("pub_time", "")), reverse=True
+        key=lambda x: utils.parse_date_to_timestamp(x.get("pub_time", "")) or 0, reverse=True
     )
 
     return recent_results
@@ -487,7 +454,7 @@ def _search_template(
                 "search_query": search_query,
                 "results": [],
                 "success": False,
-                "error": "未找到搜索结果容器",
+                "error": AIForgeI18nManager.get_instance().t("search.no_valid_results"),
             }
 
         # 收集结果和需要抓取的URL
@@ -512,7 +479,7 @@ def _search_template(
                 if not link_elem:
                     continue
 
-                title = utils.clean_text(title_elem.get_text().strip()) or "无标题"
+                title = utils.clean_text(title_elem.get_text().strip()) or "no title"
                 url = link_elem.get("href", "")
 
                 # 处理重定向链接
@@ -609,7 +576,6 @@ def _search_template(
 
 
 # 搜索引擎配置
-
 ENGINE_CONFIGS = {
     "baidu": {
         "url": "https://www.baidu.com/s?wd={search_query}&rn={max_results}",
@@ -924,40 +890,142 @@ ENGINE_CONFIGS = {
         ],
         "fallback_abstract": True,
     },
+    "google": {
+        "url": "https://www.google.com/search?q={search_query}&num={max_results}",
+        "result_selectors": [
+            "div.g",
+            "div[data-ved]",
+            ".g",
+            ".tF2Cxc",
+            ".hlcw0c",
+            "[class*='result']",
+            ".rc",
+            ".r",
+            "div.yuRUbf",
+        ],
+        "title_selectors": ["h3", "h1", "h2", ".LC20lb", ".DKV0Md", "a h3", ".yuRUbf h3"],
+        "abstract_selectors": [
+            ".VwiC3b",
+            ".s",
+            ".st",
+            ".IsZvec",
+            ".aCOpRe",
+            ".yXK7lf",
+            "span[data-ved]",
+        ],
+        "fallback_abstract": False,
+    },
+    "yandex": {
+        "url": "https://yandex.com/search/?text={search_query}&numdoc={max_results}",
+        "result_selectors": [
+            ".serp-item",
+            ".organic",
+            ".content",
+            ".serp-item_type_search",
+            ".serp-list__item",
+            ".organic__url-text",
+            ".serp-item__wrap",
+        ],
+        "title_selectors": [
+            "h2",
+            ".organic__title",
+            ".title",
+            ".organic__title-wrapper",
+            ".serp-item__title",
+            "h3",
+        ],
+        "abstract_selectors": [
+            ".text-container",
+            ".organic__text",
+            ".snippet",
+            ".organic__content-wrapper",
+            ".serp-item__text",
+            ".organic__greenurl",
+        ],
+        "fallback_abstract": False,
+    },
+    "naver": {
+        "url": "https://search.naver.com/search.naver?query={search_query}&start=1&display={max_results}",  # noqa 501
+        "result_selectors": [
+            ".bx",
+            ".total_wrap",
+            ".news_wrap",
+            ".api_subject_bx",
+            ".total_group",
+            ".lst_total",
+            ".news_area",
+        ],
+        "title_selectors": [
+            ".news_tit",
+            ".total_tit",
+            "dt a",
+            ".api_txt_lines",
+            ".total_group .tit",
+            ".lst_total .tit",
+        ],
+        "abstract_selectors": [
+            ".news_dsc",
+            ".total_dsc",
+            ".dsc_txt",
+            ".api_txt_lines",
+            ".total_group .dsc",
+            ".lst_total .dsc",
+        ],
+        "fallback_abstract": False,
+    },
+    "yahoo_japan": {
+        "url": "https://search.yahoo.co.jp/search?p={search_query}&n={max_results}",
+        "result_selectors": [
+            ".sw-CardBase",
+            ".algo",
+            ".w",
+            ".Algo",
+            ".compTitle",
+            ".searchCenterMiddle li",
+        ],
+        "title_selectors": [
+            "h3",
+            ".sw-CardBase__title",
+            ".ac",
+            ".compTitle h3",
+            ".Algo h3",
+            "h3 a",
+        ],
+        "abstract_selectors": [
+            ".sw-CardBase__body",
+            ".compText",
+            ".ab",
+            ".Algo .compText",
+            ".sw-CardBase .compText",
+        ],
+        "fallback_abstract": False,
+    },
+    "duckduckgo": {
+        "url": "https://duckduckgo.com/?q={search_query}",
+        "result_selectors": ["[data-result]", ".result", ".web-result", ".results_links"],
+        "title_selectors": [".result__title", "h2", "h3", ".result__a"],
+        "abstract_selectors": [".result__snippet", ".result__body", ".web-result__snippet"],
+        "fallback_abstract": False,
+    },
+    "startpage": {
+        "url": "https://www.startpage.com/sp/search?query={search_query}&num={max_results}",
+        "result_selectors": [".w-gl__result", ".result", ".search-result"],
+        "title_selectors": [".w-gl__result-title", "h3", ".search-result__title"],
+        "abstract_selectors": [
+            ".w-gl__description",
+            ".search-result__body",
+            ".w-gl__result-snippet",
+        ],
+        "fallback_abstract": False,
+    },
+    "searx": {
+        "url": "https://searx.org/search?q={search_query}&format=json",
+        "result_selectors": [".result", "article", ".search_result"],
+        "title_selectors": ["h3", ".result_title", "h4"],
+        "abstract_selectors": [".content", ".result_content", "p"],
+        "fallback_abstract": True,
+    },
 }
-
-
-# 搜索引擎特定函数
-def template_baidu_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
-):
-    return _search_template(
-        search_query, max_results, ENGINE_CONFIGS["baidu"], min_abstract_len, max_abstract_len
-    )
-
-
-def template_bing_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
-):
-    return _search_template(
-        search_query, max_results, ENGINE_CONFIGS["bing"], min_abstract_len, max_abstract_len
-    )
-
-
-def template_360_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
-):
-    return _search_template(
-        search_query, max_results, ENGINE_CONFIGS["360"], min_abstract_len, max_abstract_len
-    )
-
-
-def template_sougou_specific(
-    search_query, max_results=10, min_abstract_len=300, max_abstract_len=1000
-):
-    return _search_template(
-        search_query, max_results, ENGINE_CONFIGS["sogou"], min_abstract_len, max_abstract_len
-    )
 
 
 def extract_full_article_content(page_soup, min_abstract_len=300):

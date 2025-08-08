@@ -1,0 +1,397 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "검색": "검색",  
+      "가져오기": "가져오기",  
+      "얻기": "얻기",  
+      "뉴스": "뉴스",  
+      "정보": "정보",  
+      "콘텐츠": "콘텐츠",  
+      "크롤링": "크롤링",  
+      "인터페이스": "인터페이스"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "분석": "분석",  
+      "처리": "처리",  
+      "계산": "계산",  
+      "통계": "통계",  
+      "변환": "변환"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "파일": "파일",  
+      "읽기": "읽기",  
+      "쓰기": "쓰기",  
+      "저장": "저장",  
+      "일괄": "일괄",  
+      "복사": "복사",  
+      "이동": "이동",  
+      "삭제": "삭제",  
+      "이름변경": "이름변경",  
+      "압축": "압축",  
+      "추출": "추출",  
+      "생성": "생성",  
+      "디렉토리": "디렉토리",  
+      "폴더": "폴더",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "분석": "분석",  
+        "통계": "통계",  
+        "계산": "계산",  
+        "데이터 처리": "데이터 처리",  
+        "정리": "정리"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "자동화": "자동화",  
+      "스케줄": "스케줄",  
+      "모니터링": "모니터링",  
+      "작업": "작업"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "생성": "생성",  
+      "만들기": "만들기",  
+      "작성": "작성",  
+      "보고서": "보고서"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "무엇인가": "무엇인가",  
+      "어떻게": "어떻게",  
+      "왜": "왜",  
+      "설명": "설명",  
+      "기술": "기술",  
+      "정의": "정의",  
+      "개념": "개념",  
+      "원리": "원리",  
+      "차이": "차이",  
+      "비교": "비교",  
+      "쓰기": "쓰기",  
+      "작성": "작성",  
+      "초안": "초안",  
+      "번역": "번역",  
+      "변환": "변환",  
+      "다시쓰기": "다시쓰기",  
+      "언어로": "언어로",  
+      "요약": "요약",  
+      "추상": "추상",  
+      "개요": "개요",  
+      "이것을 분석": "이것을 분석",  
+      "해석": "해석",  
+      "제안": "제안",  
+      "추천": "추천",  
+      "의견": "의견",  
+      "견해": "견해",  
+      "평가": "평가",  
+      "어떻게 생각하세요": "어떻게 생각하세요",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "오늘": "오늘",  
+        "지금": "지금",  
+        "최신": "최신",  
+        "현재": "현재",  
+        "실시간": "실시간",  
+        "날씨": "날씨",  
+        "주가": "주가",  
+        "뉴스": "뉴스",  
+        "환율": "환율",  
+        "가격": "가격",  
+        "상태": "상태"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "형식": "형식",  
+      "출력 형식": "출력 형식",  
+      "타입": "타입",  
+      "확장자": "확장자",  
+      "파일 형식": "파일 형식"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "스타일": "스타일",  
+      "테마": "테마",  
+      "템플릿": "템플릿"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "언어": "언어",  
+      "로컬": "로컬",  
+      "국제화": "국제화"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "톤": "톤",  
+      "분위기": "분위기",  
+      "감정": "감정"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "마크업 언어"],  
+    "html": ["html", "webpage", "web", "웹페이지", "웹"],  
+    "json": ["json", "data format", "데이터 형식"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "문서"],  
+    "txt": ["txt", "text", "plain text", "텍스트", "일반 텍스트"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "검색", "가져오기", "얻기", "찾기", "검색", "조회"],  
+    "target_keywords": ["search", "query", "검색", "쿼리"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "검색 쿼리", "쿼리", "키워드", "검색어", "용어", "키워드들"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "검색": "검색",  
+      "찾기": "찾기",  
+      "조회": "조회",  
+      "위치찾기": "위치찾기"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "가져오기": "가져오기",  
+      "얻기": "얻기",  
+      "검색": "검색",  
+      "획득": "획득"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "분석": "분석",  
+      "검사": "검사",  
+      "계산": "계산",  
+      "연산": "연산"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "변환": "변환",  
+      "변경": "변경",  
+      "처리": "처리"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "생성": "생성",  
+      "만들기": "만들기",  
+      "생산": "생산",  
+      "제작": "제작"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "저장": "저장",  
+      "쓰기": "쓰기",  
+      "보관": "보관",  
+      "유지": "유지"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "응답": "응답",  
+      "답변": "답변",  
+      "설명": "설명",  
+      "답장": "답장"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "번역": "번역",  
+      "변환": "변환",  
+      "변형": "변형",  
+      "해석": "해석"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "요약": "요약",  
+      "추상": "추상",  
+      "압축": "압축",  
+      "개요": "개요"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "제안": "제안",  
+      "추천": "추천",  
+      "조언": "조언"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "검색(.+?)(?:\\s|,|\\.|$)",  
+        "찾기(.+?)(?:\\s|,|\\.|$)",  
+        "검색하기(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:항목|결과|엔트리|레코드))",  
+        "(?:최대|최고|맥스)\\s+(\\d+)",  
+        "(?:첫번째|상위|톱)\\s+(\\d+)",  
+        "(?:최소|최저|미니멈)\\s+(\\d+)",  
+        "처리\\s+(\\d+)",  
+        "생성\\s+(\\d+)",  
+        "가져오기\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "파일\\s+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "url": {  
+      "patterns": ["(https?://[^\\s]+)"],  
+      "type": "str"  
+    },  
+    "content": {  
+      "patterns": [  
+        "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "콘텐츠[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "텍스트[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },
+    "style": {  
+        "patterns": [  
+            "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "스타일[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "테마[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+        ],  
+        "type": "str"  
+    }
+  }
+}

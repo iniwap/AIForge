@@ -1,180 +1,184 @@
 {
   "task": {
-    "template_code_generation": "Generate code based on template",
-    "system_prompt_generation": "Please generate code according to system prompt",
-    "processing_start": "Start processing task instruction, max rounds {max_rounds}, max optimization attempts per round {max_optimization}",
-    "round_execution": "Round {round} execution",
-    "all_rounds_failed_best_result": "All rounds failed, returning best result, execution ended!",
-    "round_success_completed": "Round {round} execution successful, task completed!",
-    "all_rounds_failed_no_result": "All rounds failed, no valid result obtained, execution ended!",
-    "round_failed_continue": "Round {round} execution failed, proceeding to next round",
-    "execution_summary": "Task {task_id} execution summary",
+    "template_code_generation": "टेम्पलेट के आधार पर कोड उत्पन्न करना",
+    "system_prompt_generation": "कृपया सिस्टम प्रॉम्प्ट के अनुसार कोड उत्पन्न करें",
+    "processing_start": "कार्य निर्देश को संसाधित करना शुरू करें, अधिकतम प्रयासों की संख्या {max_rounds}, प्रति राउंड अधिकतम अनुकूलन {max_optimization}",
+    "round_execution": "राउंड {round} का निष्पादन",
+    "all_rounds_failed_best_result": "सभी राउंड विफल रहे, सबसे अच्छा परिणाम वापस करें, निष्पादन समाप्त!",
+    "round_success_completed": "राउंड {round} का निष्पादन सफल रहा, कार्य पूरा हुआ!",
+    "all_rounds_failed_no_result": "सभी राउंड विफल रहे, कोई वैध परिणाम प्राप्त नहीं हुआ, निष्पादन समाप्त!",
+    "round_failed_continue": "राउंड {round} विफल रहा, अगले राउंड में फिर से शुरू करें",
+    "execution_summary": "कार्य {task_id} का निष्पादन सारांश",
     "status": {
-      "created": "Created",
-      "running": "Running",
-      "completed": "Completed",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "unknown": "Unknown status"
+      "created": "बनाया गया",
+      "running": "चल रहा है",
+      "completed": "पूरा हुआ",
+      "failed": "विफल",
+      "cancelled": "रद्द किया गया",
+      "unknown": "अज्ञात स्थिति"
     }
   },
   "execution": {
-    "direct_response_success": "Direct response: {action} - {instruction}...",
-    "cache_lookup": "Looking up cache...",
-    "cache_found": "Found {count} cached modules",
-    "cache_execution": "Executing cached modules...",
-    "ai_generation": "Generating new code...",
-    "cache_validation_passed": "Cache validation passed"
+    "direct_response_success": "सीधी प्रतिक्रिया: {action} - {instruction}...",
+    "cache_lookup": "कैश में खोज रहा है...",
+    "cache_found": "{count} कैश मॉड्यूल मिले",
+    "cache_execution": "कैश मॉड्यूल निष्पादित कर रहा है...",
+    "ai_generation": "नया कोड उत्पन्न कर रहा है...",
+    "cache_validation_passed": "कैश सत्यापन सफल"
   },
   "search": {
-    "search_complete_success": "Search completed, found {count} results",
-    "process_system_cache": "System cache",
-    "process_ai_template": "AI template",
-    "process_ai_free": "AI free form",
-    "process_system_default": "System default",
+    "search_complete_success": "खोज पूरी हुई, {count} परिणाम मिले",
+    "process_system_cache": "सिस्टम कैश",
+    "process_ai_template": "एआई टेम्पलेट",
+    "process_ai_free": "एआई फ्री",
+    "process_system_default": "सिस्टम डिफ़ॉल्ट",
     "engine_baidu": "Baidu",
     "engine_bing": "Bing",
     "engine_360": "360",
-    "engine_sogou": "Sogou"
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
   },
   "analyzer": {
     "recommendations": {
-      "enhance_builtin_guidance": "Recommend enhancing built-in type guidance, current built-in type usage rate is low",
-      "relax_creation_conditions": "Built-in type usage rate is very high, consider appropriately relaxing new type creation conditions",
-      "too_many_dynamic": "Too many dynamic types ({count}), recommend cleaning up low-priority types",
-      "low_priority_types": "Found {count} low-priority dynamic types, recommend considering removal",
-      "unused_builtin": "Built-in types {types} have 0% usage rate, may need to optimize keyword matching",
-      "all_good": "Task type usage is good, no special optimization needed"
+      "enhance_builtin_guidance": "अंतर्निहित प्रकारों के लिए मार्गदर्शन को बढ़ाने की सलाह दी जाती है, वर्तमान में अंतर्निहित प्रकारों का उपयोग कम है",
+      "relax_creation_conditions": "अंतर्निहित प्रकारों का उपयोग बहुत अधिक है, नए प्रकारों के लिए निर्माण शर्तों को ढीला करने पर विचार किया जा सकता है",
+      "too_many_dynamic": "बहुत अधिक गतिशील प्रकार ({count}), कम प्राथमिकता वाले प्रकारों को साफ करने की सलाह दी जाती है",
+      "low_priority_types": "कम प्राथमिकता वाले {count} गतिशील प्रकार मिले, उन्हें हटाने पर विचार करने की सलाह दी जाती है",
+      "unused_builtin": "अंतर्निहित प्रकार {types} का उपयोग 0% है, कीवर्ड मिलान को अनुकूलित करने की आवश्यकता हो सकती है",
+      "all_good": "कार्य प्रकार का उपयोग अच्छा है, किसी विशेष अनुकूलन की आवश्यकता नहीं है"
     },
     "adaptive": {
-      "task_type_guidance_header": "# Task Type Guidance",
-      "system_status_header": "# System Status:",
-      "current_guidance_strength": "Current guidance strength",
-      "builtin_usage_rate": "Built-in type usage rate",
-      "efficiency_note": "These built-in types have higher cache hit rates and execution efficiency.",
-      "use_builtin_types": "use the following verified built-in task types"
+      "task_type_guidance_header": "# कार्य प्रकार मार्गदर्शन",
+      "system_status_header": "# सिस्टम स्थिति:",
+      "current_guidance_strength": "वर्तमान मार्गदर्शन की तीव्रता",
+      "builtin_usage_rate": "अंतर्निहित प्रकार उपयोग दर",
+      "efficiency_note": "इन अंतर्निहित प्रकारों में उच्च कैश हिट दर और निष्पादन दक्षता होती है।",
+      "use_builtin_types": "निम्नलिखित सत्यापित अंतर्निहित कार्य प्रकारों का उपयोग करें"
     },
-    "priority_label": "priority",
+    "priority_label": "प्राथमिकता",
     "use_cases": {
       "data_fetch": [
-        "Search web content",
-        "Get API data",
-        "Crawl news information"
+        "वेब पेज सामग्री खोजें",
+        "एपीआई डेटा प्राप्त करें",
+        "समाचार जानकारी स्क्रैप करें"
       ],
       "data_process": [
-        "Data analysis",
-        "Statistical calculation",
-        "Format conversion"
+        "डेटा विश्लेषण",
+        "सांख्यिकीय गणना",
+        "प्रारूप रूपांतरण"
       ],
       "file_operation": [
-        "Read/write files",
-        "Batch processing",
-        "Document operations"
+        "फ़ाइलें पढ़ें और लिखें",
+        "बैच प्रोसेसिंग",
+        "दस्तावेज़ संचालन"
       ],
       "automation": [
-        "Scheduled tasks",
-        "System monitoring",
-        "Automation workflows"
+        "निर्धारित कार्य",
+        "सिस्टम निगरानी",
+        "स्वचालित कार्यप्रवाह"
       ],
       "content_generation": [
-        "Document generation",
-        "Report creation",
-        "Content creation"
+        "दस्तावेज़ निर्माण",
+        "रिपोर्ट बनाना",
+        "सामग्री निर्माण"
       ],
       "direct_response": [
-        "Knowledge Q&A",
-        "Text creation",
-        "Translation and summarization"
+        "ज्ञान प्रश्नोत्तर",
+        "पाठ निर्माण",
+        "अनुवाद और सारांश"
       ]
     }
   },
   "content_generation": {
-    "generation_success": "Successfully generated {format} format content",
-    "search_based_suffix": " (based on {count} search results)",
-    "search_results_header": "Search results for '{instruction}'",
-    "result_label": "Result",
-    "title_label": "Title",
-    "publish_time_label": "Publish Time",
-    "abstract_label": "Abstract",
-    "content_label": "Content",
-    "no_title": "No title",
-    "unknown_time": "Unknown time",
-    "no_abstract": "No abstract",
-    "no_search_results_fallback": "No relevant search results found, please generate content based on existing knowledge."
+    "generation_success": "{format} प्रारूप में सामग्री सफलतापूर्वक उत्पन्न हुई",
+    "search_based_suffix": "（{count} खोज परिणामों पर आधारित）",
+    "search_results_header": "'{instruction}' के लिए खोज परिणाम",
+    "result_label": "परिणाम",
+    "title_label": "शीर्षक",
+    "publish_time_label": "प्रकाशन का समय",
+    "abstract_label": "सारांश",
+    "content_label": "सामग्री",
+    "no_title": "कोई शीर्षक नहीं",
+    "unknown_time": "अज्ञात समय",
+    "no_abstract": "कोई सारांश नहीं",
+    "no_search_results_fallback": "कोई प्रासंगिक खोज परिणाम नहीं मिला, कृपया मौजूदा ज्ञान के आधार पर सामग्री उत्पन्न करें।"
   },
   "progress": {
-    "connecting_ai": "[AIForge]🤖 Connecting to AI service{provider}...",
-    "waiting_response": "[AIForge]💭 Waiting for AI response...",
-    "processing_response": "[AIForge]✅ Received AI response, processing...",
-    "searching": "[AIForge]🔍 Searching: {query}",
-    "search_process": "[AIForge]🔍 Trying {search_type} search...",
-    "search_complete": "[AIForge]✅ Search completed, found {count} results",
-    "cache_lookup": "[AIForge]🔍 Looking up cache...",
-    "cache_found": "[AIForge]📦 Found {count} cached modules, validating...",
-    "cache_execution": "[AIForge]⚡ Executing cached code...",
-    "code_execution": "[AIForge]⚡ Executing {count} code blocks...",
-    "round_start": "[AIForge]🔄 Starting round {current}/{total} execution...",
-    "round_success": "[AIForge]🎉 Round {round_num} execution successful!",
-    "round_retry": "[AIForge]⚠️ Round {round_num} failed, preparing retry..."
+    "connecting_ai": "[AIForge]🤖 AI सेवा {provider} से कनेक्ट हो रहा है...",
+    "waiting_response": "[AIForge]💭 AI प्रतिक्रिया का इंतजार कर रहा है...",
+    "processing_response": "[AIForge]✅ AI प्रतिक्रिया प्राप्त हुई, संसाधित कर रहा है...",
+    "searching": "[AIForge]🔍 खोज रहा है: {query}",
+    "search_process": "[AIForge]🔍 {search_type} खोज का प्रयास कर रहा है...",
+    "search_complete": "[AIForge]✅ खोज पूरी हुई, {count} परिणाम मिले",
+    "cache_lookup": "[AIForge]🔍 कैश में खोज रहा है...",
+    "cache_found": "[AIForge]📦 {count} कैश मॉड्यूल मिले, सत्यापित कर रहा है...",
+    "cache_execution": "[AIForge]⚡ कैश कोड निष्पादित कर रहा है...",
+    "code_execution": "[AIForge]⚡ {count} कोड ब्लॉक निष्पादित कर रहा है...",
+    "round_start": "[AIForge]🔄 राउंड {current}/{total} शुरू कर रहा है...",
+    "round_success": "[AIForge]🎉 राउंड {round_num} सफलतापूर्वक निष्पादित हुआ!",
+    "round_retry": "[AIForge]⚠️ राउंड {round_num} विफल, पुनः प्रयास के लिए तैयारी कर रहा है..."
   },
   "llm_manager": {
-    "config_updated": "Configuration updated",
-    "lazy_load_create": "Lazy loading LLM client: {name}",
-    "switch_success": "Switched to LLM client: {name}",
-    "cleanup_unused": "Cleaned up unused clients, keeping: {current_name}"
+    "config_updated": "कॉन्फ़िगरेशन अपडेट किया गया",
+    "lazy_load_create": "LLM क्लाइंट आलसी-लोड बना रहा है: {name}",
+    "switch_success": "LLM क्लाइंट पर स्विच किया गया: {name}",
+    "cleanup_unused": "अप्रयुक्त क्लाइंट्स को साफ कर दिया गया है, रखा गया है: {current_name}"
   },
   "validation": {
-    "validation_passed": "Validation passed",
-    "found_valid_results": "Found {count} valid results",
-    "ai_validation_exception": "AI validation exception, default pass: {error}"
+    "validation_passed": "सत्यापन सफल",
+    "found_valid_results": "{count} वैध परिणाम मिले",
+    "ai_validation_exception": "AI सत्यापन अपवाद, डिफ़ॉल्ट रूप से सफल: {error}"
   },
   "runner": {
-    "sandbox_info": "Sandbox environment: timeout={timeout}s, memory={memory}MB, CPU={cpu}s, file descriptors={fd}, file size={file_size}MB, processes={processes}",
-    "network_blocked_info": "Network access blocked by security policy",
-    "cleanup_warning": "Cleanup warning: {error}"
+    "sandbox_info": "सैंडबॉक्स रनटाइम वातावरण: टाइमआउट={timeout}s, मेमोरी={memory}MB, CPU={cpu}s, फ़ाइल डिस्क्रिप्टर={fd}, फ़ाइल आकार={file_size}MB, प्रक्रियाएं={processes}",
+    "network_blocked_info": "नेटवर्क एक्सेस सुरक्षा नीति द्वारा अवरुद्ध है",
+    "cleanup_warning": "सफाई चेतावनी: {error}"
   },
   "formatter": {
-    "code_placeholder": "See code block above...",
-    "execution_result_title": "Code Execution Result",
-    "structured_feedback_message": "The following are code block execution results automatically returned by the runtime environment in execution order",
-    "execution_summary_title": "Execution Summary",
-    "item_column": "Item",
-    "value_column": "Value",
-    "total_rounds_label": "Total Rounds",
-    "history_label": "History",
-    "task_status_label": "Task Status",
-    "history_count_text": "{count} records",
-    "completed_text": "Completed",
-    "incomplete_text": "Incomplete",
-    "operation_completed": "Operation completed"
+    "code_placeholder": "ऊपर कोड ब्लॉक देखें...",
+    "execution_result_title": "कोड निष्पादन परिणाम",
+    "structured_feedback_message": "यहां रनटाइम वातावरण द्वारा निष्पादन क्रम में स्वचालित रूप से लौटाए गए कोड ब्लॉक निष्पादन परिणाम दिए गए हैं",
+    "execution_summary_title": "निष्पादन सारांश",
+    "item_column": "आइटम",
+    "value_column": "मान",
+    "total_rounds_label": "कुल राउंड",
+    "history_label": "इतिहास",
+    "task_status_label": "कार्य स्थिति",
+    "history_count_text": "{count} आइटम",
+    "completed_text": "पूरा हुआ",
+    "incomplete_text": "अधूरा",
+    "operation_completed": "ऑपरेशन पूरा हुआ"
   },
   "executor": {
-    "start_execution_block": "Starting execution of code block: {block_name}",
-    "round_attempt": "Round {round_num}, attempt {optimization_attempt}",
-    "generating_code": "Generating code...",
-    "found_code_blocks": "Found {count} code blocks",
-    "validation_passed": "Attempt {optimization_attempt} validation passed!",
-    "best_result_summary": "Returning {count} best results"
+    "start_execution_block": "कोड ब्लॉक निष्पादित करना शुरू करें: {block_name}",
+    "round_attempt": "राउंड {round_num}, प्रयास {optimization_attempt}",
+    "generating_code": "कोड उत्पन्न कर रहा है...",
+    "found_code_blocks": "{count} कोड ब्लॉक मिले",
+    "validation_passed": "प्रयास {optimization_attempt} सत्यापन सफल!",
+    "best_result_summary": "{count} सर्वोत्तम परिणाम वापस कर रहा है"
   },
   "network": {
-    "validation_disabled": "Network validation disabled",
-    "open_mode_allows_all": "Open mode allows all network access",
-    "default_allow": "Default allow",
-    "domain_filtering_disabled": "Domain filtering disabled",
-    "domain_validation_passed": "Domain validation passed",
-    "domain_whitelisted": "Domain in whitelist: {domain}",
-    "ip_address_allowed": "IP address allowed",
-    "resolved_ip_allowed": "Resolved IP {ip} allowed",
-    "no_hostname": "No hostname",
-    "no_domain_restrictions": "No domain restrictions"
+    "validation_disabled": "नेटवर्क सत्यापन अक्षम है",
+    "open_mode_allows_all": "खुला मोड सभी नेटवर्क एक्सेस की अनुमति देता है",
+    "default_allow": "डिफ़ॉल्ट रूप से अनुमति",
+    "domain_filtering_disabled": "डोमेन फ़िल्टरिंग अक्षम है",
+    "domain_validation_passed": "डोमेन सत्यापन सफल",
+    "domain_whitelisted": "डोमेन श्वेतसूची में है: {domain}",
+    "ip_address_allowed": "आईपी पता अनुमत है",
+    "resolved_ip_allowed": "हल किया गया आईपी {ip} अनुमत है",
+    "no_hostname": "कोई होस्टनाम नहीं",
+    "no_domain_restrictions": "कोई डोमेन प्रतिबंध नहीं"
   },
   "template": {
-    "title_label": "Title",
-    "url_label": "URL",
-    "content_description": "Detailed content (remove spaces and line breaks, at least {length} characters)",
-    "time_label": "Publication time",
-    "optional_empty": " (can be empty)",
-    "optional_empty_quotes": " (can be '')",
-    "corresponding_value": "Corresponding value"
+    "title_label": "शीर्षक",
+    "url_label": "लिंक",
+    "content_description": "विस्तृत सामग्री (रिक्त स्थान और नई लाइनें हटा दी गई हैं, कम से कम {length} शब्द)",
+    "time_label": "प्रकाशन का समय",
+    "optional_empty": "（खाली हो सकता है）",
+    "optional_empty_quotes": "（'' हो सकता है）",
+    "corresponding_value": "संबंधित मान"
   }
 }

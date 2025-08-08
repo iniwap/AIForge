@@ -39,24 +39,26 @@ class AIForgeOrchestrator:
         self._init_config_manager(config_file, api_key, provider, **kwargs)
         self._init_i18n_manager()
         self._init_progress_indicator()
-        self._init_cache()
         self._init_llm_manager()
 
-        # 2. 参数映射服务（必须在依赖它的组件之前初始化）
+        # 2. 参数映射服务
         self._init_parameter_mapping_service()
 
-        # 3. 执行相关组件（依赖参数映射服务）
+        # 3. 执行相关组件
         self._init_execution_engine()
         self._init_task_manager()
         self._init_runner()
 
-        # 4. 分析
+        # 4. 分析器
         self._init_instruction_analyzer()
 
-        # 5. 适配器
+        # 5. 缓存系统（依赖指令分析器）
+        self._init_cache()
+
+        # 6. 适配器
         self._init_adapters()
 
-        # 6. 管理器组件（依赖参数映射服务）
+        # 7. 管理器组件
         self._init_execution_manager()
         self._init_template_manager()
         self._init_search_manager()

@@ -1,0 +1,393 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "поиск": "поиск",  
+      "получить": "получить",  
+      "взять": "взять",  
+      "новости": "новости",  
+      "информация": "информация",  
+      "контент": "контент",  
+      "сканирование": "сканирование",  
+      "интерфейс": "интерфейс"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "анализировать": "анализировать",  
+      "обрабатывать": "обрабатывать",  
+      "вычислять": "вычислять",  
+      "статистика": "статистика",  
+      "преобразовать": "преобразовать"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "файл": "файл",  
+      "читать": "читать",  
+      "писать": "писать",  
+      "сохранить": "сохранить",  
+      "пакет": "пакет",  
+      "копировать": "копировать",  
+      "переместить": "переместить",  
+      "удалить": "удалить",  
+      "переименовать": "переименовать",  
+      "сжать": "сжать",  
+      "извлечь": "извлечь",  
+      "создать": "создать",  
+      "каталог": "каталог",  
+      "папка": "папка",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "анализировать": "анализировать",  
+        "статистика": "статистика",  
+        "вычислять": "вычислять",  
+        "обработка данных": "обработка данных",  
+        "очистить": "очистить"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "автоматизация": "автоматизация",  
+      "расписание": "расписание",  
+      "мониторинг": "мониторинг",  
+      "задача": "задача"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "генерировать": "генерировать",  
+      "создать": "создать",  
+      "писать": "писать",  
+      "отчет": "отчет"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "что такое": "что такое",  
+      "как": "как",  
+      "почему": "почему",  
+      "объяснить": "объяснить",  
+      "описать": "описать",  
+      "определить": "определить",  
+      "концепция": "концепция",  
+      "принцип": "принцип",  
+      "разница": "разница",  
+      "сравнить": "сравнить",  
+      "написать": "написать",  
+      "составить": "составить",  
+      "черновик": "черновик",  
+      "перевести": "перевести",  
+      "преобразовать в": "преобразовать в",  
+      "переписать как": "переписать как",  
+      "на языке": "на языке",  
+      "резюмировать": "резюмировать",  
+      "аннотация": "аннотация",  
+      "план": "план",  
+      "проанализировать это": "проанализировать это",  
+      "интерпретировать": "интерпретировать",  
+      "предложить": "предложить",  
+      "рекомендовать": "рекомендовать",  
+      "мнение": "мнение",  
+      "взгляд": "взгляд",  
+      "оценить": "оценить",  
+      "что вы думаете": "что вы думаете",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "сегодня": "сегодня",  
+        "сейчас": "сейчас",  
+        "последний": "последний",  
+        "текущий": "текущий",  
+        "в реальном времени": "в реальном времени",  
+        "в настоящее время": "в настоящее время",  
+        "погода": "погода",  
+        "цена акций": "цена акций",  
+        "новости": "новости",  
+        "обменный курс": "обменный курс",  
+        "цена": "цена",  
+        "статус": "статус"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "формат": "формат",  
+      "формат вывода": "формат вывода",  
+      "тип": "тип",  
+      "расширение": "расширение",  
+      "формат файла": "формат файла"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "стиль": "стиль",  
+      "тема": "тема",  
+      "шаблон": "шаблон"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "язык": "язык",  
+      "локаль": "локаль",  
+      "интернационализация": "интернационализация"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "тон": "тон",  
+      "настроение": "настроение",  
+      "эмоция": "эмоция"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "язык разметки"],  
+    "html": ["html", "webpage", "web", "веб-страница", "веб"],  
+    "json": ["json", "data format", "формат данных"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "документ"],  
+    "txt": ["txt", "text", "plain text", "текст", "простой текст"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "поиск", "получить", "взять", "найти", "извлечь", "найти"],  
+    "target_keywords": ["search", "query", "поиск", "запрос"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "поисковый запрос", "запрос", "ключевое слово", "поисковый термин", "термин", "ключевые слова"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "поиск": "поиск",  
+      "найти": "найти"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "взять": "взять",  
+      "извлечь": "извлечь",  
+      "получить": "получить"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "анализировать": "анализировать",  
+      "исследовать": "исследовать",  
+      "вычислять": "вычислять",  
+      "вычислить": "вычислить"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "обрабатывать": "обрабатывать",  
+      "преобразовать": "преобразовать",  
+      "конвертировать": "конвертировать"
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "генерировать": "генерировать",  
+      "создать": "создать",  
+      "производить": "производить",  
+      "делать": "делать"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "писать": "писать",  
+      "хранить": "хранить",  
+      "сохранить": "сохранить"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "отвечать": "отвечать",  
+      "объяснить": "объяснить",  
+      "ответить": "ответить"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "перевести": "перевести",  
+      "конвертировать": "конвертировать",  
+      "преобразовать": "преобразовать",  
+      "интерпретировать": "интерпретировать"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "резюмировать": "резюмировать",  
+      "аннотация": "аннотация",  
+      "сжать": "сжать",  
+      "план": "план"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "рекомендовать": "рекомендовать",  
+      "предложить": "предложить",  
+      "советовать": "советовать"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "поиск (.+?)(?:\\s|,|\\.|$)",  
+        "найти (.+?)(?:\\s|,|\\.|$)",  
+        "искать (.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:элементов?|результатов?|записей?|записи?))",  
+        "(?:максимум|максимальное|макс)\\s+(\\d+)",  
+        "(?:первые|топ)\\s+(\\d+)",  
+        "(?:минимум|минимальное|мин)\\s+(\\d+)",  
+        "обработать\\s+(\\d+)",  
+        "генерировать\\s+(\\d+)",  
+        "получить\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "файл\\s+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },
+    "url": {  
+        "patterns": ["(https?://[^\\s]+)"],  
+        "type": "str"  
+    },  
+    "content": {  
+        "patterns": [  
+            "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "контент[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "текст[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+        ],  
+        "type": "str"  
+    },  
+    "style": {  
+        "patterns": [  
+            "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "стиль[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "тема[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+        ],  
+        "type": "str"  
+    }
+  }
+}

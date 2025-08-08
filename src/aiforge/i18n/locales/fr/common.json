@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "Succès",
+      "error": "Erreur",
+      "pending": "En attente",
+      "cancelled": "Annulé",
+      "completed": "Terminé",
+      "failed": "Échec",
+      "running": "En cours"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "Confirmer",
+      "cancel": "Annuler",
+      "retry": "Réessayer",
+      "skip": "Ignorer",
+      "continue": "Continuer",
+      "start": "Démarrer",
+      "stop": "Arrêter"
     },
     "time_units": {
-      "seconds": "seconds",
+      "seconds": "secondes",
       "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "hours": "heures",
+      "days": "jours"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
-      "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "items": "éléments",
+      "count": "nombre",
+      "total": "Total",
+      "found": "Trouvé",
+      "valid": "Valide"
     },
     "labels": {
-      "name": "Name",
+      "name": "Nom",
       "type": "Type",
       "description": "Description",
-      "timestamp": "Timestamp",
-      "status": "Status",
-      "result": "Result"
+      "timestamp": "Horodatage",
+      "status": "Statut",
+      "result": "Résultat"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "Chargement...",
+      "no_data": "Aucune donnée disponible",
+      "unknown": "Inconnu",
+      "processing": "Traitement...",
+      "waiting": "En attente..."
     }
   }
 }

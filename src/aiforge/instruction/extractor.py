@@ -6,34 +6,46 @@ from typing import Dict, Any, List
 class ParameterExtractor:
     """参数提取器 - 负责参数提取和处理"""
 
-    def __init__(self):
-        pass
+    def __init__(self, components: Dict[str, Any] = None):
+        self.components = components or {}
+        self._i18n_manager = self.components.get("i18n_manager")
+
+    def get_action_keywords_from_i18n(self):
+        """从 i18n 配置获取动作关键词"""
+        if not self._i18n_manager:
+            return {}
+
+        action_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
+            "action_keywords", {}
+        )
+        return action_config
 
     def smart_infer_action(self, instruction: str, possible_actions: List[str]) -> str:
         """智能推断动作"""
         instruction_lower = instruction.lower()
 
-        # 动作关键词映射
-        action_keywords = {
-            "search": ["搜索", "查找", "search", "find"],
-            "fetch": ["获取", "fetch", "get", "retrieve"],
-            "analyze": ["分析", "analyze", "统计", "calculate"],
-            "process": ["处理", "process", "转换", "transform"],
-            "generate": ["生成", "generate", "创建", "create"],
-            "save": ["保存", "save", "写入", "write"],
-            "respond": ["回答", "respond", "解释", "explain"],
-            "answer": ["回答", "answer", "解答", "回复"],
-            "translate": ["翻译", "translate", "转换", "convert"],
-            "summarize": ["总结", "summarize", "概括", "归纳"],
-            "suggest": ["建议", "suggest", "推荐", "recommend"],
-        }
+        # 从 i18n 配置获取动作关键词映射
+        action_keywords = self.get_action_keywords_from_i18n()
 
         for action in possible_actions:
             if action in action_keywords:
-                if any(keyword in instruction_lower for keyword in action_keywords[action]):
+                keywords = action_keywords[action]
+                if isinstance(keywords, dict):
+                    keywords = list(keywords.values())
+                if any(keyword in instruction_lower for keyword in keywords):
                     return action
 
         return possible_actions[0] if possible_actions else "process"
+
+    def get_param_patterns_from_i18n(self):
+        """从 i18n 配置获取参数提取模式"""
+        if not self._i18n_manager:
+            return {}
+
+        param_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
+            "param_patterns", {}
+        )
+        return param_config
 
     def extract_target(self, instruction: str) -> str:
         """提取操作目标"""
@@ -45,51 +57,20 @@ class ParameterExtractor:
         """智能提取参数"""
         params = {}
 
-        # 通用参数提取规则
-        param_patterns = {
-            "query": {
-                "patterns": [
-                    r'["""]([^"""]+)["""]',
-                    r"搜索(.+?)(?:的|，|。|$)",
-                    r"查找(.+?)(?:的|，|。|$)",
-                ],
-                "type": "str",
-            },
-            "required_count": {
-                "patterns": [
-                    r"(\d+)(?:条|个|项|篇|份|次)",
-                    r"最多(\d+)",
-                    r"前(\d+)",
-                    r"至少(\d+)",
-                    r"处理(\d+)",
-                    r"生成(\d+)",
-                    r"获取(\d+)",
-                ],
-                "type": "int",
-            },
-            "file_path": {
-                "patterns": [r"([^\s]+\.[a-zA-Z]+)", r"文件(.+?)(?:的|，|。|$)"],
-                "type": "str",
-            },
-            "url": {"patterns": [r"(https?://[^\s]+)"], "type": "str"},
-            "content": {
-                "patterns": [r"内容[：:](.+?)(?:的|，|。|$)", r"文本[：:](.+?)(?:的|，|。|$)"],
-                "type": "str",
-            },
-            "style": {
-                "patterns": [r"风格[：:](.+?)(?:的|，|。|$)", r"样式[：:](.+?)(?:的|，|。|$)"],
-                "type": "str",
-            },
-        }
+        # 从 i18n 配置获取参数提取模式
+        param_patterns = self.get_param_patterns_from_i18n()
 
         for param in common_params:
             if param in param_patterns:
                 param_config = param_patterns[param]
-                for pattern in param_config["patterns"]:
+                patterns = param_config.get("patterns", [])
+                param_type = param_config.get("type", "str")
+
+                for pattern in patterns:
                     match = re.search(pattern, instruction)
                     if match:
                         value = match.group(1).strip()
-                        if param_config["type"] == "int":
+                        if param_type == "int":
                             try:
                                 value = int(value)
                             except ValueError:
@@ -97,7 +78,7 @@ class ParameterExtractor:
 
                         params[param] = {
                             "value": value,
-                            "type": param_config["type"],
+                            "type": param_type,
                         }
                         break
 

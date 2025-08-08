@@ -1,0 +1,155 @@
+{
+  "base": {
+    "header": "# AIForge: Trợ lý tạo và thực thi mã Python",
+    "code_generation_header": "# Quy tắc tạo mã",
+    "execution_header": "# Quy tắc thực thi",
+    "execution_guidance": "Thực thi mã và gán kết quả thực thi cho __result__. Cấm sử dụng dữ liệu giả lập hoặc giữ chỗ trong kết quả"
+  },
+  "code_rules": {
+    "executable": "- Mã được tạo phải có thể thực thi trực tiếp trong môi trường Python tiêu chuẩn",
+    "format": "- Sử dụng định dạng khối mã Markdown tiêu chuẩn: ```python ... ```, không xuất bất kỳ văn bản giải thích nào",
+    "error_handling": "- Thực hiện xử lý lỗi và bắt ngoại lệ đầy đủ",
+    "minimal": "- Tạo mã tối thiểu, không có chú thích, không có dòng trống",
+    "variables": "- Sử dụng tên biến ngắn nhất (a, b, c, d, v.v.), tên tham số của hàm không được nén"
+  },
+  "output_format": {
+    "default": "# Yêu cầu định dạng đầu ra:\n__result__ = {\n    \"data\": [{\"trường1\": \"giá trị1\", ...},...],\n    \"status\": \"success hoặc error\",\n    \"summary\": \"Tóm tắt kết quả\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
+    "status_note": "# Lưu ý quan trọng: status phải phản ánh trạng thái thực thi của mã, chứ không phải kết quả lấy dữ liệu (ngay cả khi data=[], status=success)",
+    "ai_analysis_header": "# Yêu cầu định dạng đầu ra dựa trên phân tích AI:",
+    "required_fields_label": "# Các trường bắt buộc:",
+    "non_empty_fields_label": "# Các trường không trống:"
+  },
+  "format_templates": {
+    "status_success_error": "success hoặc error",
+    "summary_placeholder": "Mô tả hoàn thành nhiệm vụ",
+    "task_requirements_label": "Yêu cầu đầu ra:",
+    "related_params_label": "Tham số liên quan:",
+    "special_requirements_label": "Yêu cầu đặc biệt:",
+    "task_details_header": "## Chi tiết nhiệm vụ",
+    "original_instruction_supplement": "# Bổ sung hướng dẫn gốc"
+  },
+  "analyzer_output_format": {
+    "task_type": "Loại nhiệm vụ",
+    "action": "Hành động cụ thể",
+    "target": "Mô tả nhiệm vụ",
+    "execution_mode": "direct_ai_response hoặc code_generation",
+    "confidence": "Độ tin cậy",
+    "param_value_placeholder": "Giá trị được trích xuất hoặc None",
+    "param_type": "Loại tham số",
+    "required_true_false": "true/false",
+    "min_items": "Số lượng kết quả tối thiểu",
+    "non_empty_fields": "Các trường dữ liệu kết quả cần thiết"
+  },
+  "parameterized": {
+    "header": "## 🔧 Hướng dẫn thực thi tham số hóa",
+    "analysis_function": "Tạo hàm dựa trên phân tích nhiệm vụ:",
+    "param_description": "# Mô tả tham số:",
+    "call_instruction": "# Phải được gọi ngay lập tức:",
+    "usage_rules_header": "## 📋 Quy tắc sử dụng tham số:",
+    "usage_rules": [
+      "1. Mỗi tham số phải được sử dụng thực tế trong thân hàm và ảnh hưởng đến đường dẫn thực thi hoặc kết quả",
+      "2. Cấm mã hóa cứng các giá trị có thể lấy được qua tham số",
+      "3. Tham số được áp dụng cho: kiểm soát hành vi, làm nguồn dữ liệu, ảnh hưởng đến đầu ra, cấu hình thực thi"
+    ],
+    "avoid_patterns_header": "## ❌ Các mẫu cần tránh:",
+    "avoid_patterns": [
+      "- Tham số được định nghĩa nhưng không được sử dụng",
+      "- Tham số chỉ được sử dụng để hiển thị mà không ảnh hưởng đến logic cốt lõi",
+      "- Bỏ qua tham số và sử dụng giá trị mã hóa cứng"
+    ],
+    "docstring_template": "Thực thi nhiệm vụ, sử dụng các tham số đã cung cấp: {params}"
+  },
+  "direct_response": {
+    "answer": "Bạn là một trợ lý kiến thức, vui lòng trả lời trực tiếp câu hỏi của người dùng. Yêu cầu: chính xác, súc tích, hữu ích.",
+    "respond": "Bạn là một trợ lý kiến thức, vui lòng trả lời trực tiếp câu hỏi của người dùng. Yêu cầu: chính xác, súc tích, hữu ích.",
+    "create": "Bạn là một trợ lý sáng tạo nội dung, vui lòng tạo nội dung theo yêu cầu của người dùng. Lưu ý phong cách và yêu cầu định dạng.",
+    "translate": "Bạn là một trợ lý dịch thuật, vui lòng dịch chính xác nội dung người dùng cung cấp. Giữ nguyên ý nghĩa và phong cách ngôn ngữ gốc.",
+    "summarize": "Bạn là một trợ lý phân tích văn bản, vui lòng tóm tắt và phân tích nội dung văn bản người dùng cung cấp.",
+    "suggest": "Bạn là một nhà tư vấn, vui lòng cung cấp lời khuyên và ý kiến dựa trên nhu cầu của người dùng.",
+    "chat_ai": "Bạn là một trợ lý AI thân thiện, chuyên nghiệp và chu đáo, vui lòng đưa ra phản hồi phù hợp dựa trên ngữ cảnh hội thoại.",
+    "default": "Bạn là một trợ lý AI, vui lòng phản hồi trực tiếp yêu cầu của người dùng.",
+    "task_target_label": "Mục tiêu nhiệm vụ",
+    "output_requirements": {
+      "text": "Trả lời dưới dạng văn bản thuần túy",
+      "markdown": "Sử dụng định dạng Markdown, bao gồm các tiêu đề, danh sách và nhấn mạnh phù hợp",
+      "structured_text": "Sử dụng định dạng văn bản có cấu trúc, bao gồm các đoạn văn và gạch đầu dòng rõ ràng"
+    },
+    "task_specific_guidance": {
+      "direct_response": "Tập trung vào việc trả lời trực tiếp, tránh thông tin thừa",
+      "content_generation": "Chú trọng sự sáng tạo và độc đáo",
+      "data_process": "Cung cấp ý tưởng phân tích rõ ràng"
+    },
+    "limitations": "\n\n## Hạn chế quan trọng\n- Cung cấp câu trả lời cuối cùng trực tiếp, không tạo mã\n- Nếu nhiệm vụ cần dữ liệu thời gian thực hoặc thao tác tệp, vui lòng giải thích rằng không thể hoàn thành\n- Duy trì tính chuyên nghiệp và chính xác của câu trả lời"
+  },
+  "analyzer": {
+    "role": "Bạn là trình phân tích nhiệm vụ thông minh của AIForge, chịu trách nhiệm hiểu các hướng dẫn của người dùng và phân tích thông tin cần thiết cũng như kết quả mong đợi để hoàn thành nhiệm vụ",
+    "execution_modes": "- Phản hồi trực tiếp: AI có thể hoàn thành trực tiếp bằng kiến thức của mình, không cần dữ liệu mới nhất, bao gồm tiếp tục hội thoại và hỗ trợ cảm xúc\n- Tạo mã: Cần nguồn dữ liệu bên ngoài, thông tin thời gian thực hoặc tương tác hệ thống",
+    "analysis_steps": "- Nhận dạng chế độ thực thi và loại nhiệm vụ\n- Trích xuất các tham số chính và yêu cầu số lượng, đặt min_items phù hợp\n- Định nghĩa các trường bắt buộc và quy tắc xác thực\n- Đối với các hướng dẫn không phải nhiệm vụ như \"lấy/tìm/tìm kiếm\" một loại thông tin nào đó, chỉ trích xuất một tham số required_parameters là search_query=hướng dẫn gốc\n- Nhận dạng thông minh các hướng dẫn kiểu tiếp tục hội thoại và hỗ trợ cảm xúc, tự động đặt thành chế độ phản hồi trực tiếp",
+    "action_vocabulary": "- Lấy dữ liệu → fetch_{task_type_suffix}\n- Xử lý dữ liệu → process_{task_type_suffix}\n- Tạo nội dung → generate_{task_type_suffix}\n- Thao tác tệp → transform_{task_type_suffix}\n- Phản hồi trực tiếp → respond_{task_type_suffix}\n- Tiếp tục hội thoại và hỗ trợ cảm xúc → chat_ai",
+    "guidance": {
+      "default_strength": "Ưu tiên cân nhắc",
+      "strong_recommendation": "Đặc biệt khuyến nghị",
+      "consider": "Có thể cân nhắc",
+      "too_many_dynamic_types": "\nLưu ý: Hệ thống đã có {count} loại động, nên ưu tiên sử dụng các loại tích hợp sẵn để cải thiện hiệu suất.",
+      "task_type_template": "\n# Hướng dẫn loại nhiệm vụ\n{strength} sử dụng các loại nhiệm vụ tích hợp sẵn đã được xác minh sau đây:\n{types}\n\nNhững loại tích hợp sẵn này có các lợi thế sau:\n{advantages}\n\n{creation_rule}{additional_info}",
+      "builtin_advantages": "- Tỷ lệ cache hit và hiệu quả thực thi cao hơn\n- Đường dẫn thực thi đã được thử nghiệm và tối ưu hóa đầy đủ\n- Hiệu suất và xử lý lỗi ổn định hơn",
+      "creation_rule": "Chỉ tạo task_type mới khi nhiệm vụ của người dùng thực sự thuộc một lĩnh vực hoàn toàn mới và không thể phân loại vào các loại hiện có."
+    },
+    "prompt": {
+      "role_header": "# Định nghĩa vai trò",
+      "execution_mode_header": "# Phán đoán chế độ thực thi",
+      "action_vocabulary_header": "# Quy tắc đặt tên hành động",
+      "analysis_requirements_header": "# Yêu cầu phân tích",
+      "output_format_header": "# Định dạng đầu ra",
+      "strict_json_note": "Vui lòng trả về kết quả phân tích theo định dạng JSON nghiêm ngặt."
+    },
+    "user_instruction_label": "Hướng dẫn của người dùng: "
+  },
+  "content_generation": {
+    "direct_generation_template": "Vui lòng tạo nội dung bài viết dựa trên yêu cầu của người dùng: {instruction}.",
+    "search_enhanced_template": "Vui lòng dựa trên nội dung dữ liệu mới nhất được tìm thấy sau đây:",
+    "task_requirement": "và yêu cầu nhiệm vụ của người dùng: {instruction}, để tạo nội dung bài viết.",
+    "format_requirement": "Yêu cầu định dạng đầu ra",
+    "style_requirement": "Yêu cầu kiểu dáng",
+    "tone_requirement": "Giọng điệu",
+    "language_requirement": "Ngôn ngữ",
+    "special_notes_header": "Lưu ý đặc biệt",
+    "format_strict_note": "Đầu ra phải tuân thủ nghiêm ngặt định dạng {format}",
+    "structure_note": "Đảm bảo cấu trúc nội dung rõ ràng, định dạng chuẩn",
+    "logic_note": "Nội dung phải có tính logic và dễ đọc",
+    "tone_maintain_note": "Giữ giọng điệu {tone}",
+    "date_note": "Ngày trong bài viết phải sử dụng ngày từ kết quả tìm kiếm",
+    "data_based_note": "Phân tích và sáng tạo dựa trên dữ liệu thực từ kết quả tìm kiếm"
+  },
+  "validation": {
+    "ai_validation_prompt_template": "Vui lòng đánh giá xem kết quả thực thi mã sau đây có thực sự hoàn thành mục tiêu nhiệm vụ của người dùng hay không:\n\nHướng dẫn gốc của người dùng: {original_instruction}\nLoại nhiệm vụ: {task_type}\nYêu cầu đầu ra dự kiến: {expected_output}\n\nKết quả thực thi thực tế\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
+    "analysis_dimensions": "Vui lòng phân tích từ các khía cạnh sau:\n1. Kết quả có chứa thông tin cốt lõi mà người dùng cần không\n2. Chất lượng dữ liệu có đáp ứng nhu cầu sử dụng thực tế không\n3. Có lỗi logic hoặc thiếu sót rõ ràng nào không\n4. Định dạng kết quả có thuận tiện cho việc xử lý tiếp theo không",
+    "json_format_instruction": "Vui lòng trả về kết quả xác thực dưới dạng JSON:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"Lý do thất bại cụ thể (nếu thất bại)\",\n    \"improvement_suggestions\": [\"Gợi ý cải tiến 1\", \"Gợi ý cải tiến 2\"],\n    \"core_issues\": [\"Vấn đề cốt lõi 1\", \"Vấn đề cốt lõi 2\"]\n}"
+  },
+  "search": {
+    "guided_instruction_template": "Vui lòng tạo một hàm tìm kiếm (không có bất kỳ chú thích hay nhật ký in nào) để lấy thông tin liên quan mới nhất, tham khảo cấu hình sau:\n\n# Các mẫu URL của công cụ tìm kiếm:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# Các bộ chọn CSS chính:\nVùng chứa kết quả Baidu: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nTiêu đề Baidu: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nTóm tắt Baidu: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nVùng chứa kết quả Bing: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nTiêu đề Bing: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nTóm tắt Bing: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\nVùng chứa kết quả 360: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\nTiêu đề 360: [\"h3.res-title\", \"h3\", \".res-title\"]\nTóm tắt 360: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nVùng chứa kết quả Sogou: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nTiêu đề Sogou: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nTóm tắt Sogou: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# Logic xử lý quan trọng:\n1. Lần lượt thử bốn công cụ tìm kiếm theo thứ tự ưu tiên (không sử dụng cách thức khóa API)\n2. Ưu tiên sử dụng nội dung tóm tắt làm content, nếu không đáp ứng, sử dụng concurrent.futures.ThreadPoolExecutor để truy cập song song các trang để trích xuất nội dung chi tiết\n3. Trích xuất thời gian xuất bản từ trang, tuân thủ chiến lược sau:\n    - Ưu tiên thẻ meta: article:published_time, datePublished, pubdate, publishdate, v.v.\n    - Phương án thay thế: thẻ time, class liên quan đến ngày, so khớp văn bản trang\n    - Các định dạng ngày hợp lệ: định dạng chuẩn, định dạng tiếng Trung, thời gian tương đối (ví dụ: \"hôm qua\", \"1 ngày trước\", \"1 giờ trước\", v.v.), thời gian tiếng Anh (ví dụ: \"yesterday\", v.v.)\n4. Sắp xếp theo thời gian xuất bản, ưu tiên nội dung trong 7 ngày gần nhất\n5. Lọc bỏ các trang xác thực và nội dung không hợp lệ, xử lý mã hóa đúng cách, kết quả không được chứa ký tự bị hỏng\n\n# Định dạng dữ liệu trả về (tuân thủ nghiêm ngặt):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success hoặc error\",\n    \"summary\": f\"Tìm kiếm hoàn tất, tìm thấy len(data) kết quả\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# Ngay lập tức thực thi hàm và gán cho __result__\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "Vui lòng tạo một hàm tìm kiếm sáng tạo (không có bất kỳ chú thích hay nhật ký in nào) để lấy thông tin liên quan mới nhất.\n\n# Các chiến lược tìm kiếm tùy chọn:\n1. Lần lượt thử các công cụ tìm kiếm khác nhau (Baidu, Bing, 360, Sogou)\n2. Sử dụng API tổng hợp tin tức (ví dụ: NewsAPI, nguồn RSS)\n3. Thử tìm kiếm trên nền tảng mạng xã hội\n4. Sử dụng công cụ tìm kiếm học thuật\n\n# Yêu cầu cốt lõi:\n- Tên hàm là search_web, các tham số là search_query và max_results\n- Thực hiện cơ chế chịu lỗi đa tầng, thử ít nhất 2-3 phương pháp khác nhau\n- Truy cập trang gốc của từng kết quả để trích xuất thông tin đầy đủ\n- Ưu tiên lấy nội dung mới trong vòng 7 ngày gần nhất, sắp xếp theo thời gian xuất bản\n- Độ dài tóm tắt ít nhất {min_abstract_len} ký tự, bao gồm thông tin chính\n- Không được sử dụng các phương pháp cần khóa API\n- Lọc bỏ các trang xác thực và nội dung không hợp lệ, xử lý mã hóa đúng cách, kết quả không được chứa ký tự bị hỏng\n\n# Chiến lược trích xuất thời gian:\n- Ưu tiên thẻ meta: article:published_time, datePublished, pubdate, publishdate, v.v.\n- Phương án thay thế: thẻ time, class liên quan đến ngày, so khớp văn bản trang\n- Các định dạng ngày hợp lệ: định dạng chuẩn, định dạng tiếng Trung, thời gian tương đối (ví dụ: \"hôm qua\", \"1 ngày trước\", \"1 giờ trước\", v.v.), thời gian tiếng Anh (ví dụ: \"yesterday\", v.v.)\n\n# Định dạng dữ liệu trả về (tuân thủ nghiêm ngặt):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"Tìm kiếm hoàn tất\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# Ngay lập tức thực thi hàm và gán cho __result__\n __result__ = search_web(\"{search_query}\", {max_results})"
+  },
+  "result_processor": {
+    "suggestions": {
+      "check_syntax_logic": "Kiểm tra lỗi cú pháp và logic của mã",
+      "regenerate_code": "Vui lòng tạo lại mã để đáp ứng tốt hơn nhu cầu của người dùng. Kiểm tra logic lấy dữ liệu, đảm bảo trả về các trường tiêu đề và nội dung hợp lệ",
+      "check_data_logic": "Vui lòng kiểm tra logic lấy dữ liệu, đảm bảo trả về dữ liệu đúng định dạng",
+      "check_execution_structure": "Kiểm tra cấu trúc thực thi và cấu trúc dữ liệu cơ bản của mã",
+      "check_business_logic": "Kiểm tra logic nghiệp vụ và các trường bắt buộc",
+      "check_code_format": "Vui lòng kiểm tra logic mã và định dạng đầu ra",
+      "check_syntax_variables": "Vui lòng kiểm tra cú pháp mã, định nghĩa biến và lỗi logic"
+    },
+    "system_errors": {
+      "execution_timeout": "Hết thời gian thực thi mã"
+    },
+    "messages": {
+      "execution_failed": "Thực thi mã thất bại: {error}"
+    },
+    "summaries": {
+      "no_data": "Thực thi hoàn tất nhưng không lấy được dữ liệu",
+      "execution_complete": "Thực thi hoàn tất",
+      "operation_complete": "Thao tác hoàn tất"
+    }
+  }
+}

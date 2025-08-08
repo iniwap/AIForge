@@ -1,180 +1,184 @@
 {
   "task": {
-    "template_code_generation": "Generate code based on template",
-    "system_prompt_generation": "Please generate code according to system prompt",
-    "processing_start": "Start processing task instruction, max rounds {max_rounds}, max optimization attempts per round {max_optimization}",
-    "round_execution": "Round {round} execution",
-    "all_rounds_failed_best_result": "All rounds failed, returning best result, execution ended!",
-    "round_success_completed": "Round {round} execution successful, task completed!",
-    "all_rounds_failed_no_result": "All rounds failed, no valid result obtained, execution ended!",
-    "round_failed_continue": "Round {round} execution failed, proceeding to next round",
-    "execution_summary": "Task {task_id} execution summary",
+    "template_code_generation": "Генерация кода на основе шаблона",
+    "system_prompt_generation": "Сгенерировать код на основе системной подсказки",
+    "processing_start": "Начало обработки инструкции задачи, максимальное количество попыток {max_rounds}, максимальное количество оптимизаций за одну попытку {max_optimization}",
+    "round_execution": "Выполнение раунда {round}",
+    "all_rounds_failed_best_result": "Все раунды выполнения не удались, возвращается наилучший результат, выполнение завершено!",
+    "round_success_completed": "Раунд {round} выполнен успешно, задача завершена!",
+    "all_rounds_failed_no_result": "Все раунды выполнения не удались, действительный результат не получен, выполнение завершено!",
+    "round_failed_continue": "Раунд {round} не удался, переход к следующему раунду",
+    "execution_summary": "Сводка выполнения задачи {task_id}",
     "status": {
-      "created": "Created",
-      "running": "Running",
-      "completed": "Completed",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "unknown": "Unknown status"
+      "created": "Создано",
+      "running": "Выполняется",
+      "completed": "Завершено",
+      "failed": "Провалено",
+      "cancelled": "Отменено",
+      "unknown": "Неизвестный статус"
     }
   },
   "execution": {
-    "direct_response_success": "Direct response: {action} - {instruction}...",
-    "cache_lookup": "Looking up cache...",
-    "cache_found": "Found {count} cached modules",
-    "cache_execution": "Executing cached modules...",
-    "ai_generation": "Generating new code...",
-    "cache_validation_passed": "Cache validation passed"
+    "direct_response_success": "Прямой ответ: {action} - {instruction}...",
+    "cache_lookup": "Поиск в кэше...",
+    "cache_found": "Найдено {count} модулей кэша",
+    "cache_execution": "Выполнение модуля кэша...",
+    "ai_generation": "Генерация нового кода...",
+    "cache_validation_passed": "Проверка кэша пройдена"
   },
   "search": {
-    "search_complete_success": "Search completed, found {count} results",
-    "process_system_cache": "System cache",
-    "process_ai_template": "AI template",
-    "process_ai_free": "AI free form",
-    "process_system_default": "System default",
+    "search_complete_success": "Поиск завершен, найдено {count} результатов",
+    "process_system_cache": "Системный кэш",
+    "process_ai_template": "Шаблон ИИ",
+    "process_ai_free": "Свободный ИИ",
+    "process_system_default": "Системный по умолчанию",
     "engine_baidu": "Baidu",
     "engine_bing": "Bing",
     "engine_360": "360",
-    "engine_sogou": "Sogou"
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
   },
   "analyzer": {
     "recommendations": {
-      "enhance_builtin_guidance": "Recommend enhancing built-in type guidance, current built-in type usage rate is low",
-      "relax_creation_conditions": "Built-in type usage rate is very high, consider appropriately relaxing new type creation conditions",
-      "too_many_dynamic": "Too many dynamic types ({count}), recommend cleaning up low-priority types",
-      "low_priority_types": "Found {count} low-priority dynamic types, recommend considering removal",
-      "unused_builtin": "Built-in types {types} have 0% usage rate, may need to optimize keyword matching",
-      "all_good": "Task type usage is good, no special optimization needed"
+      "enhance_builtin_guidance": "Рекомендуется усилить руководство по встроенным типам, текущая степень использования встроенных типов низкая",
+      "relax_creation_conditions": "Степень использования встроенных типов высокая, можно рассмотреть возможность ослабления условий для создания новых типов",
+      "too_many_dynamic": "Слишком много динамических типов ({count}), рекомендуется очистить типы с низким приоритетом",
+      "low_priority_types": "Обнаружено {count} динамических типов с низким приоритетом, рекомендуется рассмотреть возможность удаления",
+      "unused_builtin": "Встроенный тип {types} используется 0 раз, возможно, необходимо оптимизировать сопоставление ключевых слов",
+      "all_good": "Использование типов задач хорошее, особая оптимизация не требуется"
     },
     "adaptive": {
-      "task_type_guidance_header": "# Task Type Guidance",
-      "system_status_header": "# System Status:",
-      "current_guidance_strength": "Current guidance strength",
-      "builtin_usage_rate": "Built-in type usage rate",
-      "efficiency_note": "These built-in types have higher cache hit rates and execution efficiency.",
-      "use_builtin_types": "use the following verified built-in task types"
+      "task_type_guidance_header": "# Руководство по типу задачи",
+      "system_status_header": "# Статус системы:",
+      "current_guidance_strength": "Текущая сила руководства",
+      "builtin_usage_rate": "Степень использования встроенных типов",
+      "efficiency_note": "Эти встроенные типы имеют более высокую вероятность попадания в кэш и эффективность выполнения.",
+      "use_builtin_types": "Использовать следующие проверенные встроенные типы задач"
     },
-    "priority_label": "priority",
+    "priority_label": "Приоритет",
     "use_cases": {
       "data_fetch": [
-        "Search web content",
-        "Get API data",
-        "Crawl news information"
+        "Поиск содержимого веб-страниц",
+        "Получение данных API",
+        "Сбор информации из новостей"
       ],
       "data_process": [
-        "Data analysis",
-        "Statistical calculation",
-        "Format conversion"
+        "Анализ данных",
+        "Статистические вычисления",
+        "Преобразование формата"
       ],
       "file_operation": [
-        "Read/write files",
-        "Batch processing",
-        "Document operations"
+        "Чтение и запись файлов",
+        "Пакетная обработка",
+        "Операции с документами"
       ],
       "automation": [
-        "Scheduled tasks",
-        "System monitoring",
-        "Automation workflows"
+        "Планирование задач",
+        "Мониторинг системы",
+        "Автоматизированные процессы"
       ],
       "content_generation": [
-        "Document generation",
-        "Report creation",
-        "Content creation"
+        "Генерация документов",
+        "Создание отчетов",
+        "Создание контента"
       ],
       "direct_response": [
-        "Knowledge Q&A",
-        "Text creation",
-        "Translation and summarization"
+        "Вопросы и ответы по знаниям",
+        "Создание текста",
+        "Перевод и резюмирование"
       ]
     }
   },
   "content_generation": {
-    "generation_success": "Successfully generated {format} format content",
-    "search_based_suffix": " (based on {count} search results)",
-    "search_results_header": "Search results for '{instruction}'",
-    "result_label": "Result",
-    "title_label": "Title",
-    "publish_time_label": "Publish Time",
-    "abstract_label": "Abstract",
-    "content_label": "Content",
-    "no_title": "No title",
-    "unknown_time": "Unknown time",
-    "no_abstract": "No abstract",
-    "no_search_results_fallback": "No relevant search results found, please generate content based on existing knowledge."
+    "generation_success": "Контент в формате {format} успешно сгенерирован",
+    "search_based_suffix": "(На основе {count} результатов поиска)",
+    "search_results_header": "Результаты поиска по запросу '{instruction}'",
+    "result_label": "Результат",
+    "title_label": "Заголовок",
+    "publish_time_label": "Время публикации",
+    "abstract_label": "Аннотация",
+    "content_label": "Содержание",
+    "no_title": "Без заголовка",
+    "unknown_time": "Неизвестное время",
+    "no_abstract": "Без аннотации",
+    "no_search_results_fallback": "Не найдено релевантных результатов поиска, пожалуйста, сгенерируйте контент на основе имеющихся знаний."
   },
   "progress": {
-    "connecting_ai": "[AIForge]🤖 Connecting to AI service{provider}...",
-    "waiting_response": "[AIForge]💭 Waiting for AI response...",
-    "processing_response": "[AIForge]✅ Received AI response, processing...",
-    "searching": "[AIForge]🔍 Searching: {query}",
-    "search_process": "[AIForge]🔍 Trying {search_type} search...",
-    "search_complete": "[AIForge]✅ Search completed, found {count} results",
-    "cache_lookup": "[AIForge]🔍 Looking up cache...",
-    "cache_found": "[AIForge]📦 Found {count} cached modules, validating...",
-    "cache_execution": "[AIForge]⚡ Executing cached code...",
-    "code_execution": "[AIForge]⚡ Executing {count} code blocks...",
-    "round_start": "[AIForge]🔄 Starting round {current}/{total} execution...",
-    "round_success": "[AIForge]🎉 Round {round_num} execution successful!",
-    "round_retry": "[AIForge]⚠️ Round {round_num} failed, preparing retry..."
+    "connecting_ai": "[AIForge]🤖 Подключение к сервису ИИ {provider}...",
+    "waiting_response": "[AIForge]💭 Ожидание ответа от ИИ...",
+    "processing_response": "[AIForge]✅ Ответ от ИИ получен, обработка...",
+    "searching": "[AIForge]🔍 Поиск: {query}",
+    "search_process": "[AIForge]🔍 Попытка поиска {search_type}...",
+    "search_complete": "[AIForge]✅ Поиск завершен, найдено {count} результатов",
+    "cache_lookup": "[AIForge]🔍 Поиск в кэше...",
+    "cache_found": "[AIForge]📦 Найдено {count} модулей кэша, проверка...",
+    "cache_execution": "[AIForge]⚡ Выполнение кода кэша...",
+    "code_execution": "[AIForge]⚡ Выполнение {count} блоков кода...",
+    "round_start": "[AIForge]🔄 Начало раунда {current}/{total}...",
+    "round_success": "[AIForge]🎉 Раунд {round_num} выполнен успешно!",
+    "round_retry": "[AIForge]⚠️ Раунд {round_num} не удался, подготовка к повторной попытке..."
   },
   "llm_manager": {
-    "config_updated": "Configuration updated",
-    "lazy_load_create": "Lazy loading LLM client: {name}",
-    "switch_success": "Switched to LLM client: {name}",
-    "cleanup_unused": "Cleaned up unused clients, keeping: {current_name}"
+    "config_updated": "Конфигурация обновлена",
+    "lazy_load_create": "Создание клиента LLM с ленивой загрузкой: {name}",
+    "switch_success": "Переключено на клиент LLM: {name}",
+    "cleanup_unused": "Очищены неиспользуемые клиенты, оставлен: {current_name}"
   },
   "validation": {
-    "validation_passed": "Validation passed",
-    "found_valid_results": "Found {count} valid results",
-    "ai_validation_exception": "AI validation exception, default pass: {error}"
+    "validation_passed": "Проверка пройдена",
+    "found_valid_results": "Найдено {count} действительных результатов",
+    "ai_validation_exception": "Исключение при проверке ИИ, пройдено по умолчанию: {error}"
   },
   "runner": {
-    "sandbox_info": "Sandbox environment: timeout={timeout}s, memory={memory}MB, CPU={cpu}s, file descriptors={fd}, file size={file_size}MB, processes={processes}",
-    "network_blocked_info": "Network access blocked by security policy",
-    "cleanup_warning": "Cleanup warning: {error}"
+    "sandbox_info": "Среда выполнения Sandbox: Время ожидания={timeout}с, Память={memory}МБ, CPU={cpu}с, Дескрипторы файлов={fd}, Размер файла={file_size}МБ, Количество процессов={processes}",
+    "network_blocked_info": "Доступ к сети заблокирован политикой безопасности",
+    "cleanup_warning": "Предупреждение об очистке: {error}"
   },
   "formatter": {
-    "code_placeholder": "See code block above...",
-    "execution_result_title": "Code Execution Result",
-    "structured_feedback_message": "The following are code block execution results automatically returned by the runtime environment in execution order",
-    "execution_summary_title": "Execution Summary",
-    "item_column": "Item",
-    "value_column": "Value",
-    "total_rounds_label": "Total Rounds",
-    "history_label": "History",
-    "task_status_label": "Task Status",
-    "history_count_text": "{count} records",
-    "completed_text": "Completed",
-    "incomplete_text": "Incomplete",
-    "operation_completed": "Operation completed"
+    "code_placeholder": "См. блок кода выше...",
+    "execution_result_title": "Результат выполнения кода",
+    "structured_feedback_message": "Ниже приведены результаты выполнения блоков кода, автоматически возвращаемые средой выполнения в порядке их выполнения",
+    "execution_summary_title": "Сводка выполнения",
+    "item_column": "Элемент",
+    "value_column": "Значение",
+    "total_rounds_label": "Общее количество раундов",
+    "history_label": "История",
+    "task_status_label": "Статус задачи",
+    "history_count_text": "{count} записей",
+    "completed_text": "Завершено",
+    "incomplete_text": "Не завершено",
+    "operation_completed": "Операция завершена"
   },
   "executor": {
-    "start_execution_block": "Starting execution of code block: {block_name}",
-    "round_attempt": "Round {round_num}, attempt {optimization_attempt}",
-    "generating_code": "Generating code...",
-    "found_code_blocks": "Found {count} code blocks",
-    "validation_passed": "Attempt {optimization_attempt} validation passed!",
-    "best_result_summary": "Returning {count} best results"
+    "start_execution_block": "Начало выполнения блока кода: {block_name}",
+    "round_attempt": "Раунд {round_num}, попытка {optimization_attempt}",
+    "generating_code": "Генерация кода...",
+    "found_code_blocks": "Найдено {count} блоков кода",
+    "validation_passed": "Проверка попытки {optimization_attempt} пройдена!",
+    "best_result_summary": "Возвращается {count} лучших результатов"
   },
   "network": {
-    "validation_disabled": "Network validation disabled",
-    "open_mode_allows_all": "Open mode allows all network access",
-    "default_allow": "Default allow",
-    "domain_filtering_disabled": "Domain filtering disabled",
-    "domain_validation_passed": "Domain validation passed",
-    "domain_whitelisted": "Domain in whitelist: {domain}",
-    "ip_address_allowed": "IP address allowed",
-    "resolved_ip_allowed": "Resolved IP {ip} allowed",
-    "no_hostname": "No hostname",
-    "no_domain_restrictions": "No domain restrictions"
+    "validation_disabled": "Проверка сети отключена",
+    "open_mode_allows_all": "Открытый режим разрешает весь сетевой доступ",
+    "default_allow": "Разрешено по умолчанию",
+    "domain_filtering_disabled": "Фильтрация доменов отключена",
+    "domain_validation_passed": "Проверка домена пройдена",
+    "domain_whitelisted": "Домен находится в белом списке: {domain}",
+    "ip_address_allowed": "IP-адрес разрешен",
+    "resolved_ip_allowed": "Разрешенный IP-адрес {ip} разрешен",
+    "no_hostname": "Нет имени хоста",
+    "no_domain_restrictions": "Нет ограничений домена"
   },
   "template": {
-    "title_label": "Title",
-    "url_label": "URL",
-    "content_description": "Detailed content (remove spaces and line breaks, at least {length} characters)",
-    "time_label": "Publication time",
-    "optional_empty": " (can be empty)",
-    "optional_empty_quotes": " (can be '')",
-    "corresponding_value": "Corresponding value"
+    "title_label": "Заголовок",
+    "url_label": "Ссылка",
+    "content_description": "Подробное содержание (удалить пробелы и переводы строк, не менее {length} символов)",
+    "time_label": "Время публикации",
+    "optional_empty": "(Может быть пустым)",
+    "optional_empty_quotes": "(Может быть '')",
+    "corresponding_value": "Соответствующее значение"
   }
 }

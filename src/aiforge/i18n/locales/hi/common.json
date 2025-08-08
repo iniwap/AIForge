@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "सफल",
+      "error": "त्रुटि",
+      "pending": "लंबित",
+      "cancelled": "रद्द किया गया",
+      "completed": "पूरा हो गया",
+      "failed": "विफल",
+      "running": "चल रहा है"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "पुष्टि करें",
+      "cancel": "रद्द करें",
+      "retry": "पुनः प्रयास करें",
+      "skip": "छोड़ें",
+      "continue": "जारी रखें",
+      "start": "शुरू करें",
+      "stop": "रोकें"
     },
     "time_units": {
-      "seconds": "seconds",
-      "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "seconds": "सेकंड",
+      "minutes": "मिनट",
+      "hours": "घंटे",
+      "days": "दिन"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
-      "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "items": "वस्तुएँ",
+      "count": "संख्या",
+      "total": "कुल",
+      "found": "मिला",
+      "valid": "वैध"
     },
     "labels": {
-      "name": "Name",
-      "type": "Type",
-      "description": "Description",
-      "timestamp": "Timestamp",
-      "status": "Status",
-      "result": "Result"
+      "name": "नाम",
+      "type": "प्रकार",
+      "description": "विवरण",
+      "timestamp": "टाइमस्टैम्प",
+      "status": "स्थिति",
+      "result": "परिणाम"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "लोड हो रहा है...",
+      "no_data": "कोई डेटा उपलब्ध नहीं",
+      "unknown": "अज्ञात",
+      "processing": "प्रसंस्करण हो रहा है...",
+      "waiting": "प्रतीक्षा कर रहा है..."
     }
   }
 }

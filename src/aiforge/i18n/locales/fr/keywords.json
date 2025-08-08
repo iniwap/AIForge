@@ -1,0 +1,389 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "rechercher": "rechercher",  
+      "obtenir": "obtenir",  
+      "récupérer": "récupérer",  
+      "nouvelles": "nouvelles",  
+      "informations": "informations",  
+      "contenu": "contenu",  
+      "explorer": "explorer",  
+      "interface": "interface"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "analyser": "analyser",  
+      "traiter": "traiter",  
+      "calculer": "calculer",  
+      "statistiques": "statistiques",  
+      "transformer": "transformer"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "fichier": "fichier",  
+      "lire": "lire",  
+      "écrire": "écrire",  
+      "sauvegarder": "sauvegarder",  
+      "lot": "lot",  
+      "copier": "copier",  
+      "déplacer": "déplacer",  
+      "supprimer": "supprimer",  
+      "renommer": "renommer",  
+      "compresser": "compresser",  
+      "extraire": "extraire",  
+      "créer": "créer",  
+      "répertoire": "répertoire",  
+      "dossier": "dossier",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "analyser": "analyser",  
+        "statistiques": "statistiques",  
+        "calculer": "calculer",  
+        "traiter données": "traiter données",  
+        "nettoyer": "nettoyer"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "automatisation": "automatisation",  
+      "programmer": "programmer",  
+      "surveiller": "surveiller",  
+      "tâche": "tâche"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "générer": "générer",  
+      "créer": "créer",  
+      "écrire": "écrire",  
+      "rapport": "rapport"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "qu'est-ce que": "qu'est-ce que",  
+      "comment": "comment",  
+      "pourquoi": "pourquoi",  
+      "expliquer": "expliquer",  
+      "décrire": "décrire",  
+      "définir": "définir",  
+      "principe": "principe",  
+      "différence": "différence",  
+      "comparer": "comparer",  
+      "écrire": "écrire",  
+      "rédiger": "rédiger",  
+      "brouillon": "brouillon",  
+      "traduire": "traduire",  
+      "convertir en": "convertir en",  
+      "réécrire comme": "réécrire comme",  
+      "en langue": "en langue",  
+      "résumer": "résumer",  
+      "résumé": "résumé",  
+      "plan": "plan",  
+      "analyser ceci": "analyser ceci",  
+      "interpréter": "interpréter",  
+      "suggérer": "suggérer",  
+      "recommander": "recommander",  
+      "opinion": "opinion",  
+      "vue": "vue",  
+      "évaluer": "évaluer",  
+      "que pensez-vous": "que pensez-vous",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "aujourd'hui": "aujourd'hui",  
+        "maintenant": "maintenant",  
+        "dernier": "dernier",  
+        "actuel": "actuel",  
+        "temps réel": "temps réel",  
+        "actuellement": "actuellement",  
+        "météo": "météo",  
+        "prix des actions": "prix des actions",  
+        "nouvelles": "nouvelles",  
+        "taux de change": "taux de change",  
+        "prix": "prix",  
+        "statut": "statut"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "format de sortie": "format de sortie",  
+      "type": "type",  
+      "format de fichier": "format de fichier"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "thème": "thème",  
+      "modèle": "modèle"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "langue": "langue",  
+      "local": "local",  
+      "internationalisation": "internationalisation"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "ton": "ton",  
+      "humeur": "humeur",  
+      "émotion": "émotion"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "langage de balisage"],  
+    "html": ["html", "webpage", "web", "page web", "web"],  
+    "json": ["json", "data format", "format de données"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "document"],  
+    "txt": ["txt", "text", "plain text", "texte", "texte brut"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "rechercher", "obtenir", "récupérer", "trouver", "récupérer", "consulter"],  
+    "target_keywords": ["search", "query", "rechercher", "requête"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "requête de recherche", "requête", "mot-clé", "terme de recherche", "terme", "mots-clés"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "rechercher": "rechercher",  
+      "trouver": "trouver",  
+      "consulter": "consulter",  
+      "localiser": "localiser"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "obtenir": "obtenir",  
+      "récupérer": "récupérer",  
+      "acquérir": "acquérir"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "analyser": "analyser",  
+      "examiner": "examiner",  
+      "calculer": "calculer"
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "traiter": "traiter",  
+      "transformer": "transformer",  
+      "convertir": "convertir",  
+      "gérer": "gérer"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "générer": "générer",  
+      "créer": "créer",  
+      "produire": "produire",  
+      "faire": "faire"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "sauvegarder": "sauvegarder",  
+      "écrire": "écrire",  
+      "stocker": "stocker",  
+      "persister": "persister"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "répondre": "répondre",  
+      "expliquer": "expliquer",  
+      "répliquer": "répliquer"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "traduire": "traduire",  
+      "convertir": "convertir",  
+      "transformer": "transformer",  
+      "interpréter": "interpréter"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "résumer": "résumer",  
+      "condenser": "condenser",  
+      "schématiser": "schématiser"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "suggérer": "suggérer",  
+      "recommander": "recommander",  
+      "proposer": "proposer",  
+      "conseiller": "conseiller"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "rechercher (.+?)(?:\\s|,|\\.|$)",  
+        "trouver (.+?)(?:\\s|,|\\.|$)",  
+        "chercher (.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:éléments?|résultats?|entrées?|enregistrements?))",  
+        "(?:au maximum|maximum|max)\\s+(\\d+)",  
+        "(?:premier|premiers|top)\\s+(\\d+)",  
+        "(?:au moins|minimum|min)\\s+(\\d+)",  
+        "traiter\\s+(\\d+)",  
+        "générer\\s+(\\d+)",  
+        "obtenir\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "fichier\\s+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "url": {  
+      "patterns": ["(https?://[^\\s]+)"],  
+      "type": "str"  
+    },  
+    "content": {  
+      "patterns": [  
+        "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "contenu[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "texte[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "style": {  
+      "patterns": [  
+        "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "thème[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    }  
+  }  
+}

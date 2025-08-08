@@ -80,7 +80,6 @@ class AIForgeLLMClient:
                 if instruction:
                     messages.append({"role": "user", "content": instruction})
 
-                print("messages===>", messages)
                 payload = {
                     "model": self.model,
                     "messages": messages,

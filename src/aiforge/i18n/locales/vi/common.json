@@ -1,0 +1,50 @@
+{
+  "common": {
+    "status": {
+      "success": "Thành công",
+      "error": "Lỗi",
+      "pending": "Đang xử lý",
+      "cancelled": "Đã hủy",
+      "completed": "Đã hoàn thành",
+      "failed": "Thất bại",
+      "running": "Đang chạy"
+    },
+    "actions": {
+      "confirm": "Xác nhận",
+      "cancel": "Hủy",
+      "retry": "Thử lại",
+      "skip": "Bỏ qua",
+      "continue": "Tiếp tục",
+      "start": "Bắt đầu",
+      "stop": "Dừng"
+    },
+    "time_units": {
+      "seconds": "giây",
+      "minutes": "phút",
+      "hours": "giờ",
+      "days": "ngày"
+    },
+    "quantity": {
+      "items": "mục",
+      "count": "cái",
+      "total": "Tổng cộng",
+      "found": "Tìm thấy",
+      "valid": "Hợp lệ"
+    },
+    "labels": {
+      "name": "Tên",
+      "type": "Loại",
+      "description": "Mô tả",
+      "timestamp": "Dấu thời gian",
+      "status": "Trạng thái",
+      "result": "Kết quả"
+    },
+    "placeholders": {
+      "loading": "Đang tải...",
+      "no_data": "Không có dữ liệu",
+      "unknown": "Không xác định",
+      "processing": "Đang xử lý...",
+      "waiting": "Đang chờ..."
+    }
+  }
+}

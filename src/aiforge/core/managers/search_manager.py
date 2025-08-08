@@ -18,19 +18,33 @@ class AIForgeSearchManager:
         """判断是否为搜索类任务"""
         action = standardized_instruction.get("action", "")
 
+        # 从 i18n 配置获取搜索关键词
+        search_keywords = self._get_search_keywords_from_i18n()
+
         # 检查任务类型和动作
         search_indicators = [
-            any(keyword in action.lower() for keyword in ["search", "fetch", "get"]),
-            "search" in standardized_instruction.get("target", "").lower(),
+            any(
+                keyword in action.lower() for keyword in search_keywords.get("action_keywords", [])
+            ),
+            any(
+                keyword in standardized_instruction.get("target", "").lower()
+                for keyword in search_keywords.get("target_keywords", [])
+            ),
         ]
 
         # 检查参数中是否包含搜索相关字段
         parameters = standardized_instruction.get("required_parameters", {})
-        search_params = any(
-            param_name in ["search_query", "query", "keyword"] for param_name in parameters.keys()
-        )
+        search_param_keywords = search_keywords.get("param_keywords", [])
+        search_params = any(param_name in search_param_keywords for param_name in parameters.keys())
 
         return any(search_indicators) or search_params
+
+    def _get_search_keywords_from_i18n(self):
+        """从 i18n 配置获取搜索关键词"""
+        search_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
+            "search_keywords", {}
+        )
+        return search_config
 
     def _try_direct_search_web(
         self, standardized_instruction: Dict[str, Any], original_instruction: str

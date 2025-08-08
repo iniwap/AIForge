@@ -1,0 +1,122 @@
+{
+  "execution": {
+    "direct_response_error": "직접 응답 실패: {error}",
+    "validation_failed": "유효성 검사 실패",
+    "execution_timeout": "실행 시간 초과",
+    "module_execution_failed": "모듈 실행 실패",
+    "parameter_validation_failed": "매개변수 유효성 검사 실패",
+    "intent_validation_failed": "의도 유효성 검사 실패",
+    "functionality_validation_failed": "기능 일관성 유효성 검사 실패"
+  },
+  "search": {
+    "search_failed_error": "검색 실패: {error}",
+    "all_strategies_failed": "모든 검색 전략 실패",
+    "quality_validation_failed": "검색 결과 품질 유효성 검사 실패",
+    "no_valid_results": "유효한 검색 결과를 찾을 수 없음",
+    "no_search_container": "검색 결과 컨테이너를 찾을 수 없음"
+  },
+  "task": {
+    "execution_error": "실행 오류: {error}"
+  },
+  "analyzer": {
+    "analysis_failed": "통계 분석 실패: {error}",
+    "api_key_in_url_parameter": "URL에 API 키 매개변수가 포함되어 있음이 감지됨",
+    "api_key_in_url_constant": "URL 상수에 API 키 매개변수가 포함되어 있음이 감지됨",
+    "api_key_in_headers": "헤더에 인증 정보가 포함되어 있음이 감지됨: {key}",
+    "possible_api_key_parameter": "가능한 API 키 매개변수가 감지됨: {param}"
+  },
+  "content_generation": {
+    "llm_manager_unavailable": "LLM 관리자 사용 불가",
+    "llm_client_unavailable": "LLM 클라이언트 사용 불가",
+    "llm_manager_error_summary": "콘텐츠 생성 실패: LLM 관리자 사용 불가",
+    "llm_client_error_summary": "콘텐츠 생성 실패: LLM 클라이언트 사용 불가",
+    "generation_error": "콘텐츠 생성 오류: {error}",
+    "generation_failed": "콘텐츠 생성 실패: {error}"
+  },
+  "template": {
+    "missing_required_parameter": "필수 매개변수 누락: {param_name}",
+    "template_not_found": "템플릿을 찾을 수 없음: {template_id}",
+    "execution_failed": "템플릿 {template_id} 실행 실패: {error}"
+  },
+  "llm_client": {
+    "server_error_retry": "{name} 서버 오류: {status_code}, {attempt}번째 재시도, {wait_time}초 대기 중...",
+    "client_error": "{name} 클라이언트 오류: {status_code}",
+    "network_error_retry": "{name} 네트워크 오류: {error}, {attempt}번째 재시도",
+    "request_failed": "{name} 요청 실패: {error}"
+  },
+  "llm_manager": {
+    "default_client_unavailable": "기본 LLM 클라이언트 '{provider}'를 사용할 수 없거나 생성 실패",
+    "config_missing": "구성 파일에 기본 LLM 클라이언트가 지정되지 않았거나 구성이 존재하지 않음: {provider}",
+    "no_available_client": "사용 가능한 LLM 클라이언트를 찾을 수 없음",
+    "unsupported_type": "지원되지 않는 LLM 유형: {client_type}",
+    "client_unavailable": "LLM 클라이언트 '{name}' 사용 불가",
+    "create_failed": "LLM 클라이언트 {name} 생성 실패: {error}",
+    "switch_failed": "전환 실패, 클라이언트 '{name}' 사용 불가"
+  },
+  "validation": {
+    "local_basic_failed": "로컬 유효성 검사 실패",
+    "business_logic_failed": "비즈니스 로직 유효성 검사 실패",
+    "ai_validation_failed": "AI 유효성 검사 실패",
+    "llm_client_none": "llm_client가 None입니다",
+    "code_execution_failed": "코드 실행 실패: {error}",
+    "unknown_error": "알 수 없는 오류",
+    "execution_result_none": "실행 결과가 None입니다",
+    "data_field_empty": "data 필드가 빈 목록입니다. 유효한 데이터를 가져오지 못했습니다",
+    "data_field_none": "data 필드가 None입니다",
+    "missing_data_field": "data 필드가 누락되었습니다",
+    "execution_result_empty": "실행 결과가 비어 있습니다",
+    "result_must_be_dict": "결과 내용은 사전 형식이어야 합니다",
+    "result_status_error": "결과 상태가 error입니다",
+    "data_must_be_array": "data 필드는 배열 형식이어야 합니다",
+    "data_array_empty": "데이터 배열이 비어 있습니다",
+    "data_item_must_be_dict": "데이터 항목은 사전 형식이어야 합니다",
+    "data_item_missing_required_fields": "데이터 항목에 필수 필드가 누락되었습니다",
+    "insufficient_data_quantity": "데이터 양이 부족합니다: 최소 {min_items}개가 필요하지만 실제로는 {actual}개입니다",
+    "insufficient_valid_data": "{valid_count}개의 유효한 데이터를 가져왔지만, 최소 {min_items}개 가져오기 요구 사항을 충족하지 못했습니다",
+    "result_not_meet_requirements": "결과가 작업 요구 사항을 충족하지 않습니다",
+    "ai_response_parse_failed": "AI 응답 형식을 구문 분석할 수 없습니다",
+    "ai_response_format_error": "AI 유효성 검사 응답 형식 오류"
+  },
+  "runner": {
+    "code_execution_timeout": "코드 실행 시간 초과 ({timeout}초)",
+    "process_execution_error": "프로세스 실행 오류: {error}",
+    "result_parse_error": "결과 구문 분석 오류: {error}",
+    "network_security_blocked": "네트워크 보안 정책에 의해 차단됨",
+    "module_blocked_security_template": "보안 정책에 따라 모듈 '{missing_name}' 가져오기가 차단되었습니다. 이유: {reason}. 원본 모듈: {original_module}",
+    "code_execution_timeout_handler": "코드 실행 시간 초과",
+    "security_policy_active": "네트워크 보안 정책이 활성화되었습니다",
+    "unknown_error": "알 수 없는 오류",
+    "security_blocked_modules": "보안 정책에 따라 다음 모듈 가져오기가 차단되었습니다: {blocked_list}. {error}",
+    "execution_failed": "실행 실패: {error}",
+    "runner_error": "러너 오류: {error}"
+  },
+  "config": {
+    "file_not_exists": "구성 파일 {file}이(가) 존재하지 않습니다",
+    "load_failed": "구성 파일 로드 실패: {error}"
+  },
+  "executor": {
+    "no_llm_response": "{optimization_attempt}번째 시도: LLM이 응답을 반환하지 않았습니다",
+    "no_code_blocks_found": "{optimization_attempt}번째 시도: 실행 가능한 코드 블록을 찾을 수 없습니다",
+    "code_execution_failed": "{optimization_attempt}번째 시도: 코드 실행 실패",
+    "code_execution_error": "{optimization_attempt}번째 시도: 코드 실행 오류",
+    "validation_failed": "{optimization_attempt}번째 시도 유효성 검사 실패 ({validation_type}): {failure_reason}",
+    "final_validation_failed": "{optimization_attempt}번째 시도 유효성 검사 실패 ({validation_type}): {failure_reason}, 최대 최적화 횟수에 도달했습니다",
+    "all_attempts_failed": "단일 라운드 내 {max_optimization_attempts}번의 최적화 시도 모두 실패"
+  },
+  "security": {
+    "dangerous_function_detected": "위험한 함수 호출이 감지됨: {pattern}",
+    "analysis_failed": "보안 분석 실패: {error}"
+  },
+  "network": {
+    "strict_mode_blocks_all": "엄격 모드는 모든 네트워크 액세스를 차단합니다",
+    "domain_in_blacklist": "도메인 {domain}이(가) 블랙리스트에 있습니다",
+    "domain_not_in_whitelist": "도메인 {domain}이(가) 화이트리스트에 없습니다",
+    "empty_hostname": "호스트 이름이 비어 있습니다",
+    "domain_blacklisted": "도메인이 블랙리스트에 있습니다: {domain}",
+    "domain_not_whitelisted": "도메인이 화이트리스트에 없습니다",
+    "ip_in_blocked_range": "IP가 차단된 범위에 있습니다: {range}",
+    "resolved_ip_blocked": "해결된 IP {ip}이(가) 차단된 범위에 있습니다: {range}",
+    "cannot_resolve_hostname": "호스트 이름을 확인할 수 없습니다",
+    "unknown_policy_level": "알 수 없는 네트워크 정책 수준: {policy_level}"
+  }
+}

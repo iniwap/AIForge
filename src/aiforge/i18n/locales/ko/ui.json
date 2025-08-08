@@ -1,0 +1,184 @@
+{
+  "task": {
+    "template_code_generation": "템플릿 기반 코드 생성",
+    "system_prompt_generation": "시스템 프롬프트에 따라 코드를 생성하세요",
+    "processing_start": "최대 시도 횟수 {max_rounds}, 라운드당 최대 최적화 횟수 {max_optimization}으로 작업 지시 처리를 시작합니다",
+    "round_execution": "라운드 {round} 실행",
+    "all_rounds_failed_best_result": "모든 라운드가 실패했습니다. 최상의 결과를 반환하고 실행을 종료합니다!",
+    "round_success_completed": "라운드 {round} 실행에 성공했습니다. 작업 완료!",
+    "all_rounds_failed_no_result": "모든 라운드가 실패했습니다. 유효한 결과를 얻지 못했습니다. 실행을 종료합니다!",
+    "round_failed_continue": "라운드 {round} 실행에 실패했습니다. 다음 라운드로 다시 시작합니다",
+    "execution_summary": "작업 {task_id} 실행 요약",
+    "status": {
+      "created": "생성됨",
+      "running": "실행 중",
+      "completed": "완료됨",
+      "failed": "실패",
+      "cancelled": "취소됨",
+      "unknown": "알 수 없는 상태"
+    }
+  },
+  "execution": {
+    "direct_response_success": "직접 응답: {action} - {instruction}...",
+    "cache_lookup": "캐시를 찾는 중...",
+    "cache_found": "{count}개의 캐시 모듈을 찾았습니다",
+    "cache_execution": "캐시 모듈을 실행하는 중...",
+    "ai_generation": "새로운 코드를 생성하는 중...",
+    "cache_validation_passed": "캐시 검증 통과"
+  },
+  "search": {
+    "search_complete_success": "검색 완료, {count}개의 결과를 찾았습니다",
+    "process_system_cache": "시스템 캐시",
+    "process_ai_template": "AI 템플릿",
+    "process_ai_free": "AI 자유 형식",
+    "process_system_default": "시스템 기본값",
+    "engine_baidu": "Baidu",
+    "engine_bing": "Bing",
+    "engine_360": "360",
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
+  },
+  "analyzer": {
+    "recommendations": {
+      "enhance_builtin_guidance": "내장 유형 가이드를 강화하는 것이 좋습니다. 현재 내장 유형 사용률이 낮습니다",
+      "relax_creation_conditions": "내장 유형 사용률이 높으므로 새 유형 생성 조건을 적절히 완화하는 것을 고려할 수 있습니다",
+      "too_many_dynamic": "동적 유형이 너무 많습니다({count}개). 우선순위가 낮은 유형을 정리하는 것이 좋습니다",
+      "low_priority_types": "우선순위가 낮은 동적 유형 {count}개가 발견되었습니다. 제거를 고려하는 것이 좋습니다",
+      "unused_builtin": "내장 유형 {types}의 사용률이 0입니다. 키워드 매칭을 최적화해야 할 수 있습니다",
+      "all_good": "작업 유형 사용이 양호합니다. 특별한 최적화가 필요하지 않습니다"
+    },
+    "adaptive": {
+      "task_type_guidance_header": "# 작업 유형 가이드",
+      "system_status_header": "# 시스템 상태:",
+      "current_guidance_strength": "현재 가이드 강도",
+      "builtin_usage_rate": "내장 유형 사용률",
+      "efficiency_note": "이러한 내장 유형은 더 높은 캐시 적중률과 실행 효율을 가집니다.",
+      "use_builtin_types": "다음 검증된 내장 작업 유형을 사용하세요"
+    },
+    "priority_label": "우선순위",
+    "use_cases": {
+      "data_fetch": [
+        "웹 페이지 콘텐츠 검색",
+        "API 데이터 가져오기",
+        "뉴스 정보 스크래핑"
+      ],
+      "data_process": [
+        "데이터 분석",
+        "통계 계산",
+        "형식 변환"
+      ],
+      "file_operation": [
+        "파일 읽기 및 쓰기",
+        "일괄 처리",
+        "문서 작업"
+      ],
+      "automation": [
+        "예약된 작업",
+        "시스템 모니터링",
+        "자동화된 프로세스"
+      ],
+      "content_generation": [
+        "문서 생성",
+        "보고서 작성",
+        "콘텐츠 제작"
+      ],
+      "direct_response": [
+        "지식 기반 질의응답",
+        "텍스트 작성",
+        "번역 및 요약"
+      ]
+    }
+  },
+  "content_generation": {
+    "generation_success": "{format} 형식 콘텐츠 생성 성공",
+    "search_based_suffix": "({count}개의 검색 결과 기반)",
+    "search_results_header": "'{instruction}'에 대한 검색 결과",
+    "result_label": "결과",
+    "title_label": "제목",
+    "publish_time_label": "발행 시간",
+    "abstract_label": "요약",
+    "content_label": "내용",
+    "no_title": "제목 없음",
+    "unknown_time": "알 수 없는 시간",
+    "no_abstract": "요약 없음",
+    "no_search_results_fallback": "관련 검색 결과를 찾을 수 없습니다. 기존 지식을 기반으로 콘텐츠를 생성해 주세요."
+  },
+  "progress": {
+    "connecting_ai": "[AIForge]🤖 AI 서비스 {provider}에 연결 중...",
+    "waiting_response": "[AIForge]💭 AI 응답을 기다리는 중...",
+    "processing_response": "[AIForge]✅ AI 응답 수신, 처리 중...",
+    "searching": "[AIForge]🔍 검색 중: {query}",
+    "search_process": "[AIForge]🔍 {search_type} 검색을 시도하는 중...",
+    "search_complete": "[AIForge]✅ 검색 완료, {count}개의 결과를 찾았습니다",
+    "cache_lookup": "[AIForge]🔍 캐시를 찾는 중...",
+    "cache_found": "[AIForge]📦 {count}개의 캐시 모듈을 찾았습니다, 검증 중...",
+    "cache_execution": "[AIForge]⚡ 캐시 코드를 실행하는 중...",
+    "code_execution": "[AIForge]⚡ {count}개의 코드 블록을 실행하는 중...",
+    "round_start": "[AIForge]🔄 {current}/{total} 라운드 실행 시작...",
+    "round_success": "[AIForge]🎉 라운드 {round_num} 실행 성공!",
+    "round_retry": "[AIForge]⚠️ 라운드 {round_num} 실패, 재시도 준비 중..."
+  },
+  "llm_manager": {
+    "config_updated": "설정 업데이트 완료",
+    "lazy_load_create": "LLM 클라이언트 지연 로딩 생성: {name}",
+    "switch_success": "LLM 클라이언트로 전환 성공: {name}",
+    "cleanup_unused": "사용되지 않는 클라이언트 정리, 유지 중: {current_name}"
+  },
+  "validation": {
+    "validation_passed": "검증 통과",
+    "found_valid_results": "{count}개의 유효한 결과 찾음",
+    "ai_validation_exception": "AI 검증 예외, 기본적으로 통과: {error}"
+  },
+  "runner": {
+    "sandbox_info": "샌드박스 실행 환경: 타임아웃={timeout}초, 메모리={memory}MB, CPU={cpu}초, 파일 디스크립터={fd}, 파일 크기={file_size}MB, 프로세스 수={processes}",
+    "network_blocked_info": "네트워크 액세스가 보안 정책에 의해 차단되었습니다",
+    "cleanup_warning": "정리 경고: {error}"
+  },
+  "formatter": {
+    "code_placeholder": "위 코드 블록 참조...",
+    "execution_result_title": "코드 실행 결과",
+    "structured_feedback_message": "다음은 실행 환경이 실행 순서에 따라 자동으로 반환한 코드 블록 실행 결과입니다",
+    "execution_summary_title": "실행 요약",
+    "item_column": "항목",
+    "value_column": "값",
+    "total_rounds_label": "총 라운드 수",
+    "history_label": "이력",
+    "task_status_label": "작업 상태",
+    "history_count_text": "{count}개",
+    "completed_text": "완료",
+    "incomplete_text": "미완료",
+    "operation_completed": "작업 완료"
+  },
+  "executor": {
+    "start_execution_block": "코드 블록 실행 시작: {block_name}",
+    "round_attempt": "라운드 {round_num}, {optimization_attempt}번째 시도",
+    "generating_code": "코드를 생성하는 중...",
+    "found_code_blocks": "{count}개의 코드 블록을 찾았습니다",
+    "validation_passed": "{optimization_attempt}번째 시도 검증 통과!",
+    "best_result_summary": "{count}개의 최상의 결과 반환"
+  },
+  "network": {
+    "validation_disabled": "네트워크 검증이 비활성화되었습니다",
+    "open_mode_allows_all": "오픈 모드는 모든 네트워크 액세스를 허용합니다",
+    "default_allow": "기본적으로 허용",
+    "domain_filtering_disabled": "도메인 필터링이 비활성화되었습니다",
+    "domain_validation_passed": "도메인 검증 통과",
+    "domain_whitelisted": "도메인이 화이트리스트에 있습니다: {domain}",
+    "ip_address_allowed": "IP 주소 액세스 허용",
+    "resolved_ip_allowed": "확인된 IP {ip} 액세스 허용",
+    "no_hostname": "호스트 이름 없음",
+    "no_domain_restrictions": "도메인 제한 없음"
+  },
+  "template": {
+    "title_label": "제목",
+    "url_label": "링크",
+    "content_description": "자세한 내용(공백 및 줄 바꿈 제거, 최소 {length}자)",
+    "time_label": "발행 시간",
+    "optional_empty": "(비워둘 수 있음)",
+    "optional_empty_quotes": "(''로 비워둘 수 있음)",
+    "corresponding_value": "해당 값"
+  }
+}

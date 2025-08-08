@@ -118,6 +118,9 @@ class AIForgeI18nManager:
         else:
             if isinstance(current, str):
                 return current
+            elif isinstance(current, list):
+                # 自动将数组转换为换行符分隔的字符串
+                return "\\n".join(str(item) for item in current)
 
         # 回退到默认语言
         current = self.messages.get(self.fallback_locale, {})
@@ -127,7 +130,12 @@ class AIForgeI18nManager:
             else:
                 return None
 
-        return current if isinstance(current, (str, list)) else None
+        if isinstance(current, str):
+            return current
+        elif isinstance(current, list):
+            return "\\n".join(str(item) for item in current)
+
+        return None
 
     def _load_all_messages(self):
         """加载所有语言的消息文件"""
@@ -161,7 +169,14 @@ class AIForgeI18nManager:
             self.messages[locale] = {}
 
         # 加载所有 JSON 文件
-        json_files = ["common.json", "prompts.json", "errors.json", "ui.json", "data.json"]
+        json_files = [
+            "common.json",
+            "prompts.json",
+            "errors.json",
+            "ui.json",
+            "data.json",
+            "keywords.json",
+        ]
 
         for json_file in json_files:
             file_path = locale_dir / json_file

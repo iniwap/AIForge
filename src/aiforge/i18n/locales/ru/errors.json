@@ -1,122 +1,122 @@
 {
   "execution": {
-    "direct_response_error": "Direct response failed: {error}",
-    "validation_failed": "Validation failed",
-    "execution_timeout": "Execution timeout",
-    "module_execution_failed": "Module execution failed",
-    "parameter_validation_failed": "Parameter validation failed",
-    "intent_validation_failed": "Intent validation failed",
-    "functionality_validation_failed": "Functionality consistency validation failed"
+    "direct_response_error": "Прямой ответ не удался: {error}",
+    "validation_failed": "Проверка не пройдена",
+    "execution_timeout": "Время выполнения истекло",
+    "module_execution_failed": "Ошибка выполнения модуля",
+    "parameter_validation_failed": "Ошибка проверки параметра",
+    "intent_validation_failed": "Ошибка проверки намерения",
+    "functionality_validation_failed": "Ошибка проверки функциональной согласованности"
   },
   "search": {
-    "search_failed_error": "Search failed: {error}",
-    "all_strategies_failed": "All search strategies failed",
-    "quality_validation_failed": "Search result quality validation failed",
-    "no_valid_results": "No valid search results found",
-    "no_search_container": "No search result container found"
+    "search_failed_error": "Ошибка поиска: {error}",
+    "all_strategies_failed": "Все стратегии поиска не удались",
+    "quality_validation_failed": "Проверка качества результатов поиска не пройдена",
+    "no_valid_results": "Не найдено действительных результатов поиска",
+    "no_search_container": "Не найден контейнер для результатов поиска"
   },
   "task": {
-    "execution_error": "Execution error: {error}"
+    "execution_error": "Ошибка выполнения: {error}"
   },
   "analyzer": {
-    "analysis_failed": "Statistical analysis failed: {error}",
-    "api_key_in_url_parameter": "Detected API key parameter in URL",
-    "api_key_in_url_constant": "Detected API key parameter in URL constant",
-    "api_key_in_headers": "Detected authentication info in headers: {key}",
-    "possible_api_key_parameter": "Detected possible API key parameter: {param}"
+    "analysis_failed": "Ошибка статистического анализа: {error}",
+    "api_key_in_url_parameter": "Обнаружен параметр ключа API в URL",
+    "api_key_in_url_constant": "Обнаружен параметр ключа API в константе URL",
+    "api_key_in_headers": "Обнаружена информация об аутентификации в заголовках: {key}",
+    "possible_api_key_parameter": "Обнаружен возможный параметр ключа API: {param}"
   },
   "content_generation": {
-    "llm_manager_unavailable": "LLM manager unavailable",
-    "llm_client_unavailable": "LLM client unavailable",
-    "llm_manager_error_summary": "Content generation failed: LLM manager unavailable",
-    "llm_client_error_summary": "Content generation failed: LLM client unavailable",
-    "generation_error": "Content generation error: {error}",
-    "generation_failed": "Content generation failed: {error}"
+    "llm_manager_unavailable": "Менеджер LLM недоступен",
+    "llm_client_unavailable": "Клиент LLM недоступен",
+    "llm_manager_error_summary": "Ошибка генерации контента: менеджер LLM недоступен",
+    "llm_client_error_summary": "Ошибка генерации контента: клиент LLM недоступен",
+    "generation_error": "Ошибка генерации контента: {error}",
+    "generation_failed": "Генерация контента не удалась: {error}"
   },
   "template": {
-    "missing_required_parameter": "Missing required parameter: {param_name}",
-    "template_not_found": "Template not found: {template_id}",
-    "execution_failed": "Template {template_id} execution failed: {error}"
+    "missing_required_parameter": "Отсутствует обязательный параметр: {param_name}",
+    "template_not_found": "Шаблон не найден: {template_id}",
+    "execution_failed": "Выполнение шаблона {template_id} не удалось: {error}"
   },
   "llm_client": {
-    "server_error_retry": "{name} server error: {status_code}, retry {attempt}, waiting {wait_time} seconds...",
-    "client_error": "{name} client error: {status_code}",
-    "network_error_retry": "{name} network error: {error}, retry {attempt}",
-    "request_failed": "{name} request failed: {error}"
+    "server_error_retry": "Ошибка сервера {name}: {status_code}, попытка {attempt}, ожидание {wait_time} секунд...",
+    "client_error": "Ошибка клиента {name}: {status_code}",
+    "network_error_retry": "Ошибка сети {name}: {error}, попытка {attempt}",
+    "request_failed": "Запрос {name} не удался: {error}"
   },
   "llm_manager": {
-    "default_client_unavailable": "Default LLM client '{provider}' unavailable or creation failed",
-    "config_missing": "Default LLM client not specified in config or config does not exist: {provider}",
-    "no_available_client": "No available LLM client found",
-    "unsupported_type": "Unsupported LLM type: {client_type}",
-    "client_unavailable": "LLM client '{name}' unavailable",
-    "create_failed": "Failed to create LLM client {name}: {error}",
-    "switch_failed": "Switch failed, client '{name}' unavailable"
+    "default_client_unavailable": "Клиент LLM по умолчанию '{provider}' недоступен или не удалось создать",
+    "config_missing": "Клиент LLM по умолчанию не указан в файле конфигурации или конфигурация не существует: {provider}",
+    "no_available_client": "Не найдено доступных клиентов LLM",
+    "unsupported_type": "Неподдерживаемый тип LLM: {client_type}",
+    "client_unavailable": "Клиент LLM '{name}' недоступен",
+    "create_failed": "Не удалось создать клиент LLM {name}: {error}",
+    "switch_failed": "Ошибка переключения, клиент '{name}' недоступен"
   },
   "validation": {
-    "local_basic_failed": "Local basic validation failed",
-    "business_logic_failed": "Business logic validation failed",
-    "ai_validation_failed": "AI validation failed",
-    "llm_client_none": "llm_client is None",
-    "code_execution_failed": "Code execution failed: {error}",
-    "unknown_error": "Unknown error",
-    "execution_result_none": "Execution result is None",
-    "data_field_empty": "Data field is empty list, no valid data retrieved",
-    "data_field_none": "Data field is None",
-    "missing_data_field": "Missing data field",
-    "execution_result_empty": "Execution result is empty",
-    "result_must_be_dict": "Result content must be in dictionary format",
-    "result_status_error": "Result status is error",
-    "data_must_be_array": "Data field must be in array format",
-    "data_array_empty": "Data array is empty",
-    "data_item_must_be_dict": "Data item must be in dictionary format",
-    "data_item_missing_required_fields": "Data item missing required fields",
-    "insufficient_data_quantity": "Insufficient data quantity: need at least {min_items} items, actual {actual} items",
-    "insufficient_valid_data": "Retrieved {valid_count} valid data items, does not meet minimum requirement of {min_items} items",
-    "result_not_meet_requirements": "Result does not meet task requirements",
-    "ai_response_parse_failed": "AI response format cannot be parsed",
-    "ai_response_format_error": "AI validation response format error"
+    "local_basic_failed": "Базовая локальная проверка не пройдена",
+    "business_logic_failed": "Проверка бизнес-логики не пройдена",
+    "ai_validation_failed": "Проверка AI не пройдена",
+    "llm_client_none": "llm_client имеет значение None",
+    "code_execution_failed": "Ошибка выполнения кода: {error}",
+    "unknown_error": "Неизвестная ошибка",
+    "execution_result_none": "Результат выполнения имеет значение None",
+    "data_field_empty": "Поле данных пустое, действительные данные не получены",
+    "data_field_none": "Поле данных имеет значение None",
+    "missing_data_field": "Отсутствует поле данных",
+    "execution_result_empty": "Результат выполнения пустой",
+    "result_must_be_dict": "Содержимое результата должно быть в формате словаря",
+    "result_status_error": "Статус результата - ошибка",
+    "data_must_be_array": "Поле данных должно быть в формате массива",
+    "data_array_empty": "Массив данных пустой",
+    "data_item_must_be_dict": "Элемент данных должен быть в формате словаря",
+    "data_item_missing_required_fields": "В элементе данных отсутствуют обязательные поля",
+    "insufficient_data_quantity": "Недостаточно данных: требуется минимум {min_items}, получено {actual}",
+    "insufficient_valid_data": "Получено {valid_count} действительных данных, что не соответствует минимальному количеству {min_items}",
+    "result_not_meet_requirements": "Результат не соответствует требованиям задачи",
+    "ai_response_parse_failed": "Не удалось разобрать формат ответа AI",
+    "ai_response_format_error": "Ошибка формата ответа проверки AI"
   },
   "runner": {
-    "code_execution_timeout": "Code execution timeout ({timeout} seconds)",
-    "process_execution_error": "Process execution error: {error}",
-    "result_parse_error": "Result parsing error: {error}",
-    "network_security_blocked": "Blocked by network security policy",
-    "module_blocked_security_template": "Module '{missing_name}' blocked by security policy. Reason: {reason}. Original module: {original_module}",
-    "code_execution_timeout_handler": "Code execution timeout",
-    "security_policy_active": "Network security policy active",
-    "unknown_error": "Unknown error",
-    "security_blocked_modules": "Security policy blocked the following modules: {blocked_list}. {error}",
-    "execution_failed": "Execution failed: {error}",
-    "runner_error": "Runner error: {error}"
+    "code_execution_timeout": "Время выполнения кода истекло ({timeout} секунд)",
+    "process_execution_error": "Ошибка выполнения процесса: {error}",
+    "result_parse_error": "Ошибка разбора результата: {error}",
+    "network_security_blocked": "Заблокировано политикой сетевой безопасности",
+    "module_blocked_security_template": "Модуль '{missing_name}' был заблокирован для импорта из-за политики безопасности. Причина: {reason}. Исходный модуль: {original_module}",
+    "code_execution_timeout_handler": "Время выполнения кода истекло",
+    "security_policy_active": "Действует политика сетевой безопасности",
+    "unknown_error": "Неизвестная ошибка",
+    "security_blocked_modules": "Политика безопасности заблокировала импорт следующих модулей: {blocked_list}. {error}",
+    "execution_failed": "Выполнение не удалось: {error}",
+    "runner_error": "Ошибка Runner: {error}"
   },
   "config": {
-    "file_not_exists": "Configuration file {file} does not exist",
-    "load_failed": "Failed to load configuration file: {error}"
+    "file_not_exists": "Файл конфигурации {file} не существует",
+    "load_failed": "Не удалось загрузить файл конфигурации: {error}"
   },
   "executor": {
-    "no_llm_response": "Attempt {optimization_attempt}: LLM returned no response",
-    "no_code_blocks_found": "Attempt {optimization_attempt}: No executable code blocks found",
-    "code_execution_failed": "Attempt {optimization_attempt}: Code execution failed",
-    "code_execution_error": "Attempt {optimization_attempt}: Code execution error",
-    "validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}",
-    "final_validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}, reached maximum optimization attempts",
-    "all_attempts_failed": "All {max_optimization_attempts} optimization attempts failed within single round"
+    "no_llm_response": "Попытка {optimization_attempt}: LLM не вернул ответ",
+    "no_code_blocks_found": "Попытка {optimization_attempt}: Не найдено исполняемых блоков кода",
+    "code_execution_failed": "Попытка {optimization_attempt}: Выполнение кода не удалось",
+    "code_execution_error": "Попытка {optimization_attempt}: Ошибка выполнения кода",
+    "validation_failed": "Попытка {optimization_attempt} не прошла проверку ({validation_type}): {failure_reason}",
+    "final_validation_failed": "Попытка {optimization_attempt} не прошла проверку ({validation_type}): {failure_reason}, достигнуто максимальное количество оптимизаций",
+    "all_attempts_failed": "Все {max_optimization_attempts} попыток оптимизации в одном раунде не удались"
   },
   "security": {
-    "dangerous_function_detected": "Detected dangerous function call: {pattern}",
-    "analysis_failed": "Security analysis failed: {error}"
+    "dangerous_function_detected": "Обнаружен вызов опасной функции: {pattern}",
+    "analysis_failed": "Ошибка анализа безопасности: {error}"
   },
   "network": {
-    "strict_mode_blocks_all": "Strict mode blocks all network access",
-    "domain_in_blacklist": "Domain {domain} is in blacklist",
-    "domain_not_in_whitelist": "Domain {domain} is not in whitelist",
-    "empty_hostname": "Empty hostname",
-    "domain_blacklisted": "Domain in blacklist: {domain}",
-    "domain_not_whitelisted": "Domain not in whitelist",
-    "ip_in_blocked_range": "IP in blocked range: {range}",
-    "resolved_ip_blocked": "Resolved IP {ip} in blocked range: {range}",
-    "cannot_resolve_hostname": "Cannot resolve hostname",
-    "unknown_policy_level": "Unknown network policy level: {policy_level}"
+    "strict_mode_blocks_all": "Строгий режим запрещает любой сетевой доступ",
+    "domain_in_blacklist": "Домен {domain} находится в черном списке",
+    "domain_not_in_whitelist": "Домен {domain} не находится в белом списке",
+    "empty_hostname": "Имя хоста пустое",
+    "domain_blacklisted": "Домен находится в черном списке: {domain}",
+    "domain_not_whitelisted": "Домен не находится в белом списке",
+    "ip_in_blocked_range": "IP-адрес находится в заблокированном диапазоне: {range}",
+    "resolved_ip_blocked": "Разрешенный IP-адрес {ip} находится в заблокированном диапазоне: {range}",
+    "cannot_resolve_hostname": "Не удалось разрешить имя хоста",
+    "unknown_policy_level": "Неизвестный уровень сетевой политики: {policy_level}"
   }
 }

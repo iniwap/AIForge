@@ -1,0 +1,397 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "検索": "検索",  
+      "取得": "取得",  
+      "入手": "入手",  
+      "ニュース": "ニュース",  
+      "情報": "情報",  
+      "コンテンツ": "コンテンツ",  
+      "クロール": "クロール",  
+      "インターフェース": "インターフェース"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "分析": "分析",  
+      "処理": "処理",  
+      "計算": "計算",  
+      "統計": "統計",  
+      "変換": "変換"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "ファイル": "ファイル",  
+      "読み取り": "読み取り",  
+      "書き込み": "書き込み",  
+      "保存": "保存",  
+      "バッチ": "バッチ",  
+      "コピー": "コピー",  
+      "移動": "移動",  
+      "削除": "削除",  
+      "名前変更": "名前変更",  
+      "圧縮": "圧縮",  
+      "展開": "展開",  
+      "作成": "作成",  
+      "ディレクトリ": "ディレクトリ",  
+      "フォルダ": "フォルダ",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "分析": "分析",  
+        "統計": "統計",  
+        "計算": "計算",  
+        "データ処理": "データ処理",  
+        "クリーン": "クリーン"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "自動化": "自動化",  
+      "スケジュール": "スケジュール",  
+      "監視": "監視",  
+      "タスク": "タスク"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "生成": "生成",  
+      "作成": "作成",  
+      "執筆": "執筆",  
+      "レポート": "レポート"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "何ですか": "何ですか",  
+      "どのように": "どのように",  
+      "なぜ": "なぜ",  
+      "説明": "説明",  
+      "記述": "記述",  
+      "定義": "定義",  
+      "概念": "概念",  
+      "原理": "原理",  
+      "違い": "違い",  
+      "比較": "比較",  
+      "書く": "書く",  
+      "作成": "作成",  
+      "下書き": "下書き",  
+      "翻訳": "翻訳",  
+      "変換": "変換",  
+      "書き直し": "書き直し",  
+      "言語で": "言語で",  
+      "要約": "要約",  
+      "抽象": "抽象",  
+      "概要": "概要",  
+      "これを分析": "これを分析",  
+      "解釈": "解釈",  
+      "提案": "提案",  
+      "推奨": "推奨",  
+      "意見": "意見",  
+      "見解": "見解",  
+      "評価": "評価",  
+      "どう思いますか": "どう思いますか",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "今日": "今日",  
+        "今": "今",  
+        "最新": "最新",  
+        "現在": "現在",  
+        "リアルタイム": "リアルタイム",  
+        "天気": "天気",  
+        "株価": "株価",  
+        "ニュース": "ニュース",  
+        "為替レート": "為替レート",  
+        "価格": "価格",  
+        "ステータス": "ステータス"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "フォーマット": "フォーマット",  
+      "出力形式": "出力形式",  
+      "タイプ": "タイプ",  
+      "拡張子": "拡張子",  
+      "ファイル形式": "ファイル形式"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "スタイル": "スタイル",  
+      "テーマ": "テーマ",  
+      "テンプレート": "テンプレート"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "言語": "言語",  
+      "ローカル": "ローカル",  
+      "国際化": "国際化"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "トーン": "トーン",  
+      "ムード": "ムード",  
+      "感情": "感情"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "マークアップ言語"],  
+    "html": ["html", "webpage", "web", "ウェブページ", "ウェブ"],  
+    "json": ["json", "data format", "データ形式"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "ドキュメント"],  
+    "txt": ["txt", "text", "plain text", "テキスト", "プレーンテキスト"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "検索", "取得", "入手", "見つける", "取り出し", "参照"],  
+    "target_keywords": ["search", "query", "検索", "クエリ"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "検索クエリ", "クエリ", "キーワード", "検索語", "用語", "キーワード群"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "検索": "検索",  
+      "見つける": "見つける",  
+      "参照": "参照",  
+      "特定": "特定"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "取得": "取得",  
+      "入手": "入手",  
+      "取り出し": "取り出し",  
+      "獲得": "獲得"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "分析": "分析",  
+      "検査": "検査",  
+      "計算": "計算",  
+      "演算": "演算"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "変換": "変換",  
+      "変更": "変更",  
+      "処理": "処理"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "生成": "生成",  
+      "作成": "作成",  
+      "生産": "生産",  
+      "作る": "作る"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "保存": "保存",  
+      "書き込み": "書き込み",  
+      "格納": "格納",  
+      "永続化": "永続化"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "応答": "応答",  
+      "回答": "回答",  
+      "説明": "説明",  
+      "返答": "返答"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "翻訳": "翻訳",  
+      "変換": "変換",  
+      "変形": "変形",  
+      "解釈": "解釈"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "要約": "要約",  
+      "抽象": "抽象",  
+      "凝縮": "凝縮",  
+      "概要": "概要"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "提案": "提案",  
+      "推奨": "推奨",  
+      "助言": "助言"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "検索(.+?)(?:\\s|、|。|$)",  
+        "探す(.+?)(?:\\s|、|。|$)",  
+        "検索する(.+?)(?:\\s|、|。|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:項目|結果|エントリ|レコード))",  
+        "(?:最大|最高|マックス)\\s+(\\d+)",  
+        "(?:最初|トップ)\\s+(\\d+)",  
+        "(?:最小|最低|ミニマム)\\s+(\\d+)",  
+        "処理\\s+(\\d+)",  
+        "生成\\s+(\\d+)",  
+        "取得\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "ファイル\\s+(.+?)(?:\\s|、|。|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "url": {  
+      "patterns": ["(https?://[^\\s]+)"],  
+      "type": "str"  
+    },  
+    "content": {  
+      "patterns": [  
+        "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "コンテンツ[：\\s]+(.+?)(?:\\s|、|。|$)",  
+        "テキスト[：\\s]+(.+?)(?:\\s|、|。|$)"  
+      ],  
+      "type": "str"  
+    },
+    "style": {  
+      "patterns": [  
+        "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "スタイル[：\\s]+(.+?)(?:\\s|、|。|$)",  
+        "テーマ[：\\s]+(.+?)(?:\\s|、|。|$)"  
+      ],  
+      "type": "str"  
+    }
+  }
+}

@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "Успешно",
+      "error": "Ошибка",
+      "pending": "В ожидании",
+      "cancelled": "Отменено",
+      "completed": "Завершено",
+      "failed": "Провалено",
+      "running": "Выполняется"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "Подтвердить",
+      "cancel": "Отмена",
+      "retry": "Повторить",
+      "skip": "Пропустить",
+      "continue": "Продолжить",
+      "start": "Начать",
+      "stop": "Остановить"
     },
     "time_units": {
-      "seconds": "seconds",
-      "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "seconds": "сек",
+      "minutes": "мин",
+      "hours": "ч",
+      "days": "дн"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
-      "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "items": "элементов",
+      "count": "количество",
+      "total": "всего",
+      "found": "найдено",
+      "valid": "действительно"
     },
     "labels": {
-      "name": "Name",
-      "type": "Type",
-      "description": "Description",
-      "timestamp": "Timestamp",
-      "status": "Status",
-      "result": "Result"
+      "name": "Имя",
+      "type": "Тип",
+      "description": "Описание",
+      "timestamp": "Отметка времени",
+      "status": "Статус",
+      "result": "Результат"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "Загрузка...",
+      "no_data": "Нет данных",
+      "unknown": "Неизвестно",
+      "processing": "Обработка...",
+      "waiting": "Ожидание..."
     }
   }
 }

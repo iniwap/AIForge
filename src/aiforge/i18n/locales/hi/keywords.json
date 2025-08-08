@@ -1,0 +1,400 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "खोजें": "खोजें",  
+      "प्राप्त करें": "प्राप्त करें",  
+      "लाएं": "लाएं",  
+      "समाचार": "समाचार",  
+      "जानकारी": "जानकारी",  
+      "सामग्री": "सामग्री",  
+      "क्रॉल": "क्रॉल",  
+      "इंटरफेस": "इंटरफेस"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "विश्लेषण": "विश्लेषण",  
+      "प्रक्रिया": "प्रक्रिया",  
+      "गणना": "गणना",  
+      "आंकड़े": "आंकड़े",  
+      "रूपांतरण": "रूपांतरण"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "फ़ाइल": "फ़ाइल",  
+      "पढ़ें": "पढ़ें",  
+      "लिखें": "लिखें",  
+      "सहेजें": "सहेजें",  
+      "बैच": "बैच",  
+      "कॉपी": "कॉपी",  
+      "स्थानांतरित": "स्थानांतरित",  
+      "हटाएं": "हटाएं",  
+      "नाम बदलें": "नाम बदलें",  
+      "संपीड़ित": "संपीड़ित",  
+      "निकालें": "निकालें",  
+      "बनाएं": "बनाएं",  
+      "निर्देशिका": "निर्देशिका",  
+      "फ़ोल्डर": "फ़ोल्डर",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "विश्लेषण": "विश्लेषण",  
+        "आंकड़े": "आंकड़े",  
+        "गणना": "गणना",  
+        "डेटा प्रक्रिया": "डेटा प्रक्रिया",  
+        "साफ़": "साफ़"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "स्वचालन": "स्वचालन",  
+      "अनुसूची": "अनुसूची",  
+      "निगरानी": "निगरानी",  
+      "कार्य": "कार्य"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "उत्पन्न": "उत्पन्न",  
+      "बनाएं": "बनाएं",  
+      "लेखन": "लेखन",  
+      "रिपोर्ट": "रिपोर्ट"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "क्या है": "क्या है",  
+      "कैसे": "कैसे",  
+      "क्यों": "क्यों",  
+      "समझाएं": "समझाएं",  
+      "वर्णन": "वर्णन",  
+      "परिभाषा": "परिभाषा",  
+      "अवधारणा": "अवधारणा",  
+      "सिद्धांत": "सिद्धांत",  
+      "अंतर": "अंतर",  
+      "तुलना": "तुलना",  
+      "लिखें": "लिखें",  
+      "रचना": "रचना",  
+      "मसौदा": "मसौदा",  
+      "अनुवाद": "अनुवाद",  
+      "में बदलें": "में बदलें",  
+      "के रूप में फिर से लिखें": "के रूप में फिर से लिखें",  
+      "भाषा में": "भाषा में",  
+      "सारांश": "सारांश",  
+      "सार": "सार",  
+      "रूपरेखा": "रूपरेखा",  
+      "इसका विश्लेषण": "इसका विश्लेषण",  
+      "व्याख्या": "व्याख्या",  
+      "सुझाव": "सुझाव",  
+      "सिफारिश": "सिफारिश",  
+      "राय": "राय",  
+      "दृश्य": "दृश्य",  
+      "मूल्यांकन": "मूल्यांकन",  
+      "आप क्या सोचते हैं": "आप क्या सोचते हैं",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "आज": "आज",  
+        "अभी": "अभी",  
+        "नवीनतम": "नवीनतम",  
+        "वर्तमान": "वर्तमान",  
+        "वास्तविक समय": "वास्तविक समय",  
+        "वर्तमान में": "वर्तमान में",  
+        "मौसम": "मौसम",  
+        "शेयर की कीमत": "शेयर की कीमत",  
+        "समाचार": "समाचार",  
+        "विनिमय दर": "विनिमय दर",  
+        "कीमत": "कीमत",  
+        "स्थिति": "स्थिति"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "प्रारूप": "प्रारूप",  
+      "आउटपुट प्रारूप": "आउटपुट प्रारूप",  
+      "प्रकार": "प्रकार",  
+      "एक्सटेंशन": "एक्सटेंशन",  
+      "फ़ाइल प्रारूप": "फ़ाइल प्रारूप"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "शैली": "शैली",  
+      "विषय": "विषय",  
+      "टेम्प्लेट": "टेम्प्लेट"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "भाषा": "भाषा",  
+      "स्थानीय": "स्थानीय",  
+      "अंतर्राष्ट्रीयकरण": "अंतर्राष्ट्रीयकरण"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "स्वर": "स्वर",  
+      "मूड": "मूड",  
+      "भावना": "भावना"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "मार्कअप भाषा"],  
+    "html": ["html", "webpage", "web", "वेब पेज", "वेब"],  
+    "json": ["json", "data format", "डेटा प्रारूप"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "दस्तावेज़"],  
+    "txt": ["txt", "text", "plain text", "पाठ", "सादा पाठ"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "खोजें", "प्राप्त करें", "लाएं", "ढूंढें", "पुनर्प्राप्त", "देखें"],  
+    "target_keywords": ["search", "query", "खोज", "क्वेरी"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "खोज क्वेरी", "क्वेरी", "कीवर्ड", "खोज शब्द", "शब्द", "कीवर्ड्स"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "खोजें": "खोजें",  
+      "ढूंढें": "ढूंढें",  
+      "देखें": "देखें",  
+      "स्थान": "स्थान"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "प्राप्त करें": "प्राप्त करें",  
+      "लाएं": "लाएं",  
+      "पुनर्प्राप्त": "पुनर्प्राप्त",  
+      "प्राप्त": "प्राप्त"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "विश्लेषण": "विश्लेषण",  
+      "जांच": "जांच",  
+      "गणना": "गणना",  
+      "कंप्यूट": "कंप्यूट"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "प्रक्रिया": "प्रक्रिया",  
+      "रूपांतरण": "रूपांतरण",  
+      "बदलें": "बदलें",  
+      "संभालें": "संभालें"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "उत्पन्न": "उत्पन्न",  
+      "बनाएं": "बनाएं",  
+      "उत्पादन": "उत्पादन",  
+      "बनाना": "बनाना"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "सहेजें": "सहेजें",  
+      "लिखें": "लिखें",  
+      "स्टोर": "स्टोर",  
+      "बनाए रखें": "बनाए रखें"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "जवाब": "जवाब",  
+      "उत्तर": "उत्तर",  
+      "समझाएं": "समझाएं",  
+      "जवाब दें": "जवाब दें"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "अनुवाद": "अनुवाद",  
+      "बदलें": "बदलें",  
+      "रूपांतरण": "रूपांतरण",  
+      "व्याख्या": "व्याख्या"  
+    },
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "सारांश": "सारांश",  
+      "सार": "सार",  
+      "संक्षेप": "संक्षेप",  
+      "रूपरेखा": "रूपरेखा"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "सुझाव": "सुझाव",  
+      "सिफारिश": "सिफारिश",  
+      "प्रस्ताव": "प्रस्ताव",  
+      "सलाह": "सलाह"  
+    }
+  },
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "खोजें (.+?)(?:\\s|,|\\.|$)",  
+        "ढूंढें (.+?)(?:\\s|,|\\.|$)",  
+        "के लिए खोजें (.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:आइटम|परिणाम|प्रविष्टियां|रिकॉर्ड))",  
+        "(?:अधिकतम|सबसे ज्यादा|मैक्स)\\s+(\\d+)",  
+        "(?:पहले|शीर्ष|टॉप)\\s+(\\d+)",  
+        "(?:कम से कम|न्यूनतम|मिन)\\s+(\\d+)",  
+        "प्रक्रिया\\s+(\\d+)",  
+        "उत्पन्न\\s+(\\d+)",  
+        "प्राप्त करें\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "फ़ाइल\\s+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "url": {  
+      "patterns": ["(https?://[^\\s]+)"],  
+      "type": "str"  
+    },  
+    "content": {  
+      "patterns": [  
+        "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "सामग्री[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "पाठ[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "style": {  
+      "patterns": [  
+        "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "शैली[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "विषय[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    }  
+  }
+}

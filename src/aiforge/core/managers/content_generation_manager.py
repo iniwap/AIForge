@@ -11,24 +11,29 @@ class AIForgeContentGenerationManager:
         self.field_processor = SemanticFieldStrategy()
         self.parameter_mapping_service = components.get("parameter_mapping_service")
         self._i18n_manager = self.components.get("i18n_manager")
-        # 扩展语义字段定义，支持格式相关参数
+        self._initialize_semantic_fields()
+
+    def _initialize_semantic_fields(self):
+        """动态初始化语义字段定义"""
         if hasattr(self.field_processor, "field_semantics"):
-            self.field_processor.field_semantics.update(
-                {
-                    "format": [
-                        "format",
-                        "output_format",
-                        "格式",
-                        "输出格式",
-                        "type",
-                        "extension",
-                        "文件格式",
-                    ],
-                    "style": ["style", "样式", "风格", "theme", "template", "模板"],
-                    "language": ["language", "lang", "语言", "locale", "国际化"],
-                    "tone": ["tone", "语调", "风格", "mood", "情感"],
-                }
-            )
+            # 从 i18n 配置获取语义字段
+            semantic_fields = self._get_semantic_fields_from_i18n()
+            self.field_processor.field_semantics.update(semantic_fields)
+
+    def _get_semantic_fields_from_i18n(self):
+        """从 i18n 配置获取语义字段"""
+        semantic_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
+            "semantic_fields", {}
+        )
+
+        semantic_fields = {}
+        for field_type, keywords in semantic_config.items():
+            if isinstance(keywords, dict):
+                semantic_fields[field_type] = list(keywords.values())
+            elif isinstance(keywords, list):
+                semantic_fields[field_type] = keywords
+
+        return semantic_fields
 
     def can_handle_content_generation(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为内容生成任务"""
@@ -323,24 +328,22 @@ class AIForgeContentGenerationManager:
                 elif isinstance(param_info, str):
                     return param_info.lower()
 
-        # 检查指令中是否包含格式要求
-        instruction_lower = standardized_instruction.get("target", "").lower()
-        format_keywords = {
-            "markdown": ["markdown", "md", "标记语言"],
-            "html": ["html", "网页", "web"],
-            "json": ["json", "数据格式"],
-            "xml": ["xml"],
-            "pdf": ["pdf"],
-            "docx": ["word", "docx", "文档"],
-            "txt": ["txt", "文本", "纯文本"],
-        }
+        # 从 i18n 配置获取格式关键词
+        format_keywords = self._get_format_keywords_from_i18n()
 
+        instruction_lower = standardized_instruction.get("target", "").lower()
         for format_type, keywords in format_keywords.items():
             if any(keyword in instruction_lower for keyword in keywords):
                 return format_type
 
-        # 默认返回markdown
         return "markdown"
+
+    def _get_format_keywords_from_i18n(self):
+        """从 i18n 配置获取格式关键词"""
+        format_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
+            "format_keywords", {}
+        )
+        return format_config
 
     def _call_llm_for_content(
         self,

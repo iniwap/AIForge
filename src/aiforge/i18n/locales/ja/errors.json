@@ -1,122 +1,122 @@
 {
   "execution": {
-    "direct_response_error": "Direct response failed: {error}",
-    "validation_failed": "Validation failed",
-    "execution_timeout": "Execution timeout",
-    "module_execution_failed": "Module execution failed",
-    "parameter_validation_failed": "Parameter validation failed",
-    "intent_validation_failed": "Intent validation failed",
-    "functionality_validation_failed": "Functionality consistency validation failed"
+    "direct_response_error": "直接応答が失敗しました: {error}",
+    "validation_failed": "検証失敗",
+    "execution_timeout": "実行タイムアウト",
+    "module_execution_failed": "モジュール実行失敗",
+    "parameter_validation_failed": "パラメータ検証失敗",
+    "intent_validation_failed": "意図検証失敗",
+    "functionality_validation_failed": "機能の一貫性検証失敗"
   },
   "search": {
-    "search_failed_error": "Search failed: {error}",
-    "all_strategies_failed": "All search strategies failed",
-    "quality_validation_failed": "Search result quality validation failed",
-    "no_valid_results": "No valid search results found",
-    "no_search_container": "No search result container found"
+    "search_failed_error": "検索失敗: {error}",
+    "all_strategies_failed": "すべての検索戦略が失敗しました",
+    "quality_validation_failed": "検索結果の品質検証失敗",
+    "no_valid_results": "有効な検索結果が見つかりませんでした",
+    "no_search_container": "検索結果コンテナが見つかりませんでした"
   },
   "task": {
-    "execution_error": "Execution error: {error}"
+    "execution_error": "実行エラー: {error}"
   },
   "analyzer": {
-    "analysis_failed": "Statistical analysis failed: {error}",
-    "api_key_in_url_parameter": "Detected API key parameter in URL",
-    "api_key_in_url_constant": "Detected API key parameter in URL constant",
-    "api_key_in_headers": "Detected authentication info in headers: {key}",
-    "possible_api_key_parameter": "Detected possible API key parameter: {param}"
+    "analysis_failed": "統計分析失敗: {error}",
+    "api_key_in_url_parameter": "URLにAPIキーパラメータが含まれていることが検出されました",
+    "api_key_in_url_constant": "URL定数にAPIキーパラメータが含まれていることが検出されました",
+    "api_key_in_headers": "ヘッダーに認証情報が含まれていることが検出されました: {key}",
+    "possible_api_key_parameter": "APIキーパラメータの可能性が検出されました: {param}"
   },
   "content_generation": {
-    "llm_manager_unavailable": "LLM manager unavailable",
-    "llm_client_unavailable": "LLM client unavailable",
-    "llm_manager_error_summary": "Content generation failed: LLM manager unavailable",
-    "llm_client_error_summary": "Content generation failed: LLM client unavailable",
-    "generation_error": "Content generation error: {error}",
-    "generation_failed": "Content generation failed: {error}"
+    "llm_manager_unavailable": "LLMマネージャーが利用できません",
+    "llm_client_unavailable": "LLMクライアントが利用できません",
+    "llm_manager_error_summary": "コンテンツ生成失敗: LLMマネージャーが利用できません",
+    "llm_client_error_summary": "コンテンツ生成失敗: LLMクライアントが利用できません",
+    "generation_error": "コンテンツ生成エラー: {error}",
+    "generation_failed": "コンテンツ生成失敗: {error}"
   },
   "template": {
-    "missing_required_parameter": "Missing required parameter: {param_name}",
-    "template_not_found": "Template not found: {template_id}",
-    "execution_failed": "Template {template_id} execution failed: {error}"
+    "missing_required_parameter": "必須パラメータがありません: {param_name}",
+    "template_not_found": "テンプレートが見つかりません: {template_id}",
+    "execution_failed": "テンプレート {template_id} の実行が失敗しました: {error}"
   },
   "llm_client": {
-    "server_error_retry": "{name} server error: {status_code}, retry {attempt}, waiting {wait_time} seconds...",
-    "client_error": "{name} client error: {status_code}",
-    "network_error_retry": "{name} network error: {error}, retry {attempt}",
-    "request_failed": "{name} request failed: {error}"
+    "server_error_retry": "{name} サーバーエラー: {status_code}, {attempt}回目の再試行, {wait_time}秒待機中...",
+    "client_error": "{name} クライアントエラー: {status_code}",
+    "network_error_retry": "{name} ネットワーク異常: {error}, {attempt}回目の再試行",
+    "request_failed": "{name} リクエスト失敗: {error}"
   },
   "llm_manager": {
-    "default_client_unavailable": "Default LLM client '{provider}' unavailable or creation failed",
-    "config_missing": "Default LLM client not specified in config or config does not exist: {provider}",
-    "no_available_client": "No available LLM client found",
-    "unsupported_type": "Unsupported LLM type: {client_type}",
-    "client_unavailable": "LLM client '{name}' unavailable",
-    "create_failed": "Failed to create LLM client {name}: {error}",
-    "switch_failed": "Switch failed, client '{name}' unavailable"
+    "default_client_unavailable": "デフォルトのLLMクライアント '{provider}' が利用できないか、作成に失敗しました",
+    "config_missing": "設定ファイルにデフォルトのLLMクライアントが指定されていないか、設定が存在しません: {provider}",
+    "no_available_client": "利用可能なLLMクライアントが見つかりませんでした",
+    "unsupported_type": "サポートされていないLLMタイプ: {client_type}",
+    "client_unavailable": "LLMクライアント '{name}' が利用できません",
+    "create_failed": "LLMクライアント {name} の作成が失敗しました: {error}",
+    "switch_failed": "切り替え失敗、クライアント '{name}' が利用できません"
   },
   "validation": {
-    "local_basic_failed": "Local basic validation failed",
-    "business_logic_failed": "Business logic validation failed",
-    "ai_validation_failed": "AI validation failed",
-    "llm_client_none": "llm_client is None",
-    "code_execution_failed": "Code execution failed: {error}",
-    "unknown_error": "Unknown error",
-    "execution_result_none": "Execution result is None",
-    "data_field_empty": "Data field is empty list, no valid data retrieved",
-    "data_field_none": "Data field is None",
-    "missing_data_field": "Missing data field",
-    "execution_result_empty": "Execution result is empty",
-    "result_must_be_dict": "Result content must be in dictionary format",
-    "result_status_error": "Result status is error",
-    "data_must_be_array": "Data field must be in array format",
-    "data_array_empty": "Data array is empty",
-    "data_item_must_be_dict": "Data item must be in dictionary format",
-    "data_item_missing_required_fields": "Data item missing required fields",
-    "insufficient_data_quantity": "Insufficient data quantity: need at least {min_items} items, actual {actual} items",
-    "insufficient_valid_data": "Retrieved {valid_count} valid data items, does not meet minimum requirement of {min_items} items",
-    "result_not_meet_requirements": "Result does not meet task requirements",
-    "ai_response_parse_failed": "AI response format cannot be parsed",
-    "ai_response_format_error": "AI validation response format error"
+    "local_basic_failed": "ローカル検証失敗",
+    "business_logic_failed": "ビジネスロジック検証失敗",
+    "ai_validation_failed": "AI検証失敗",
+    "llm_client_none": "llm_client が None です",
+    "code_execution_failed": "コード実行失敗: {error}",
+    "unknown_error": "不明なエラー",
+    "execution_result_none": "実行結果が None です",
+    "data_field_empty": "dataフィールドが空のリストです。有効なデータが取得されていません",
+    "data_field_none": "dataフィールドが None です",
+    "missing_data_field": "dataフィールドがありません",
+    "execution_result_empty": "実行結果が空です",
+    "result_must_be_dict": "結果の内容は辞書形式でなければなりません",
+    "result_status_error": "結果ステータスが error です",
+    "data_must_be_array": "dataフィールドは配列形式でなければなりません",
+    "data_array_empty": "データ配列が空です",
+    "data_item_must_be_dict": "データ項目は辞書形式でなければなりません",
+    "data_item_missing_required_fields": "データ項目に必須フィールドがありません",
+    "insufficient_data_quantity": "データ量が不足しています: 少なくとも{min_items}項目必要ですが、実際には{actual}項目です",
+    "insufficient_valid_data": "{valid_count}個の有効なデータが取得されましたが、最低{min_items}個の取得要件を満たしていません",
+    "result_not_meet_requirements": "結果がタスク要件を満たしていません",
+    "ai_response_parse_failed": "AI応答形式を解析できません",
+    "ai_response_format_error": "AI検証応答形式エラー"
   },
   "runner": {
-    "code_execution_timeout": "Code execution timeout ({timeout} seconds)",
-    "process_execution_error": "Process execution error: {error}",
-    "result_parse_error": "Result parsing error: {error}",
-    "network_security_blocked": "Blocked by network security policy",
-    "module_blocked_security_template": "Module '{missing_name}' blocked by security policy. Reason: {reason}. Original module: {original_module}",
-    "code_execution_timeout_handler": "Code execution timeout",
-    "security_policy_active": "Network security policy active",
-    "unknown_error": "Unknown error",
-    "security_blocked_modules": "Security policy blocked the following modules: {blocked_list}. {error}",
-    "execution_failed": "Execution failed: {error}",
-    "runner_error": "Runner error: {error}"
+    "code_execution_timeout": "コード実行タイムアウト ({timeout}秒)",
+    "process_execution_error": "プロセス実行エラー: {error}",
+    "result_parse_error": "結果解析エラー: {error}",
+    "network_security_blocked": "ネットワークセキュリティポリシーによってブロックされました",
+    "module_blocked_security_template": "セキュリティポリシーにより、モジュール '{missing_name}' のインポートがブロックされました。理由: {reason}。元のモジュール: {original_module}",
+    "code_execution_timeout_handler": "コード実行タイムアウト",
+    "security_policy_active": "ネットワークセキュリティポリシーが有効です",
+    "unknown_error": "不明なエラー",
+    "security_blocked_modules": "セキュリティポリシーにより、以下のモジュールのインポートがブロックされました: {blocked_list}。{error}",
+    "execution_failed": "実行失敗: {error}",
+    "runner_error": "ランナーエラー: {error}"
   },
   "config": {
-    "file_not_exists": "Configuration file {file} does not exist",
-    "load_failed": "Failed to load configuration file: {error}"
+    "file_not_exists": "設定ファイル {file} が存在しません",
+    "load_failed": "設定ファイルの読み込みに失敗しました: {error}"
   },
   "executor": {
-    "no_llm_response": "Attempt {optimization_attempt}: LLM returned no response",
-    "no_code_blocks_found": "Attempt {optimization_attempt}: No executable code blocks found",
-    "code_execution_failed": "Attempt {optimization_attempt}: Code execution failed",
-    "code_execution_error": "Attempt {optimization_attempt}: Code execution error",
-    "validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}",
-    "final_validation_failed": "Attempt {optimization_attempt} validation failed ({validation_type}): {failure_reason}, reached maximum optimization attempts",
-    "all_attempts_failed": "All {max_optimization_attempts} optimization attempts failed within single round"
+    "no_llm_response": "{optimization_attempt}回目の試行: LLMが応答を返しませんでした",
+    "no_code_blocks_found": "{optimization_attempt}回目の試行: 実行可能なコードブロックが見つかりませんでした",
+    "code_execution_failed": "{optimization_attempt}回目の試行: コード実行失敗",
+    "code_execution_error": "{optimization_attempt}回目の試行: コード実行エラー",
+    "validation_failed": "{optimization_attempt}回目の試行検証失敗（{validation_type}）: {failure_reason}",
+    "final_validation_failed": "{optimization_attempt}回目の試行検証失敗（{validation_type}）: {failure_reason}、最大最適化回数に達しました",
+    "all_attempts_failed": "単一ラウンド内の {max_optimization_attempts}回の最適化試行がすべて失敗しました"
   },
   "security": {
-    "dangerous_function_detected": "Detected dangerous function call: {pattern}",
-    "analysis_failed": "Security analysis failed: {error}"
+    "dangerous_function_detected": "危険な関数呼び出しが検出されました: {pattern}",
+    "analysis_failed": "セキュリティ分析失敗: {error}"
   },
   "network": {
-    "strict_mode_blocks_all": "Strict mode blocks all network access",
-    "domain_in_blacklist": "Domain {domain} is in blacklist",
-    "domain_not_in_whitelist": "Domain {domain} is not in whitelist",
-    "empty_hostname": "Empty hostname",
-    "domain_blacklisted": "Domain in blacklist: {domain}",
-    "domain_not_whitelisted": "Domain not in whitelist",
-    "ip_in_blocked_range": "IP in blocked range: {range}",
-    "resolved_ip_blocked": "Resolved IP {ip} in blocked range: {range}",
-    "cannot_resolve_hostname": "Cannot resolve hostname",
-    "unknown_policy_level": "Unknown network policy level: {policy_level}"
+    "strict_mode_blocks_all": "厳格モードではすべてのネットワークアクセスが禁止されています",
+    "domain_in_blacklist": "ドメイン {domain} はブラックリストにあります",
+    "domain_not_in_whitelist": "ドメイン {domain} はホワイトリストにありません",
+    "empty_hostname": "ホスト名が空です",
+    "domain_blacklisted": "ドメインはブラックリストにあります: {domain}",
+    "domain_not_whitelisted": "ドメインはホワイトリストにありません",
+    "ip_in_blocked_range": "IPはブロックされた範囲にあります: {range}",
+    "resolved_ip_blocked": "解決されたIP {ip} はブロックされた範囲にあります: {range}",
+    "cannot_resolve_hostname": "ホスト名を解決できません",
+    "unknown_policy_level": "不明なネットワークポリシーレベル: {policy_level}"
   }
 }

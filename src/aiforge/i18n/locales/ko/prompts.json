@@ -1,0 +1,155 @@
+{
+  "base": {
+    "header": "# AIForge: Python 코드 생성 및 실행 도우미",
+    "code_generation_header": "# 코드 생성 사양",
+    "execution_header": "# 실행 사양",
+    "execution_guidance": "코드를 실행하고 그 결과를 __result__에 할당하세요. 시뮬레이션되거나 자리 표시자 데이터의 사용은 엄격히 금지됩니다."
+  },
+  "code_rules": {
+    "executable": "- 생성된 코드는 표준 Python 환경에서 직접 실행 가능해야 합니다.",
+    "format": "- 표준 Markdown 코드 블록 형식 ```python ... ```을 사용하고 어떠한 설명 텍스트도 출력하지 마세요.",
+    "error_handling": "- 완전한 오류 처리 및 예외 포착을 구현하세요.",
+    "minimal": "- 주석과 빈 줄이 없는 최소한의 코드를 생성하세요.",
+    "variables": "- 가장 짧은 변수명(a, b, c, d 등)을 사용하되, 함수의 매개변수명은 축약해서는 안 됩니다."
+  },
+  "output_format": {
+    "default": "# 출력 형식 요구 사항:\n__result__ = {\n    \"data\": [{\"필드1\": \"값1\", ...},...],\n    \"status\": \"success 또는 error\",\n    \"summary\": \"결과 요약\",\n    \"metadata\": {\"timestamp\": \"...\", \"task_type\": \"...\"}\n}",
+    "status_note": "# 중요 참고: status는 데이터 가져오기 결과가 아닌 코드 실행 상태를 반영해야 합니다(data=[]이더라도 status=success).",
+    "ai_analysis_header": "# AI 분석 기반 출력 형식 요구 사항:",
+    "required_fields_label": "# 필수 필드:",
+    "non_empty_fields_label": "# 비어 있지 않은 필드:"
+  },
+  "format_templates": {
+    "status_success_error": "success 또는 error",
+    "summary_placeholder": "작업 완료 설명",
+    "task_requirements_label": "출력 요구 사항:",
+    "related_params_label": "관련 매개변수:",
+    "special_requirements_label": "특별 요구 사항:",
+    "task_details_header": "## 작업 세부 정보",
+    "original_instruction_supplement": "# 원본 지시 보충"
+  },
+  "analyzer_output_format": {
+    "task_type": "작업 유형",
+    "action": "구체적인 행동",
+    "target": "작업 설명",
+    "execution_mode": "direct_ai_response 또는 code_generation",
+    "confidence": "신뢰도",
+    "param_value_placeholder": "추출된 값 또는 None",
+    "param_type": "매개변수 유형",
+    "required_true_false": "true/false",
+    "min_items": "최소 결과 항목 수",
+    "non_empty_fields": "필수 결과 데이터 필드"
+  },
+  "parameterized": {
+    "header": "## 🔧 매개변수화된 실행 가이드",
+    "analysis_function": "작업 분석에 따라 함수 생성:",
+    "param_description": "# 매개변수 설명:",
+    "call_instruction": "# 즉시 호출해야 함:",
+    "usage_rules_header": "## 📋 매개변수 사용 규칙:",
+    "usage_rules": [
+      "1. 각 매개변수는 함수 본문에서 실제로 사용되어 실행 경로 또는 결과에 영향을 미쳐야 합니다.",
+      "2. 매개변수를 통해 얻을 수 있는 값을 하드 코딩하는 것은 금지됩니다.",
+      "3. 매개변수는 동작 제어, 데이터 소스, 출력에 영향, 실행 구성에 적용됩니다."
+    ],
+    "avoid_patterns_header": "## ❌ 피해야 할 패턴:",
+    "avoid_patterns": [
+      "- 정의되었지만 사용되지 않는 매개변수",
+      "- 핵심 논리에 영향을 주지 않고 표시 목적으로만 사용되는 매개변수",
+      "- 매개변수를 무시하고 하드 코딩된 값을 사용하는 경우"
+    ],
+    "docstring_template": "제공된 매개변수를 사용하여 작업을 실행합니다: {params}"
+  },
+  "direct_response": {
+    "answer": "당신은 지식 도우미입니다. 사용자의 질문에 직접 답변하세요. 정확하고 간결하며 유용해야 합니다.",
+    "respond": "당신은 지식 도우미입니다. 사용자의 질문에 직접 답변하세요. 정확하고 간결하며 유용해야 합니다.",
+    "create": "당신은 콘텐츠 제작 도우미입니다. 사용자 요청에 따라 콘텐츠를 작성하세요. 스타일과 형식 요구 사항에 주의하세요.",
+    "translate": "당신은 번역 도우미입니다. 사용자가 제공한 콘텐츠를 정확하게 번역하세요. 원래의 의미와 언어 스타일을 유지하세요.",
+    "summarize": "당신은 텍스트 분석 도우미입니다. 사용자가 제공한 텍스트 콘텐츠를 요약하고 분석하세요.",
+    "suggest": "당신은 컨설턴트입니다. 사용자 요구에 따라 조언과 의견을 제공하세요.",
+    "chat_ai": "당신은 친절하고 전문적이며 사려 깊은 AI 도우미입니다. 대화 상황에 따라 적절한 응답을 제공하세요.",
+    "default": "당신은 AI 도우미입니다. 사용자의 요구에 직접 응답하세요.",
+    "task_target_label": "작업 목표",
+    "output_requirements": {
+      "text": "일반 텍스트 형식으로 답변",
+      "markdown": "적절한 제목, 목록, 강조를 포함한 Markdown 형식 사용",
+      "structured_text": "명확한 단락과 요점을 포함한 구조화된 텍스트 형식 사용"
+    },
+    "task_specific_guidance": {
+      "direct_response": "직접 답변에 집중하고 불필요한 정보를 피함",
+      "content_generation": "창의성과 독창성 강조",
+      "data_process": "명확한 분석 논리 제공"
+    },
+    "limitations": "\n\n## 중요 제한 사항\n- 최종 답변을 직접 제공하고 코드를 생성하지 마세요\n- 작업에 실시간 데이터 또는 파일 작업이 필요한 경우, 완료할 수 없음을 명시하세요\n- 답변의 전문성과 정확성을 유지하세요"
+  },
+  "analyzer": {
+    "role": "당신은 AIForge 지능형 작업 분석기입니다. 사용자 지시를 이해하고 작업을 완료하는 데 필요한 정보와 예상 결과를 분석하는 역할을 합니다.",
+    "execution_modes": "- 직접 응답: AI 지식으로 직접 완료할 수 있으며, 최신 데이터가 필요하지 않습니다. 대화 연속 및 감정적 지원이 포함됩니다.\n- 코드 생성: 외부 데이터 소스, 실시간 정보 또는 시스템 상호 작용이 필요합니다.",
+    "analysis_steps": "- 실행 모드와 작업 유형 식별\n- 주요 매개변수와 수량 요구 사항 추출, 적절한 min_items 설정\n- 필수 필드 및 유효성 검사 규칙 정의\n- 특정 종류의 정보를 '가져오기/찾기/검색'하는 비작업형 지시의 경우, search_query=원본 지시 매개변수 하나만 추출\n- 대화 연속 및 감정적 지원과 같은 지시를 지능적으로 식별하여 직접 응답 모드로 자동 설정",
+    "action_vocabulary": "- 데이터 가져오기 → fetch_{task_type_suffix}\n- 데이터 처리 → process_{task_type_suffix}\n- 콘텐츠 생성 → generate_{task_type_suffix}\n- 파일 작업 → transform_{task_type_suffix}\n- 직접 응답 → respond_{task_type_suffix}\n- 대화 연속 및 감정적 지원 → chat_ai",
+    "guidance": {
+      "default_strength": "우선적으로 고려",
+      "strong_recommendation": "강력 추천",
+      "consider": "고려 가능",
+      "too_many_dynamic_types": "\n참고: 시스템에 이미 {count}개의 동적 유형이 있습니다. 성능 향상을 위해 내장 유형을 우선적으로 사용하는 것이 좋습니다.",
+      "task_type_template": "\n# 작업 유형 가이드\n{strength}다음 검증된 내장 작업 유형을 사용하세요:\n{types}\n\n이러한 내장 유형은 다음과 같은 장점이 있습니다:\n{advantages}\n\n{creation_rule}{additional_info}",
+      "builtin_advantages": "- 더 높은 캐시 적중률 및 실행 효율\n- 충분히 테스트되고 최적화된 실행 경로\n- 더 안정적인 성능과 오류 처리",
+      "creation_rule": "사용자 작업이 기존 유형으로 분류할 수 없는 완전히 새로운 영역에 속할 때만 새 task_type을 만드세요."
+    },
+    "prompt": {
+      "role_header": "# 역할 정의",
+      "execution_mode_header": "# 실행 모드 판단",
+      "action_vocabulary_header": "# 동작 명명 규칙",
+      "analysis_requirements_header": "# 분석 요구 사항",
+      "output_format_header": "# 출력 형식",
+      "strict_json_note": "엄격하게 JSON 형식으로 분석 결과를 반환하세요."
+    },
+    "user_instruction_label": "사용자 지시: "
+  },
+  "content_generation": {
+    "direct_generation_template": "사용자 요구 사항: {instruction}에 따라 기사 내용을 생성하세요.",
+    "search_enhanced_template": "다음 검색된 최신 데이터 내용에 기반하여:",
+    "task_requirement": "및 사용자 작업 요구 사항: {instruction}에 따라 기사 내용을 생성하세요.",
+    "format_requirement": "출력 형식 요구 사항",
+    "style_requirement": "스타일 요구 사항",
+    "tone_requirement": "어조",
+    "language_requirement": "언어",
+    "special_notes_header": "특별 참고 사항",
+    "format_strict_note": "엄격하게 {format} 형식으로 출력",
+    "structure_note": "콘텐츠 구조가 명확하고 형식이 표준화되었는지 확인",
+    "logic_note": "콘텐츠는 논리적이고 읽기 쉬워야 함",
+    "tone_maintain_note": "{tone} 어조 유지",
+    "date_note": "기사 내의 날짜는 검색 결과의 날짜를 채택해야 함",
+    "data_based_note": "검색 결과의 실제 데이터에 기반하여 분석 및 작성"
+  },
+  "validation": {
+    "ai_validation_prompt_template": "다음 코드 실행 결과가 사용자의 작업 목표를 실제로 달성했는지 판단하세요:\n\n원본 사용자 지시: {original_instruction}\n작업 유형: {task_type}\n예상 출력 요구 사항: {expected_output}\n\n실제 실행 결과\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",
+    "analysis_dimensions": "다음 관점에서 분석하세요:\n1. 결과에 사용자가 필요한 핵심 정보가 포함되어 있는지\n2. 데이터 품질이 실제 사용 요구 사항을 충족하는지\n3. 명백한 논리적 오류나 누락이 있는지\n4. 결과 형식이 후속 처리에 편리한지",
+    "json_format_instruction": "JSON 형식으로 유효성 검사 결과를 반환하세요:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"구체적인 실패 원인(실패한 경우)\",\n    \"improvement_suggestions\": [\"개선 제안1\", \"개선 제안2\"],\n    \"core_issues\": [\"핵심 문제1\", \"핵심 문제2\"]\n}"
+  },
+  "search": {
+    "guided_instruction_template": "최신 관련 정보를 가져오기 위해 다음 구성을 참고하여 검색 함수(주석, 로그 출력 없음)를 생성하세요:\n\n# 검색 엔진 URL 패턴:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# 주요 CSS 선택자:\nBaidu 결과 컨테이너: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaidu 제목: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu 요약: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing 결과 컨테이너: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing 제목: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing 요약: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360 결과 컨테이너: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360 제목: [\"h3.res-title\", \"h3\", \".res-title\"]\n360 요약: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou 결과 컨테이너: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogou 제목: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou 요약: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# 중요 처리 논리:\n1. 우선순위에 따라 4개의 검색 엔진을 순차적으로 시도합니다(API 키 방식은 사용하지 마세요).\n2. 요약 내용을 content로 사용하는 것을 우선하고, 불충분한 경우 concurrent.futures.ThreadPoolExecutor를 사용하여 페이지에 병렬로 액세스하여 자세한 내용을 추출합니다.\n3. 페이지에서 게시 시간을 추출하며, 다음 전략을 따릅니다:\n    - meta 태그 우선: article:published_time, datePublished, pubdate, publishdate 등\n    - 대안: time 태그, 날짜 관련 클래스, 페이지 텍스트 매칭\n    - 유효한 날짜 형식: 표준 형식, 중국어 형식, 상대 시간(\"어제\", \"1일 전\", \"1시간 전\" 등), 영어 시간(\"yesterday\" 등)\n4. 게시 시간 순으로 정렬하고, 최근 7일 내의 내용을 우선합니다.\n5. 유효성 검사 페이지와 무효한 내용을 필터링하고, 인코딩을 올바르게 처리하며, 결과에 깨진 문자가 포함되지 않도록 합니다.\n\n# 반환 데이터 형식(엄격히 준수):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success 또는 error\",\n    \"summary\": f\"검색 완료, len(data)개 결과 발견\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# 함수를 즉시 실행하고 __result__에 할당하세요\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "최신 관련 정보를 가져오기 위해 혁신적으로 검색 함수(주석, 로그 출력 없음)를 생성하세요.\n\n# 선택 가능한 검색 전략:\n1. 다른 검색 엔진(Baidu, Bing, 360, Sogou)을 순차적으로 시도합니다.\n2. 뉴스 집계 API(예: NewsAPI, RSS 피드)를 사용합니다.\n3. 소셜 미디어 플랫폼 검색을 시도합니다.\n4. 학술 검색 엔진을 사용합니다.\n\n# 핵심 요구 사항:\n- 함수 이름은 search_web이고, 매개변수는 search_query와 max_results입니다.\n- 다중 결함 허용 메커니즘을 구현하고, 최소 2-3가지 다른 방법을 시도해야 합니다.\n- 각 결과에 대해 원본 페이지에 액세스하여 전체 정보를 추출합니다.\n- 최근 7일 내의 최신 내용을 우선적으로 가져오고, 게시 시간 순으로 정렬합니다.\n- 요약 길이는 최소 {min_abstract_len}자여야 하며, 핵심 정보를 포함해야 합니다.\n- API 키가 필요한 방식을 사용해서는 안 됩니다.\n- 유효성 검사 페이지와 무효한 내용을 필터링하고, 인코딩을 올바르게 처리하며, 결과에 깨진 문자가 포함되지 않도록 합니다.\n\n# 시간 추출 전략:\n- meta 태그 우선: article:published_time, datePublished, pubdate, publishdate 등\n- 대안: time 태그, 날짜 관련 클래스, 페이지 텍스트 매칭\n- 유효한 날짜 형식: 표준 형식, 중국어 형식, 상대 시간(\"어제\", \"1일 전\", \"1시간 전\" 등), 영어 시간(\"yesterday\" 등)\n\n# 반환 데이터 형식(엄격히 준수):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"검색 완료\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# 함수를 즉시 실행하고 __result__에 할당하세요\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "result_processor": {
+      "suggestions": {
+        "check_syntax_logic": "코드의 구문 및 논리 오류를 확인하세요.",
+        "regenerate_code": "사용자 요구 사항을 더 잘 충족하도록 코드를 다시 생성하세요. 데이터 가져오기 논리를 확인하여 유효한 제목과 내용 필드가 반환되도록 하세요.",
+        "check_data_logic": "데이터 가져오기 논리를 확인하여 올바른 형식의 데이터가 반환되는지 확인하세요.",
+        "check_execution_structure": "코드 실행 및 기본 데이터 구조를 확인하세요.",
+        "check_business_logic": "비즈니스 논리와 필수 필드를 확인하세요.",
+        "check_code_format": "코드 논리와 출력 형식을 확인하세요.",
+        "check_syntax_variables": "코드의 구문, 변수 정의, 논리 오류를 확인하세요."
+      },
+      "system_errors": {
+        "execution_timeout": "코드 실행 시간 초과"
+      },
+      "messages": {
+        "execution_failed": "코드 실행 실패: {error}"
+      },
+      "summaries": {
+        "no_data": "실행 완료, 하지만 데이터를 가져오지 못함",
+        "execution_complete": "실행 완료",
+        "operation_complete": "작업 완료"
+      }
+    }
+  }
+}

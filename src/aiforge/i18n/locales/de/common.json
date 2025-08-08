@@ -1,50 +1,50 @@
 {
   "common": {
     "status": {
-      "success": "Success",
-      "error": "Error",
-      "pending": "Processing",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "failed": "Failed",
-      "running": "Running"
+      "success": "Erfolgreich",
+      "error": "Fehler",
+      "pending": "Ausstehend",
+      "cancelled": "Abgebrochen",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "running": "Läuft"
     },
     "actions": {
-      "confirm": "Confirm",
-      "cancel": "Cancel",
-      "retry": "Retry",
-      "skip": "Skip",
-      "continue": "Continue",
-      "start": "Start",
-      "stop": "Stop"
+      "confirm": "Bestätigen",
+      "cancel": "Abbrechen",
+      "retry": "Wiederholen",
+      "skip": "Überspringen",
+      "continue": "Weiter",
+      "start": "Starten",
+      "stop": "Stoppen"
     },
     "time_units": {
-      "seconds": "seconds",
-      "minutes": "minutes",
-      "hours": "hours",
-      "days": "days"
+      "seconds": "Sekunden",
+      "minutes": "Minuten",
+      "hours": "Stunden",
+      "days": "Tage"
     },
     "quantity": {
-      "items": "items",
-      "count": "count",
-      "total": "total",
-      "found": "found",
-      "valid": "valid"
+      "items": "Elemente",
+      "count": "Anzahl",
+      "total": "Gesamt",
+      "found": "Gefunden",
+      "valid": "Gültig"
     },
     "labels": {
       "name": "Name",
-      "type": "Type",
-      "description": "Description",
-      "timestamp": "Timestamp",
+      "type": "Typ",
+      "description": "Beschreibung",
+      "timestamp": "Zeitstempel",
       "status": "Status",
-      "result": "Result"
+      "result": "Ergebnis"
     },
     "placeholders": {
-      "loading": "Loading...",
-      "no_data": "No data",
-      "unknown": "Unknown",
-      "processing": "Processing...",
-      "waiting": "Waiting..."
+      "loading": "Wird geladen...",
+      "no_data": "Keine Daten verfügbar",
+      "unknown": "Unbekannt",
+      "processing": "Wird verarbeitet...",
+      "waiting": "Wartet..."
     }
   }
 }

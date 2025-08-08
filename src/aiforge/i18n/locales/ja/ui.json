@@ -1,180 +1,184 @@
 {
   "task": {
-    "template_code_generation": "Generate code based on template",
-    "system_prompt_generation": "Please generate code according to system prompt",
-    "processing_start": "Start processing task instruction, max rounds {max_rounds}, max optimization attempts per round {max_optimization}",
-    "round_execution": "Round {round} execution",
-    "all_rounds_failed_best_result": "All rounds failed, returning best result, execution ended!",
-    "round_success_completed": "Round {round} execution successful, task completed!",
-    "all_rounds_failed_no_result": "All rounds failed, no valid result obtained, execution ended!",
-    "round_failed_continue": "Round {round} execution failed, proceeding to next round",
-    "execution_summary": "Task {task_id} execution summary",
+    "template_code_generation": "テンプレートに基づいてコードを生成",
+    "system_prompt_generation": "システムプロンプトに基づいてコードを生成してください",
+    "processing_start": "タスク命令の処理を開始します。最大試行回数 {max_rounds}、1ラウンドあたりの最大最適化数 {max_optimization}",
+    "round_execution": "ラウンド {round} を実行中",
+    "all_rounds_failed_best_result": "すべてのラウンドが失敗しました。最良の結果を返して実行を終了します！",
+    "round_success_completed": "ラウンド {round} の実行に成功しました。タスク完了！",
+    "all_rounds_failed_no_result": "すべてのラウンドが失敗しました。有効な結果が得られませんでした。実行を終了します！",
+    "round_failed_continue": "ラウンド {round} が失敗しました。次のラウンドに進み、再開します",
+    "execution_summary": "タスク {task_id} の実行概要",
     "status": {
-      "created": "Created",
-      "running": "Running",
-      "completed": "Completed",
-      "failed": "Failed",
-      "cancelled": "Cancelled",
-      "unknown": "Unknown status"
+      "created": "作成済み",
+      "running": "実行中",
+      "completed": "完了",
+      "failed": "失敗",
+      "cancelled": "キャンセル済み",
+      "unknown": "不明なステータス"
     }
   },
   "execution": {
-    "direct_response_success": "Direct response: {action} - {instruction}...",
-    "cache_lookup": "Looking up cache...",
-    "cache_found": "Found {count} cached modules",
-    "cache_execution": "Executing cached modules...",
-    "ai_generation": "Generating new code...",
-    "cache_validation_passed": "Cache validation passed"
+    "direct_response_success": "直接応答: {action} - {instruction}...",
+    "cache_lookup": "キャッシュを検索中...",
+    "cache_found": "{count}個のキャッシュモジュールが見つかりました",
+    "cache_execution": "キャッシュモジュールを実行中...",
+    "ai_generation": "新しいコードを生成中...",
+    "cache_validation_passed": "キャッシュ検証に合格しました"
   },
   "search": {
-    "search_complete_success": "Search completed, found {count} results",
-    "process_system_cache": "System cache",
-    "process_ai_template": "AI template",
-    "process_ai_free": "AI free form",
-    "process_system_default": "System default",
+    "search_complete_success": "検索完了、{count}件の結果が見つかりました",
+    "process_system_cache": "システムキャッシュ",
+    "process_ai_template": "AIテンプレート",
+    "process_ai_free": "AI自由",
+    "process_system_default": "システムデフォルト",
     "engine_baidu": "Baidu",
     "engine_bing": "Bing",
     "engine_360": "360",
-    "engine_sogou": "Sogou"
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
   },
   "analyzer": {
     "recommendations": {
-      "enhance_builtin_guidance": "Recommend enhancing built-in type guidance, current built-in type usage rate is low",
-      "relax_creation_conditions": "Built-in type usage rate is very high, consider appropriately relaxing new type creation conditions",
-      "too_many_dynamic": "Too many dynamic types ({count}), recommend cleaning up low-priority types",
-      "low_priority_types": "Found {count} low-priority dynamic types, recommend considering removal",
-      "unused_builtin": "Built-in types {types} have 0% usage rate, may need to optimize keyword matching",
-      "all_good": "Task type usage is good, no special optimization needed"
+      "enhance_builtin_guidance": "組み込みタイプのガイダンスを強化することをお勧めします。現在、組み込みタイプの使用率が低いです",
+      "relax_creation_conditions": "組み込みタイプの使用率が非常に高いです。新しいタイプの作成条件を適度に緩和することを検討できます",
+      "too_many_dynamic": "動的タイプが多すぎます（{count}個）。優先度の低いタイプをクリーンアップすることをお勧めします",
+      "low_priority_types": "優先度の低い動的タイプが{count}個見つかりました。削除を検討することをお勧めします",
+      "unused_builtin": "組み込みタイプ {types} の使用率が0です。キーワードマッチングの最適化が必要かもしれません",
+      "all_good": "タスクタイプの使用状況は良好です。特別な最適化は必要ありません"
     },
     "adaptive": {
-      "task_type_guidance_header": "# Task Type Guidance",
-      "system_status_header": "# System Status:",
-      "current_guidance_strength": "Current guidance strength",
-      "builtin_usage_rate": "Built-in type usage rate",
-      "efficiency_note": "These built-in types have higher cache hit rates and execution efficiency.",
-      "use_builtin_types": "use the following verified built-in task types"
+      "task_type_guidance_header": "# タスクタイプガイダンス",
+      "system_status_header": "# システムステータス：",
+      "current_guidance_strength": "現在のガイダンス強度",
+      "builtin_usage_rate": "組み込みタイプ使用率",
+      "efficiency_note": "これらの組み込みタイプは、キャッシュヒット率と実行効率が高くなります。",
+      "use_builtin_types": "以下の検証済みの組み込みタスクタイプを使用してください"
     },
-    "priority_label": "priority",
+    "priority_label": "優先度",
     "use_cases": {
       "data_fetch": [
-        "Search web content",
-        "Get API data",
-        "Crawl news information"
+        "ウェブコンテンツを検索する",
+        "APIデータを取得する",
+        "ニュース情報をスクレイピングする"
       ],
       "data_process": [
-        "Data analysis",
-        "Statistical calculation",
-        "Format conversion"
+        "データ分析",
+        "統計計算",
+        "フォーマット変換"
       ],
       "file_operation": [
-        "Read/write files",
-        "Batch processing",
-        "Document operations"
+        "ファイルの読み書き",
+        "バッチ処理",
+        "ドキュメント操作"
       ],
       "automation": [
-        "Scheduled tasks",
-        "System monitoring",
-        "Automation workflows"
+        "定期タスク",
+        "システム監視",
+        "自動化プロセス"
       ],
       "content_generation": [
-        "Document generation",
-        "Report creation",
-        "Content creation"
+        "ドキュメント生成",
+        "レポート作成",
+        "コンテンツ作成"
       ],
       "direct_response": [
-        "Knowledge Q&A",
-        "Text creation",
-        "Translation and summarization"
+        "知識ベースのQ&A",
+        "テキスト作成",
+        "翻訳と要約"
       ]
     }
   },
   "content_generation": {
-    "generation_success": "Successfully generated {format} format content",
-    "search_based_suffix": " (based on {count} search results)",
-    "search_results_header": "Search results for '{instruction}'",
-    "result_label": "Result",
-    "title_label": "Title",
-    "publish_time_label": "Publish Time",
-    "abstract_label": "Abstract",
-    "content_label": "Content",
-    "no_title": "No title",
-    "unknown_time": "Unknown time",
-    "no_abstract": "No abstract",
-    "no_search_results_fallback": "No relevant search results found, please generate content based on existing knowledge."
+    "generation_success": "{format}形式のコンテンツが正常に生成されました",
+    "search_based_suffix": "（{count}件の検索結果に基づく）",
+    "search_results_header": "'{instruction}'に関する検索結果",
+    "result_label": "結果",
+    "title_label": "タイトル",
+    "publish_time_label": "公開時間",
+    "abstract_label": "概要",
+    "content_label": "コンテンツ",
+    "no_title": "タイトルなし",
+    "unknown_time": "不明な時間",
+    "no_abstract": "概要なし",
+    "no_search_results_fallback": "関連する検索結果が見つかりませんでした。既存の知識に基づいてコンテンツを生成してください。"
   },
   "progress": {
-    "connecting_ai": "[AIForge]🤖 Connecting to AI service{provider}...",
-    "waiting_response": "[AIForge]💭 Waiting for AI response...",
-    "processing_response": "[AIForge]✅ Received AI response, processing...",
-    "searching": "[AIForge]🔍 Searching: {query}",
-    "search_process": "[AIForge]🔍 Trying {search_type} search...",
-    "search_complete": "[AIForge]✅ Search completed, found {count} results",
-    "cache_lookup": "[AIForge]🔍 Looking up cache...",
-    "cache_found": "[AIForge]📦 Found {count} cached modules, validating...",
-    "cache_execution": "[AIForge]⚡ Executing cached code...",
-    "code_execution": "[AIForge]⚡ Executing {count} code blocks...",
-    "round_start": "[AIForge]🔄 Starting round {current}/{total} execution...",
-    "round_success": "[AIForge]🎉 Round {round_num} execution successful!",
-    "round_retry": "[AIForge]⚠️ Round {round_num} failed, preparing retry..."
+    "connecting_ai": "[AIForge]🤖 AIサービス{provider}に接続中...",
+    "waiting_response": "[AIForge]💭 AIからの返信を待機中...",
+    "processing_response": "[AIForge]✅ AIからの返信を受信しました。処理中...",
+    "searching": "[AIForge]🔍 検索中: {query}",
+    "search_process": "[AIForge]🔍 {search_type}検索を試行中...",
+    "search_complete": "[AIForge]✅ 検索完了、{count}件の結果が見つかりました",
+    "cache_lookup": "[AIForge]🔍 キャッシュを検索中...",
+    "cache_found": "[AIForge]📦 {count}個のキャッシュモジュールが見つかりました。検証中...",
+    "cache_execution": "[AIForge]⚡ キャッシュコードを実行中...",
+    "code_execution": "[AIForge]⚡ {count}個のコードブロックを実行中...",
+    "round_start": "[AIForge]🔄 第 {current}/{total} ラウンドを開始中...",
+    "round_success": "[AIForge]🎉 第 {round_num} ラウンドの実行に成功しました！",
+    "round_retry": "[AIForge]⚠️ 第 {round_num} ラウンドが失敗しました。再試行を準備中..."
   },
   "llm_manager": {
-    "config_updated": "Configuration updated",
-    "lazy_load_create": "Lazy loading LLM client: {name}",
-    "switch_success": "Switched to LLM client: {name}",
-    "cleanup_unused": "Cleaned up unused clients, keeping: {current_name}"
+    "config_updated": "設定が更新されました",
+    "lazy_load_create": "LLMクライアントの遅延読み込み作成: {name}",
+    "switch_success": "LLMクライアントに切り替えました: {name}",
+    "cleanup_unused": "未使用のクライアントをクリーンアップしました。保持中: {current_name}"
   },
   "validation": {
-    "validation_passed": "Validation passed",
-    "found_valid_results": "Found {count} valid results",
-    "ai_validation_exception": "AI validation exception, default pass: {error}"
+    "validation_passed": "検証に合格しました",
+    "found_valid_results": "{count}件の有効な結果が見つかりました",
+    "ai_validation_exception": "AI検証例外、デフォルトで合格: {error}"
   },
   "runner": {
-    "sandbox_info": "Sandbox environment: timeout={timeout}s, memory={memory}MB, CPU={cpu}s, file descriptors={fd}, file size={file_size}MB, processes={processes}",
-    "network_blocked_info": "Network access blocked by security policy",
-    "cleanup_warning": "Cleanup warning: {error}"
+    "sandbox_info": "サンドボックス実行環境: タイムアウト={timeout}秒, メモリ={memory}MB, CPU={cpu}秒, ファイルディスクリプタ={fd}, ファイルサイズ={file_size}MB, プロセス数={processes}",
+    "network_blocked_info": "ネットワークアクセスはセキュリティポリシーによってブロックされました",
+    "cleanup_warning": "クリーンアップ警告: {error}"
   },
   "formatter": {
-    "code_placeholder": "See code block above...",
-    "execution_result_title": "Code Execution Result",
-    "structured_feedback_message": "The following are code block execution results automatically returned by the runtime environment in execution order",
-    "execution_summary_title": "Execution Summary",
-    "item_column": "Item",
-    "value_column": "Value",
-    "total_rounds_label": "Total Rounds",
-    "history_label": "History",
-    "task_status_label": "Task Status",
-    "history_count_text": "{count} records",
-    "completed_text": "Completed",
-    "incomplete_text": "Incomplete",
-    "operation_completed": "Operation completed"
+    "code_placeholder": "上記のコードブロックを参照...",
+    "execution_result_title": "コード実行結果",
+    "structured_feedback_message": "以下は、実行環境が実行順序に従って自動的に返したコードブロックの実行結果です",
+    "execution_summary_title": "実行概要",
+    "item_column": "項目",
+    "value_column": "値",
+    "total_rounds_label": "総ラウンド数",
+    "history_label": "履歴",
+    "task_status_label": "タスクステータス",
+    "history_count_text": "{count}件",
+    "completed_text": "完了",
+    "incomplete_text": "未完了",
+    "operation_completed": "操作完了"
   },
   "executor": {
-    "start_execution_block": "Starting execution of code block: {block_name}",
-    "round_attempt": "Round {round_num}, attempt {optimization_attempt}",
-    "generating_code": "Generating code...",
-    "found_code_blocks": "Found {count} code blocks",
-    "validation_passed": "Attempt {optimization_attempt} validation passed!",
-    "best_result_summary": "Returning {count} best results"
+    "start_execution_block": "コードブロックの実行を開始: {block_name}",
+    "round_attempt": "第 {round_num} ラウンド、第 {optimization_attempt} 回目の試行",
+    "generating_code": "コードを生成中...",
+    "found_code_blocks": "{count}個のコードブロックが見つかりました",
+    "validation_passed": "第 {optimization_attempt} 回目の試行の検証に合格しました！",
+    "best_result_summary": "{count}件の最良の結果を返します"
   },
   "network": {
-    "validation_disabled": "Network validation disabled",
-    "open_mode_allows_all": "Open mode allows all network access",
-    "default_allow": "Default allow",
-    "domain_filtering_disabled": "Domain filtering disabled",
-    "domain_validation_passed": "Domain validation passed",
-    "domain_whitelisted": "Domain in whitelist: {domain}",
-    "ip_address_allowed": "IP address allowed",
-    "resolved_ip_allowed": "Resolved IP {ip} allowed",
-    "no_hostname": "No hostname",
-    "no_domain_restrictions": "No domain restrictions"
+    "validation_disabled": "ネットワーク検証は無効です",
+    "open_mode_allows_all": "オープンモードではすべてのネットワークアクセスが許可されます",
+    "default_allow": "デフォルトで許可",
+    "domain_filtering_disabled": "ドメインフィルタリングは無効です",
+    "domain_validation_passed": "ドメイン検証に合格しました",
+    "domain_whitelisted": "ドメインがホワイトリストにあります: {domain}",
+    "ip_address_allowed": "IPアドレスはアクセスが許可されています",
+    "resolved_ip_allowed": "解決されたIP {ip} はアクセスが許可されています",
+    "no_hostname": "ホスト名なし",
+    "no_domain_restrictions": "ドメイン制限なし"
   },
   "template": {
-    "title_label": "Title",
-    "url_label": "URL",
-    "content_description": "Detailed content (remove spaces and line breaks, at least {length} characters)",
-    "time_label": "Publication time",
-    "optional_empty": " (can be empty)",
-    "optional_empty_quotes": " (can be '')",
-    "corresponding_value": "Corresponding value"
+    "title_label": "タイトル",
+    "url_label": "リンク",
+    "content_description": "詳細コンテンツ（スペースと改行を削除し、少なくとも{length}文字）",
+    "time_label": "公開時間",
+    "optional_empty": "（空にすることができます）",
+    "optional_empty_quotes": "（''にすることができます）",
+    "corresponding_value": "対応する値"
   }
 }

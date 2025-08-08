@@ -1,0 +1,397 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "بحث": "بحث",  
+      "جلب": "جلب",  
+      "الحصول": "الحصول",  
+      "أخبار": "أخبار",  
+      "معلومات": "معلومات",  
+      "محتوى": "محتوى",  
+      "زحف": "زحف",  
+      "واجهة": "واجهة"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "تحليل": "تحليل",  
+      "معالجة": "معالجة",  
+      "حساب": "حساب",  
+      "إحصائيات": "إحصائيات",  
+      "تحويل": "تحويل"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "folder": "folder",  
+      "ملف": "ملف",  
+      "قراءة": "قراءة",  
+      "كتابة": "كتابة",  
+      "حفظ": "حفظ",  
+      "دفعة": "دفعة",  
+      "نسخ": "نسخ",  
+      "نقل": "نقل",  
+      "حذف": "حذف",  
+      "إعادة تسمية": "إعادة تسمية",  
+      "ضغط": "ضغط",  
+      "استخراج": "استخراج",  
+      "إنشاء": "إنشاء",  
+      "دليل": "دليل",  
+      "مجلد": "مجلد",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "تحليل": "تحليل",  
+        "إحصائيات": "إحصائيات",  
+        "حساب": "حساب",  
+        "معالجة البيانات": "معالجة البيانات",  
+        "تنظيف": "تنظيف"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "أتمتة": "أتمتة",  
+      "جدولة": "جدولة",  
+      "مراقبة": "مراقبة",  
+      "مهمة": "مهمة"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "توليد": "توليد",  
+      "إنشاء": "إنشاء",  
+      "كتابة": "كتابة",  
+      "تقرير": "تقرير"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "ما هو": "ما هو",  
+      "كيف": "كيف",  
+      "لماذا": "لماذا",  
+      "اشرح": "اشرح",  
+      "وصف": "وصف",  
+      "تعريف": "تعريف",  
+      "مفهوم": "مفهوم",  
+      "مبدأ": "مبدأ",  
+      "فرق": "فرق",  
+      "مقارنة": "مقارنة",  
+      "اكتب": "اكتب",  
+      "ألف": "ألف",  
+      "مسودة": "مسودة",  
+      "ترجم": "ترجم",  
+      "حول إلى": "حول إلى",  
+      "أعد كتابة": "أعد كتابة",  
+      "باللغة": "باللغة",  
+      "لخص": "لخص",  
+      "خلاصة": "خلاصة",  
+      "مخطط": "مخطط",  
+      "حلل هذا": "حلل هذا",  
+      "فسر": "فسر",  
+      "اقترح": "اقترح",  
+      "أوصي": "أوصي",  
+      "رأي": "رأي",  
+      "وجهة نظر": "وجهة نظر",  
+      "قيم": "قيم",  
+      "ما رأيك": "ما رأيك",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "اليوم": "اليوم",  
+        "الآن": "الآن",  
+        "الأحدث": "الأحدث",  
+        "الحالي": "الحالي",  
+        "الوقت الفعلي": "الوقت الفعلي",  
+        "حاليا": "حاليا",  
+        "الطقس": "الطقس",  
+        "سعر السهم": "سعر السهم",  
+        "أخبار": "أخبار",  
+        "سعر الصرف": "سعر الصرف",  
+        "السعر": "السعر",  
+        "الحالة": "الحالة"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "تنسيق": "تنسيق",  
+      "تنسيق الإخراج": "تنسيق الإخراج",  
+      "نوع": "نوع",  
+      "امتداد": "امتداد",  
+      "تنسيق الملف": "تنسيق الملف"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "نمط": "نمط",  
+      "موضوع": "موضوع",  
+      "قالب": "قالب"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "لغة": "لغة",  
+      "محلي": "محلي",  
+      "تدويل": "تدويل"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "نبرة": "نبرة",  
+      "مزاج": "مزاج",  
+      "عاطفة": "عاطفة"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "لغة الترميز"],  
+    "html": ["html", "webpage", "web", "صفحة ويب", "ويب"],  
+    "json": ["json", "data format", "تنسيق البيانات"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "مستند"],  
+    "txt": ["txt", "text", "plain text", "نص", "نص عادي"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "بحث", "جلب", "الحصول", "العثور", "استرجاع", "البحث"],  
+    "target_keywords": ["search", "query", "بحث", "استعلام"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "استعلام البحث", "استعلام", "كلمة مفتاحية", "مصطلح البحث", "مصطلح", "كلمات مفتاحية"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "بحث": "بحث",  
+      "العثور": "العثور",  
+      "البحث": "البحث",  
+      "تحديد الموقع": "تحديد الموقع"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "جلب": "جلب",  
+      "الحصول": "الحصول",  
+      "استرجاع": "استرجاع",  
+      "الحصول على": "الحصول على"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "تحليل": "تحليل",  
+      "فحص": "فحص",
+      "حساب": "حساب",  
+      "حوسبة": "حوسبة"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "معالجة": "معالجة",  
+      "تحويل": "تحويل",  
+      "التعامل": "التعامل"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "توليد": "توليد",  
+      "إنشاء": "إنشاء",  
+      "إنتاج": "إنتاج",  
+      "صنع": "صنع"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "حفظ": "حفظ",  
+      "كتابة": "كتابة",  
+      "تخزين": "تخزين",  
+      "الاستمرار": "الاستمرار"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "رد": "رد",  
+      "إجابة": "إجابة",  
+      "شرح": "شرح"
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "ترجم": "ترجم",  
+      "تحويل": "تحويل",  
+      "تفسير": "تفسير"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "لخص": "لخص",  
+      "خلاصة": "خلاصة",  
+      "تكثيف": "تكثيف",  
+      "مخطط": "مخطط"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "اقترح": "اقترح",  
+      "أوصي": "أوصي",  
+      "اقتراح": "اقتراح",  
+      "نصح": "نصح"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "ابحث عن (.+?)(?:\\s|،|\\.|$)",  
+        "العثور على (.+?)(?:\\s|،|\\.|$)",  
+        "البحث عن (.+?)(?:\\s|،|\\.|$)"  
+      ],  
+      "type": "str"  
+    },
+    "required_count": {  
+      "patterns": [  
+        "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+        "(?:at most|maximum|max)\\s+(\\d+)",  
+        "(?:first|top)\\s+(\\d+)",  
+        "(?:at least|minimum|min)\\s+(\\d+)",  
+        "process\\s+(\\d+)",  
+        "generate\\s+(\\d+)",  
+        "get\\s+(\\d+)",  
+        "(\\d+)(?:\\s+(?:عناصر|نتائج|إدخالات|سجلات))",  
+        "(?:على الأكثر|الحد الأقصى|أقصى)\\s+(\\d+)",  
+        "(?:الأول|الأعلى)\\s+(\\d+)",  
+        "(?:على الأقل|الحد الأدنى|أدنى)\\s+(\\d+)",  
+        "معالجة\\s+(\\d+)",  
+        "توليد\\s+(\\d+)",  
+        "الحصول على\\s+(\\d+)"  
+      ],  
+      "type": "int"  
+    },  
+    "file_path": {  
+      "patterns": [  
+        "([^\\s]+\\.[a-zA-Z]+)",  
+        "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+        "ملف\\s+(.+?)(?:\\s|،|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "url": {  
+      "patterns": ["(https?://[^\\s]+)"],  
+      "type": "str"  
+    },  
+    "content": {  
+      "patterns": [  
+        "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "محتوى[:\\s]+(.+?)(?:\\s|،|\\.|$)",  
+        "نص[:\\s]+(.+?)(?:\\s|،|\\.|$)"  
+      ],  
+      "type": "str"  
+    },  
+    "style": {  
+      "patterns": [  
+        "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+        "نمط[:\\s]+(.+?)(?:\\s|،|\\.|$)",  
+        "موضوع[:\\s]+(.+?)(?:\\s|،|\\.|$)"  
+      ],  
+      "type": "str"  
+    }
+  }
+}

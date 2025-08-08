@@ -1,0 +1,184 @@
+{
+  "task": {
+    "template_code_generation": "Tạo mã dựa trên mẫu",
+    "system_prompt_generation": "Vui lòng tạo mã dựa trên lời nhắc của hệ thống",
+    "processing_start": "Bắt đầu xử lý hướng dẫn tác vụ, số lần thử tối đa {max_rounds}, số lần tối ưu hóa tối đa mỗi vòng {max_optimization}",
+    "round_execution": "Đang thực thi vòng {round}",
+    "all_rounds_failed_best_result": "Tất cả các vòng thực thi đã thất bại, trả về kết quả tốt nhất, thực thi đã kết thúc!",
+    "round_success_completed": "Thực thi vòng {round} thành công, tác vụ đã hoàn thành!",
+    "all_rounds_failed_no_result": "Tất cả các vòng thực thi đã thất bại, không có kết quả hợp lệ nào được lấy, thực thi đã kết thúc!",
+    "round_failed_continue": "Thực thi vòng {round} đã thất bại, chuyển sang vòng tiếp theo",
+    "execution_summary": "Tóm tắt thực thi tác vụ {task_id}",
+    "status": {
+      "created": "Đã tạo",
+      "running": "Đang chạy",
+      "completed": "Đã hoàn thành",
+      "failed": "Thất bại",
+      "cancelled": "Đã hủy",
+      "unknown": "Trạng thái không xác định"
+    }
+  },
+  "execution": {
+    "direct_response_success": "Phản hồi trực tiếp: {action} - {instruction}...",
+    "cache_lookup": "Đang tra cứu bộ nhớ cache...",
+    "cache_found": "Tìm thấy {count} mô-đun trong bộ nhớ cache",
+    "cache_execution": "Đang thực thi mô-đun trong bộ nhớ cache...",
+    "ai_generation": "Đang tạo mã mới...",
+    "cache_validation_passed": "Xác thực bộ nhớ cache thành công"
+  },
+  "search": {
+    "search_complete_success": "Tìm kiếm hoàn tất, tìm thấy {count} kết quả",
+    "process_system_cache": "Bộ nhớ cache hệ thống",
+    "process_ai_template": "Mẫu AI",
+    "process_ai_free": "AI tự do",
+    "process_system_default": "Mặc định hệ thống",
+    "engine_baidu": "Baidu",
+    "engine_bing": "Bing",
+    "engine_360": "360",
+    "engine_sogou": "Sogou",
+    "engine_google": "Google",  
+    "engine_yandex": "Yandex",  
+    "engine_naver": "Naver",  
+    "engine_yahoo_japan": "Yahoo Japan"  
+  },
+  "analyzer": {
+    "recommendations": {
+      "enhance_builtin_guidance": "Đề xuất tăng cường hướng dẫn cho các loại tích hợp sẵn, tỷ lệ sử dụng hiện tại của các loại tích hợp sẵn thấp",
+      "relax_creation_conditions": "Tỷ lệ sử dụng loại tích hợp sẵn rất cao, có thể xem xét nới lỏng các điều kiện tạo loại mới một cách thích hợp",
+      "too_many_dynamic": "Có quá nhiều loại động ({count}), đề xuất dọn dẹp các loại có mức độ ưu tiên thấp",
+      "low_priority_types": "Phát hiện {count} loại động có mức độ ưu tiên thấp, đề xuất xem xét xóa",
+      "unused_builtin": "Loại tích hợp sẵn {types} có tỷ lệ sử dụng là 0, có thể cần tối ưu hóa việc khớp từ khóa",
+      "all_good": "Tình hình sử dụng loại tác vụ tốt, không cần tối ưu hóa đặc biệt"
+    },
+    "adaptive": {
+      "task_type_guidance_header": "# Hướng dẫn loại tác vụ",
+      "system_status_header": "# Trạng thái hệ thống:",
+      "current_guidance_strength": "Cường độ hướng dẫn hiện tại",
+      "builtin_usage_rate": "Tỷ lệ sử dụng loại tích hợp sẵn",
+      "efficiency_note": "Các loại tích hợp sẵn này có tỷ lệ truy cập bộ nhớ cache cao hơn và hiệu suất thực thi tốt hơn.",
+      "use_builtin_types": "Sử dụng các loại tác vụ tích hợp sẵn đã được xác minh sau đây"
+    },
+    "priority_label": "Mức độ ưu tiên",
+    "use_cases": {
+      "data_fetch": [
+        "Tìm kiếm nội dung trang web",
+        "Lấy dữ liệu API",
+        "Trích xuất thông tin tin tức"
+      ],
+      "data_process": [
+        "Phân tích dữ liệu",
+        "Tính toán thống kê",
+        "Chuyển đổi định dạng"
+      ],
+      "file_operation": [
+        "Đọc và ghi tệp",
+        "Xử lý hàng loạt",
+        "Thao tác tài liệu"
+      ],
+      "automation": [
+        "Tác vụ định kỳ",
+        "Giám sát hệ thống",
+        "Quy trình tự động hóa"
+      ],
+      "content_generation": [
+        "Tạo tài liệu",
+        "Tạo báo cáo",
+        "Sáng tạo nội dung"
+      ],
+      "direct_response": [
+        "Hỏi đáp kiến thức",
+        "Sáng tạo văn bản",
+        "Dịch và tóm tắt"
+      ]
+    }
+  },
+  "content_generation": {
+    "generation_success": "Đã tạo thành công nội dung ở định dạng {format}",
+    "search_based_suffix": "(dựa trên {count} kết quả tìm kiếm)",
+    "search_results_header": "Kết quả tìm kiếm về '{instruction}'",
+    "result_label": "Kết quả",
+    "title_label": "Tiêu đề",
+    "publish_time_label": "Thời gian xuất bản",
+    "abstract_label": "Tóm tắt",
+    "content_label": "Nội dung",
+    "no_title": "Không có tiêu đề",
+    "unknown_time": "Thời gian không xác định",
+    "no_abstract": "Không có tóm tắt",
+    "no_search_results_fallback": "Không tìm thấy kết quả tìm kiếm liên quan, vui lòng tạo nội dung dựa trên kiến thức đã có."
+  },
+  "progress": {
+    "connecting_ai": "[AIForge]🤖 Đang kết nối dịch vụ AI {provider}...",
+    "waiting_response": "[AIForge]💭 Đang chờ phản hồi từ AI...",
+    "processing_response": "[AIForge]✅ Đã nhận được phản hồi từ AI, đang xử lý...",
+    "searching": "[AIForge]🔍 Đang tìm kiếm: {query}",
+    "search_process": "[AIForge]🔍 Đang thử tìm kiếm {search_type}...",
+    "search_complete": "[AIForge]✅ Tìm kiếm hoàn tất, tìm thấy {count} kết quả",
+    "cache_lookup": "[AIForge]🔍 Đang tra cứu bộ nhớ cache...",
+    "cache_found": "[AIForge]📦 Tìm thấy {count} mô-đun trong bộ nhớ cache, đang xác thực...",
+    "cache_execution": "[AIForge]⚡ Đang thực thi mã trong bộ nhớ cache...",
+    "code_execution": "[AIForge]⚡ Đang thực thi {count} khối mã...",
+    "round_start": "[AIForge]🔄 Bắt đầu thực thi vòng {current}/{total}...",
+    "round_success": "[AIForge]🎉 Thực thi vòng {round_num} thành công!",
+    "round_retry": "[AIForge]⚠️ Vòng {round_num} đã thất bại, đang chuẩn bị thử lại..."
+  },
+  "llm_manager": {
+    "config_updated": "Đã cập nhật cấu hình",
+    "lazy_load_create": "Tạo LLM client bằng lazy-load: {name}",
+    "switch_success": "Đã chuyển sang LLM client: {name}",
+    "cleanup_unused": "Đã dọn dẹp các client không sử dụng, giữ lại: {current_name}"
+  },
+  "validation": {
+    "validation_passed": "Xác thực thành công",
+    "found_valid_results": "Tìm thấy {count} kết quả hợp lệ",
+    "ai_validation_exception": "Ngoại lệ xác thực AI, mặc định thành công: {error}"
+  },
+  "runner": {
+    "sandbox_info": "Môi trường chạy sandbox: thời gian chờ={timeout}s, bộ nhớ={memory}MB, CPU={cpu}s, mô tả tệp={fd}, kích thước tệp={file_size}MB, số tiến trình={processes}",
+    "network_blocked_info": "Truy cập mạng đã bị chặn bởi chính sách bảo mật",
+    "cleanup_warning": "Cảnh báo dọn dẹp: {error}"
+  },
+  "formatter": {
+    "code_placeholder": "Xem khối mã ở trên...",
+    "execution_result_title": "Kết quả thực thi mã",
+    "structured_feedback_message": "Dưới đây là kết quả thực thi khối mã được môi trường chạy tự động trả về theo thứ tự thực thi",
+    "execution_summary_title": "Tóm tắt thực thi",
+    "item_column": "Mục",
+    "value_column": "Giá trị",
+    "total_rounds_label": "Tổng số vòng",
+    "history_label": "Lịch sử",
+    "task_status_label": "Trạng thái tác vụ",
+    "history_count_text": "{count} mục",
+    "completed_text": "Hoàn thành",
+    "incomplete_text": "Chưa hoàn thành",
+    "operation_completed": "Thao tác hoàn thành"
+  },
+  "executor": {
+    "start_execution_block": "Bắt đầu thực thi khối mã: {block_name}",
+    "round_attempt": "Vòng {round_num}, lần thử tối ưu hóa thứ {optimization_attempt}",
+    "generating_code": "Đang tạo mã...",
+    "found_code_blocks": "Tìm thấy {count} khối mã",
+    "validation_passed": "Xác thực lần thử thứ {optimization_attempt} thành công!",
+    "best_result_summary": "Trả về {count} kết quả tốt nhất"
+  },
+  "network": {
+    "validation_disabled": "Xác thực mạng đã bị tắt",
+    "open_mode_allows_all": "Chế độ mở cho phép tất cả các truy cập mạng",
+    "default_allow": "Cho phép mặc định",
+    "domain_filtering_disabled": "Lọc tên miền đã bị tắt",
+    "domain_validation_passed": "Xác thực tên miền thành công",
+    "domain_whitelisted": "Tên miền nằm trong danh sách trắng: {domain}",
+    "ip_address_allowed": "Địa chỉ IP được phép truy cập",
+    "resolved_ip_allowed": "IP đã phân giải {ip} được phép truy cập",
+    "no_hostname": "Không có tên máy chủ",
+    "no_domain_restrictions": "Không có hạn chế tên miền"
+  },
+  "template": {
+    "title_label": "Tiêu đề",
+    "url_label": "Liên kết",
+    "content_description": "Nội dung chi tiết (xóa khoảng trắng và ngắt dòng, ít nhất {length} ký tự)",
+    "time_label": "Thời gian xuất bản",
+    "optional_empty": "(có thể để trống)",
+    "optional_empty_quotes": "(có thể là '')",
+    "corresponding_value": "Giá trị tương ứng"
+  }
+}

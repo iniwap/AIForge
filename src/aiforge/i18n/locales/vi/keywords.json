@@ -1,0 +1,397 @@
+{  
+  "keywords": {  
+    "data_fetch": {  
+      "search": "search",  
+      "fetch": "fetch",   
+      "get": "get",  
+      "news": "news",  
+      "information": "information",  
+      "content": "content",  
+      "crawl": "crawl",  
+      "api": "api",  
+      "interface": "interface",  
+      "tìm kiếm": "tìm kiếm",  
+      "lấy": "lấy",  
+      "nhận": "nhận",  
+      "tin tức": "tin tức",  
+      "thông tin": "thông tin",  
+      "nội dung": "nội dung",  
+      "thu thập": "thu thập",  
+      "giao diện": "giao diện"  
+    },  
+    "data_process": {  
+      "analyze": "analyze",  
+      "process": "process",  
+      "calculate": "calculate",  
+      "statistics": "statistics",  
+      "transform": "transform",  
+      "phân tích": "phân tích",  
+      "xử lý": "xử lý",  
+      "tính toán": "tính toán",  
+      "thống kê": "thống kê",  
+      "chuyển đổi": "chuyển đổi"  
+    },  
+    "file_operation": {  
+      "file": "file",  
+      "read": "read",  
+      "write": "write",  
+      "save": "save",  
+      "batch": "batch",  
+      "copy": "copy",  
+      "move": "move",  
+      "delete": "delete",  
+      "rename": "rename",  
+      "compress": "compress",  
+      "extract": "extract",  
+      "create": "create",  
+      "directory": "directory",  
+      "tệp": "tệp",  
+      "đọc": "đọc",  
+      "viết": "viết",  
+      "lưu": "lưu",  
+      "hàng loạt": "hàng loạt",  
+      "sao chép": "sao chép",  
+      "di chuyển": "di chuyển",  
+      "xóa": "xóa",  
+      "đổi tên": "đổi tên",  
+      "nén": "nén",  
+      "giải nén": "giải nén",  
+      "tạo": "tạo",  
+      "thư mục": "thư mục",  
+      "folder": "folder",  
+      "exclude": {  
+        "analyze": "analyze",  
+        "statistics": "statistics",  
+        "calculate": "calculate",  
+        "process data": "process data",  
+        "clean": "clean",  
+        "phân tích": "phân tích",  
+        "thống kê": "thống kê",  
+        "tính toán": "tính toán",  
+        "xử lý dữ liệu": "xử lý dữ liệu",  
+        "làm sạch": "làm sạch"  
+      }  
+    },  
+    "automation": {  
+      "automation": "automation",  
+      "schedule": "schedule",  
+      "monitor": "monitor",  
+      "task": "task",  
+      "tự động hóa": "tự động hóa",  
+      "lập lịch": "lập lịch",  
+      "giám sát": "giám sát",  
+      "nhiệm vụ": "nhiệm vụ"  
+    },  
+    "content_generation": {  
+      "generate": "generate",  
+      "create": "create",  
+      "writing": "writing",  
+      "report": "report",  
+      "tạo ra": "tạo ra",  
+      "tạo": "tạo",  
+      "viết": "viết",  
+      "báo cáo": "báo cáo"  
+    },  
+    "direct_response": {  
+      "what is": "what is",  
+      "how": "how",  
+      "why": "why",  
+      "explain": "explain",  
+      "describe": "describe",  
+      "define": "define",  
+      "concept": "concept",  
+      "principle": "principle",  
+      "difference": "difference",  
+      "compare": "compare",  
+      "write a": "write a",  
+      "write an": "write an",  
+      "compose": "compose",  
+      "draft": "draft",  
+      "translate": "translate",  
+      "convert to": "convert to",  
+      "rewrite as": "rewrite as",  
+      "in language": "in language",  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "outline": "outline",  
+      "analyze this": "analyze this",  
+      "interpret": "interpret",  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "opinion": "opinion",  
+      "view": "view",  
+      "evaluate": "evaluate",  
+      "what do you think": "what do you think",  
+      "là gì": "là gì",  
+      "như thế nào": "như thế nào",  
+      "tại sao": "tại sao",  
+      "giải thích": "giải thích",  
+      "mô tả": "mô tả",  
+      "định nghĩa": "định nghĩa",  
+      "khái niệm": "khái niệm",  
+      "nguyên tắc": "nguyên tắc",  
+      "sự khác biệt": "sự khác biệt",  
+      "so sánh": "so sánh",  
+      "viết": "viết",  
+      "soạn": "soạn",  
+      "bản thảo": "bản thảo",  
+      "dịch": "dịch",  
+      "chuyển đổi thành": "chuyển đổi thành",  
+      "viết lại thành": "viết lại thành",  
+      "bằng ngôn ngữ": "bằng ngôn ngữ",  
+      "tóm tắt": "tóm tắt",  
+      "tóm lược": "tóm lược",  
+      "đề cương": "đề cương",  
+      "phân tích này": "phân tích này",  
+      "diễn giải": "diễn giải",  
+      "đề xuất": "đề xuất",  
+      "khuyến nghị": "khuyến nghị",  
+      "ý kiến": "ý kiến",  
+      "quan điểm": "quan điểm",  
+      "đánh giá": "đánh giá",  
+      "bạn nghĩ gì": "bạn nghĩ gì",  
+      "exclude": {  
+        "today": "today",  
+        "now": "now",  
+        "latest": "latest",  
+        "current": "current",  
+        "real-time": "real-time",  
+        "currently": "currently",  
+        "weather": "weather",  
+        "stock price": "stock price",  
+        "news": "news",  
+        "exchange rate": "exchange rate",  
+        "price": "price",  
+        "status": "status",  
+        "hôm nay": "hôm nay",  
+        "bây giờ": "bây giờ",  
+        "mới nhất": "mới nhất",  
+        "thời gian thực": "thời gian thực",  
+        "hiện tại": "hiện tại",  
+        "thời tiết": "thời tiết",  
+        "giá cổ phiếu": "giá cổ phiếu",  
+        "tin tức": "tin tức",  
+        "tỷ giá": "tỷ giá",  
+        "giá": "giá",  
+        "trạng thái": "trạng thái"  
+      }  
+    }  
+  },  
+  "semantic_fields": {  
+    "format": {  
+      "format": "format",  
+      "output_format": "output_format",  
+      "type": "type",  
+      "extension": "extension",  
+      "file_format": "file_format",  
+      "định dạng": "định dạng",  
+      "định dạng đầu ra": "định dạng đầu ra",  
+      "loại": "loại",  
+      "phần mở rộng": "phần mở rộng",  
+      "định dạng tệp": "định dạng tệp"  
+    },  
+    "style": {  
+      "style": "style",  
+      "theme": "theme",  
+      "template": "template",  
+      "phong cách": "phong cách",  
+      "chủ đề": "chủ đề",  
+      "mẫu": "mẫu"  
+    },  
+    "language": {  
+      "language": "language",  
+      "lang": "lang",  
+      "locale": "locale",  
+      "internationalization": "internationalization",  
+      "ngôn ngữ": "ngôn ngữ",  
+      "địa phương": "địa phương",  
+      "quốc tế hóa": "quốc tế hóa"  
+    },  
+    "tone": {  
+      "tone": "tone",  
+      "mood": "mood",  
+      "emotion": "emotion",  
+      "giọng điệu": "giọng điệu",  
+      "tâm trạng": "tâm trạng",  
+      "cảm xúc": "cảm xúc"  
+    }  
+  },  
+  "format_keywords": {  
+    "markdown": ["markdown", "md", "markup language", "ngôn ngữ đánh dấu"],  
+    "html": ["html", "webpage", "web", "trang web", "web"],  
+    "json": ["json", "data format", "định dạng dữ liệu"],  
+    "xml": ["xml"],  
+    "pdf": ["pdf"],  
+    "docx": ["word", "docx", "document", "tài liệu"],  
+    "txt": ["txt", "text", "plain text", "văn bản", "văn bản thuần"]  
+  },  
+  "search_keywords": {  
+    "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "tìm kiếm", "lấy", "nhận", "tìm", "truy xuất", "tra cứu"],  
+    "target_keywords": ["search", "query", "tìm kiếm", "truy vấn"],  
+    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "truy vấn tìm kiếm", "truy vấn", "từ khóa", "thuật ngữ tìm kiếm", "thuật ngữ", "từ khóa"]  
+  },  
+  "action_keywords": {  
+    "search": {  
+      "search": "search",  
+      "find": "find",  
+      "lookup": "lookup",  
+      "locate": "locate",  
+      "tìm kiếm": "tìm kiếm",  
+      "tìm": "tìm",  
+      "tra cứu": "tra cứu",  
+      "định vị": "định vị"  
+    },  
+    "fetch": {  
+      "fetch": "fetch",  
+      "get": "get",  
+      "retrieve": "retrieve",  
+      "obtain": "obtain",  
+      "lấy": "lấy",  
+      "nhận": "nhận",  
+      "truy xuất": "truy xuất",  
+      "thu được": "thu được"  
+    },  
+    "analyze": {  
+      "analyze": "analyze",  
+      "examine": "examine",  
+      "calculate": "calculate",  
+      "compute": "compute",  
+      "phân tích": "phân tích",  
+      "kiểm tra": "kiểm tra",  
+      "tính toán": "tính toán",  
+      "tính": "tính"  
+    },  
+    "process": {  
+      "process": "process",  
+      "transform": "transform",  
+      "convert": "convert",  
+      "handle": "handle",  
+      "chuyển đổi": "chuyển đổi",  
+      "biến đổi": "biến đổi",  
+      "xử lý": "xử lý"  
+    },  
+    "generate": {  
+      "generate": "generate",  
+      "create": "create",  
+      "produce": "produce",  
+      "make": "make",  
+      "tạo ra": "tạo ra",  
+      "tạo": "tạo",  
+      "sản xuất": "sản xuất",  
+      "làm": "làm"  
+    },  
+    "save": {  
+      "save": "save",  
+      "write": "write",  
+      "store": "store",  
+      "persist": "persist",  
+      "lưu": "lưu",  
+      "viết": "viết",  
+      "lưu trữ": "lưu trữ",  
+      "duy trì": "duy trì"  
+    },  
+    "respond": {  
+      "respond": "respond",  
+      "answer": "answer",  
+      "explain": "explain",  
+      "reply": "reply",  
+      "phản hồi": "phản hồi",  
+      "trả lời": "trả lời",  
+      "giải thích": "giải thích",  
+      "hồi đáp": "hồi đáp"  
+    },  
+    "translate": {  
+      "translate": "translate",  
+      "convert": "convert",  
+      "transform": "transform",  
+      "interpret": "interpret",  
+      "dịch": "dịch",  
+      "chuyển đổi": "chuyển đổi",  
+      "biến đổi": "biến đổi",  
+      "diễn giải": "diễn giải"  
+    },  
+    "summarize": {  
+      "summarize": "summarize",  
+      "abstract": "abstract",  
+      "condense": "condense",  
+      "outline": "outline",  
+      "tóm tắt": "tóm tắt",  
+      "tóm lược": "tóm lược",  
+      "cô đọng": "cô đọng",  
+      "đề cương": "đề cương"  
+    },  
+    "suggest": {  
+      "suggest": "suggest",  
+      "recommend": "recommend",  
+      "propose": "propose",  
+      "advise": "advise",  
+      "đề xuất": "đề xuất",  
+      "khuyến nghị": "khuyến nghị",  
+      "đề nghị": "đề nghị",  
+      "khuyên": "khuyên"  
+    }  
+  },  
+  "param_patterns": {  
+    "query": {  
+      "patterns": [  
+        "[\"\"\"']([^\"\"\"']+)[\"\"\"']",  
+        "search for (.+?)(?:\\s|,|\\.|$)",  
+        "find (.+?)(?:\\s|,|\\.|$)",  
+        "lookup (.+?)(?:\\s|,|\\.|$)",  
+        "tìm kiếm (.+?)(?:\\s|,|\\.|$)",  
+        "tìm (.+?)(?:\\s|,|\\.|$)",  
+        "tra cứu (.+?)(?:\\s|,|\\.|$)"  
+      ],  
+      "type": "str"  
+    },
+    "required_count": {  
+        "patterns": [  
+            "(\\d+)(?:\\s+(?:items?|results?|entries?|records?))",  
+            "(?:at most|maximum|max)\\s+(\\d+)",  
+            "(?:first|top)\\s+(\\d+)",  
+            "(?:at least|minimum|min)\\s+(\\d+)",  
+            "process\\s+(\\d+)",  
+            "generate\\s+(\\d+)",  
+            "get\\s+(\\d+)",  
+            "(\\d+)(?:\\s+(?:mục|kết quả|bản ghi|dữ liệu))",  
+            "(?:tối đa|tối đa|max)\\s+(\\d+)",  
+            "(?:đầu tiên|hàng đầu|top)\\s+(\\d+)",  
+            "(?:ít nhất|tối thiểu|min)\\s+(\\d+)",  
+            "xử lý\\s+(\\d+)",  
+            "tạo ra\\s+(\\d+)",  
+            "lấy\\s+(\\d+)"  
+        ],  
+        "type": "int"  
+        },  
+        "file_path": {  
+        "patterns": [  
+            "([^\\s]+\\.[a-zA-Z]+)",  
+            "file\\s+(.+?)(?:\\s|,|\\.|$)",  
+            "tệp\\s+(.+?)(?:\\s|,|\\.|$)"  
+        ],  
+        "type": "str"  
+        },  
+        "url": {  
+        "patterns": ["(https?://[^\\s]+)"],  
+        "type": "str"  
+        },  
+        "content": {  
+        "patterns": [  
+            "content[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "text[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "nội dung[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "văn bản[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+        ],  
+        "type": "str"  
+        },  
+        "style": {  
+        "patterns": [  
+            "style[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "theme[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "phong cách[:\\s]+(.+?)(?:\\s|,|\\.|$)",  
+            "chủ đề[:\\s]+(.+?)(?:\\s|,|\\.|$)"  
+        ],  
+        "type": "str"  
+    }
+  }
+}
