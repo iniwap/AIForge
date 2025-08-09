@@ -15,11 +15,7 @@ class TaskClassifier:
         if not self._i18n_manager:
             return []
 
-        task_keywords = (
-            self._i18n_manager.messages.get(self._i18n_manager.locale, {})
-            .get("keywords", {})
-            .get(task_type, {})
-        )
+        task_keywords = self._i18n_manager.t("keywords", default={}).get(task_type, {})
 
         keywords = []
         for key, value in task_keywords.items():
@@ -82,9 +78,7 @@ class TaskClassifier:
             ]
 
         # 从 i18n 配置中获取所有可用的任务类型
-        keywords_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
-            "keywords", {}
-        )
+        keywords_config = self._i18n_manager.t("keywords", default={})
 
         return list(keywords_config.keys()) if keywords_config else []
 

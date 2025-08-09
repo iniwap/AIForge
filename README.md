@@ -90,7 +90,7 @@ AIForge提供多层安全保障，确保AI代码安全执行：
     forge = AIForgeEngine(api_key="your-openrouter-apikey")  
   
     # 执行自然语言指令  
-    result = forge("分析全球股市最新趋势并生成投资建议")  
+    result = forge("搜索全球股市最新趋势并分析写一篇投资建议")  
     print(result)  
   
 ### 高级配置  

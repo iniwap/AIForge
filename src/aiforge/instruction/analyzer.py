@@ -85,11 +85,7 @@ class AIForgeInstructionAnalyzer:
     def get_task_type_keywords(self, task_type):
         """动态获取任务类型的关键词"""
         # 从 i18n 配置中获取当前语言的关键词
-        task_keywords = (
-            self._i18n_manager.messages.get(self._i18n_manager.locale, {})
-            .get("keywords", {})
-            .get(task_type, {})
-        )
+        task_keywords = self._i18n_manager.t(f"keywords.{task_type}", default={})
 
         # 返回所有关键词（排除 exclude 部分）
         keywords = []
@@ -101,11 +97,7 @@ class AIForgeInstructionAnalyzer:
 
     def get_exclude_keywords(self, task_type):
         """获取排除关键词"""
-        task_keywords = (
-            self._i18n_manager.messages.get(self._i18n_manager.locale, {})
-            .get("keywords", {})
-            .get(task_type, {})
-        )
+        task_keywords = self._i18n_manager.t("keywords", default={}).get(task_type, {})
 
         exclude_section = task_keywords.get("exclude", {})
         return list(exclude_section.values()) if exclude_section else []

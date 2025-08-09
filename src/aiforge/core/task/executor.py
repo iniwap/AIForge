@@ -244,15 +244,8 @@ class TaskExecutor:
                     self.console.print(f"❌ {final_validation_failed_message}")
 
                     # 尝试返回最佳可用结果
-                    best_result = self._get_best_available_result()
+                    best_result, best_code = self._get_best_available_result()
                     if best_result:
-                        # 查找对应的代码
-                        best_code = ""
-                        for execution in reversed(self.task_execution_history):
-                            if execution.get("result", {}).get("result") == best_result:
-                                best_code = execution.get("code", "")
-                                break
-
                         last_execution["result"]["result"] = best_result
                         last_execution["success"] = True
                         return True, best_result, best_code, True
@@ -272,6 +265,7 @@ class TaskExecutor:
             return None
 
         best_result = None
+        best_code = ""
         max_valid_items = 0
 
         for execution in reversed(self.task_execution_history):
@@ -290,6 +284,7 @@ class TaskExecutor:
 
                     if valid_count > max_valid_items:
                         max_valid_items = valid_count
+                        best_code = execution.get("code", "")
                         # 过滤并返回有效数据
                         valid_data = []
                         for item in data:
@@ -309,4 +304,4 @@ class TaskExecutor:
                             "metadata": result.get("metadata", {}),
                         }
 
-        return best_result
+        return best_result, best_code

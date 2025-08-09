@@ -1,5 +1,165 @@
 {
   "search": {
     "noise_keywords": "Escanear com o WeChat,Escanear código QR,Compartilhar deixar mensagem e favoritar,Tocar duas vezes para cancelar,Continuar a deslizar para ver o próximo,Usar mini programa,Entendido,Clique para ver,Ver mais,Expandir texto completo,Recolher,Entrar,Cadastrar,Baixar APP,Baixar agora,Download grátis,Clique para baixar,Instalar,Atualizar,Upgrade,Assinar,Seguir,Curtir,Compartilhar,Comentar,Responder,Denunciar,Reclamar,Atendimento ao cliente,Fale conosco,Feedback,Acordo do usuário,Política de privacidade,Isenção de responsabilidade,Declaração de direitos autorais,Mapa do site,Links amigos,Parceiros,Anúncio,Promoção,Patrocinado,Parceria comercial,Recrutamento,Junte-se a nós,Sobre nós,Central de ajuda,Perguntas frequentes,Guia de uso,Manual de operação,Manual do usuário,Suporte técnico,Atendimento online,Grupo QQ,Grupo WeChat,Grupo oficial,Grupo de discussão,Grupo de debate,Fórum,Comunidade,Blog,Weibo,Momentos,Espaço,Atualizações,Status,Humor,Sentimentos,Diário,Álbum,Vídeo,Música,Jogo,Aplicativo,Software,Ferramenta,Plugin,Extensão,Tema,Skin,Papel de parede,Toque,Emoji,Adesivo,Filtro,Efeito especial,Beleza,Tirar foto,Gravar vídeo,Transmissão ao vivo,Vídeo curto,Vídeo longo,Filme,Série,Variedade,Anime,Documentário,Notícias,Informação,Manchete,Assuntos quentes,Recomendado,Selecionado,Popular,Mais recente,Ranking,Lista,Classificação,Pontuação,Avaliação,Comentário,Revisão,Análise,Experiência,Teste,Sentimento de uso,Conselhos,Guia,Tutorial,Manual,Dica,Método,Passo,Fluxo,Operação,Configurar,Instalar,Desinstalar,Atualizar,Upgrade,Reparar,Falha,Problema,Solução,Perguntas frequentes,FAQ,Ajuda,Suporte,Serviço,Pós-venda,Garantia,Reparo,Troca e devolução,Logística,Entrega,Frete,Frete grátis,Oferta,Desconto,Promoção,Atividade,Sorteio,红包(envelope vermelho),Pontos,Membro,VIP,Recarregar,Pagar,Comprar,Fazer pedido,Checkout,Pagamento,Carrinho de compras,Favoritos,Lista de desejos,Comparar,Filtrar,Pesquisar,Encontrar,Descobrir,Recomendado,Acho que você vai gostar,Recomendado para você,Recomendações relacionadas,Recomendações populares,Recomendações de alta qualidade,Escolha do editor,Recomendações do usuário,Recomendações de amigos,Recomendações do sistema,Recomendações inteligentes,Recomendações personalizadas,Recomendações exclusivas,Recomendações por tempo limitado,Recomendação diária,Recomendação semanal,Recomendação mensal,Recomendação anual,Melhor recomendação,Recomendação premium,Recomendação selecionada,Recomendação especial,Recomendação de mais vendidos,Recomendação de novo produto,Recomendação de sucesso,Recomendação boca a boca,Recomendação de 5 estrelas,Recomendação de pontuação máxima,Recomendação perfeita,Recomendação de super valor,Recomendação de custo-benefício,Recomendação barata,Recomendação vantajosa,Recomendação que vale a pena,Recomendação de compra obrigatória,Recomendação essencial,Recomendação de escolha obrigatória,Recomendação preferida,Recomendação de alta qualidade,Recomendação de alta seleção,Recomendação rigorosa,Escolha meticulosa,Escolha difícil,Escolha única,Único,Inigualável,Sem precedentes,Nunca antes visto,Fenomenal,Insuperável,Incomparável,Ninguém pode igualar,Liderando o caminho,Liderando o pacote,No topo da lista,Classificado entre os melhores,No auge,Contado nos dedos,Muito poucos,Raro,Oportunidade única na vida,Oportunidade imperdível,Perder e se arrepender,Passa num piscar de olhos,Efémero,Rapidez de relâmpago,O tempo voa,A vida passa rápido,A juventude passa rápido,A beleza desvanece,O herói envelhece,O talento se esgota,Sem recursos,Sem esperança,Sem munição e comida,No fim de sua vida,Ofegante,Prestes a morrer,Respirando com dificuldade,Lutando na beira da morte,Balançando a vida,Cuidado paliativo,Momento de vida ou morte,Sobrevivência,Sobrevivência e extinção,Linha tênue entre a vida e a morte,Na beira do penhasco,Perigo iminente,Instável,Chacoalhando na tempestade,Problemas internos e externos,Situação desesperadora,Cercado por inimigos,Entre a espada e a parede,Indeciso,Sem saída,Onde a montanha e o rio se encontram,Onde os salgueiros se tornam verdes e as flores se tornam brilhantes,Reviver após quase morrer,Renascido das cinzas,Transformar o perigo em segurança,Transformar a crise em oportunidade,Transformar o mal em bem,O sofrimento se transforma em felicidade,O sol volta a brilhar após a chuva,Ver a luz após a escuridão,Aguardar a luz do sol após a chuva"
+  },
+  "time_patterns": {
+    "date_formats": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\s*[-/]\\s*\\d{4}",
+      "\\d{1,2}\\s*\\d{1,2}"
+    ],
+    "relative_time": {
+      "pattern": "(?:há\\s*\\d+\\s*(?:segundo|segundos|minuto|minutos|hora|horas|dia|dias|semana|semanas|mês|meses|ano|anos)|agora mesmo|hoje|ontem|anteontem|semana passada|mês passado|ano passado)",
+      "units": [
+        "segundo",
+        "segundos",
+        "minuto",
+        "minutos",
+        "hora",
+        "horas",
+        "dia",
+        "dias",
+        "semana",
+        "semanas",
+        "mês",
+        "meses",
+        "ano",
+        "anos"
+      ],
+      "special_terms": [
+        "agora mesmo",
+        "hoje",
+        "ontem",
+        "anteontem",
+        "semana passada",
+        "mês passado",
+        "ano passado"
+      ]
+    },
+    "date_prefixes": {
+      "pattern": "^(Publicado em|Atualizado em|Data de criação):\\s*",
+      "terms": [
+        "Publicado em",
+        "Atualizado em",
+        "Data de criação"
+      ]
+    }
+  },
+  "datetime": {
+    "timezone_offset": -3,
+    "date_format": "%Y-%m-%d",
+    "datetime_format": "%Y-%m-%d %H:%M:%S",
+    "unknown_identifiers": [
+      "desconhecido",
+      "nenhum",
+      "não disponível",
+      "null",
+      "None"
+    ],
+    "date_prefixes": [
+      "Publicado em",
+      "Atualizado em",
+      "Data de publicação",
+      "Data de criação",
+      "Data de atualização",
+      "Data",
+      "Hora"
+    ],
+    "char_replacements": {
+      "/": "-"
+    },
+    "meta_selectors": [
+      "meta[property='article:published_time']",
+      "meta[property='sitemap:news:publication_date']",
+      "meta[itemprop='datePublished']",
+      "meta[name='publishdate']",
+      "meta[name='pubdate']",
+      "meta[name='original-publish-date']",
+      "meta[name='weibo:article:create_at']",
+      "meta[name='baidu_ssp:publishdate']"
+    ],
+    "validation_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:Z|[+-]\\d{2}:\\d{2})?",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?",
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+      "há\\s*(\\d+)\\s*(segundo|segundos|minuto|minutos|hora|horas|dia|dias|semana|semanas|mês|meses|ano|anos)",
+      "(agora mesmo|hoje|ontem|anteontem|semana passada|mês passado|ano passado)",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "^\\d{10}$",
+      "^\\d{13}$",
+      "\\d+\\s*(second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\\s*ago",
+      "(yesterday|today|just\\s*now|last\\s*(week|month|year)|this\\s*(week|month|year))"
+    ],
+    "date_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\s*[-/]\\s*\\d{4}",
+      "(?:há\\s*\\d+\\s*(?:segundo|segundos|minuto|minutos|hora|horas|dia|dias|semana|semanas|mês|meses|ano|anos)|agora mesmo|hoje|ontem|anteontem|semana passada|mês passado|ano passado)",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}"
+    ],
+    "fallback_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+      "\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\s*[-/]\\s*\\d{4}",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "(?:há\\s*\\d+\\s*(?:segundo|segundos|minuto|minutos|hora|horas|dia|dias|semana|semanas|mês|meses|ano|anos)|agora mesmo|hoje|ontem|anteontem|semana passada|mês passado|ano passado)"
+    ],
+    "relative_time_patterns": {
+      "seconds_ago": [
+        "há\\s*(\\d+)\\s*(segundo|segundos)"
+      ],
+      "minutes_ago": [
+        "há\\s*(\\d+)\\s*(minuto|minutos)"
+      ],
+      "hours_ago": [
+        "há\\s*(\\d+)\\s*(hora|horas)"
+      ],
+      "days_ago": [
+        "há\\s*(\\d+)\\s*(dia|dias)"
+      ],
+      "weeks_ago": [
+        "há\\s*(\\d+)\\s*(semana|semanas)"
+      ],
+      "months_ago": [
+        "há\\s*(\\d+)\\s*(mês|meses)"
+      ],
+      "years_ago": [
+        "há\\s*(\\d+)\\s*(ano|anos)"
+      ],
+      "just_now": [
+        "agora mesmo"
+      ],
+      "today": [
+        "hoje"
+      ],
+      "yesterday": [
+        "ontem"
+      ],
+      "day_before_yesterday": [
+        "anteontem"
+      ]
+    },
+    "incomplete_patterns": [
+      "(\\d{1,2})\\s*[-/\\.]?\\s*(\\d{1,2})"
+    ],
+    "complete_patterns": [
+      {
+        "pattern": "(\\d{4})\\s*[-/\\.]?\\s*(\\d{1,2})\\s*[-/\\.]?\\s*(\\d{1,2})",
+        "format": "%Y-%m-%d"
+      },
+      {
+        "pattern": "(\\d{1,2})[-/](\\d{1,2})[-/](\\d{4})",
+        "format": "%d/%m/%Y"
+      }
+    ],
+    "parse_formats": [
+      "%Y-%m-%d %H:%M:%S",
+      "%Y-%m-%d %H:%M",
+      "%Y-%m-%d",
+      "%Y/%m/%d",
+      "%Y.%m.%d",
+      "%y-%m-%d"
+    ]
   }
 }

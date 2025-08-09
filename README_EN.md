@@ -87,7 +87,7 @@ AIForge provides multi-layer security for safe AI code execution:
     forge = AIForgeEngine(api_key="your-openrouter-apikey")  
   
     # Execute natural language instruction  
-    result = forge("Analyze newest global stock market trends and generate investment recommendations")  
+    result = forge("Search for the latest trends in global stock markets, analyze them, and write an investment recommendation")  
     print(result)  
   
 ### Advanced Configuration  

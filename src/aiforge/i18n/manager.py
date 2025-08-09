@@ -1,6 +1,6 @@
 import importlib.resources
 import threading
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from rich.console import Console
 from .formatters.message_formatter import ICUMessageFormatter
 from .detector import LocaleDetector
@@ -24,17 +24,15 @@ class AIForgeI18nManager:
         if self._initialized:
             return
 
-        self._config = config
-        self.console = Console()
-
-        # 从配置中检测语言设置
-        self.locale, self.fallback_locale = self._detect_locale_from_config()
-
-        self.messages: Dict[str, Dict[str, Any]] = {}
-        self.formatter = ICUMessageFormatter()
-        self._load_all_messages()
-
-        AIForgeI18nManager._initialized = True
+        with self._lock:
+            if not self._initialized:
+                self._config = config
+                self.console = Console()
+                self.locale, self.fallback_locale = self._detect_locale_from_config()
+                self.messages: Dict[str, Dict[str, Any]] = {}
+                self.formatter = ICUMessageFormatter()
+                self._load_all_messages()
+                AIForgeI18nManager._initialized = True
 
     @classmethod
     def get_instance(cls, config: AIForgeConfig = None):
@@ -94,18 +92,29 @@ class AIForgeI18nManager:
             raise TypeError("config must be an instance of AIForgeConfig")
         self._update_config(value)
 
-    def t(self, key: str, **params) -> str:
-        """翻译函数，支持ICU MessageFormat"""
+    def t(self, key: str, default=None, **params) -> Union[str, list, dict, int, float, bool]:
+        """翻译函数，智能处理不同数据类型"""
         message = self._get_message(key)
-        if not message:
+
+        if message is None:
+            if default is not None:
+                return default
             # 只在翻译失败时输出错误日志
             print(f"[ERROR] Translation failed for key: {key}")
             return key
 
-        return self.formatter.format(message, **params)
+        # 对于非字符串类型，直接返回原始类型
+        if isinstance(message, (list, dict, int, float, bool)):
+            return message
 
-    def _get_message(self, key: str) -> Optional[str]:
-        """获取消息，支持嵌套键和回退"""
+        # 只有字符串类型才进行格式化
+        if isinstance(message, str):
+            return self.formatter.format(message, **params)
+
+        return message
+
+    def _get_message(self, key: str) -> Optional[Union[str, list, dict, int, float, bool]]:
+        """获取消息，支持嵌套键和回退，保持原始数据类型"""
         keys = key.split(".")
 
         # 尝试当前语言
@@ -116,11 +125,9 @@ class AIForgeI18nManager:
             else:
                 break
         else:
-            if isinstance(current, str):
+            # 直接返回原始类型，不进行转换
+            if isinstance(current, (str, list, dict, int, float, bool)):
                 return current
-            elif isinstance(current, list):
-                # 自动将数组转换为换行符分隔的字符串
-                return "\\n".join(str(item) for item in current)
 
         # 回退到默认语言
         current = self.messages.get(self.fallback_locale, {})
@@ -130,10 +137,9 @@ class AIForgeI18nManager:
             else:
                 return None
 
-        if isinstance(current, str):
+        # 直接返回原始类型，不进行转换
+        if isinstance(current, (str, list, dict, int, float, bool)):
             return current
-        elif isinstance(current, list):
-            return "\\n".join(str(item) for item in current)
 
         return None
 

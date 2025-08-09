@@ -22,4 +22,4 @@ def test_search():
 
 
 def test_search_web():
-    print(search_web("全球股市趋势"))
+    print(search_web("CHATGPT 5 RELEASE"))

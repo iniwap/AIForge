@@ -10,22 +10,12 @@ class ParameterExtractor:
         self.components = components or {}
         self._i18n_manager = self.components.get("i18n_manager")
 
-    def get_action_keywords_from_i18n(self):
-        """从 i18n 配置获取动作关键词"""
-        if not self._i18n_manager:
-            return {}
-
-        action_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
-            "action_keywords", {}
-        )
-        return action_config
-
     def smart_infer_action(self, instruction: str, possible_actions: List[str]) -> str:
         """智能推断动作"""
         instruction_lower = instruction.lower()
 
         # 从 i18n 配置获取动作关键词映射
-        action_keywords = self.get_action_keywords_from_i18n()
+        action_keywords = self._i18n_manager.t("action_keywords", default={})
 
         for action in possible_actions:
             if action in action_keywords:
@@ -36,16 +26,6 @@ class ParameterExtractor:
                     return action
 
         return possible_actions[0] if possible_actions else "process"
-
-    def get_param_patterns_from_i18n(self):
-        """从 i18n 配置获取参数提取模式"""
-        if not self._i18n_manager:
-            return {}
-
-        param_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
-            "param_patterns", {}
-        )
-        return param_config
 
     def extract_target(self, instruction: str) -> str:
         """提取操作目标"""
@@ -58,7 +38,7 @@ class ParameterExtractor:
         params = {}
 
         # 从 i18n 配置获取参数提取模式
-        param_patterns = self.get_param_patterns_from_i18n()
+        param_patterns = self._i18n_manager.t("param_patterns", default={})
 
         for param in common_params:
             if param in param_patterns:

@@ -127,29 +127,29 @@
     "json_format_instruction": "JSON 형식으로 유효성 검사 결과를 반환하세요:\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"구체적인 실패 원인(실패한 경우)\",\n    \"improvement_suggestions\": [\"개선 제안1\", \"개선 제안2\"],\n    \"core_issues\": [\"핵심 문제1\", \"핵심 문제2\"]\n}"
   },
   "search": {
-    "guided_instruction_template": "최신 관련 정보를 가져오기 위해 다음 구성을 참고하여 검색 함수(주석, 로그 출력 없음)를 생성하세요:\n\n# 검색 엔진 URL 패턴:\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# 주요 CSS 선택자:\nBaidu 결과 컨테이너: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaidu 제목: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu 요약: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing 결과 컨테이너: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBing 제목: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing 요약: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360 결과 컨테이너: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360 제목: [\"h3.res-title\", \"h3\", \".res-title\"]\n360 요약: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou 결과 컨테이너: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogou 제목: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou 요약: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# 중요 처리 논리:\n1. 우선순위에 따라 4개의 검색 엔진을 순차적으로 시도합니다(API 키 방식은 사용하지 마세요).\n2. 요약 내용을 content로 사용하는 것을 우선하고, 불충분한 경우 concurrent.futures.ThreadPoolExecutor를 사용하여 페이지에 병렬로 액세스하여 자세한 내용을 추출합니다.\n3. 페이지에서 게시 시간을 추출하며, 다음 전략을 따릅니다:\n    - meta 태그 우선: article:published_time, datePublished, pubdate, publishdate 등\n    - 대안: time 태그, 날짜 관련 클래스, 페이지 텍스트 매칭\n    - 유효한 날짜 형식: 표준 형식, 중국어 형식, 상대 시간(\"어제\", \"1일 전\", \"1시간 전\" 등), 영어 시간(\"yesterday\" 등)\n4. 게시 시간 순으로 정렬하고, 최근 7일 내의 내용을 우선합니다.\n5. 유효성 검사 페이지와 무효한 내용을 필터링하고, 인코딩을 올바르게 처리하며, 결과에 깨진 문자가 포함되지 않도록 합니다.\n\n# 반환 데이터 형식(엄격히 준수):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success 또는 error\",\n    \"summary\": f\"검색 완료, len(data)개 결과 발견\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# 함수를 즉시 실행하고 __result__에 할당하세요\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "free_form_instruction_template": "최신 관련 정보를 가져오기 위해 혁신적으로 검색 함수(주석, 로그 출력 없음)를 생성하세요.\n\n# 선택 가능한 검색 전략:\n1. 다른 검색 엔진(Baidu, Bing, 360, Sogou)을 순차적으로 시도합니다.\n2. 뉴스 집계 API(예: NewsAPI, RSS 피드)를 사용합니다.\n3. 소셜 미디어 플랫폼 검색을 시도합니다.\n4. 학술 검색 엔진을 사용합니다.\n\n# 핵심 요구 사항:\n- 함수 이름은 search_web이고, 매개변수는 search_query와 max_results입니다.\n- 다중 결함 허용 메커니즘을 구현하고, 최소 2-3가지 다른 방법을 시도해야 합니다.\n- 각 결과에 대해 원본 페이지에 액세스하여 전체 정보를 추출합니다.\n- 최근 7일 내의 최신 내용을 우선적으로 가져오고, 게시 시간 순으로 정렬합니다.\n- 요약 길이는 최소 {min_abstract_len}자여야 하며, 핵심 정보를 포함해야 합니다.\n- API 키가 필요한 방식을 사용해서는 안 됩니다.\n- 유효성 검사 페이지와 무효한 내용을 필터링하고, 인코딩을 올바르게 처리하며, 결과에 깨진 문자가 포함되지 않도록 합니다.\n\n# 시간 추출 전략:\n- meta 태그 우선: article:published_time, datePublished, pubdate, publishdate 등\n- 대안: time 태그, 날짜 관련 클래스, 페이지 텍스트 매칭\n- 유효한 날짜 형식: 표준 형식, 중국어 형식, 상대 시간(\"어제\", \"1일 전\", \"1시간 전\" 등), 영어 시간(\"yesterday\" 등)\n\n# 반환 데이터 형식(엄격히 준수):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"검색 완료\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# 함수를 즉시 실행하고 __result__에 할당하세요\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "result_processor": {
-      "suggestions": {
-        "check_syntax_logic": "코드의 구문 및 논리 오류를 확인하세요.",
-        "regenerate_code": "사용자 요구 사항을 더 잘 충족하도록 코드를 다시 생성하세요. 데이터 가져오기 논리를 확인하여 유효한 제목과 내용 필드가 반환되도록 하세요.",
-        "check_data_logic": "데이터 가져오기 논리를 확인하여 올바른 형식의 데이터가 반환되는지 확인하세요.",
-        "check_execution_structure": "코드 실행 및 기본 데이터 구조를 확인하세요.",
-        "check_business_logic": "비즈니스 논리와 필수 필드를 확인하세요.",
-        "check_code_format": "코드 논리와 출력 형식을 확인하세요.",
-        "check_syntax_variables": "코드의 구문, 변수 정의, 논리 오류를 확인하세요."
-      },
-      "system_errors": {
-        "execution_timeout": "코드 실행 시간 초과"
-      },
-      "messages": {
-        "execution_failed": "코드 실행 실패: {error}"
-      },
-      "summaries": {
-        "no_data": "실행 완료, 하지만 데이터를 가져오지 못함",
-        "execution_complete": "실행 완료",
-        "operation_complete": "작업 완료"
-      }
+    "guided_instruction_template": "최신 관련 정보를 얻기 위해 검색 함수(주석이나 출력 로그 없이)를 생성하세요. 다음 구성을 참조하세요:\n\n# 검색 엔진 URL 패턴:\n- Naver: https://search.naver.com/search.naver?query={{quote(search_query)}}&start=1&display={{max_results}}\n- Google: https://www.google.com/search?q={{quote(search_query)}}&num={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n\n# 주요 CSS 선택자:\nNaver 결과 컨테이너: [\".lst_total\", \".api_subject_bx\", \".total_wrap\", \".news_wrap\"]\nNaver 제목: [\".news_tit\", \".api_txt_lines.total_tit\", \".total_tit\", \"dt a\"]\nNaver 요약: [\".news_dsc\", \".api_txt_lines.dsc_txt_wrap\", \".total_dsc\", \"dd\"]\n\nGoogle 결과 컨테이너: [\"div.g\", \"div[class*='result']\", \"div.tF2Cxc\", \"div.MjjYud\"]\nGoogle 제목: [\"h3\", \"h3 a\", \".LC20lb\", \".DKV0Md\", \"[data-attrid='title']\"]\nGoogle 요약: [\".VwiC3b\", \".s\", \".st\", \"[class*='snippet']\", \".yXK7lf\"]\n\nBing 결과 컨테이너: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\", \".b_algoheader\"]\nBing 제목: [\"h2\", \"h3\", \"h2 a\", \".b_title\", \"a[href*='http']\"]\nBing 요약: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\", \".b_paractl\"]\n\n# 중요한 처리 로직:\n1. 세 검색 엔진을 우선순위에 따라 시도하세요 (API 키 방법 사용 금지)\n2. 요약 내용을 콘텐츠로 우선 사용하고, 불충분한 경우 concurrent.futures.ThreadPoolExecutor를 사용하여 페이지에 병렬 접근하여 상세 콘텐츠를 추출하세요\n3. 페이지에서 게시 시간을 추출하고, 다음 포괄적 전략을 따르세요:\n    - 우선순위 meta 태그: article:published_time, datePublished, pubdate, publishdate, og:article:published_time, twitter:data1, sailthru.date, parsely-pub-date, article.published, content_date\n    - 대체 옵션: datetime 속성이 있는 time 태그, 날짜 관련 CSS 클래스 (.date, .timestamp, .published, .post-date, .entry-date), 구조화된 데이터 (JSON-LD with @type Article)\n    - 한국어와 영어 날짜의 고급 텍스트 패턴:\n      * 표준 형식: YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, DD/MM/YYYY\n      * 한국어 월 형식: \"2024년 1월 15일\", \"1월 15일\", \"15일\"\n      * 상대 시간 표현: \"X분/시간/일/주/월/년 전\", \"어제\", \"오늘\", \"지난주\", \"지난달\", \"1분/시간/일/주/월/년 전\", \"방금\", \"잠시 전\"\n      * Regex 패턴: r\"(\\d{4}년\\s*\\d{1,2}월\\s*\\d{1,2}일)\", r\"(\\d+\\s*(?:초|분|시간|일|주|월|년)\\s*전)\", r\"(어제|오늘|방금|잠시\\s*전)\"\n4. 게시 시간으로 정렬하고, 최근 7일 내 콘텐츠를 우선시하세요\n5. 검증 페이지, 쿠키 알림, 유효하지 않은 콘텐츠를 필터링하고, 인코딩을 올바르게 처리하며, 결과에 깨진 텍스트가 포함되지 않도록 하세요\n6. 각 검색 엔진에 대해 적절한 폴백을 가진 강력한 오류 처리를 구현하세요\n\n# 반환 데이터 형식 (엄격히 준수):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success 또는 error\",\n    \"summary\": f\"검색 완료, {{len(data)}}개 결과 발견\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# 함수를 즉시 실행하고 __result__에 할당\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "최신 관련 정보를 얻기 위해 창의적으로 검색 함수(주석이나 출력 로그 없이)를 생성하세요.\n\n# 선택적 검색 전략:\n1. 다양한 검색 엔진을 순차적으로 시도 (Naver, Google, Bing)\n2. API 키 없이 사용 가능한 뉴스 집계 API 사용 (NewsAPI, RSS 피드 등)\n3. 소셜 미디어 플랫폼 검색 시도 (Twitter, Reddit 공개 API)\n4. 학술 검색 엔진 사용 (Google Scholar, arXiv)\n5. 적절한 사용자 에이전트와 속도 제한으로 웹 스크래핑 구현\n\n# 핵심 요구사항:\n- 함수명은 search_web, 매개변수는 search_query와 max_results\n- 여러 장애 허용 메커니즘 구현, 최소 2-3가지 다른 방법 시도\n- 각 결과의 원본 페이지에 접근하여 완전한 정보 추출\n- 최근 7일 내 신선한 콘텐츠 우선 획득, 게시 시간으로 정렬\n- 요약 길이 최소 {min_abstract_len}자, 핵심 정보 포함\n- API 키가 필요한 방법 사용 불가\n- 검증 페이지, 쿠키 알림, 유효하지 않은 콘텐츠 필터링, 인코딩 올바르게 처리, 결과에 깨진 텍스트 포함 금지\n- 적절한 요청 헤더, 타임아웃, 재시도 메커니즘 구현\n\n# 한국어 콘텐츠를 위한 향상된 시간 추출 전략:\n- 우선순위 meta 태그: article:published_time, datePublished, pubdate, publishdate, og:article:published_time, twitter:data1, sailthru.date, parsely-pub-date\n- 구조화된 데이터: JSON-LD with @type Article, microdata with itemprop datePublished\n- Time 태그: <time datetime=\"...\"> 요소, data-time 속성\n- CSS 선택자: .date, .timestamp, .published, .post-date, .entry-date, .article-date\n- 포괄적인 regex를 사용한 텍스트 패턴 매칭:\n  * ISO 형식: r\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\"\n  * 한국어 형식: r\"\\d{1,2}/\\d{1,2}/\\d{4}\", r\"\\d{1,2}-\\d{1,2}-\\d{4}\"\n  * 한국어 월: r\"(?:1월|2월|3월|4월|5월|6월|7월|8월|9월|10월|11월|12월)\\s*\\d{1,2}일\"\n  * 상대 시간: r\"\\d+\\s*(?:초|분|시간|일|주|월|년)\\s*전\"\n  * 일반적인 구문: r\"(?:어제|오늘|방금|잠시\\s*전|지난\\s*주|지난\\s*달|작년)\"\n- 날짜를 찾지 못한 경우 현재 타임스탬프로 폴백\n\n# 반환 데이터 형식 (엄격히 준수):\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"검색 완료\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# 함수를 즉시 실행하고 __result__에 할당\n __result__ = search_web(\"{search_query}\", {max_results})"
+  },
+  "result_processor": {
+    "suggestions": {
+      "check_syntax_logic": "코드의 구문 및 논리 오류를 확인하세요.",
+      "regenerate_code": "사용자 요구 사항을 더 잘 충족하도록 코드를 다시 생성하세요. 데이터 가져오기 논리를 확인하여 유효한 제목과 내용 필드가 반환되도록 하세요.",
+      "check_data_logic": "데이터 가져오기 논리를 확인하여 올바른 형식의 데이터가 반환되는지 확인하세요.",
+      "check_execution_structure": "코드 실행 및 기본 데이터 구조를 확인하세요.",
+      "check_business_logic": "비즈니스 논리와 필수 필드를 확인하세요.",
+      "check_code_format": "코드 논리와 출력 형식을 확인하세요.",
+      "check_syntax_variables": "코드의 구문, 변수 정의, 논리 오류를 확인하세요."
+    },
+    "system_errors": {
+      "execution_timeout": "코드 실행 시간 초과"
+    },
+    "messages": {
+      "execution_failed": "코드 실행 실패: {error}"
+    },
+    "summaries": {
+      "no_data": "실행 완료, 하지만 데이터를 가져오지 못함",
+      "execution_complete": "실행 완료",
+      "operation_complete": "작업 완료"
     }
   }
 }

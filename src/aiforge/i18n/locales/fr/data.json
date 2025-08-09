@@ -1,5 +1,165 @@
 {
   "search": {
     "noise_keywords": "WeChat scan, scanner un code QR, partager, laisser un commentaire, collectionner, double-cliquer pour annuler, continuer à glisser pour voir le suivant, utiliser un mini-programme, compris, cliquer pour voir, voir plus, déplier le texte complet, replier, se connecter, s'inscrire, télécharger l'APP, télécharger maintenant, télécharger gratuitement, cliquer pour télécharger, installer, mettre à jour, souscrire, suivre, aimer, transférer, commenter, répondre, signaler, se plaindre, service client, nous contacter, feedback, accord utilisateur, politique de confidentialité, clause de non-responsabilité, avis de droit d'auteur, plan du site, liens amis, partenaires, publicité, promotion, sponsoring, coopération commerciale, recrutement, rejoignez-nous, à propos de nous, centre d'aide, questions fréquentes, guide d'utilisation, manuel d'utilisation, manuel d'utilisateur, support technique, service client en ligne, groupe QQ, groupe WeChat, groupe officiel, groupe d'échange, groupe de discussion, forum, communauté, blog, Weibo, Moments, espace, dynamique, statut, humeur, journal, album, vidéo, musique, jeux, applications, logiciels, outils, plugins, extensions, thèmes, skins, fonds d'écran, sonneries, émoticônes, autocollants, filtres, effets, beauté, prendre des photos, enregistrer des vidéos, diffusion en direct, vidéo courte, vidéo longue, film, série télévisée, émission de variétés, anime, documentaire, actualités, informations, gros titres, points chauds, recommandé, sélectionné, populaire, dernier, classement, liste, note, évaluation, commentaire, critique, test, expérience, essai, sentiment d'utilisation, conseils, stratégie, tutoriel, guide, astuces, méthodes, étapes, processus, opération, paramètres, configuration, installation, désinstallation, mise à jour, réparation, panne, problème, solution, questions fréquentes, FAQ, aide, support, service, service après-vente, garantie, réparation, retour et échange, logistique, livraison, express, frais de port, livraison gratuite, réduction, rabais, promotion, événement, tirage au sort, enveloppe rouge, points, membre, VIP, recharger, payant, acheter, passer commande, régler, payer, caisse, panier, collection, liste de souhaits, comparer, filtrer, rechercher, trouver, découvrir, recommander, vous aimerez aussi, recommandé pour vous, recommandations connexes, recommandations populaires, recommandations de qualité, recommandations de l'éditeur, recommandations des utilisateurs, recommandations d'amis, recommandations du système, recommandations intelligentes, recommandations personnalisées, recommandations sur mesure, recommandations exclusives, recommandations à durée limitée, recommandations quotidiennes, recommandations hebdomadaires, recommandations mensuelles, recommandations annuelles, meilleure recommandation, recommandation de qualité, recommandation spéciale, recommandation de produits à succès, recommandation de nouveaux produits, recommandation de produits phares, recommandation de bouche-à-oreille, recommandation de bonnes critiques, recommandation cinq étoiles, recommandation parfaite, recommandation d'un excellent rapport qualité-prix, recommandation abordable, recommandation économique, recommandation intéressante, recommandation digne d'être achetée, recommandation incontournable, recommandation de premier choix, recommandation préférée, recommandation soigneusement sélectionnée, recommandation rigoureusement sélectionnée, sélection rigoureuse, choisir parmi des milliers, unique, sans précédent, inouï, inégalé, sans pareil, sans égal, hors pair, loin devant, en tête, à l'honneur, en bonne place, le numéro un, quelques-uns, rare, une fois par siècle, une occasion en or, à ne pas manquer, qui ne se reproduira pas, fugace, éphémère, comme un éclair, le temps file, le temps passe, les années s'écoulent, la jeunesse s'envole, la beauté s'estompe, la fin d'un héros, le talent s'épuise, au bout du rouleau, au bout du chemin, à court de munitions et de vivres, l'huile est épuisée et la lampe est éteinte, à bout de souffle, à l'agonie, lutte pour sa survie, dernier sursaut, soins palliatifs, une question de vie ou de mort, crucial, entre la vie et la mort, en jeu, sur le fil du rasoir, en danger imminent, précaire, vacillant, dans la tourmente, troubles internes et externes, encerclé de toutes parts, attaqué de front et de dos, dans une impasse, dans une position difficile, entre le marteau et l'enclume, impossible de reculer, sans issue, au bout du tunnel, une lumière au bout du chemin, s'en sortir, ressusciter, transformer le danger en sécurité, transformer le mal en bien, après la pluie le beau temps, sortir des nuages pour voir le soleil, trouver la lumière après la tempête"
+  },
+  "time_patterns": {
+    "date_formats": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\s*[-/]\\s*\\d{4}",
+      "\\d{1,2}\\s*[-/\\.]\\s*\\d{1,2}",
+      "\\d{1,2}\\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\\s+\\d{4}"
+    ],
+    "relative_time": {
+      "pattern": "(?:il y a\\s*\\d+\\s*(?:seconde|secondes|minute|minutes|heure|heures|jour|jours|semaine|semaines|mois|mois|an|ans)|à l'instant|aujourd'hui|hier|avant-hier|la semaine dernière|le mois dernier|l'année dernière)",
+      "units": [
+        "seconde",
+        "secondes",
+        "minute",
+        "minutes",
+        "heure",
+        "heures",
+        "jour",
+        "jours",
+        "semaine",
+        "semaines",
+        "mois",
+        "ans"
+      ],
+      "special_terms": [
+        "à l'instant",
+        "aujourd'hui",
+        "hier",
+        "avant-hier",
+        "la semaine dernière",
+        "le mois dernier",
+        "l'année dernière"
+      ]
+    },
+    "date_prefixes": {
+      "pattern": "^(Publié le|Mis à jour le|Date de création):\\s*",
+      "terms": [
+        "Publié le",
+        "Mis à jour le",
+        "Date de création"
+      ]
+    }
+  },
+  "datetime": {
+    "timezone_offset": 1,
+    "date_format": "%d/%m/%Y",
+    "datetime_format": "%d/%m/%Y %H:%M:%S",
+    "unknown_identifiers": [
+      "inconnu",
+      "aucun",
+      "non disponible",
+      "null",
+      "None"
+    ],
+    "date_prefixes": [
+      "Publié le",
+      "Mis à jour le",
+      "Date de publication",
+      "Date de création",
+      "Date de mise à jour",
+      "Date",
+      "Heure"
+    ],
+    "char_replacements": {
+      "-": "/",
+      ".": "/"
+    },
+    "meta_selectors": [
+      "meta[property='article:published_time']",
+      "meta[property='sitemap:news:publication_date']",
+      "meta[itemprop='datePublished']",
+      "meta[name='publishdate']",
+      "meta[name='pubdate']",
+      "meta[name='original-publish-date']",
+      "meta[name='weibo:article:create_at']",
+      "meta[name='baidu_ssp:publishdate']"
+    ],
+    "validation_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:Z|[+-]\\d{2}:\\d{2})?",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?",
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+      "il y a\\s*(\\d+)\\s*(seconde|secondes|minute|minutes|heure|heures|jour|jours|semaine|semaines|mois|ans)",
+      "(à l'instant|aujourd'hui|hier|avant-hier|la semaine dernière|le mois dernier|l'année dernière)",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "^\\d{10}$",
+      "^\\d{13}$",
+      "\\d+\\s*(second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\\s*ago",
+      "(yesterday|today|just\\s*now|last\\s*(week|month|year)|this\\s*(week|month|year))"
+    ],
+    "date_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\s*[-/]\\s*\\d{4}",
+      "(?:il y a\\s*\\d+\\s*(?:seconde|secondes|minute|minutes|heure|heures|jour|jours|semaine|semaines|mois|ans)|à l'instant|aujourd'hui|hier|avant-hier|la semaine dernière|le mois dernier|l'année dernière)",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}"
+    ],
+    "fallback_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+      "\\d{1,2}\\s*[-/]\\s*\\d{1,2}\\s*[-/]\\s*\\d{4}",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "(?:il y a\\s*\\d+\\s*(?:seconde|secondes|minute|minutes|heure|heures|jour|jours|semaine|semaines|mois|ans)|à l'instant|aujourd'hui|hier|avant-hier|la semaine dernière|le mois dernier|l'année dernière)"
+    ],
+    "relative_time_patterns": {
+      "seconds_ago": [
+        "il y a\\s*(\\d+)\\s*(seconde|secondes)"
+      ],
+      "minutes_ago": [
+        "il y a\\s*(\\d+)\\s*(minute|minutes)"
+      ],
+      "hours_ago": [
+        "il y a\\s*(\\d+)\\s*(heure|heures)"
+      ],
+      "days_ago": [
+        "il y a\\s*(\\d+)\\s*(jour|jours)"
+      ],
+      "weeks_ago": [
+        "il y a\\s*(\\d+)\\s*(semaine|semaines)"
+      ],
+      "months_ago": [
+        "il y a\\s*(\\d+)\\s*(mois)"
+      ],
+      "years_ago": [
+        "il y a\\s*(\\d+)\\s*(an|ans)"
+      ],
+      "just_now": [
+        "à l'instant"
+      ],
+      "today": [
+        "aujourd'hui"
+      ],
+      "yesterday": [
+        "hier"
+      ],
+      "day_before_yesterday": [
+        "avant-hier"
+      ]
+    },
+    "incomplete_patterns": [
+      "(\\d{1,2})\\s*[-/\\.]?\\s*(\\d{1,2})"
+    ],
+    "complete_patterns": [
+      {
+        "pattern": "(\\d{4})\\s*[-/\\.]?\\s*(\\d{1,2})\\s*[-/\\.]?\\s*(\\d{1,2})",
+        "format": "%d/%m/%Y"
+      },
+      {
+        "pattern": "(\\d{1,2})[-/](\\d{1,2})[-/](\\d{4})",
+        "format": "%d/%m/%Y"
+      }
+    ],
+    "parse_formats": [
+      "%d/%m/%Y %H:%M:%S",
+      "%d/%m/%Y %H:%M",
+      "%d/%m/%Y",
+      "%d/%m/%Y",
+      "%Y.%m.%d",
+      "%y-%m-%d"
+    ]
   }
 }

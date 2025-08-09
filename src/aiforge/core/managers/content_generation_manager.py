@@ -22,9 +22,7 @@ class AIForgeContentGenerationManager:
 
     def _get_semantic_fields_from_i18n(self):
         """从 i18n 配置获取语义字段"""
-        semantic_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
-            "semantic_fields", {}
-        )
+        semantic_config = self._i18n_manager.t("semantic_fields", default={})
 
         semantic_fields = {}
         for field_type, keywords in semantic_config.items():
@@ -329,7 +327,7 @@ class AIForgeContentGenerationManager:
                     return param_info.lower()
 
         # 从 i18n 配置获取格式关键词
-        format_keywords = self._get_format_keywords_from_i18n()
+        format_keywords = self._i18n_manager.t("format_keywords", default={})
 
         instruction_lower = standardized_instruction.get("target", "").lower()
         for format_type, keywords in format_keywords.items():
@@ -337,13 +335,6 @@ class AIForgeContentGenerationManager:
                 return format_type
 
         return "markdown"
-
-    def _get_format_keywords_from_i18n(self):
-        """从 i18n 配置获取格式关键词"""
-        format_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
-            "format_keywords", {}
-        )
-        return format_config
 
     def _call_llm_for_content(
         self,
@@ -422,3 +413,16 @@ class AIForgeContentGenerationManager:
     def validate_format(self, format_name: str) -> bool:
         """验证格式是否支持"""
         return format_name.lower() in self.get_supported_formats()
+
+    def _get_content_type(self, output_format: str) -> str:
+        """根据输出格式获取内容类型"""
+        content_type_mapping = {
+            "markdown": "text/markdown",
+            "html": "text/html",
+            "json": "application/json",
+            "xml": "application/xml",
+            "pdf": "application/pdf",
+            "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "txt": "text/plain",
+        }
+        return content_type_mapping.get(output_format.lower(), "text/plain")

@@ -19,7 +19,7 @@ class AIForgeSearchManager:
         action = standardized_instruction.get("action", "")
 
         # 从 i18n 配置获取搜索关键词
-        search_keywords = self._get_search_keywords_from_i18n()
+        search_keywords = self._i18n_manager.t("search_keywords", default={})
 
         # 检查任务类型和动作
         search_indicators = [
@@ -38,13 +38,6 @@ class AIForgeSearchManager:
         search_params = any(param_name in search_param_keywords for param_name in parameters.keys())
 
         return any(search_indicators) or search_params
-
-    def _get_search_keywords_from_i18n(self):
-        """从 i18n 配置获取搜索关键词"""
-        search_config = self._i18n_manager.messages.get(self._i18n_manager.locale, {}).get(
-            "search_keywords", {}
-        )
-        return search_config
 
     def _try_direct_search_web(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
@@ -374,10 +367,14 @@ class AIForgeSearchManager:
     ) -> Optional[Dict[str, Any]]:
         """执行多层级搜索策略"""
 
-        # 第一层：直接调用 search_web
-        direct_result = self._try_direct_search_web(standardized_instruction, original_instruction)
-        if direct_result:
-            return direct_result
+        # 非中文环境，暂时无法支持本地直接搜素
+        if self._i18n_manager.locale == "zh":
+            # 第一层：直接调用 search_web
+            direct_result = self._try_direct_search_web(
+                standardized_instruction, original_instruction
+            )
+            if direct_result:
+                return direct_result
 
         # 第二层：使用缓存中的搜索函数
         self._progress_indicator.show_search_process(

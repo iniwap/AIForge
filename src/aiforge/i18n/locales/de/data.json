@@ -1,5 +1,166 @@
 {
   "search": {
     "noise_keywords": "WeChat scannen, QR-Code scannen, teilen, kommentieren, favorisieren, zweimal tippen zum Abbrechen, weiter wischen zum nächsten, Miniprogramm verwenden, verstanden, zum Anzeigen klicken, mehr anzeigen, ganzen Text ausklappen, einklappen, anmelden, registrieren, APP herunterladen, jetzt herunterladen, kostenlos herunterladen, zum Download klicken, installieren, aktualisieren, abonnieren, folgen, liken, weiterleiten, kommentieren, antworten, melden, beschweren, Kundenservice, kontaktieren Sie uns, Feedback, Nutzungsbedingungen, Datenschutzbestimmungen, Haftungsausschluss, Urheberrechtshinweis, Sitemap, Freundschafts-Links, Partner, Werbung, Promotion, Sponsoring, Geschäftspartner, Stellenangebote, schließen Sie sich uns an, über uns, Hilfe-Center, häufig gestellte Fragen, Benutzerhandbuch, Bedienungsanleitung, technischer Support, Online-Kundenservice, QQ-Gruppe, WeChat-Gruppe, offizielle Gruppe, Austauschgruppe, Diskussionsgruppe, Forum, Community, Blog, Weibo, Freundeskreis, Weltraum, Dynamik, Status, Stimmung, Tagebuch, Album, Video, Musik, Spiele, Apps, Software, Tools, Plugins, Erweiterungen, Themen, Skins, Hintergrundbilder, Klingeltöne, Emojis, Aufkleber, Filter, Effekte, Beauty-Filter, fotografieren, aufnehmen, Live-Streaming, Kurzvideo, Langvideo, Film, TV-Serie, Varieté-Show, Anime, Dokumentarfilm, Nachrichten, Informationen, Schlagzeilen, Hotspots, Empfohlen, Ausgewählt, Beliebt, Neueste, Rangliste, Liste, Bewertung, Rezension, Kommentar, Testbericht, Erfahrung, Testnutzung, Nutzungsgefühle, Tipps, Strategie, Tutorial, Anleitung, Fähigkeiten, Methoden, Schritte, Prozess, Bedienung, Einstellungen, Konfiguration, Installation, Deinstallation, Aktualisierung, Reparatur, Störung, Problem, Lösung, häufig gestellte Fragen, FAQ, Hilfe, Support, Service, Kundendienst, Garantie, Reparatur, Rückgabe und Umtausch, Logistik, Lieferung, Expressversand, Versandkosten, kostenloser Versand, Rabatt, Angebot, Promotion, Aktivität, Verlosung, roter Umschlag, Punkte, Mitglied, VIP, aufladen, kostenpflichtig, kaufen, bestellen, abrechnen, bezahlen, Kasse, Warenkorb, Favoriten, Wunschliste, vergleichen, filtern, suchen, finden, entdecken, Empfehlung, könnte Ihnen gefallen, für Sie empfohlen, verwandte Empfehlungen, beliebte Empfehlungen, ausgewählte Empfehlungen, Empfehlung der Redaktion, Empfehlung der Benutzer, Empfehlung von Freunden, Systemempfehlung, intelligente Empfehlung, personalisierte Empfehlung, maßgeschneiderte Empfehlung, exklusive Empfehlung, zeitlich begrenzte Empfehlung, tägliche Empfehlung, wöchentliche Empfehlung, monatliche Empfehlung, jährliche Empfehlung, beste Empfehlung, hochwertige Empfehlung, spezielle Empfehlung, meistverkaufte Empfehlung, neue Produktempfehlung, Bestseller-Empfehlung, Mundpropaganda-Empfehlung, gute Bewertung, Fünf-Sterne-Empfehlung, volle Punktzahl Empfehlung, perfekte Empfehlung, super-Preis-Leistungs-Verhältnis, preisgünstige Empfehlung, günstige Empfehlung, kostengünstige Empfehlung, lohnende Empfehlung, Must-Have-Empfehlung, unverzichtbare Empfehlung, erste Wahl, bevorzugte Empfehlung, handverlesene Empfehlung, streng ausgewählte Empfehlung, sorgfältig ausgewählt, einzigartig, beispiellos, noch nie dagewesen, unerhört, unübertroffen, unvergleichlich, unerreicht, weit voraus, an vorderster Front, an der Spitze, ganz vorne, erstklassig, einsame Spitze, wenige, selten, Phönixfeder und Einhornhorn, einmalig im Jahrhundert, tausendjährige Gelegenheit, nicht zu verpassen, die Zeit kommt nicht wieder, vergeht im Handumdrehen, vergeht schnell, wie ein Blitz, wie ein weißes Pferd, das durch einen Spalt galoppiert, die Zeit fliegt, die Jahre vergehen, die Jugend vergeht leicht, Schönheit altert leicht, Helden am Ende ihres Weges, erschöpftes Talent, am Ende seiner Kräfte, erschöpfte Munition und Nahrung, Öl ist verbraucht und die Lampe ist aus, am Ende seiner Kräfte, die Sonne geht unter, fast am Ende, kaum noch am Leben, kämpft um sein Überleben, letztes Aufblitzen, Sterbebegleitung, lebenswichtig, entscheidend, Überleben, auf Gedeih und Verderb, in der Schwebe, in höchster Gefahr, wackelig, anfällig, im Wind wehend, innere und äußere Probleme, von Feinden umzingelt, von vorne und hinten angegriffen, in der Klemme, in einer Zwickmühle, in einer Sackgasse, nach dem Sturm kommt die Sonne, aus der Not eine Tugend machen, von den Toten auferstehen, Gefahren abwenden, in Sicherheit bringen, Glück aus dem Unglück ziehen, das Schlechte wendet sich zum Guten, nach Regen kommt Sonnenschein, die Wolken vertreiben und die Sonne sehen, nach dem Sturm einen klaren Himmel finden"
+  },
+  "time_patterns": {
+    "date_formats": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}\\s*\\.\\s*\\d{1,2}\\s*\\.\\s*\\d{4}",
+      "\\d{1,2}\\s*\\.\\s*\\d{1,2}"
+    ],
+    "relative_time": {
+      "pattern": "(?:vor\\s*\\d+\\s*(?:Sekunde|Sekunden|Minute|Minuten|Stunde|Stunden|Tag|Tagen|Woche|Wochen|Monat|Monaten|Jahr|Jahren)|gerade eben|heute|gestern|vorgestern|letzte Woche|letzten Monat|letztes Jahr)",
+      "units": [
+        "Sekunde",
+        "Sekunden",
+        "Minute",
+        "Minuten",
+        "Stunde",
+        "Stunden",
+        "Tag",
+        "Tagen",
+        "Woche",
+        "Wochen",
+        "Monat",
+        "Monaten",
+        "Jahr",
+        "Jahren"
+      ],
+      "special_terms": [
+        "gerade eben",
+        "heute",
+        "gestern",
+        "vorgestern",
+        "letzte Woche",
+        "letzten Monat",
+        "letztes Jahr"
+      ]
+    },
+    "date_prefixes": {
+      "pattern": "^(Veröffentlicht am|Aktualisiert am|Erstellungsdatum):\\s*",
+      "terms": [
+        "Veröffentlicht am",
+        "Aktualisiert am",
+        "Erstellungsdatum"
+      ]
+    }
+  },
+  "datetime": {
+    "timezone_offset": 1,
+    "date_format": "%d.%m.%Y",
+    "datetime_format": "%d.%m.%Y %H:%M:%S",
+    "unknown_identifiers": [
+      "unbekannt",
+      "keine",
+      "derzeit nicht verfügbar",
+      "null",
+      "None"
+    ],
+    "date_prefixes": [
+      "Veröffentlicht am",
+      "Aktualisiert am",
+      "Veröffentlichungszeit",
+      "Erstellungszeit",
+      "Veröffentlichungsdatum",
+      "Aktualisierungsdatum",
+      "Datum"
+    ],
+    "char_replacements": {
+      "/": ".",
+      "-": "."
+    },
+    "meta_selectors": [
+      "meta[property='article:published_time']",
+      "meta[property='sitemap:news:publication_date']",
+      "meta[itemprop='datePublished']",
+      "meta[name='publishdate']",
+      "meta[name='pubdate']",
+      "meta[name='original-publish-date']",
+      "meta[name='weibo:article:create_at']",
+      "meta[name='baidu_ssp:publishdate']"
+    ],
+    "validation_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:Z|[+-]\\d{2}:\\d{2})?",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?",
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+      "vor\\s*(\\d+)\\s*(Sekunde|Sekunden|Minute|Minuten|Stunde|Stunden|Tag|Tagen|Woche|Wochen|Monat|Monaten|Jahr|Jahren)",
+      "(gerade eben|heute|gestern|vorgestern|letzte Woche|letzten Monat|letztes Jahr)",
+      "\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}",
+      "^\\d{10}$",
+      "^\\d{13}$",
+      "\\d+\\s*(second|seconds|minute|minutes|hour|hours|day|days|week|weeks|month|months|year|years)\\s*ago",
+      "(yesterday|today|just\\s*now|last\\s*(week|month|year)|this\\s*(week|month|year))"
+    ],
+    "date_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}\\s*\\.\\s*\\d{1,2}\\s*\\.\\s*\\d{4}",
+      "(?:vor\\s*\\d+\\s*(?:Sekunde|Sekunden|Minute|Minuten|Stunde|Stunden|Tag|Tagen|Woche|Wochen|Monat|Monaten|Jahr|Jahren)|gerade eben|heute|gestern|vorgestern|letzte Woche|letzten Monat|letztes Jahr)",
+      "\\d{1,2}\\s*\\.\\s*\\d{1,2}"
+    ],
+    "fallback_patterns": [
+      "\\d{4}\\s*[-/\\.]?\\s*\\d{1,2}\\s*[-/\\.]?\\s*\\d{1,2}\\s*(?:\\s+\\d{1,2}:\\d{1,2}(?::\\d{1,2})?)?",
+      "\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+      "\\d{1,2}\\s*\\.\\s*\\d{1,2}\\s*\\.\\s*\\d{4}",
+      "\\d{1,2}\\s*\\.\\s*\\d{1,2}",
+      "(?:vor\\s*\\d+\\s*(?:Sekunde|Sekunden|Minute|Minuten|Stunde|Stunden|Tag|Tagen|Woche|Wochen|Monat|Monaten|Jahr|Jahren)|gerade eben|heute|gestern|vorgestern|letzte Woche|letzten Monat|letztes Jahr)"
+    ],
+    "relative_time_patterns": {
+      "seconds_ago": [
+        "vor\\s*(\\d+)\\s*(Sekunde|Sekunden)"
+      ],
+      "minutes_ago": [
+        "vor\\s*(\\d+)\\s*(Minute|Minuten)"
+      ],
+      "hours_ago": [
+        "vor\\s*(\\d+)\\s*(Stunde|Stunden)"
+      ],
+      "days_ago": [
+        "vor\\s*(\\d+)\\s*(Tag|Tagen)"
+      ],
+      "weeks_ago": [
+        "vor\\s*(\\d+)\\s*(Woche|Wochen)"
+      ],
+      "months_ago": [
+        "vor\\s*(\\d+)\\s*(Monat|Monaten)"
+      ],
+      "years_ago": [
+        "vor\\s*(\\d+)\\s*(Jahr|Jahren)"
+      ],
+      "just_now": [
+        "gerade eben"
+      ],
+      "today": [
+        "heute"
+      ],
+      "yesterday": [
+        "gestern"
+      ],
+      "day_before_yesterday": [
+        "vorgestern"
+      ]
+    },
+    "incomplete_patterns": [
+      "(\\d{1,2})\\s*[-/\\.]?\\s*(\\d{1,2})"
+    ],
+    "complete_patterns": [
+      {
+        "pattern": "(\\d{4})\\s*[-/\\.]?\\s*(\\d{1,2})\\s*[-/\\.]?\\s*(\\d{1,2})",
+        "format": "%d.%m.%Y"
+      },
+      {
+        "pattern": "(\\d{1,2})\\s*\\.\\s*(\\d{1,2})\\s*\\.\\s*(\\d{4})",
+        "format": "%d.%m.%Y"
+      }
+    ],
+    "parse_formats": [
+      "%d.%m.%Y %H:%M:%S",
+      "%d.%m.%Y %H:%M",
+      "%d.%m.%Y",
+      "%Y.%m.%d",
+      "%d.%m.%Y",
+      "%y-%m-%d"
+    ]
   }
 }

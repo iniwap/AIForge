@@ -36,10 +36,13 @@
     "engine_bing": "Bing",
     "engine_360": "360",
     "engine_sogou": "Sogou",
-    "engine_google": "Google",  
-    "engine_yandex": "Yandex",  
-    "engine_naver": "Naver",  
-    "engine_yahoo_japan": "Yahoo Japan"  
+    "engine_google": "Google",
+    "engine_yandex": "Yandex",
+    "engine_naver": "Naver",
+    "engine_yahoo_japan": "Yahoo Japan",
+    "engine_duckduckgo": "duckduckgo",
+    "engine_startpage": "startpage",
+    "engine_searx": "searx"
   },
   "analyzer": {
     "recommendations": {

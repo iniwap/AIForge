@@ -1,21 +1,35 @@
 from typing import Dict, Any
+import threading
+
+from ..i18n.manager import AIForgeI18nManager
 
 
 class ProgressIndicator:
     _instance = None
     _initialized = False
+    _lock = threading.RLock()
 
     def __new__(cls, components: Dict[str, Any] = None):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            with cls._lock:  # 使用线程锁
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, components: Dict[str, Any] = None):
-        if not self._initialized and components:
-            self.components = components
-            self._i18n_manager = self.components.get("i18n_manager")
-            self._show_progress = True
-            ProgressIndicator._initialized = True
+        if self._initialized:
+            return
+
+        with self._lock:
+            if not self._initialized:
+                self._show_progress = True
+                ProgressIndicator._initialized = True
+                if components:
+                    self.components = components
+                    self._i18n_manager = self.components.get("i18n_manager")
+                else:
+                    self.components = None
+                    self._i18n_manager = AIForgeI18nManager.get_instance()
 
     @classmethod
     def get_instance(cls, components: Dict[str, Any] = None):

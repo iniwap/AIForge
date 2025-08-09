@@ -89,11 +89,8 @@ LOCALE_SEARCH_ENGINES = {
 def search_web(
     search_query, max_results=10, min_items=1, min_abstract_len=300, max_abstract_len=1000
 ):
-
+    """使用多个搜索引擎进行网络搜索，返回min_items有效结果"""
     i18n_manager = AIForgeI18nManager.get_instance()
-    print(
-        "search_web~~~>", i18n_manager.locale, LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh")
-    )
     for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
         try:
             engine_name = i18n_manager.t(f"search.engine_{engine}")
@@ -107,13 +104,11 @@ def search_web(
                 max_abstract_len,
             )
             # 验证搜索结果质量
-            print("search_result++++>", search_result)
             if validate_search_result(search_result, min_items):
                 return search_result
             else:
                 continue
-        except Exception as e:
-            print("search_web======>", str(e))
+        except Exception:
             continue
 
     # 所有搜索引擎都失败，返回 None
@@ -130,7 +125,8 @@ def validate_search_result(result, min_items=1, search_type="local", min_abstrac
         return False
 
     timestamp = result.get("timestamp", time.time())
-
+    i18n_manager = AIForgeI18nManager.get_instance()
+    date_patterns = i18n_manager.t("datetime.date_patterns", default=[])
     for item in results:
         pub_time = item.get("pub_time", "")
         abstract = item.get("abstract", "")
@@ -168,12 +164,7 @@ def validate_search_result(result, min_items=1, search_type="local", min_abstrac
 
         # 兜底：从 abstract 提取日期
         if not item["pub_time"] and abstract:
-            for pattern in [
-                r"\d{4}\s*[-/年\.]?\s*\d{1,2}\s*[-/月\.]?\s*\d{1,2}\s*(?:日)?(?:\s+\d{1,2}:\d{1,2}(?::\d{1,2})?)?",  # noqa 501
-                r"\d{1,2}\s*[月]\s*\d{1,2}\s*[日]?",
-                r"(?:\d+\s*(?:秒|一分钟|分钟|分|小时|个小时|天|日|周|星期|个月|月|年)前|刚刚|今天|昨天|前天|上周|上星期|上个月|上月|去年)",
-                r"\d{4}年\d{1,2}月\d{1,2}日",
-            ]:
+            for pattern in date_patterns:
                 match = re.search(pattern, abstract, re.IGNORECASE)
                 if match:
                     pub_time = match.group(0)
@@ -256,17 +247,9 @@ def get_common_headers():
 def _extract_publish_time(page_soup):
     """统一的发布时间提取函数"""
     # Meta 标签提取 - 优先处理标准的发布时间标签
-    meta_selectors = [
-        "meta[property='article:published_time']",
-        "meta[property='sitemap:news:publication_date']",
-        "meta[itemprop='datePublished']",
-        "meta[name='publishdate']",
-        "meta[name='pubdate']",
-        "meta[name='original-publish-date']",
-        "meta[name='weibo:article:create_at']",
-        "meta[name='baidu_ssp:publishdate']",
-    ]
-
+    i18n_manager = AIForgeI18nManager.get_instance()
+    meta_selectors = i18n_manager.t("datetime.meta_selectors")
+    timezone_offset = i18n_manager.t("datetime.timezone_offset", default=8)
     for selector in meta_selectors:
         meta_tag = page_soup.select_one(selector)
         if meta_tag:
@@ -276,9 +259,10 @@ def _extract_publish_time(page_soup):
                     # 处理 UTC 时间 (以Z结尾)
                     if datetime_str.endswith("Z"):
                         dt = datetime.fromisoformat(datetime_str.replace("Z", "+00:00"))
-                        # 转换为东八区时间
-                        dt_local = dt + timedelta(hours=8)
-                        return dt_local.strftime("%Y-%m-%d")
+                        dt_local = dt + timedelta(hours=int(timezone_offset))
+                        return dt_local.strftime(
+                            i18n_manager.t("datetime.date_format", default="%Y-%m-%d")
+                        )
                     # 处理带时区的 ISO 8601 格式
                     elif "T" in datetime_str and ("+" in datetime_str or "-" in datetime_str[-6:]):
                         dt = datetime.fromisoformat(datetime_str)
@@ -348,13 +332,8 @@ def _extract_publish_time(page_soup):
 
     # 兜底：全文搜索
     text = utils.clean_date_text(page_soup.get_text())
-    for pattern in [
-        r"\d{4}\s*[-/年\.]?\s*\d{1,2}\s*[-/月\.]?\s*\d{1,2}\s*(?:日)?(?:\s+\d{1,2}:\d{1,2}(?::\d{1,2})?)?",  # noqa 501
-        r"\d{1,2}[-/]\d{1,2}[-/]\d{4}",
-        r"\d{1,2}\s*[月]\s*\d{1,2}\s*[日]?",
-        r"(?:\d+\s*(?:秒|分钟|分|小时|个小时|天|日|周|星期|个月|月|年)前|刚刚|今天|昨天|前天|上周|上星期|上个月|上月|去年)",
-        r"\d{4}年\d{1,2}月\d{1,2}日",
-    ]:
+    fallback_patterns = i18n_manager.t("datetime.fallback_patterns", default=[])
+    for pattern in fallback_patterns:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             pub_time = match.group(0)
@@ -414,11 +393,17 @@ def sort_and_filter_results(results):
     if not results:
         return results
 
-    recent_results = [
-        result for result in results if utils.is_within_days(result.get("pub_time"), 7)
-    ]
+    recent_results = []
+    for result in results:
+        pub_time = result.get("pub_time")
+        if pub_time is None or utils.is_within_days(pub_time, 7):
+            recent_results.append(result)
+
     recent_results.sort(
-        key=lambda x: utils.parse_date_to_timestamp(x.get("pub_time", "")) or 0, reverse=True
+        key=lambda x: (
+            x.get("pub_time") is None,
+            -(utils.parse_date_to_timestamp(x.get("pub_time", "")) or 0),
+        )
     )
 
     return recent_results

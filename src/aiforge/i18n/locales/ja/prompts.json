@@ -127,29 +127,29 @@
     "json_format_instruction": "JSON形式で検証結果を返してください：\n{\n    \"validation_passed\": true/false,\n    \"confidence\": 0.0-1.0,\n    \"failure_reason\": \"具体的な失敗理由（失敗した場合）\",\n    \"improvement_suggestions\": [\"改善提案1\", \"改善提案2\"],\n    \"core_issues\": [\"核心的な問題1\", \"核心的な問題2\"]\n}"
   },
   "search": {
-    "guided_instruction_template": "最新の関連情報を取得するために、以下の設定を参考にして、検索関数（コメントやログ出力は不要）を生成してください：\n\n# 検索エンジンURLパターン：\n- Baidu: https://www.baidu.com/s?wd={{quote(search_query)}}&rn={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n- 360: https://www.so.com/s?q={{quote(search_query)}}&rn={{max_results}}\n- Sogou: https://www.sogou.com/web?query={{quote(search_query)}}\n\n# 主要なCSSセレクタ：\nBaidu結果コンテナ: [\"div.result\", \"div.c-container\", \"div[class*='result']\"]\nBaiduタイトル: [\"h3\", \"h3 a\", \".t\", \".c-title\"]\nBaidu概要: [\"div.c-abstract\", \".c-span9\", \"[class*='abstract']\"]\n\nBing結果コンテナ: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\"]\nBingタイトル: [\"h2\", \"h3\", \"h2 a\", \".b_title\"]\nBing概要: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\"]\n\n360結果コンテナ: [\"li.res-list\", \"div.result\", \"li[class*='res']\"]\n360タイトル: [\"h3.res-title\", \"h3\", \".res-title\"]\n360概要: [\"p.res-desc\", \"div.res-desc\", \".res-summary\"]\n\nSogou結果コンテナ: [\"div.vrwrap\", \"div.results\", \"div.result\"]\nSogouタイトル: [\"h3.vr-title\", \"h3.vrTitle\", \"a.title\", \"h3\"]\nSogou概要: [\"div.str-info\", \"div.str_info\", \"p.str-info\"]\n\n# 重要な処理ロジック：\n1. 優先順位に従って4つの検索エンジンを順に試行します（APIキー方式は使用しないでください）\n2. 概要コンテンツをcontentとして使用することを優先し、不十分な場合は、concurrent.futures.ThreadPoolExecutorを使用してページに並行アクセスし、詳細なコンテンツを抽出します\n3. ページから公開時間を抽出し、以下の戦略に従います：\n    - metaタグを優先：article:published_time、datePublished、pubdate、publishdateなど\n    - 代替案：timeタグ、日付関連のクラス、ページテキストの照合\n    - 有効な日付形式：標準形式、中国語形式、相対時間（例：「昨日」、「1日前」、「1時間前」など）、英語の時間（例：「yesterday」など）\n4. 公開時間でソートし、最近7日間のコンテンツを優先します\n5. 検証ページと無効なコンテンツをフィルタリングし、エンコーディングを正しく処理し、結果に文字化けを含めないようにします\n\n# 返すデータ形式（厳密に遵守）：\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"successまたはerror\",\n    \"summary\": f\"検索が完了しました。{len(data)}件の結果が見つかりました\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# 関数をすぐに実行し、__result__ に割り当ててください\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "free_form_instruction_template": "最新の関連情報を取得するために、創造的に検索関数（コメントやログ出力は不要）を生成してください。\n\n# 選択可能な検索戦略：\n1. 異なる検索エンジン（Baidu、Bing、360、Sogou）を順に試行する\n2. ニュースアグリゲーションAPI（NewsAPI、RSSフィードなど）を使用する\n3. ソーシャルメディアプラットフォームの検索を試みる\n4. 学術検索エンジンを使用する\n\n# 主要な要件：\n- 関数名はsearch_web、パラメータはsearch_queryとmax_results\n- 複数のフォールトトレランスメカニズムを実装し、少なくとも2-3つの異なる方法を試行する\n- 各結果の元のページにアクセスして完全な情報を抽出する\n- 最近7日以内の新しいコンテンツを優先的に取得し、公開時間でソートする\n- 概要の長さは少なくとも{min_abstract_len}文字で、重要な情報を含むようにする\n- APIキーを必要とする方法は使用しない\n- 検証ページと無効なコンテンツをフィルタリングし、エンコーディングを正しく処理し、結果に文字化けを含めないようにする\n\n# 時間抽出戦略：\n- metaタグを優先：article:published_time、datePublished、pubdate、publishdateなど\n- 代替案：timeタグ、日付関連のクラス、ページテキストの照合\n- 有効な日付形式：標準形式、中国語形式、相対時間（例：「昨日」、「1日前」、「1時間前」など）、英語の時間（例：「yesterday」など）\n\n# 返すデータ形式（厳密に遵守）：\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"検索が完了しました\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# 関数をすぐに実行し、__result__ に割り当ててください\n __result__ = search_web(\"{search_query}\", {max_results})",
-    "result_processor": {
-      "suggestions": {
-        "check_syntax_logic": "コードの構文と論理エラーを確認してください",
-        "regenerate_code": "ユーザーの要求をよりよく満たすために、コードを再生成してください。データ取得ロジックを確認し、有効なタイトルとコンテンツフィールドが返されるようにしてください",
-        "check_data_logic": "データ取得ロジックを確認し、正しい形式のデータが返されるようにしてください",
-        "check_execution_structure": "コードの実行と基本的なデータ構造を確認してください",
-        "check_business_logic": "ビジネスロジックと必須フィールドを確認してください",
-        "check_code_format": "コードのロジックと出力形式を確認してください",
-        "check_syntax_variables": "コードの構文、変数定義、論理エラーを確認してください"
-      },
-      "system_errors": {
-        "execution_timeout": "コード実行タイムアウト"
-      },
-      "messages": {
-        "execution_failed": "コード実行失敗: {error}"
-      },
-      "summaries": {
-        "no_data": "実行は完了しましたが、データが取得されませんでした",
-        "execution_complete": "実行完了",
-        "operation_complete": "操作完了"
-      }
+    "guided_instruction_template": "最新の関連情報を取得するために、以下の設定を参考にして、検索関数（コメントやログ出力は不要）を生成してください：\n\n# 検索エンジンURLパターン：\n- Yahoo Japan: https://search.yahoo.co.jp/search?p={{quote(search_query)}}&n={{max_results}}\n- Google: https://www.google.com/search?q={{quote(search_query)}}&num={{max_results}}\n- Bing: https://www.bing.com/search?q={{quote(search_query)}}&count={{max_results}}\n\n# 主要なCSSセレクタ：\nYahoo Japan結果コンテナ: [\".sw-CardBase\", \".algo\", \"[class*='result']\", \".w\"]\nYahoo Japanタイトル: [\"h3\", \"h3 a\", \".sw-CardBase__title\", \".title\"]\nYahoo Japan概要: [\".sw-CardBase__body\", \".abstr\", \".sw-CardBase__summary\"]\n\nGoogle結果コンテナ: [\"div.g\", \"div[class*='result']\", \"div.tF2Cxc\", \"div.MjjYud\"]\nGoogleタイトル: [\"h3\", \"h3 a\", \".LC20lb\", \".DKV0Md\", \"[data-attrid='title']\"]\nGoogle概要: [\".VwiC3b\", \".s\", \".st\", \"[class*='snippet']\", \".yXK7lf\"]\n\nBing結果コンテナ: [\"li.b_algo\", \"div.b_algo\", \"li[class*='algo']\", \".b_algoheader\"]\nBingタイトル: [\"h2\", \"h3\", \"h2 a\", \".b_title\", \"a[href*='http']\"]\nBing概要: [\"p.b_lineclamp4\", \"div.b_caption\", \".b_snippet\", \".b_paractl\"]\n\n# 重要な処理ロジック：\n1. 3つの検索エンジンを優先順位で試行する（APIキーを使用する方法は使わない）\n2. 概要内容をコンテンツとして優先使用し、不十分な場合はconcurrent.futures.ThreadPoolExecutorを使用してページに並行アクセスし、詳細コンテンツを抽出する\n3. ページから公開時間を抽出し、以下の包括的戦略に従う：\n    - 優先metaタグ: article:published_time, datePublished, pubdate, publishdate, og:article:published_time, twitter:data1, sailthru.date, parsely-pub-date, article.published, content_date\n    - フォールバックオプション: datetime属性を持つtimeタグ、日付関連CSSクラス (.date, .timestamp, .published, .post-date, .entry-date)、構造化データ (JSON-LD with @type Article)\n    - 日本語と英語の日付の高度なテキストパターン：\n      * 標準形式: YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, DD/MM/YYYY\n      * 日本語月形式: \"2024年1月15日\", \"令和6年1月15日\", \"1月15日\", \"15日\"\n      * 相対時間表現: \"X分/時間/日/週/月/年前\", \"昨日\", \"今日\", \"先週\", \"先月\", \"1分/時間/日/週/月/年前\", \"たった今\", \"少し前\"\n      * Regexパターン: r\"(\\d{4}年\\d{1,2}月\\d{1,2}日)\", r\"(\\d+\\s*(?:分|時間|日|週|月|年)前)\", r\"(昨日|今日|たった今|少し前)\"\n4. 公開時間でソートし、過去7日間のコンテンツを優先する\n5. 検証ページ、Cookieお知らせ、無効なコンテンツをフィルタリングし、エンコーディングを正しく処理し、結果に文字化けを含めない\n6. 各検索エンジンに対して適切なフォールバックを持つ堅牢なエラーハンドリングを実装する\n\n# 返却データ形式（厳密に従う）：\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success または error\",\n    \"summary\": f\"検索完了、{{len(data)}}件の結果が見つかりました\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"template_guided_search\"\n    }}\n}}\n\n# 関数を即座に実行し、__result__に割り当てる\n __result__ = search_web(\"{search_query}\", {max_results})",
+    "free_form_instruction_template": "最新の関連情報を取得するために、創造的に検索関数（コメントやログ出力は不要）を生成してください。\n\n# 選択可能な検索戦略：\n1. 異なる検索エンジン（Yahoo Japan、Google、Bing）を順に試行する\n2. ニュースアグリゲーションAPI（NewsAPI、RSSフィードなど）をAPIキーなしで利用可能な場合に使用する\n3. ソーシャルメディアプラットフォームの検索を試みる（Twitter、Reddit公開API）\n4. 学術検索エンジンを使用する（Google Scholar、arXiv）\n5. 適切なユーザーエージェントとレート制限でウェブスクレイピングを実装する\n\n# 主要な要件：\n- 関数名はsearch_web、パラメータはsearch_queryとmax_results\n- 複数のフォールトトレランスメカニズムを実装し、少なくとも2-3つの異なる方法を試行する\n- 各結果の元のページにアクセスして完全な情報を抽出する\n- 過去7日以内の新しいコンテンツを優先的に取得し、公開時間でソートする\n- 概要の長さは少なくとも{min_abstract_len}文字で、重要な情報を含む\n- APIキーを必要とする方法は使用できない\n- 検証ページ、Cookieお知らせ、無効なコンテンツをフィルタリングし、エンコーディングを正しく処理し、結果に文字化けを含めない\n- 適切なリクエストヘッダー、タイムアウト、リトライメカニズムを実装する\n\n# 日本語コンテンツの強化された時間抽出戦略：\n- 優先metaタグ: article:published_time, datePublished, pubdate, publishdate, og:article:published_time, twitter:data1, sailthru.date, parsely-pub-date\n- 構造化データ: JSON-LD with @type Article、microdata with itemprop datePublished\n- Timeタグ: <time datetime=\"...\">要素、data-time属性\n- CSSセレクタ: .date, .timestamp, .published, .post-date, .entry-date, .article-date\n- 包括的regexでのテキストパターンマッチング：\n  * ISO形式: r\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\"\n  * 日本語形式: r\"\\d{4}年\\d{1,2}月\\d{1,2}日\", r\"\\d{1,2}/\\d{1,2}/\\d{4}\"\n  * 日本語月: r\"(?:1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月)\\s*\\d{1,2}日\"\n  * 相対時間: r\"\\d+\\s*(?:分|時間|日|週|月|年)前\"\n  * 一般的なフレーズ: r\"(?:昨日|今日|たった今|少し前|先週|先月|昨年)\"\n- 日付が見つからない場合は現在のタイムスタンプにフォールバック\n\n# 返却データ形式（厳密に従う）：\n{{\n    \"data\": [\n        {data_format}\n    ],\n    \"status\": \"success\",\n    \"summary\": \"検索完了\",\n    \"metadata\": {{\n        \"timestamp\": time.time(),\n        \"task_type\": \"data_fetch\",\n        \"search_query\": \"{search_query}\",\n        \"execution_type\": \"free_form_search\"\n    }}\n}}\n\n# 関数を即座に実行し、__result__に割り当てる\n __result__ = search_web(\"{search_query}\", {max_results})"
+  },
+  "result_processor": {
+    "suggestions": {
+      "check_syntax_logic": "コードの構文と論理エラーを確認してください",
+      "regenerate_code": "ユーザーの要求をよりよく満たすために、コードを再生成してください。データ取得ロジックを確認し、有効なタイトルとコンテンツフィールドが返されるようにしてください",
+      "check_data_logic": "データ取得ロジックを確認し、正しい形式のデータが返されるようにしてください",
+      "check_execution_structure": "コードの実行と基本的なデータ構造を確認してください",
+      "check_business_logic": "ビジネスロジックと必須フィールドを確認してください",
+      "check_code_format": "コードのロジックと出力形式を確認してください",
+      "check_syntax_variables": "コードの構文、変数定義、論理エラーを確認してください"
+    },
+    "system_errors": {
+      "execution_timeout": "コード実行タイムアウト"
+    },
+    "messages": {
+      "execution_failed": "コード実行失敗: {error}"
+    },
+    "summaries": {
+      "no_data": "実行は完了しましたが、データが取得されませんでした",
+      "execution_complete": "実行完了",
+      "operation_complete": "操作完了"
     }
   }
 }

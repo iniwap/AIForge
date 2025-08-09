@@ -8,8 +8,8 @@ from aiforge import AIForgeEngine
 )
 def test_quick_start():
     """方式1：快速启动"""
-    forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"], locale="ja")
-    result = forge("获取5条名古屋市市长希望与南京恢复交流的报道")
+    forge = AIForgeEngine(api_key=os.environ["OPENROUTER_API_KEY"], locale="zh")
+    result = forge("搜索全球股市最新趋势并分析写一篇投资建议")
     print("任务执行结果:", result)
     assert result is not None
 
