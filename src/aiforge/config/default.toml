@@ -178,3 +178,10 @@ priority = 1
 name = "domain_specific_executor"
 type = "executor"
 config_file = "plugins/domain_executor.toml"
+
+[searxng]
+enabled = true
+local_url = "http://localhost:55510"
+remote_url = ""
+fallback_to_public = true
+timeout = 10

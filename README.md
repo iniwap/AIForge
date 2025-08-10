@@ -48,7 +48,7 @@ AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代�
 ### 🔧 高级执行管理  
 - **语义缓存** - 基于指令相似性的智能代码复用  
 - **模板系统** - 领域特定的执行模板  
-- **搜索集成** - 多引擎搜索能力（百度、Bing、360、搜狗）  
+- **搜索集成** - 多引擎搜索能力（百度、Bing、360、搜狗），支持SearXNG集成
 - **内容生成** - 专业的内容创建工作流  
 
 ### 🌍 多语言支持  
@@ -58,6 +58,7 @@ AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代�
 - **跨语言兼容** - 保持英文关键词通用性的同时提供本地化体验
 
 ### 🛡️ 企业级功能  
+- **Docker部署** - 同时支持两种部署方式
 - **进度跟踪** - 实时执行状态指示器  
 - **错误处理** - 全面的异常管理和重试逻辑  
 - **配置管理** - 灵活的TOML配置系统  
@@ -74,40 +75,69 @@ AIForge提供多层安全保障，确保AI代码安全执行：
   
 ### 安装  
   
-    # 基础安装  
-    pip install aiforge-engine  
-  
-    # 包含可选依赖  
-    pip install aiforge-engine[all]  # 所有功能  
-    pip install aiforge-engine[gui]  # 终端GUI支持  
-    pip install aiforge-engine[web]  # Web API支持  
-  
+- 基础安装 - 非Docker模式
+```bash
+pip install aiforge-engine  
+
+# 包含可选依赖  
+pip install aiforge-engine[all]  # 所有功能  
+pip install aiforge-engine[gui]  # 终端GUI支持  
+pip install aiforge-engine[web]  # Web API支持  
+```
+- 基础安装 - Docker模式
+
+```bash
+# 1. 设置环境变量  
+export OPENROUTER_API_KEY="your-api-key"  
+# 2. 启动 Web API 服务  
+docker-compose up -d aiforge  
+# 3. 使用 CLI 模式  
+docker-compose --profile cli run --rm aiforge-cli cli "搜索股市趋势"  
+# 4. 直接运行容器  
+docker run -e OPENROUTER_API_KEY="your-key" \\  
+-p 8000:8000 \\  
+-v $(pwd)/aiforge_work:/app/aiforge_work \\  
+aiforge:latest web
+```
 ### 基础使用  
-  
-    from aiforge import AIForgeEngine  
-  
-    # 使用API密钥快速开始  
-    forge = AIForgeEngine(api_key="your-openrouter-apikey")  
-  
-    # 执行自然语言指令  
-    result = forge("搜索全球股市最新趋势并分析写一篇投资建议")  
-    print(result)  
-  
+```python
+from aiforge import AIForgeEngine  
+
+# 使用API密钥快速开始  
+forge = AIForgeEngine(api_key="your-openrouter-apikey")  
+
+# 执行自然语言指令  
+result = forge("搜索全球股市最新趋势并分析写一篇投资建议")  
+print(result)  
+```  
 ### 高级配置  
+
+- 高级参数传递
+```python
+# 提供商特定配置  
+forge = AIForgeEngine(  
+    api_key="your-deepseek-key",  
+    provider="deepseek",
+    locale="en", # ar|de|en|es|fr|hi|ja|ko|pt|ru|vi|zh
+    max_rounds=5,
+)  
+
+# 复杂任务执行  
+result = forge.run(  
+    "构建实时数据监控系统",  
+    system_prompt="你是一位高级软件架构师"  
+)  
+```
+
+- 本地 SearXNG配置
+```bash
+# 启动本地 SearXNG  
+docker run -d -p 55510:8080 searxng/searxng:latest  
   
-    # 提供商特定配置  
-    forge = AIForgeEngine(  
-        api_key="your-deepseek-key",  
-        provider="deepseek",
-        locale="en", # ar|de|en|es|fr|hi|ja|ko|pt|ru|vi|zh
-        max_rounds=5,
-    )  
-  
-    # 复杂任务执行  
-    result = forge.run(  
-        "构建实时数据监控系统",  
-        system_prompt="你是一位高级软件架构师"  
-    )  
+# 配置 AIForge 使用本地 SearXNG  
+export SEARXNG_ENABLED=true  
+export SEARXNG_LOCAL_URL=http://localhost:55510
+```
   
 ### 配置文件设置  
   

@@ -10,6 +10,12 @@ class AIForgeConfigManager:
         self.config: Optional[AIForgeConfig] = None
         self._runtime_overrides: Dict[str, Any] = {}
 
+    def _is_docker_environment(self) -> bool:
+        """检测是否在 Docker 环境中运行"""
+        import os
+
+        return os.path.exists("/.dockerenv") or os.environ.get("DOCKER_CONTAINER") == "true"
+
     def initialize_config(
         self,
         config_file: str | None = None,
@@ -18,6 +24,10 @@ class AIForgeConfigManager:
         **kwargs,
     ) -> AIForgeConfig:
         """初始化配置"""
+        # Docker 环境检测
+        if self._is_docker_environment():
+            config_file = config_file or "/app/config/aiforge.toml"
+
         # 情况3：传入配置文件，以此文件为准
         if config_file:
             self.config = AIForgeConfig(config_file)
@@ -40,6 +50,51 @@ class AIForgeConfigManager:
             self.config.update(self._runtime_overrides)
 
         return self.config
+
+    def get_searxng_config(self) -> Dict[str, Any]:
+        """获取 SearXNG 配置"""
+        return self.config.config.get(
+            "searxng",
+            {
+                "enabled": False,
+                "local_url": "http://localhost:55510",
+                "remote_url": None,
+                "fallback_to_public": True,
+                "timeout": 10,
+            },
+        )
+
+    def is_searxng_available(self) -> bool:
+        """检查 SearXNG 服务是否可用"""
+        searxng_config = self.get_searxng_config()
+        if not searxng_config.get("enabled"):
+            return False
+
+        # 检查本地服务
+        if searxng_config.get("local_url"):
+            try:
+                import requests
+
+                response = requests.get(
+                    f"{searxng_config['local_url']}/search?q=test&format=json", timeout=5
+                )
+                return response.status_code == 200
+            except Exception:
+                pass
+
+        # 检查远程服务
+        if searxng_config.get("remote_url"):
+            try:
+                import requests
+
+                response = requests.get(
+                    f"{searxng_config['remote_url']}/search?q=test&format=json", timeout=5
+                )
+                return response.status_code == 200
+            except Exception:
+                pass
+
+        return False
 
     def get_config(self) -> AIForgeConfig:
         """获取当前配置"""

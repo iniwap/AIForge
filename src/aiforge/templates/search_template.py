@@ -87,10 +87,38 @@ LOCALE_SEARCH_ENGINES = {
 
 
 def search_web(
-    search_query, max_results=10, min_items=1, min_abstract_len=300, max_abstract_len=1000
+    search_query,
+    max_results=10,
+    min_items=1,
+    min_abstract_len=300,
+    max_abstract_len=1000,
+    engine_override=None,
 ):
     """使用多个搜索引擎进行网络搜索，返回min_items有效结果"""
     i18n_manager = AIForgeI18nManager.get_instance()
+    # 如果指定了 engine_override 且为 SearXNG 相关
+    if engine_override and engine_override.startswith("searxng"):
+        if engine_override in ENGINE_CONFIGS:
+            try:
+                ProgressIndicator.get_instance().show_search_process("SearXNG")
+                # 使用 SearXNG 专用的搜索逻辑
+                search_result = _search_searxng_template(
+                    search_query,
+                    max_results,
+                    ENGINE_CONFIGS[engine_override],
+                    min_abstract_len,
+                    max_abstract_len,
+                )
+
+                if validate_search_result(search_result, min_items):
+                    return search_result
+            except Exception:
+                pass
+
+        # SearXNG 失败时的回退逻辑
+        if not ENGINE_CONFIGS.get(engine_override, {}).get("fallback_to_public", True):
+            return None
+
     for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
         try:
             engine_name = i18n_manager.t(f"search.engine_{engine}")
@@ -113,6 +141,118 @@ def search_web(
 
     # 所有搜索引擎都失败，返回 None
     return None
+
+
+def _search_searxng_template(
+    search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=1000
+):
+    """SearXNG JSON API 专用搜索模板"""
+    try:
+        # 使用会话管理，模拟验证方法的成功模式
+        session = requests.Session()
+        # 完整的浏览器头部信息
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",  # noqa 501
+            "Accept": "application/json, text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",  # noqa 501
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate",
+            "Connection": "keep-alive",
+            "Referer": f"{engine_config['url']}/",
+        }
+
+        # 先建立会话（模拟验证方法）
+        base_url = engine_config["url"]
+        session.get(f"{base_url}/", headers=headers, timeout=10)
+
+        # 使用 POST 请求，让 SearXNG 使用默认引擎配置
+        search_data = {
+            "q": search_query,
+            "category_general": "1",
+            "language": "auto",
+            "time_range": "",
+            "safesearch": "0",
+            "format": "json",
+            # 不指定 engines 参数，让 SearXNG 使用默认配置
+        }
+
+        response = session.post(f"{base_url}/search", data=search_data, headers=headers, timeout=20)
+
+        response.encoding = response.apparent_encoding or "utf-8"
+        response.raise_for_status()
+
+        # 直接解析 JSON 响应
+        data = response.json()
+        results = []
+
+        search_results = data.get(engine_config["result_path"], [])
+        print("search_results", search_results)
+
+        # 第一阶段：过滤内容达标的结果
+        qualified_results = []
+        for item in search_results:
+            try:
+                title = item.get(engine_config["title_path"], "").strip()
+                url = item.get(engine_config["url_path"], "").strip()
+                content = item.get(engine_config["content_path"], "").strip()
+
+                if not title or not url:
+                    continue
+
+                title = utils.clean_text(title)
+                abstract = utils.clean_text(content)
+
+                # 先检查摘要长度，只保留达标的结果
+                if len(abstract) < min_abstract_len // 4:
+                    continue
+
+                if len(abstract) > max_abstract_len:
+                    abstract = abstract[:max_abstract_len] + "..."
+
+                # 直接使用 SearXNG 返回的发布时间
+                pub_time = ""
+                if item.get("publishedDate"):
+                    pub_time = item["publishedDate"]
+                    # 如果是 ISO 格式，提取日期部分
+                    if "T" in pub_time:
+                        pub_time = pub_time.split("T")[0]
+                elif item.get("pubdate"):
+                    pub_time = item["pubdate"]
+                    # 如果是 ISO 格式，提取日期部分
+                    if "T" in pub_time:
+                        pub_time = pub_time.split("T")[0]
+
+                qualified_results.append(
+                    {"title": title, "url": url, "abstract": abstract, "pub_time": pub_time}
+                )
+
+            except Exception:
+                continue
+
+        results = qualified_results
+        print("results", results)
+        results = sort_and_filter_results(results)
+
+        return {
+            "timestamp": time.time(),
+            "search_query": search_query,
+            "results": results,
+            "success": bool(results),
+            "error": (
+                None if results else AIForgeI18nManager.get_instance().t("search.no_valid_results")
+            ),
+        }
+
+    except Exception as e:
+        return {
+            "timestamp": time.time(),
+            "search_query": search_query,
+            "results": [],
+            "success": False,
+            "error": f"SearXNG search error: {str(e)}",
+        }
+    finally:
+        if "session" in locals():
+            session.close()
 
 
 def validate_search_result(result, min_items=1, search_type="local", min_abstract_len=300):
@@ -1009,6 +1149,26 @@ ENGINE_CONFIGS = {
         "title_selectors": ["h3", ".result_title", "h4"],
         "abstract_selectors": [".content", ".result_content", "p"],
         "fallback_abstract": True,
+    },
+    "searxng_local": {
+        "url": "http://localhost:55510",
+        "api_type": "json",
+        "result_path": "results",
+        "title_path": "title",
+        "url_path": "url",
+        "content_path": "content",
+        "fallback_abstract": True,
+        "local_service": True,
+    },
+    "searxng_remote": {
+        "url": "{searxng_base_url}",
+        "api_type": "json",
+        "result_path": "results",
+        "title_path": "title",
+        "url_path": "url",
+        "content_path": "content",
+        "fallback_abstract": True,
+        "remote_service": True,
     },
 }
 

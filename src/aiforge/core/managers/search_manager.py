@@ -39,6 +39,53 @@ class AIForgeSearchManager:
 
         return any(search_indicators) or search_params
 
+    def _try_searxng_search(
+        self, standardized_instruction: Dict[str, Any], original_instruction: str
+    ) -> Optional[Dict[str, Any]]:
+        """尝试使用 SearXNG 搜索"""
+        config_manager = self.components.get("config_manager")
+        if not config_manager or not config_manager.is_searxng_available():
+            return None
+
+        try:
+            search_params = self.parameter_mapping_service.extract_search_parameters(
+                standardized_instruction, original_instruction
+            )
+            if not search_params["search_query"]:
+                return None
+
+            self._progress_indicator.show_search_start(search_params["search_query"])
+
+            # 使用 SearXNG 搜索
+            template_manager = self.components.get("template_manager")
+            if template_manager:
+                searxng_config = config_manager.get_searxng_config()
+                engine_key = (
+                    "searxng_local" if searxng_config.get("local_url") else "searxng_remote"
+                )
+
+                search_result = template_manager.get_template(
+                    "search_direct",
+                    search_query=search_params["search_query"],
+                    max_results=search_params["max_results"],
+                    min_items=search_params["min_items"],
+                    min_abstract_len=search_params["min_abstract_len"],
+                    max_abstract_len=search_params["max_abstract_len"],
+                    engine_override=engine_key,
+                )
+
+                if search_result and search_result.get("success"):
+                    self._progress_indicator.show_search_complete(
+                        len(search_result.get("results", 0))
+                    )
+                    return self._convert_search_result_to_aiforge_format(
+                        search_result, standardized_instruction, "searxng_search"
+                    )
+
+            return None
+        except Exception:
+            return None
+
     def _try_direct_search_web(
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
@@ -367,9 +414,14 @@ class AIForgeSearchManager:
     ) -> Optional[Dict[str, Any]]:
         """执行多层级搜索策略"""
 
-        # 非中文环境，暂时无法支持本地直接搜素
+        # 第0层：尝试 SearXNG（如果可用）
+        searxng_result = self._try_searxng_search(standardized_instruction, original_instruction)
+        if searxng_result:
+            return searxng_result
+
+        # 第一层：直接调用 search_web
         if self._i18n_manager.locale == "zh":
-            # 第一层：直接调用 search_web
+            # 非中文环境，暂时无法支持本地直接搜素
             direct_result = self._try_direct_search_web(
                 standardized_instruction, original_instruction
             )

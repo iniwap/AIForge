@@ -152,6 +152,12 @@ class TemplateManager:
                         "default": 500,
                         "description": "最多摘要字数",
                     },
+                    "engine_override": {
+                        "type": "str",
+                        "required": False,
+                        "default": None,
+                        "description": "覆盖默认搜索引擎",
+                    },
                 },
             )
 

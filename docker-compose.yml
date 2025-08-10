@@ -1,0 +1,75 @@
+services:
+  aiforge:
+    build: .
+    container_name: aiforge-engine
+    ports:
+      - "${AIFORGE_WEB_PORT:-8000}:8000"
+    volumes:
+      - ./aiforge_work:/app/aiforge_work
+      - ./config:/app/config
+      - ./logs:/app/logs
+    environment:
+      # API Keys    
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
+      # AIForge 配置    
+      - AIFORGE_MAX_TOKENS=${AIFORGE_MAX_TOKENS:-4096}
+      - AIFORGE_MAX_ROUNDS=${AIFORGE_MAX_ROUNDS:-5}
+      - AIFORGE_DEFAULT_PROVIDER=${AIFORGE_DEFAULT_PROVIDER:-openrouter}
+      - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
+      - AIFORGE_NETWORK_POLICY=${AIFORGE_NETWORK_POLICY:-filtered}
+
+      # SearXNG 配置  
+      - SEARXNG_ENABLED=true
+      - SEARXNG_LOCAL_URL=http://nginx:80
+    depends_on:
+      - nginx
+    networks:
+      - aiforge-network
+    restart: unless-stopped
+    command: [ "web" ]
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: aiforge-searxng
+    expose:
+      - "8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    networks:
+      - aiforge-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: aiforge-nginx
+    ports:
+      - "55510:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - searxng
+    networks:
+      - aiforge-network
+    restart: unless-stopped
+
+  # CLI 模式服务（可选）    
+  aiforge-cli:
+    build: .
+    container_name: aiforge-cli
+    volumes:
+      - ./aiforge_work:/app/aiforge_work
+      - ./config:/app/config
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    networks:
+      - aiforge-network
+    profiles: [ "cli" ]
+    command: [ "cli", "--help" ]
+
+networks:
+  aiforge-network:
+    driver: bridge

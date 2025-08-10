@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiforge-engine"
-version = "0.0.9"
+version = "0.0.10"
 description = "Intelligent Intent Adaptive Execution Engine - 智能意图自适应执行引擎"
 readme = "README_EN.md"
 license = { text = "Apache 2.0" }
@@ -56,6 +56,7 @@ dependencies = [
     "peewee>=3.14.0",
     "pydantic>=2.0.0",
     "typing-extensions>=4.0.0",
+    "rich>=12.0.0",
 ]
 
 [project.optional-dependencies]
@@ -77,13 +78,23 @@ Twitter = "https://twitter.com/iafun_tipixel"
 
 [project.scripts]
 aiforge = "aiforge.cli:main"
+aiforge-docker = "aiforge.utils.manage_docker_services:main"
+
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aiforge"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src", "/README.md", "/LICENSE", "/pyproject.toml"]
-
+include = [
+    "/src",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/Dockerfile",
+    "/docker-compose.yml",
+    "/docker",
+    "/scripts",
+]
 
 [dependency-groups]
 dev = ["python-dotenv>=1.1.1"]
