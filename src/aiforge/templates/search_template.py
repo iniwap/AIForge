@@ -169,11 +169,11 @@ def _search_searxng_template(
             "q": search_query,
             "category_general": "1",
             "language": "auto",
-            "time_range": "",
             "safesearch": "0",
             "format": "json",
             "pageno": "1",
             "results_per_page": max_results * 2,
+            "time_range": "week",  # 默认时间范围为一周 ，为""不筛选
             # 不指定 engines 参数，让 SearXNG 使用默认配置
         }
 

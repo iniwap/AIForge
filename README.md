@@ -73,9 +73,9 @@ AIForge提供多层安全保障，确保AI代码安全执行：
 
 ## 🚀 快速开始  
   
-### 安装  
+### 安装部署  
   
-- 基础安装 - 非Docker模式
+- 非Docker模式
 ```bash
 pip install aiforge-engine  
 
@@ -84,22 +84,20 @@ pip install aiforge-engine[all]  # 所有功能
 pip install aiforge-engine[gui]  # 终端GUI支持  
 pip install aiforge-engine[web]  # Web API支持  
 ```
-- 基础安装 - Docker模式
+- Docker模式
 
-```bash
-# 1. 设置环境变量  
-export OPENROUTER_API_KEY="your-api-key"  
-# 2. 启动 Web API 服务  
-docker-compose up -d aiforge  
-# 3. 使用 CLI 模式  
-docker-compose --profile cli run --rm aiforge-cli cli "搜索股市趋势"  
-# 4. 直接运行容器  
-docker run -e OPENROUTER_API_KEY="your-key" \\  
--p 8000:8000 \\  
--v $(pwd)/aiforge_work:/app/aiforge_work \\  
-aiforge:latest web
+```bash  
+# 1. 设置 API 密钥  
+echo "OPENROUTER_API_KEY=your-api-key" > .env  
+  
+# 2. 一键启动  
+aiforge-docker start  
+  
+# 3. 开发模式（热重载） 
+aiforge-docker start --dev
 ```
-### 基础使用  
+### 基础使用
+- 非Docker模式 
 ```python
 from aiforge import AIForgeEngine  
 
@@ -110,6 +108,15 @@ forge = AIForgeEngine(api_key="your-openrouter-apikey")
 result = forge("搜索全球股市最新趋势并分析写一篇投资建议")  
 print(result)  
 ```  
+- Docker模式
+```bash  
+# CLI 直接使用  
+aiforge "搜索股市趋势并分析"  
+  
+# 指定提供商   
+aiforge --provider deepseek "分析数据" 
+```
+
 ### 高级配置  
 
 - 高级参数传递

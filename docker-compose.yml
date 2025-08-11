@@ -1,12 +1,15 @@
 services:
   aiforge:
-    build: .
+    build:
+      context: .
+      args:
+        - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+        - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     container_name: aiforge-engine
     ports:
       - "${AIFORGE_WEB_PORT:-8000}:8000"
     volumes:
       - ./aiforge_work:/app/aiforge_work
-      - ./config:/app/config
       - ./logs:/app/logs
     environment:
       # Docker环境标识
@@ -31,9 +34,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["web"]
+    command: [ "web" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -50,7 +53,7 @@ services:
       - aiforge-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -68,7 +71,7 @@ services:
       - aiforge-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -86,8 +89,8 @@ services:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     networks:
       - aiforge-network
-    profiles: ["cli"]
-    command: ["cli", "--help"]
+    profiles: [ "cli" ]
+    command: [ "cli", "--help" ]
 
 networks:
   aiforge-network:

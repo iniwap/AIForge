@@ -7,7 +7,7 @@ locale = "en"
 [llm.openrouter]  
 type = "openai"  
 model = "deepseek/deepseek-chat-v3-0324:free"  
-api_key = ""  # 通过环境变量设置  
+api_key = "${OPENROUTER_API_KEY}"  
 base_url = "https://openrouter.ai/api/v1"  
 timeout = 30  
 max_tokens = 8192  
@@ -15,10 +15,10 @@ max_tokens = 8192
 [llm.deepseek]  
 type = "deepseek"  
 model = "deepseek-chat"  
-api_key = ""  # 通过环境变量设置  
+api_key = "${DEEPSEEK_API_KEY}"  
 base_url = "https://api.deepseek.com"  
 timeout = 30  
-max_tokens = 8192  
+max_tokens = 8192
   
 [llm.ollama]  
 type = "ollama"  

@@ -6,11 +6,10 @@ services:
       - ./templates:/app/templates
       - ./static:/app/static
       - ./aiforge_work:/app/aiforge_work
-      - ./config:/app/config
       - ./logs:/app/logs
     environment:
       - AIFORGE_DEBUG=true
       - AIFORGE_RELOAD=true
       - AIFORGE_LOG_LEVEL=DEBUG
     # 开发模式下使用不同的启动命令，支持热重载  
-    command: [ "python", "-m", "aiforge.web.main", "--reload", "--debug" ]
+    command: [ "web", "--reload", "--debug" ]

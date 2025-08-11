@@ -15,8 +15,40 @@ class DockerServiceManager:
     """一体化Docker服务管理器"""
 
     def __init__(self):
-        self.compose_file = "docker-compose.yml"
-        self.dev_compose_file = "docker-compose.dev.yml"
+        # 动态判断是源码环境还是打包环境
+        if self._is_source_environment():
+            # 源码环境：使用当前工作目录的配置文件
+            self.compose_file = "docker-compose.yml"
+            self.dev_compose_file = "docker-compose.dev.yml"
+        else:
+            # 打包环境：使用包内资源
+            self.compose_file = self._get_package_resource("docker-compose.yml")
+            self.dev_compose_file = self._get_package_resource("docker-compose.dev.yml")
+
+    def _is_source_environment(self) -> bool:
+        """判断是否为源码环境"""
+        # 检查当前目录是否有源码结构
+        current_dir = Path.cwd()
+        return (
+            (current_dir / "src" / "aiforge").exists()
+            and (current_dir / "docker-compose.yml").exists()
+            and (current_dir / "pyproject.toml").exists()
+        )
+
+    def _get_package_resource(self, filename: str) -> str:
+        """获取包内资源路径（使用现代方法替代 pkg_resources）"""
+        try:
+            # 使用 importlib.resources 替代 pkg_resources
+            from importlib import resources
+
+            with resources.path("aiforge", "..") as package_root:
+                return str(package_root / filename)
+        except ImportError:
+            # 回退到 pkg_resources（兼容性）
+            import pkg_resources
+
+            package_root = Path(pkg_resources.resource_filename("aiforge", ".."))
+            return str(package_root / filename)
 
     def check_docker_environment(self) -> dict:
         """全面检查Docker环境"""
@@ -324,6 +356,76 @@ class DockerServiceManager:
             print(f"❌ 清理失败: {e}")
             return False
 
+    def deep_cleanup(self) -> bool:
+        """彻底清理AIForge相关资源，但保留基础镜像"""
+        print("🔥 执行AIForge彻底清理...")
+        print("⚠️ 这将删除AIForge相关的Docker资源，但保留Python、SearXNG、Nginx基础镜像")
+
+        try:
+            # 1. 停止所有服务
+            print("🛑 停止所有服务...")
+            subprocess.run(
+                ["docker-compose", "down", "-v", "--remove-orphans"], capture_output=True
+            )
+
+            # 2. 只清理AIForge构建的镜像，保留基础镜像
+            print("🗑️ 清理AIForge构建镜像...")
+            self._remove_aiforge_built_images_only()
+
+            # 3. 清理构建缓存（但不影响基础镜像）
+            print("🧹 清理构建缓存...")
+            subprocess.run(["docker", "builder", "prune", "-f"], capture_output=True)
+
+            # 4. 清理悬空资源（不影响基础镜像）
+            print("🌐 清理悬空资源...")
+            subprocess.run(["docker", "image", "prune", "-f"], capture_output=True)
+            subprocess.run(["docker", "volume", "prune", "-f"], capture_output=True)
+
+            print("✅ 彻底清理完成，基础镜像已保留")
+            return True
+
+        except Exception as e:
+            print(f"❌ 彻底清理失败: {e}")
+            return False
+
+    def _remove_aiforge_built_images_only(self):
+        """只移除AIForge构建的镜像，保留基础镜像"""
+        try:
+            # 修复：使用正确的转义字符
+            result = subprocess.run(
+                ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}\t{{.ID}}"],
+                capture_output=True,
+                text=True,
+            )
+
+            if not result.stdout.strip():
+                return
+
+            preserve_images = {"python", "searxng/searxng", "nginx"}
+            images_to_remove = []
+
+            # 修复：使用正确的换行符和制表符
+            for line in result.stdout.strip().split("\n"):
+                if "\t" in line:
+                    repo_tag, image_id = line.split("\t", 1)
+                    repo = repo_tag.split(":")[0]
+
+                    if any(keyword in repo.lower() for keyword in ["aiforge"]):
+                        if not any(base in repo.lower() for base in preserve_images):
+                            images_to_remove.append(image_id)
+
+            # 删除镜像
+            for image_id in images_to_remove:
+                subprocess.run(["docker", "rmi", "-f", image_id], capture_output=True)
+
+            if images_to_remove:
+                print(f"✅ 移除了 {len(images_to_remove)} 个AIForge构建镜像")
+            else:
+                print("ℹ️ 没有找到需要清理的AIForge构建镜像")
+
+        except Exception as e:
+            print(f"⚠️ 清理构建镜像时出错: {e}")
+
     def _check_service_health(self) -> None:
         """检查服务健康状态"""
         print("\n🏥 服务健康检查:")
@@ -431,7 +533,9 @@ def main():
         """,
     )
 
-    parser.add_argument("action", choices=["start", "stop", "status", "cleanup"], help="操作类型")
+    parser.add_argument(
+        "action", choices=["start", "stop", "status", "cleanup", "deep-cleanup"], help="操作类型"
+    )
     parser.add_argument("--dev", action="store_true", help="开发模式启动（代码热重载）")
 
     args = parser.parse_args()
@@ -447,6 +551,8 @@ def main():
             success = True
         elif args.action == "cleanup":
             success = manager.cleanup()
+        elif args.action == "deep-cleanup":
+            success = manager.deep_cleanup()
         else:
             success = False
 

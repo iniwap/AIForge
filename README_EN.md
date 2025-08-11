@@ -44,6 +44,7 @@ AIForge is an **intelligent execution engine** that bridges the gap between natu
 - **Ollama** - Local model execution  
   
 ### 🔧 Advanced Execution Management  
+- **Docker Deployment** - Supports both deployment methods
 - **Template System** - Domain-specific execution templates  
 - **Search Integration** - Multi-engine search capabilities (Baidu, Bing, 360, Sogou)  
 - **Content Generation** - Specialized content creation workflows  
@@ -69,27 +70,52 @@ AIForge provides multi-layer security for safe AI code execution:
 
 ## 🚀 Quick Start  
   
-### Installation  
-  
-    # Basic installation  
-    pip install aiforge-engine  
-  
-    # With optional dependencies  
-    pip install aiforge-engine[all]  # All features  
-    pip install aiforge-engine[gui]  # Terminal GUI support  
-    pip install aiforge-engine[web]  # Web API support  
-  
+### Installation & Deployment  
+- Non-Docker Mode
+```bash
+# Basic installation  
+pip install aiforge-engine  
+
+# With optional dependencies  
+pip install aiforge-engine[all]  # All features  
+pip install aiforge-engine[gui]  # Terminal GUI support  
+pip install aiforge-engine[web]  # Web API support  
+```
+- Docker Mode
+```bash
+# 1. Install 
+pip install aiforge-engine
+
+# 2. Set API key    
+echo "OPENROUTER_API_KEY=your-api-key" > .env    
+
+# 3. One-click startup    
+aiforge-docker start    
+
+# 4. Development mode (hot reload)   
+aiforge-docker start --dev
+```
+
 ### Basic Usage  
-  
-    from aiforge import AIForgeEngine  
-  
-    # Quick start with API key (OpenRouter default)
-    forge = AIForgeEngine(api_key="your-openrouter-apikey")  
-  
-    # Execute natural language instruction  
-    result = forge("Search for the latest trends in global stock markets, analyze them, and write an investment recommendation")  
-    print(result)  
-  
+- Non-Docker Mode
+```python  
+from aiforge import AIForgeEngine  
+
+# Quick start with API key (OpenRouter default)
+forge = AIForgeEngine(api_key="your-openrouter-apikey")  
+
+# Execute natural language instruction  
+result = forge("Search for the latest trends in global stock markets, analyze them, and write an investment recommendation")  
+print(result)  
+```
+- Docker Mode
+```bash
+# Direct CLI usage    
+aiforge "Search stock market trends and analyze"    
+
+# Specify provider     
+aiforge --provider deepseek "Analyze data"
+```
 ### Advanced Configuration  
   
     # Provider-specific configuration  
