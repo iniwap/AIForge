@@ -64,3 +64,8 @@ async def process_instruction(request: Request):
         "result": ui_result,
         "metadata": {"source": "web", "processed_at": time.time()},
     }
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

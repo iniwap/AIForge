@@ -1,47 +1,36 @@
 workdir = "/app/aiforge_work"  
-max_tokens = ${AIFORGE_MAX_TOKENS:-4096}  
-max_rounds = ${AIFORGE_MAX_ROUNDS:-5}  
-default_llm_provider = "${AIFORGE_DEFAULT_PROVIDER:-openrouter}"  
-locale = "${AIFORGE_LOCALE:-en}"  
+max_tokens = 4096  
+max_rounds = 5  
+default_llm_provider = "openrouter"  
+locale = "en"  
   
 [llm.openrouter]  
 type = "openai"  
-model = "${OPENROUTER_MODEL:-deepseek/deepseek-chat-v3-0324:free}"  
-api_key = "${OPENROUTER_API_KEY}"  
+model = "deepseek/deepseek-chat-v3-0324:free"  
+api_key = ""  # 通过环境变量设置  
 base_url = "https://openrouter.ai/api/v1"  
 timeout = 30  
 max_tokens = 8192  
   
 [llm.deepseek]  
 type = "deepseek"  
-model = "${DEEPSEEK_MODEL:-deepseek-chat}"  
-api_key = "${DEEPSEEK_API_KEY}"  
+model = "deepseek-chat"  
+api_key = ""  # 通过环境变量设置  
 base_url = "https://api.deepseek.com"  
 timeout = 30  
 max_tokens = 8192  
   
 [llm.ollama]  
 type = "ollama"  
-model = "${OLLAMA_MODEL:-llama3}"  
+model = "llama3"  
 api_key = ""  
-base_url = "${OLLAMA_BASE_URL:-http://localhost:11434}"  
+base_url = "http://localhost:11434"  
 timeout = 30  
 max_tokens = 8192  
   
-[cache.code]  
-enabled = ${AIFORGE_CACHE_ENABLED:-true}  
-max_modules = ${AIFORGE_CACHE_MAX_MODULES:-20}  
-semantic_threshold = ${AIFORGE_CACHE_THRESHOLD:-0.6}  
-  
-[security]  
-execution_timeout = ${AIFORGE_EXEC_TIMEOUT:-60}  
-memory_limit_mb = ${AIFORGE_MEMORY_LIMIT:-512}  
-network.policy = "${AIFORGE_NETWORK_POLICY:-filtered}"
-
-
 [searxng]  
-enabled = ${SEARXNG_ENABLED:-false}  
-local_url = "${SEARXNG_LOCAL_URL:-http://localhost:55510}"  
-remote_url = "${SEARXNG_REMOTE_URL:-}"  
-fallback_to_public = ${SEARXNG_FALLBACK:-true}  
-timeout = ${SEARXNG_TIMEOUT:-10}
+enabled = false  
+local_url = "http://localhost:55510"  
+remote_url = ""  
+fallback_to_public = true  
+timeout = 10  

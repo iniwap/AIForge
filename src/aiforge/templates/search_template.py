@@ -172,6 +172,8 @@ def _search_searxng_template(
             "time_range": "",
             "safesearch": "0",
             "format": "json",
+            "pageno": "1",
+            "results_per_page": max_results * 2,
             # 不指定 engines 参数，让 SearXNG 使用默认配置
         }
 
@@ -182,14 +184,11 @@ def _search_searxng_template(
 
         # 直接解析 JSON 响应
         data = response.json()
-        results = []
-
         search_results = data.get(engine_config["result_path"], [])
-        print("search_results", search_results)
 
-        # 第一阶段：过滤内容达标的结果
+        # 第一阶段：预筛选所有结果，不限制数量
         qualified_results = []
-        for item in search_results:
+        for item in search_results:  # 处理所有结果
             try:
                 title = item.get(engine_config["title_path"], "").strip()
                 url = item.get(engine_config["url_path"], "").strip()
@@ -198,17 +197,21 @@ def _search_searxng_template(
                 if not title or not url:
                     continue
 
+                # URL 有效性检查
+                if not url.startswith("http"):
+                    continue
+
                 title = utils.clean_text(title)
                 abstract = utils.clean_text(content)
 
-                # 先检查摘要长度，只保留达标的结果
+                # 质量预筛选：摘要长度检查
                 if len(abstract) < min_abstract_len // 4:
                     continue
 
                 if len(abstract) > max_abstract_len:
                     abstract = abstract[:max_abstract_len] + "..."
 
-                # 直接使用 SearXNG 返回的发布时间
+                # 初始化 pub_time，优先使用 SearXNG 返回的发布时间
                 pub_time = ""
                 if item.get("publishedDate"):
                     pub_time = item["publishedDate"]
@@ -221,15 +224,76 @@ def _search_searxng_template(
                     if "T" in pub_time:
                         pub_time = pub_time.split("T")[0]
 
+                # 如果 SearXNG 没有提供时间，从摘要中提取
+                if not pub_time and abstract:
+                    pub_time = _extract_time_from_abstract(abstract)
+
                 qualified_results.append(
-                    {"title": title, "url": url, "abstract": abstract, "pub_time": pub_time}
+                    {
+                        "title": title,
+                        "url": url,
+                        "abstract": abstract,
+                        "pub_time": pub_time,
+                        "quality_score": _calculate_quality_score(title, abstract, pub_time),
+                    }
                 )
 
             except Exception:
                 continue
 
-        results = qualified_results
-        print("results", results)
+        # 第二阶段：按质量排序
+        qualified_results.sort(key=lambda x: x["quality_score"], reverse=True)
+
+        # 第三阶段：选择top结果进行并发抓取（可选，SearXNG通常已提供较好的摘要）
+        top_results = qualified_results[:max_results]
+
+        # 对于 SearXNG，由于已经提供了较好的内容，可以选择性地进行页面抓取
+        # 只对质量分数较低的结果进行页面抓取以增强摘要
+        tasks = []
+        for item in top_results:
+            if item["quality_score"] < 60:  # 质量分数较低的才进行页面抓取
+                tasks.append((item["url"], headers))
+
+        # 并行获取页面内容（仅对需要增强的结果）
+        if tasks:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(tasks), 3)) as executor:
+                future_to_url = {
+                    executor.submit(extract_page_content, url, headers): url
+                    for url, headers in tasks
+                }
+                for future in concurrent.futures.as_completed(future_to_url):
+                    url = future_to_url[future]
+                    try:
+                        page_soup, page_pub_time = future.result()
+                        for res in top_results:
+                            if res["url"] == url:
+                                # 优先使用页面提取的时间，如果没有则保留原有时间
+                                if page_pub_time:
+                                    res["pub_time"] = page_pub_time
+
+                                # 增强摘要
+                                enhanced_abstract = enhance_abstract(
+                                    res["abstract"], page_soup, min_abstract_len, max_abstract_len
+                                )
+                                if enhanced_abstract:
+                                    res["abstract"] = enhanced_abstract
+                                break
+                    except Exception:
+                        pass
+
+        # 构建最终结果
+        results = [
+            {
+                "title": res["title"],
+                "url": res["url"],
+                "abstract": res["abstract"] or "",
+                "pub_time": res.get("pub_time", None),
+            }
+            for res in top_results
+            if res["title"] and res["url"]
+        ]
+
+        # 应用现有的排序和过滤逻辑
         results = sort_and_filter_results(results)
 
         return {
@@ -558,7 +622,7 @@ def _search_template(
         results = []
         headers = get_common_headers()
         search_url = engine_config["url"].format(
-            search_query=quote(search_query), max_results=max_results
+            search_query=quote(search_query), max_results=max_results * 2
         )
 
         response = requests.get(search_url, headers=headers, timeout=10)
@@ -582,10 +646,9 @@ def _search_template(
                 "error": AIForgeI18nManager.get_instance().t("search.no_valid_results"),
             }
 
-        # 收集结果和需要抓取的URL
-        tasks = []
-        parsed_results = []
-        for result in search_results[:max_results]:
+        # 第一阶段：预筛选所有结果，不限制数量
+        qualified_results = []
+        for result in search_results:
             try:
                 # 提取标题
                 title_elem = None
@@ -607,6 +670,10 @@ def _search_template(
                 title = utils.clean_text(title_elem.get_text().strip()) or "no title"
                 url = link_elem.get("href", "")
 
+                # URL 有效性检查
+                if not url or not url.startswith("http"):
+                    continue
+
                 # 处理重定向链接
                 if (
                     engine_config.get("redirect_pattern")
@@ -619,7 +686,7 @@ def _search_template(
                         response.raise_for_status()
                         url = response.url
                     except requests.exceptions.RequestException:
-                        url = ""
+                        continue
 
                 # 提取摘要
                 abstract = ""
@@ -637,12 +704,34 @@ def _search_template(
                         else ""
                     )
 
-                parsed_results.append({"title": title, "url": url, "abstract": abstract})
-                if url and url.startswith("http"):
-                    tasks.append((url, headers))
+                # 质量预筛选：摘要长度检查
+                if len(abstract.strip()) < min_abstract_len // 4:
+                    continue
+
+                # 从摘要中提取时间信息并直接赋值给pub_time
+                pub_time = ""
+                if abstract:
+                    pub_time = _extract_time_from_abstract(abstract)
+
+                qualified_results.append(
+                    {
+                        "title": title,
+                        "url": url,
+                        "abstract": abstract,
+                        "pub_time": pub_time,
+                        "quality_score": _calculate_quality_score(title, abstract, pub_time),
+                    }
+                )
 
             except Exception:
                 continue
+
+        # 第二阶段：按质量排序
+        qualified_results.sort(key=lambda x: x["quality_score"], reverse=True)
+
+        # 第三阶段：选择top结果进行并发抓取
+        top_results = qualified_results[:max_results]
+        tasks = [(item["url"], headers) for item in top_results]
 
         # 并行获取页面内容
         with concurrent.futures.ThreadPoolExecutor(max_workers=min(max_results, 5)) as executor:
@@ -652,17 +741,19 @@ def _search_template(
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
-                    page_soup, pub_time = future.result()
-                    for res in parsed_results:
+                    page_soup, page_pub_time = future.result()
+                    for res in top_results:
                         if res["url"] == url:
-                            res["pub_time"] = pub_time
+                            # 优先使用页面提取的时间，如果没有则保留摘要提取的时间
+                            if page_pub_time:
+                                res["pub_time"] = page_pub_time
+
                             res["abstract"] = (
                                 enhance_abstract(
                                     res["abstract"], page_soup, min_abstract_len, max_abstract_len
                                 )
                                 or res["abstract"]
                             )
-
                             break
                 except Exception:
                     pass
@@ -675,9 +766,11 @@ def _search_template(
                 "abstract": res["abstract"] or "",
                 "pub_time": res.get("pub_time", None),
             }
-            for res in parsed_results
+            for res in top_results
             if res["title"] and res["url"]
         ]
+
+        # 应用现有的排序和过滤逻辑
         results = sort_and_filter_results(results)
 
         return {
@@ -698,6 +791,169 @@ def _search_template(
             "success": False,
             "error": str(e),
         }
+
+
+def _extract_time_from_abstract(abstract):
+    """从摘要中提取时间信息"""
+    if not abstract:
+        return ""
+
+    import re
+    from ..i18n.manager import AIForgeI18nManager
+
+    i18n_manager = AIForgeI18nManager.get_instance()
+
+    # 获取i18n配置的日期模式
+    date_patterns = i18n_manager.t("datetime.date_patterns", default=[])
+
+    # 使用i18n配置的模式进行匹配
+    for pattern in date_patterns:
+        try:
+            match = re.search(pattern, abstract, re.IGNORECASE)
+            if match:
+                extracted_time = match.group(0)
+                # 使用现有的时间验证和转换逻辑
+                if utils.is_valid_date(extracted_time):
+                    # 转换为标准格式
+                    actual_date = utils.calculate_actual_date(extracted_time, time.time())
+                    if actual_date:
+                        date_format = i18n_manager.t("datetime.date_format", default="%Y-%m-%d")
+                        return actual_date.strftime(date_format)
+        except Exception:
+            continue
+
+    # 如果主要模式没有匹配到，使用fallback模式
+    fallback_patterns = i18n_manager.t("datetime.fallback_patterns", default=[])
+    for pattern in fallback_patterns:
+        try:
+            match = re.search(pattern, abstract, re.IGNORECASE)
+            if match:
+                extracted_time = match.group(0)
+                if utils.is_valid_date(extracted_time):
+                    actual_date = utils.calculate_actual_date(extracted_time, time.time())
+                    if actual_date:
+                        date_format = i18n_manager.t("datetime.date_format", default="%Y-%m-%d")
+                        return actual_date.strftime(date_format)
+        except Exception:
+            continue
+
+    return ""
+
+
+def _calculate_quality_score(title, abstract, pub_time):
+    """计算结果质量分数"""
+    score = 0
+
+    # 标题质量 (0-30分)
+    if title and len(title.strip()) > 10:
+        score += min(len(title.strip()) / 2, 30)
+
+    # 摘要质量 (0-50分)
+    if abstract:
+        abstract_len = len(abstract.strip())
+        if abstract_len > 100:
+            score += min(abstract_len / 10, 50)
+        elif abstract_len > 50:
+            score += 25
+        elif abstract_len > 20:
+            score += 10
+
+    # 发布时间加分 (0-20分)
+    time_score = 0
+
+    # 优先检查 pub_time 字段
+    if pub_time:
+        try:
+            if utils.is_valid_date(pub_time):
+                time_score = 20
+            else:
+                # 使用i18n配置检查相对时间
+                time_score = _check_relative_time_in_text(pub_time)
+        except Exception:
+            pass
+
+    # 如果 pub_time 没有有效时间，从摘要中检查时间信息
+    if time_score == 0 and abstract:
+        time_score = _extract_time_score_from_abstract(abstract)
+
+    score += time_score
+    return score
+
+
+def _check_relative_time_in_text(text):
+    """使用i18n配置检查文本中的相对时间"""
+    if not text:
+        return 0
+
+    from ..i18n.manager import AIForgeI18nManager
+    import re
+
+    i18n_manager = AIForgeI18nManager.get_instance()
+    text_lower = text.lower()
+
+    # 获取i18n配置的相对时间模式
+    relative_time_patterns = i18n_manager.t("datetime.relative_time_patterns", default={})
+
+    # 检查各种相对时间模式
+    for time_type, patterns in relative_time_patterns.items():
+        for pattern in patterns:
+            try:
+                if re.search(pattern, text_lower, re.IGNORECASE):
+                    if time_type in ["just_now", "today"]:
+                        return 15
+                    elif time_type in ["yesterday", "hours_ago", "minutes_ago"]:
+                        return 12
+                    else:
+                        return 8
+            except Exception:
+                continue
+
+    return 0
+
+
+def _extract_time_score_from_abstract(abstract):
+    """从摘要中提取时间信息并计算时间分数"""
+    if not abstract:
+        return 0
+
+    import re
+    from ..i18n.manager import AIForgeI18nManager
+
+    i18n_manager = AIForgeI18nManager.get_instance()
+
+    # 1. 使用i18n配置的相对时间模式检查
+    relative_score = _check_relative_time_in_text(abstract)
+    if relative_score > 0:
+        return relative_score
+
+    # 2. 使用i18n配置的日期模式 (15分)
+    date_patterns = i18n_manager.t("datetime.date_patterns", default=[])
+    for pattern in date_patterns:
+        try:
+            if re.search(pattern, abstract, re.IGNORECASE):
+                return 15
+        except Exception:
+            continue
+
+    # 3. 使用i18n配置的验证模式 (12分)
+    validation_patterns = i18n_manager.t("datetime.validation_patterns", default=[])
+    for pattern in validation_patterns:
+        try:
+            if re.search(pattern, abstract, re.IGNORECASE):
+                return 12
+        except Exception:
+            continue
+
+    # 4. 使用i18n配置的fallback模式 (8分)
+    fallback_patterns = i18n_manager.t("datetime.fallback_patterns", default=[])
+    for pattern in fallback_patterns:
+        try:
+            if re.search(pattern, abstract, re.IGNORECASE):
+                return 8
+        except Exception:
+            continue
+
+    return 0
 
 
 # 搜索引擎配置

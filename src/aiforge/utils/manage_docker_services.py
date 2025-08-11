@@ -1,131 +1,145 @@
 #!/usr/bin/env python3
 """
-AIForge Docker 和 SearXNG 服务管理脚本
-支持启动、停止、状态检查功能，智能检测 Docker Compose 环境
+AIForge Docker服务管理 - 一体化版本
+用户只需执行一行命令即可完成所有初始化工作
 """
 
-import requests
-import subprocess
 import time
+import subprocess
 import sys
 import argparse
-import os
+from pathlib import Path
 
 
 class DockerServiceManager:
-    def __init__(self):
-        self.searxng_container_name = "test-searxng"
-        self.searxng_port = "55510"
-        self.searxng_url = f"http://localhost:{self.searxng_port}"
+    """一体化Docker服务管理器"""
 
-    def check_docker_available(self):
-        """检查 Docker 是否可用"""
+    def __init__(self):
+        self.compose_file = "docker-compose.yml"
+        self.dev_compose_file = "docker-compose.dev.yml"
+
+    def check_docker_environment(self) -> dict:
+        """全面检查Docker环境"""
+        print("🔍 检查Docker环境...")
+
+        checks = {
+            "docker_available": False,
+            "docker_compose_available": False,
+            "docker_running": False,
+            "compose_file_exists": False,
+            "dev_compose_file_exists": False,
+            "aiforge_image_exists": False,
+        }
+
+        # 检查Docker是否安装
         try:
             result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
-            return result.returncode == 0
-        except Exception:
-            return False
+            if result.returncode == 0:
+                checks["docker_available"] = True
+                print("✅ Docker已安装")
+            else:
+                print("❌ Docker未安装")
+                return checks
+        except FileNotFoundError:
+            print("❌ Docker未安装或不在PATH中")
+            return checks
 
-    def _check_docker_compose_available(self):
-        """检查 Docker Compose 是否可用"""
+        # 检查Docker是否运行
+        try:
+            result = subprocess.run(["docker", "info"], capture_output=True, text=True)
+            if result.returncode == 0:
+                checks["docker_running"] = True
+                print("✅ Docker服务正在运行")
+            else:
+                print("❌ Docker服务未运行，请启动Docker Desktop")
+                return checks
+        except Exception:
+            print("❌ 无法连接到Docker服务")
+            return checks
+
+        # 检查Docker Compose
         try:
             result = subprocess.run(["docker-compose", "--version"], capture_output=True, text=True)
-            return result.returncode == 0
-        except Exception:
-            return False
+            if result.returncode == 0:
+                checks["docker_compose_available"] = True
+                print("✅ Docker Compose可用")
+            else:
+                print("❌ Docker Compose不可用")
+        except FileNotFoundError:
+            print("❌ Docker Compose未安装")
 
-    def check_aiforge_image(self):
-        """检查 AIForge 镜像是否存在"""
-        try:
-            result = subprocess.run(
-                ["docker", "images", "aiforge", "--format", "table"], capture_output=True, text=True
-            )
-            return "aiforge" in result.stdout
-        except Exception:
-            return False
+        # 检查配置文件
+        if Path(self.compose_file).exists():
+            checks["compose_file_exists"] = True
+            print("✅ docker-compose.yml存在")
+        else:
+            print("❌ docker-compose.yml不存在")
 
-    def is_searxng_running(self):
-        """检查 SearXNG 是否正在运行"""
+        if Path(self.dev_compose_file).exists():
+            checks["dev_compose_file_exists"] = True
+            print("✅ docker-compose.dev.yml存在")
+        else:
+            print("ℹ️ docker-compose.dev.yml不存在（开发模式不可用）")
+
+        # 检查AIForge镜像
         try:
             result = subprocess.run(
                 [
                     "docker",
-                    "ps",
-                    "--filter",
-                    f"name={self.searxng_container_name}",
+                    "images",
                     "--format",
-                    "{{.Names}}",
+                    "{{.Repository}}:{{.Tag}}",
+                    "--filter",
+                    "reference=*aiforge*",
                 ],
                 capture_output=True,
                 text=True,
             )
-            return self.searxng_container_name in result.stdout
+            if result.stdout.strip():
+                checks["aiforge_image_exists"] = True
+                print("✅ AIForge镜像已存在")
+            else:
+                print("ℹ️ AIForge镜像不存在，需要构建")
         except Exception:
-            return False
+            print("⚠️ 无法检查AIForge镜像状态")
 
-    def _is_nginx_running(self):
-        """检查 nginx 容器是否运行"""
+        return checks
+
+    def build_images_if_needed(self, dev_mode: bool = False) -> bool:
+        """智能构建镜像"""
+        print("\n🔨 检查并构建必要的镜像...")
+
         try:
+            # 检查是否需要构建
             result = subprocess.run(
-                ["docker", "ps", "--filter", "name=aiforge-nginx", "--format", "{{.Names}}"],
+                [
+                    "docker",
+                    "images",
+                    "--format",
+                    "{{.Repository}}:{{.Tag}}",
+                    "--filter",
+                    "reference=*aiforge*",
+                ],
                 capture_output=True,
                 text=True,
             )
-            return "aiforge-nginx" in result.stdout
-        except Exception:
-            return False
 
-    def _is_docker_compose_running(self):
-        """检查 Docker Compose 服务是否运行"""
-        try:
-            result = subprocess.run(["docker-compose", "ps"], capture_output=True, text=True)
-            return len([line for line in result.stdout.split("\n") if "Up" in line]) > 0
-        except Exception:
-            return False
+            if result.stdout.strip():
+                print("✅ AIForge镜像已存在，跳过构建")
+                return True
 
-    def start_searxng(self, dev_mode=False):
-        """启动 SearXNG 服务（智能检测环境）"""
-        print("🚀 启动 SearXNG 服务...")
+            print("📦 开始构建AIForge镜像...")
+            print("ℹ️ 首次构建可能需要5-10分钟，请耐心等待...")
 
-        try:
-            # 检查是否存在 docker-compose.yml 和 nginx 配置
-            has_compose = os.path.exists("docker-compose.yml")
-            has_nginx_config = os.path.exists("nginx/nginx.conf")
-
-            if has_compose and has_nginx_config:
-                print("🔍 检测到 Docker Compose 配置，使用完整服务栈...")
-                return self._start_docker_compose_services(dev_mode)
+            # 构建命令
+            cmd = ["docker-compose"]
+            if dev_mode and Path(self.dev_compose_file).exists():
+                cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
             else:
-                print("⚠️ 未检测到完整配置，使用单容器模式...")
-                return self._start_single_searxng_container()
-        except Exception as e:
-            print(f"❌ 启动异常: {e}")
-            return False
+                cmd.extend(["-f", self.compose_file])
+            cmd.extend(["build", "--no-cache"])
 
-    def _start_docker_compose_services(self, dev_mode=False):
-        """启动 Docker Compose 服务栈"""
-        try:
-            # 停止现有服务
-            subprocess.run(["docker-compose", "down"], capture_output=True)
-
-            if dev_mode:
-                print("🔧 启动开发模式（代码挂载）...")
-                print("ℹ️ 开发模式下代码修改将立即生效，无需重新构建...")
-                cmd = [
-                    "docker-compose",
-                    "-f",
-                    "docker-compose.yml",
-                    "-f",
-                    "docker-compose.dev.yml",
-                    "up",
-                    "-d",
-                ]
-            else:
-                print("🔨 启动生产模式...")
-                print("ℹ️ 首次构建可能需要较长时间，请耐心等待...")
-                cmd = ["docker-compose", "up", "-d"]
-
-            # 使用实时输出模式显示构建进度
+            # 实时显示构建进度
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -134,325 +148,293 @@ class DockerServiceManager:
                 bufsize=1,
             )
 
-            # 实时显示构建输出
+            print("📦 构建进度:")
             for line in process.stdout:
                 line = line.strip()
-                if "Building" in line or "Pulling" in line:
-                    print(f"📦 {line}")
-                elif "FINISHED" in line or "Created" in line or "Started" in line:
-                    print(f"✅ {line}")
-                elif "ERROR" in line or "FAILED" in line:
-                    print(f"❌ {line}")
+                if line:
+                    if "Step" in line:
+                        print(f"🔧 {line}")
+                    elif "Successfully built" in line or "Successfully tagged" in line:
+                        print(f"✅ {line}")
+                    elif "ERROR" in line or "FAILED" in line:
+                        print(f"❌ {line}")
+                    elif any(
+                        keyword in line
+                        for keyword in ["Downloading", "Extracting", "Pull complete"]
+                    ):
+                        print(f"⬇️ {line}")
 
             process.wait()
 
             if process.returncode == 0:
-                mode = "开发模式" if dev_mode else "生产模式"
-                print(f"✅ {mode} 启动成功")
+                print("✅ 镜像构建成功")
                 return True
             else:
-                print("❌ Docker Compose 启动失败")
-                print("🔄 回退到单容器模式...")
-                return self._start_single_searxng_container()
+                print("❌ 镜像构建失败")
+                return False
 
         except Exception as e:
-            print(f"❌ Docker Compose 启动异常: {e}")
-            print("🔄 回退到单容器模式...")
-            return self._start_single_searxng_container()
+            print(f"❌ 构建过程异常: {e}")
+            return False
 
-    def _start_single_searxng_container(self):
-        """启动单独的 SearXNG 容器（回退方案）"""
-        # 如果已经在运行，先停止
-        if self.is_searxng_running():
-            print("⚠️ SearXNG 已在运行，先停止现有容器...")
-            self._stop_single_container()
+    def start_services(self, dev_mode: bool = False) -> bool:
+        """一体化启动服务"""
+        print("🚀 AIForge Docker一体化启动...")
+        print("=" * 50)
+
+        # 1. 环境检查
+        checks = self.check_docker_environment()
+
+        # 检查必要条件
+        if not checks["docker_available"]:
+            print("\n❌ Docker未安装，请先安装Docker Desktop")
+            print("💡 下载地址: https://www.docker.com/products/docker-desktop")
+            return False
+
+        if not checks["docker_running"]:
+            print("\n❌ Docker服务未运行")
+            print("💡 请启动Docker Desktop并等待其完全启动")
+            return False
+
+        if not checks["docker_compose_available"]:
+            print("\n❌ Docker Compose不可用")
+            return False
+
+        if not checks["compose_file_exists"]:
+            print("\n❌ docker-compose.yml文件不存在")
+            return False
+
+        if dev_mode and not checks["dev_compose_file_exists"]:
+            print("\n⚠️ 开发模式需要docker-compose.dev.yml文件")
+            print("💡 将使用生产模式启动")
+            dev_mode = False
+
+        print("\n" + "=" * 50)
+
+        # 2. 构建镜像（如果需要）
+        if not self.build_images_if_needed(dev_mode):
+            return False
+
+        print("\n" + "=" * 50)
+
+        # 3. 启动服务
+        print("🚀 启动Docker服务栈...")
 
         try:
-            # 清理可能存在的停止容器
-            subprocess.run(["docker", "rm", self.searxng_container_name], capture_output=True)
+            # 先清理可能存在的旧容器
+            print("🧹 清理旧容器...")
+            subprocess.run(["docker-compose", "down"], capture_output=True)
 
-            # 启动新容器
-            result = subprocess.run(
-                [
-                    "docker",
-                    "run",
-                    "-d",
-                    "--name",
-                    self.searxng_container_name,
-                    "-p",
-                    f"{self.searxng_port}:8080",
-                    "searxng/searxng:latest",
-                ],
-                capture_output=True,
-                text=True,
-            )
+            # 构建启动命令
+            cmd = ["docker-compose"]
+            if dev_mode:
+                cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
+                print("🔧 开发模式启动（代码热重载）")
+            else:
+                cmd.extend(["-f", self.compose_file])
+                print("🔨 生产模式启动")
+
+            cmd.extend(["up", "-d"])
+
+            # 启动服务
+            result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode == 0:
-                print("✅ SearXNG 容器启动成功")
+                print("✅ Docker服务启动成功")
+
+                # 显示服务信息
+                self._show_service_urls()
+
+                # 等待服务稳定
+                print("\n⏳ 等待服务完全启动...")
+                time.sleep(10)
+
+                # 检查服务健康状态
+                self._check_service_health()
+
+                # 更新SearXNG配置
+                self._check_and_update_searxng_formats()
+
+                print("\n🎉 AIForge Docker服务一体化启动完成！")
+                print("💡 现在可以开始使用AIForge了")
+
                 return True
             else:
-                print(f"❌ SearXNG 启动失败: {result.stderr}")
-                return False
-        except Exception as e:
-            print(f"❌ SearXNG 启动异常: {e}")
-            return False
-
-    def stop_searxng(self):
-        """停止 SearXNG 服务"""
-        print("🛑 停止 SearXNG 服务...")
-
-        try:
-            # 首先尝试停止 Docker Compose 服务
-            if os.path.exists("docker-compose.yml"):
-                result = subprocess.run(["docker-compose", "down"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    print("✅ Docker Compose 服务已停止")
-                    return True
-
-            # 回退到停止单独容器
-            return self._stop_single_container()
-        except Exception as e:
-            print(f"❌ 停止服务失败: {e}")
-            return False
-
-    def _stop_single_container(self):
-        """停止单独的 SearXNG 容器"""
-        try:
-            result1 = subprocess.run(
-                ["docker", "stop", self.searxng_container_name], capture_output=True, text=True
-            )
-            subprocess.run(
-                ["docker", "rm", self.searxng_container_name], capture_output=True, text=True
-            )
-
-            if result1.returncode == 0 or "No such container" in result1.stderr:
-                print("✅ SearXNG 服务已停止")
-                return True
-            else:
-                print(f"⚠️ 停止 SearXNG 时出现问题: {result1.stderr}")
-                return False
-        except Exception as e:
-            print(f"❌ 停止单独容器失败: {e}")
-            return False
-
-    def verify_searxng(self):
-        """验证 SearXNG 服务功能 - 简化版本"""
-        print("🔍 验证 SearXNG 服务...")
-        print("⏳ 等待服务启动（5秒）...")
-        time.sleep(5)
-
-        session = requests.Session()
-
-        try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",  # noqa 501
-                "Accept": "application/json, text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",  # noqa 501
-                "Accept-Language": "en-US,en;q=0.5",
-                "Referer": f"{self.searxng_url}/",
-            }
-
-            # 建立会话
-            session.get(f"{self.searxng_url}/", headers=headers, timeout=10)
-
-            # 搜索请求
-            search_data = {
-                "q": "python",
-                "category_general": "1",
-                "format": "json",
-            }
-
-            response = session.post(
-                f"{self.searxng_url}/search", data=search_data, headers=headers, timeout=20
-            )
-
-            if response.status_code == 200:
-                json_data = response.json()
-                results_count = len(json_data.get("results", []))
-                print(f"✅ SearXNG 搜索功能正常，返回 {results_count} 个结果")
-                return True
-            else:
-                print(f"❌ SearXNG 搜索失败，状态码: {response.status_code}")
+                print(f"❌ Docker服务启动失败: {result.stderr}")
                 return False
 
         except Exception as e:
-            print(f"❌ SearXNG 验证失败: {e}")
+            print(f"❌ 启动过程异常: {e}")
             return False
-        finally:
-            session.close()
 
-    def cleanup_all_containers(self):
-        """清理所有相关容器"""
-        print("🧹 清理相关容器...")
+    def stop_services(self) -> bool:
+        """停止Docker服务栈"""
+        if not Path(self.compose_file).exists():
+            print("❌ docker-compose.yml文件不存在")
+            return False
+
+        print("🛑 停止AIForge Docker服务...")
 
         try:
-            # 停用 Docker Compose 服务
-            if os.path.exists("docker-compose.yml"):
-                subprocess.run(["docker-compose", "down"], capture_output=True)
-
-            # 清理 AIForge 相关容器
-            result = subprocess.run(
-                ["docker", "ps", "-a", "--filter", "name=aiforge", "--format", "{{.Names}}"],
-                capture_output=True,
-                text=True,
-            )
-
-            container_names = [name for name in result.stdout.strip().split("\n") if name]
-
-            if container_names:
-                for name in container_names:
-                    subprocess.run(["docker", "stop", name], capture_output=True)
-                    subprocess.run(["docker", "rm", name], capture_output=True)
-                print(f"✅ 清理了 {len(container_names)} 个 AIForge 容器")
-
-            # 清理测试容器
-            subprocess.run(["docker", "stop", self.searxng_container_name], capture_output=True)
-            subprocess.run(["docker", "rm", self.searxng_container_name], capture_output=True)
-
+            subprocess.run(["docker-compose", "-f", self.compose_file, "down"], check=True)
+            print("✅ Docker服务停止成功")
             return True
-        except Exception as e:
-            print(f"❌ 清理容器失败: {e}")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Docker服务停止失败: {e}")
             return False
 
-    def check_environment(self):
-        """检查环境配置"""
-        print("🔍 检查环境配置...")
-
-        checks = {
-            "Docker 可用": self.check_docker_available(),
-            "Docker Compose 可用": self._check_docker_compose_available(),
-            "AIForge 镜像": self.check_aiforge_image(),
-            "Docker Compose 文件": os.path.exists("docker-compose.yml"),
-            "Nginx 配置文件": os.path.exists("nginx/nginx.conf"),
-        }
-
-        for check_name, passed in checks.items():
-            status = "✅ 可用" if passed else "❌ 缺失"
-            print(f"{check_name}: {status}")
-
-        if checks["Docker Compose 文件"] and checks["Nginx 配置文件"]:
-            print("💡 建议使用 Docker Compose 模式以获得最佳体验")
-        else:
-            print("⚠️ 将使用单容器模式，可能遇到 403 错误")
-
-        return checks
-
-    def show_status(self):
-        """显示服务状态"""
-        print("📊 服务状态检查:")
+    def show_status(self) -> None:
+        """显示Docker服务状态"""
+        print("📊 AIForge Docker服务状态:")
         print("=" * 40)
 
-        # Docker 状态
-        docker_ok = self.check_docker_available()
-        print(f"Docker 环境: {'✅ 可用' if docker_ok else '❌ 不可用'}")
+        try:
+            result = subprocess.run(
+                ["docker-compose", "ps"], capture_output=True, text=True, check=True
+            )
+            print(result.stdout)
+            self._check_service_health()
+        except subprocess.CalledProcessError:
+            print("❌ 无法获取服务状态")
 
-        # AIForge 镜像状态
-        image_ok = self.check_aiforge_image()
-        print(f"AIForge 镜像: {'✅ 存在' if image_ok else '❌ 不存在'}")
+    def cleanup(self) -> bool:
+        """清理Docker资源"""
+        print("🧹 清理AIForge Docker资源...")
 
-        # SearXNG 状态
-        searxng_running = self.is_searxng_running()
-        print(f"SearXNG 服务: {'✅ 运行中' if searxng_running else '❌ 未运行'}")
+        try:
+            # 停止并移除容器
+            subprocess.run(["docker-compose", "down", "-v"], capture_output=True)
 
-        # Nginx 代理状态
-        nginx_running = self._is_nginx_running()
-        print(f"Nginx 代理: {'✅ 运行中' if nginx_running else '❌ 未运行'}")
+            # 清理相关镜像
+            subprocess.run(
+                [
+                    "docker",
+                    "image",
+                    "prune",
+                    "-f",
+                    "--filter",
+                    "label=com.docker.compose.project=aiforge",
+                ],
+                capture_output=True,
+            )
 
-        # Docker Compose 状态
-        compose_running = self._is_docker_compose_running()
-        print(f"Docker Compose: {'✅ 有服务运行' if compose_running else '❌ 无服务运行'}")
-
-        # 环境配置状态
-        print("\n🔧 环境配置:")
-        print("-" * 40)
-
-        has_compose_file = os.path.exists("docker-compose.yml")
-        print(f"Docker Compose 文件: {'✅ 存在' if has_compose_file else '❌ 缺失'}")
-
-        has_nginx_config = os.path.exists("nginx/nginx.conf")
-        print(f"Nginx 配置文件: {'✅ 存在' if has_nginx_config else '❌ 缺失'}")
-
-        # 推荐配置模式
-        print("\n💡 推荐配置:")
-        if has_compose_file and has_nginx_config:
-            print("✅ 建议使用 Docker Compose 模式（完整功能）")
-        else:
-            print("⚠️ 当前为单容器模式（可能遇到 403 错误）")
-
-    def start_services(self, dev_mode=False):
-        """启动所有服务"""
-        print("🚀 启动 Docker 和 SearXNG 服务...\n")
-
-        # 检查环境
-        if not self.check_docker_available():
-            print("❌ Docker 不可用，请先安装 Docker")
-            return False
-
-        print("✅ Docker 可用")
-
-        # 启动 SearXNG
-        if not self.start_searxng(dev_mode):
-            return False
-
-        # 验证服务
-        if not self.verify_searxng():
-            return False
-
-        print("\n🎉 所有服务启动成功！")
-        print(f"SearXNG 访问地址: {self.searxng_url}")
-        return True
-
-    def stop_services(self):
-        """停止所有服务"""
-        print("🛑 停止 Docker 和 SearXNG 服务...\n")
-
-        results = []
-
-        # 停止 SearXNG
-        results.append(self.stop_searxng())
-
-        # 清理其他容器
-        results.append(self.cleanup_all_containers())
-
-        if all(results):
-            print("\n🎉 所有服务已成功停止！")
-            print("💡 现在可以正常进行开发工作了")
+            print("✅ Docker资源清理完成")
             return True
-        else:
-            print("\n⚠️ 部分服务停止失败")
+        except Exception as e:
+            print(f"❌ 清理失败: {e}")
+            return False
+
+    def _check_service_health(self) -> None:
+        """检查服务健康状态"""
+        print("\n🏥 服务健康检查:")
+        services = {"aiforge-engine": "8000", "aiforge-searxng": "8080", "aiforge-nginx": "55510"}
+
+        for service, port in services.items():
+            try:
+                result = subprocess.run(
+                    ["docker", "ps", "--filter", f"name={service}", "--format", "{{.Status}}"],
+                    capture_output=True,
+                    text=True,
+                )
+                status = result.stdout.strip()
+                if "Up" in status:
+                    print(f"✅ {service}: 运行正常")
+                else:
+                    print(f"❌ {service}: {status}")
+            except Exception:
+                print(f"⚠️ {service}: 状态未知")
+
+    def _show_service_urls(self) -> None:
+        """显示服务访问地址"""
+        print("\n🌐 服务访问地址:")
+        print("- AIForge Web: http://localhost:8000")
+        print("- SearXNG: http://localhost:55510")
+        print("- 管理面板: http://localhost:8000/admin")
+
+    def _check_and_update_searxng_formats(self):
+        """更新SearXNG配置以支持多种输出格式"""
+        try:
+            import yaml
+        except ImportError:
+            print("⚠️ PyYAML未安装，跳过SearXNG配置更新")
+            return False
+
+        settings_file = Path("searxng/settings.yml")
+
+        if not settings_file.exists():
+            print("ℹ️ SearXNG配置文件不存在，跳过格式更新")
+            return False
+
+        try:
+            with open(settings_file, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+
+            if "search" not in config:
+                config["search"] = {}
+
+            required_formats = ["html", "json", "csv", "rss"]
+            current_formats = config["search"].get("formats", [])
+
+            if set(current_formats) != set(required_formats):
+                config["search"]["formats"] = required_formats
+
+                with open(settings_file, "w", encoding="utf-8") as f:
+                    yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
+
+                print("✅ SearXNG配置已更新，支持多种输出格式")
+                return True
+            else:
+                print("✅ SearXNG配置已是最新")
+                return False
+
+        except Exception as e:
+            print(f"⚠️ 更新SearXNG配置失败: {e}")
             return False
 
 
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(
-        description="AIForge Docker 服务管理",
+        description="AIForge Docker一体化服务管理",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-使用示例:
-    # 生产模式启动
-    python3 -m src.aiforge.utils.manage_docker_services start
+一体化使用示例:
+    # 一键启动生产模式
+    aiforge-docker start
 
-    # 开发模式启动（代码挂载，热重载）
-    python3 -m src.aiforge.utils.manage_docker_services start --dev
+    # 一键启动开发模式（代码热重载）
+    aiforge-docker start --dev
 
-    # 停止服务
-    python3 -m src.aiforge.utils.manage_docker_services stop
+    # 停止所有服务
+    aiforge-docker stop
 
-    # 查看状态
-    python3 -m src.aiforge.utils.manage_docker_services status
+    # 查看服务状态
+    aiforge-docker status
+
+    # 清理Docker资源
+    aiforge-docker cleanup
+
+开发版本使用示例:
+    # 直接运行模块
+    python -m src.aiforge.utils.manage_docker_services start --dev
+
+    # 或直接运行脚本
+    python src/aiforge/utils/manage_docker_services.py start --dev
+
+特性说明:
+    ✅ 自动检测Docker环境
+    ✅ 智能构建镜像（避免重复构建）
+    ✅ 实时显示构建进度
+    ✅ 自动配置SearXNG输出格式
+    ✅ 服务健康检查
+    ✅ 一键清理资源
         """,
     )
 
-    parser.add_argument(
-        "action",
-        choices=["start", "stop", "status"],
-        help="操作类型: start(启动), stop(停止), status(状态)",
-    )
-
-    parser.add_argument("--dev", action="store_true", help="开发模式启动（代码挂载，热重载）")
+    parser.add_argument("action", choices=["start", "stop", "status", "cleanup"], help="操作类型")
+    parser.add_argument("--dev", action="store_true", help="开发模式启动（代码热重载）")
 
     args = parser.parse_args()
-
     manager = DockerServiceManager()
 
     try:
@@ -463,14 +445,16 @@ def main():
         elif args.action == "status":
             manager.show_status()
             success = True
+        elif args.action == "cleanup":
+            success = manager.cleanup()
         else:
             success = False
 
     except KeyboardInterrupt:
-        print("\n\n⚠️ 用户中断操作")
+        print("\n⚠️ 用户中断操作")
         success = False
     except Exception as e:
-        print(f"\n❌ 执行过程中发生异常: {e}")
+        print(f"❌ 执行异常: {e}")
         success = False
 
     sys.exit(0 if success else 1)

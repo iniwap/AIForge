@@ -9,19 +9,21 @@ services:
       - ./config:/app/config
       - ./logs:/app/logs
     environment:
-      # API Keys    
+      # Docker环境标识
+      - AIFORGE_DOCKER_MODE=true
+
+      # API配置 (Docker层)
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
 
-      # AIForge 配置    
+      # 基础应用配置
       - AIFORGE_MAX_TOKENS=${AIFORGE_MAX_TOKENS:-4096}
       - AIFORGE_MAX_ROUNDS=${AIFORGE_MAX_ROUNDS:-5}
       - AIFORGE_DEFAULT_PROVIDER=${AIFORGE_DEFAULT_PROVIDER:-openrouter}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
-      - AIFORGE_NETWORK_POLICY=${AIFORGE_NETWORK_POLICY:-filtered}
 
-      # SearXNG 配置  
+      # 搜索服务配置 (Docker层)
       - SEARXNG_ENABLED=true
       - SEARXNG_LOCAL_URL=http://nginx:80
     depends_on:
@@ -29,7 +31,13 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: [ "web" ]
+    command: ["web"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   searxng:
     image: searxng/searxng:latest
@@ -41,6 +49,11 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   nginx:
     image: nginx:alpine
@@ -54,8 +67,13 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # CLI 模式服务（可选）    
+  # CLI服务简化
   aiforge-cli:
     build: .
     container_name: aiforge-cli
@@ -63,12 +81,13 @@ services:
       - ./aiforge_work:/app/aiforge_work
       - ./config:/app/config
     environment:
+      - AIFORGE_DOCKER_MODE=true
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     networks:
       - aiforge-network
-    profiles: [ "cli" ]
-    command: [ "cli", "--help" ]
+    profiles: ["cli"]
+    command: ["cli", "--help"]
 
 networks:
   aiforge-network:
