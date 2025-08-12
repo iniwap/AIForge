@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-AIForge Docker服务管理 - 一体化版本
-用户只需执行一行命令即可完成所有初始化工作
+AIForge Docker服务管理
 """
 
 import time
@@ -9,25 +8,25 @@ import subprocess
 import sys
 import argparse
 from pathlib import Path
+from ..i18n.manager import AIForgeI18nManager
 
 
 class DockerServiceManager:
     """一体化Docker服务管理器"""
 
     def __init__(self):
+        # 初始化 i18n 管理器
+        self._i18n_manager = AIForgeI18nManager.get_instance()
         # 动态判断是源码环境还是打包环境
         if self._is_source_environment():
-            # 源码环境：使用当前工作目录的配置文件
             self.compose_file = "docker-compose.yml"
             self.dev_compose_file = "docker-compose.dev.yml"
         else:
-            # 打包环境：使用包内资源
             self.compose_file = self._get_package_resource("docker-compose.yml")
             self.dev_compose_file = self._get_package_resource("docker-compose.dev.yml")
 
     def _is_source_environment(self) -> bool:
         """判断是否为源码环境"""
-        # 检查当前目录是否有源码结构
         current_dir = Path.cwd()
         return (
             (current_dir / "src" / "aiforge").exists()
@@ -36,15 +35,13 @@ class DockerServiceManager:
         )
 
     def _get_package_resource(self, filename: str) -> str:
-        """获取包内资源路径（使用现代方法替代 pkg_resources）"""
+        """获取包内资源路径"""
         try:
-            # 使用 importlib.resources 替代 pkg_resources
             from importlib import resources
 
             with resources.path("aiforge", "..") as package_root:
                 return str(package_root / filename)
         except ImportError:
-            # 回退到 pkg_resources（兼容性）
             import pkg_resources
 
             package_root = Path(pkg_resources.resource_filename("aiforge", ".."))
@@ -52,7 +49,7 @@ class DockerServiceManager:
 
     def check_docker_environment(self) -> dict:
         """全面检查Docker环境"""
-        print("🔍 检查Docker环境...")
+        print(self._i18n_manager.t("docker.checking_environment"))
 
         checks = {
             "docker_available": False,
@@ -68,12 +65,12 @@ class DockerServiceManager:
             result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
             if result.returncode == 0:
                 checks["docker_available"] = True
-                print("✅ Docker已安装")
+                print(self._i18n_manager.t("docker.docker_installed"))
             else:
-                print("❌ Docker未安装")
+                print(self._i18n_manager.t("docker.docker_not_installed"))
                 return checks
         except FileNotFoundError:
-            print("❌ Docker未安装或不在PATH中")
+            print(self._i18n_manager.t("docker.docker_not_in_path"))
             return checks
 
         # 检查Docker是否运行
@@ -81,12 +78,12 @@ class DockerServiceManager:
             result = subprocess.run(["docker", "info"], capture_output=True, text=True)
             if result.returncode == 0:
                 checks["docker_running"] = True
-                print("✅ Docker服务正在运行")
+                print(self._i18n_manager.t("docker.docker_running"))
             else:
-                print("❌ Docker服务未运行，请启动Docker Desktop")
+                print(self._i18n_manager.t("docker.docker_not_running"))
                 return checks
         except Exception:
-            print("❌ 无法连接到Docker服务")
+            print(self._i18n_manager.t("docker.cannot_connect_docker"))
             return checks
 
         # 检查Docker Compose
@@ -94,24 +91,24 @@ class DockerServiceManager:
             result = subprocess.run(["docker-compose", "--version"], capture_output=True, text=True)
             if result.returncode == 0:
                 checks["docker_compose_available"] = True
-                print("✅ Docker Compose可用")
+                print(self._i18n_manager.t("docker.docker_compose_available"))
             else:
-                print("❌ Docker Compose不可用")
+                print(self._i18n_manager.t("docker.docker_compose_not_available"))
         except FileNotFoundError:
-            print("❌ Docker Compose未安装")
+            print(self._i18n_manager.t("docker.docker_compose_not_installed"))
 
         # 检查配置文件
         if Path(self.compose_file).exists():
             checks["compose_file_exists"] = True
-            print("✅ docker-compose.yml存在")
+            print(self._i18n_manager.t("docker.compose_file_exists"))
         else:
-            print("❌ docker-compose.yml不存在")
+            print(self._i18n_manager.t("docker.compose_file_not_exists"))
 
         if Path(self.dev_compose_file).exists():
             checks["dev_compose_file_exists"] = True
-            print("✅ docker-compose.dev.yml存在")
+            print(self._i18n_manager.t("docker.dev_compose_file_exists"))
         else:
-            print("ℹ️ docker-compose.dev.yml不存在（开发模式不可用）")
+            print(self._i18n_manager.t("docker.dev_compose_file_not_exists"))
 
         # 检查AIForge镜像
         try:
@@ -129,17 +126,17 @@ class DockerServiceManager:
             )
             if result.stdout.strip():
                 checks["aiforge_image_exists"] = True
-                print("✅ AIForge镜像已存在")
+                print(self._i18n_manager.t("docker.aiforge_image_exists"))
             else:
-                print("ℹ️ AIForge镜像不存在，需要构建")
+                print(self._i18n_manager.t("docker.aiforge_image_not_exists"))
         except Exception:
-            print("⚠️ 无法检查AIForge镜像状态")
+            print(self._i18n_manager.t("docker.cannot_check_image_status"))
 
         return checks
 
     def build_images_if_needed(self, dev_mode: bool = False) -> bool:
         """智能构建镜像"""
-        print("\n🔨 检查并构建必要的镜像...")
+        print(f"\n{self._i18n_manager.t('docker.building_images')}")
 
         try:
             # 检查是否需要构建
@@ -157,11 +154,11 @@ class DockerServiceManager:
             )
 
             if result.stdout.strip():
-                print("✅ AIForge镜像已存在，跳过构建")
+                print(self._i18n_manager.t("docker.image_exists_skip_build"))
                 return True
 
-            print("📦 开始构建AIForge镜像...")
-            print("ℹ️ 首次构建可能需要5-10分钟，请耐心等待...")
+            print(self._i18n_manager.t("docker.start_building"))
+            print(self._i18n_manager.t("docker.build_time_notice"))
 
             # 构建命令
             cmd = ["docker-compose"]
@@ -180,7 +177,7 @@ class DockerServiceManager:
                 bufsize=1,
             )
 
-            print("📦 构建进度:")
+            print(self._i18n_manager.t("docker.build_progress"))
             for line in process.stdout:
                 line = line.strip()
                 if line:
@@ -199,19 +196,19 @@ class DockerServiceManager:
             process.wait()
 
             if process.returncode == 0:
-                print("✅ 镜像构建成功")
+                print(self._i18n_manager.t("docker.build_success"))
                 return True
             else:
-                print("❌ 镜像构建失败")
+                print(self._i18n_manager.t("docker.build_failed"))
                 return False
 
         except Exception as e:
-            print(f"❌ 构建过程异常: {e}")
+            print(self._i18n_manager.t("docker.build_exception", error=str(e)))
             return False
 
     def start_services(self, dev_mode: bool = False, enable_searxng: bool = False) -> bool:
         """一体化启动服务"""
-        print("🚀 AIForge Docker一体化启动...")
+        print(self._i18n_manager.t("docker.starting_services"))
         print("=" * 50)
 
         # 1. 环境检查
@@ -219,26 +216,26 @@ class DockerServiceManager:
 
         # 检查必要条件
         if not checks["docker_available"]:
-            print("\n❌ Docker未安装，请先安装Docker Desktop")
-            print("💡 下载地址: https://www.docker.com/products/docker-desktop")
+            print(f"\n{self._i18n_manager.t('docker.docker_not_installed')}")
+            print(self._i18n_manager.t("docker.docker_not_installed_help"))
             return False
 
         if not checks["docker_running"]:
-            print("\n❌ Docker服务未运行")
-            print("💡 请启动Docker Desktop并等待其完全启动")
+            print(f"\n{self._i18n_manager.t('docker.docker_not_running')}")
+            print(self._i18n_manager.t("docker.docker_not_running_help"))
             return False
 
         if not checks["docker_compose_available"]:
-            print("\n❌ Docker Compose不可用")
+            print(f"\n{self._i18n_manager.t('docker.docker_compose_not_available_msg')}")
             return False
 
         if not checks["compose_file_exists"]:
-            print("\n❌ docker-compose.yml文件不存在")
+            print(f"\n{self._i18n_manager.t('docker.compose_file_not_exists_msg')}")
             return False
 
         if dev_mode and not checks["dev_compose_file_exists"]:
-            print("\n⚠️ 开发模式需要docker-compose.dev.yml文件")
-            print("💡 将使用生产模式启动")
+            print(f"\n{self._i18n_manager.t('docker.dev_compose_file_not_exists')}")
+            print(self._i18n_manager.t("docker.dev_mode_fallback"))
             dev_mode = False
 
         print("\n" + "=" * 50)
@@ -250,28 +247,28 @@ class DockerServiceManager:
         print("\n" + "=" * 50)
 
         # 3. 启动服务
-        print("🚀 启动Docker服务栈...")
+        print(self._i18n_manager.t("docker.starting_services"))
 
         try:
             # 先清理可能存在的旧容器
-            print("🧹 清理旧容器...")
+            print(self._i18n_manager.t("docker.cleaning_old_containers"))
             subprocess.run(["docker-compose", "down"], capture_output=True)
 
             # 构建启动命令
             cmd = ["docker-compose"]
             if dev_mode:
                 cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
-                print("🔧 开发模式启动（代码热重载）")
+                print(self._i18n_manager.t("docker.dev_mode_start"))
             else:
                 cmd.extend(["-f", self.compose_file])
-                print("🔨 生产模式启动")
+                print(self._i18n_manager.t("docker.production_mode_start"))
 
             # 添加 profile 支持
             if enable_searxng:
                 cmd.extend(["--profile", "searxng"])
-                print("🔍 启用 SearXNG 搜索服务")
+                print(self._i18n_manager.t("docker.searxng_enabled"))
             else:
-                print("⚠️ SearXNG 搜索服务未启用")
+                print(self._i18n_manager.t("docker.searxng_not_enabled"))
 
             cmd.extend(["up", "-d"])
 
@@ -279,13 +276,13 @@ class DockerServiceManager:
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode == 0:
-                print("✅ Docker服务启动成功")
+                print(self._i18n_manager.t("docker.service_start_success"))
 
                 # 显示服务信息
                 self._show_service_urls(enable_searxng)
 
                 # 等待服务稳定
-                print("\n⏳ 等待服务完全启动...")
+                print(f"\n{self._i18n_manager.t('docker.waiting_services')}")
                 time.sleep(10)
 
                 # 检查服务健康状态
@@ -295,37 +292,37 @@ class DockerServiceManager:
                 if enable_searxng:
                     self._check_and_update_searxng_formats()
 
-                print("\n🎉 AIForge Docker服务一体化启动完成！")
-                print("💡 现在可以开始使用AIForge了")
+                print(f"\n{self._i18n_manager.t('docker.startup_complete')}")
+                print(self._i18n_manager.t("docker.ready_to_use"))
 
                 return True
             else:
-                print(f"❌ Docker服务启动失败: {result.stderr}")
+                print(self._i18n_manager.t("docker.service_start_failed", error=result.stderr))
                 return False
 
         except Exception as e:
-            print(f"❌ 启动过程异常: {e}")
+            print(self._i18n_manager.t("docker.startup_exception", error=str(e)))
             return False
 
     def stop_services(self) -> bool:
         """停止Docker服务栈"""
         if not Path(self.compose_file).exists():
-            print("❌ docker-compose.yml文件不存在")
+            print(self._i18n_manager.t("docker.compose_file_not_exists_msg"))
             return False
 
-        print("🛑 停止AIForge Docker服务...")
+        print(self._i18n_manager.t("docker.stopping_services"))
 
         try:
             subprocess.run(["docker-compose", "-f", self.compose_file, "down"], check=True)
-            print("✅ Docker服务停止成功")
+            print(self._i18n_manager.t("docker.stop_success"))
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Docker服务停止失败: {e}")
+            print(self._i18n_manager.t("docker.stop_failed", error=str(e)))
             return False
 
     def show_status(self) -> None:
         """显示Docker服务状态"""
-        print("📊 AIForge Docker服务状态:")
+        print(self._i18n_manager.t("docker.service_status"))
         print("=" * 40)
 
         try:
@@ -335,15 +332,19 @@ class DockerServiceManager:
             print(result.stdout)
             self._check_service_health()
         except subprocess.CalledProcessError:
-            print("❌ 无法获取服务状态")
+            print(self._i18n_manager.t("docker.cannot_get_status"))
 
     def cleanup(self) -> bool:
         """清理Docker资源"""
-        print("🧹 清理AIForge Docker资源...")
+        print(self._i18n_manager.t("docker.cleaning_resources"))
 
         try:
             # 停止并移除容器
             subprocess.run(["docker-compose", "down", "-v"], capture_output=True)
+            subprocess.run(
+                ["docker-compose", "--profile", "searxng", "down", "-v", "--remove-orphans"],
+                capture_output=True,
+            )
 
             # 清理相关镜像
             subprocess.run(
@@ -358,48 +359,51 @@ class DockerServiceManager:
                 capture_output=True,
             )
 
-            print("✅ Docker资源清理完成")
+            print(self._i18n_manager.t("docker.cleanup_success"))
             return True
         except Exception as e:
-            print(f"❌ 清理失败: {e}")
+            print(self._i18n_manager.t("docker.cleanup_failed", error=str(e)))
             return False
 
     def deep_cleanup(self) -> bool:
         """彻底清理AIForge相关资源，但保留基础镜像"""
-        print("🔥 执行AIForge彻底清理...")
-        print("⚠️ 这将删除AIForge相关的Docker资源，但保留Python、SearXNG、Nginx基础镜像")
+        print(self._i18n_manager.t("docker.deep_cleanup_start"))
+        print(self._i18n_manager.t("docker.deep_cleanup_warning"))
 
         try:
             # 1. 停止所有服务
-            print("🛑 停止所有服务...")
+            print(self._i18n_manager.t("docker.stopping_all_services"))
             subprocess.run(
                 ["docker-compose", "down", "-v", "--remove-orphans"], capture_output=True
             )
+            subprocess.run(
+                ["docker-compose", "--profile", "searxng", "down", "-v", "--remove-orphans"],
+                capture_output=True,
+            )
 
             # 2. 只清理AIForge构建的镜像，保留基础镜像
-            print("🗑️ 清理AIForge构建镜像...")
+            print(self._i18n_manager.t("docker.cleaning_built_images"))
             self._remove_aiforge_built_images_only()
 
             # 3. 清理构建缓存（但不影响基础镜像）
-            print("🧹 清理构建缓存...")
+            print(self._i18n_manager.t("docker.cleaning_build_cache"))
             subprocess.run(["docker", "builder", "prune", "-f"], capture_output=True)
 
             # 4. 清理悬空资源（不影响基础镜像）
-            print("🌐 清理悬空资源...")
+            print(self._i18n_manager.t("docker.cleaning_dangling_resources"))
             subprocess.run(["docker", "image", "prune", "-f"], capture_output=True)
             subprocess.run(["docker", "volume", "prune", "-f"], capture_output=True)
 
-            print("✅ 彻底清理完成，基础镜像已保留")
+            print(self._i18n_manager.t("docker.deep_cleanup_success"))
             return True
 
         except Exception as e:
-            print(f"❌ 彻底清理失败: {e}")
+            print(self._i18n_manager.t("docker.deep_cleanup_failed", error=str(e)))
             return False
 
     def _remove_aiforge_built_images_only(self):
         """只移除AIForge构建的镜像，保留基础镜像"""
         try:
-            # 修复：使用正确的转义字符
             result = subprocess.run(
                 ["docker", "images", "--format", "{{.Repository}}:{{.Tag}}\t{{.ID}}"],
                 capture_output=True,
@@ -412,7 +416,6 @@ class DockerServiceManager:
             preserve_images = {"python", "searxng/searxng", "nginx"}
             images_to_remove = []
 
-            # 修复：使用正确的换行符和制表符
             for line in result.stdout.strip().split("\n"):
                 if "\t" in line:
                     repo_tag, image_id = line.split("\t", 1)
@@ -427,16 +430,16 @@ class DockerServiceManager:
                 subprocess.run(["docker", "rmi", "-f", image_id], capture_output=True)
 
             if images_to_remove:
-                print(f"✅ 移除了 {len(images_to_remove)} 个AIForge构建镜像")
+                print(self._i18n_manager.t("docker.removed_images", count=len(images_to_remove)))
             else:
-                print("ℹ️ 没有找到需要清理的AIForge构建镜像")
+                print(self._i18n_manager.t("docker.no_images_to_remove"))
 
         except Exception as e:
-            print(f"⚠️ 清理构建镜像时出错: {e}")
+            print(self._i18n_manager.t("docker.cleanup_images_error", error=str(e)))
 
     def _check_service_health(self, enable_searxng: bool = False) -> None:
         """检查服务健康状态"""
-        print("\n🏥 服务健康检查:")
+        print(f"\n{self._i18n_manager.t('docker.health_check')}")
         services = {"aiforge-engine": "8000"}
 
         if enable_searxng:
@@ -451,32 +454,36 @@ class DockerServiceManager:
                 )
                 status = result.stdout.strip()
                 if "Up" in status:
-                    print(f"✅ {service}: 运行正常")
+                    print(self._i18n_manager.t("docker.service_running", service=service))
                 else:
-                    print(f"❌ {service}: {status}")
+                    print(
+                        self._i18n_manager.t(
+                            "docker.service_not_running", service=service, status=status
+                        )
+                    )
             except Exception:
-                print(f"⚠️ {service}: 状态未知")
+                print(self._i18n_manager.t("docker.service_status_unknown", service=service))
 
     def _show_service_urls(self, enable_searxng: bool = False) -> None:
         """显示服务访问地址"""
-        print("\n🌐 服务访问地址:")
-        print("- AIForge Web: http://localhost:8000")
+        print(f"\n{self._i18n_manager.t('docker.service_urls')}")
+        print(self._i18n_manager.t("docker.aiforge_web_url"))
         if enable_searxng:
-            print("- SearXNG: http://localhost:55510")
-        print("- 管理面板: http://localhost:8000/admin")
+            print(self._i18n_manager.t("docker.searxng_url"))
+        print(self._i18n_manager.t("docker.admin_panel_url"))
 
     def _check_and_update_searxng_formats(self):
         """更新SearXNG配置以支持多种输出格式"""
         try:
             import yaml
         except ImportError:
-            print("⚠️ PyYAML未安装，跳过SearXNG配置更新")
+            print(self._i18n_manager.t("docker.pyyaml_not_installed"))
             return False
 
         settings_file = Path("searxng/settings.yml")
 
         if not settings_file.exists():
-            print("ℹ️ SearXNG配置文件不存在，跳过格式更新")
+            print(self._i18n_manager.t("docker.searxng_config_not_exists"))
             return False
 
         try:
@@ -495,68 +502,40 @@ class DockerServiceManager:
                 with open(settings_file, "w", encoding="utf-8") as f:
                     yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
 
-                print("✅ SearXNG配置已更新，支持多种输出格式")
+                print(self._i18n_manager.t("docker.searxng_config_updated"))
                 return True
             else:
-                print("✅ SearXNG配置已是最新")
+                print(self._i18n_manager.t("docker.searxng_config_latest"))
                 return False
 
         except Exception as e:
-            print(f"⚠️ 更新SearXNG配置失败: {e}")
+            print(self._i18n_manager.t("docker.searxng_config_update_failed", error=str(e)))
             return False
 
 
 def main():
     """主函数"""
+    manager = DockerServiceManager()
+
     parser = argparse.ArgumentParser(
-        description="AIForge Docker一体化服务管理",
+        description=manager._i18n_manager.t("docker.cli.description"),
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-一体化使用示例:
-    # 一键启动生产模式（不含SearXNG）
-    aiforge-docker start
-
-    # 一键启动生产模式（含SearXNG）
-    aiforge-docker start --searxng
-
-    # 一键启动开发模式（代码热重载，含SearXNG）
-    aiforge-docker start --dev --searxng
-
-    # 停止所有服务
-    aiforge-docker stop
-
-    # 查看服务状态
-    aiforge-docker status
-
-    # 清理Docker资源
-    aiforge-docker cleanup
-
-开发版本使用示例:
-    # 直接运行模块
-    python -m src.aiforge.utils.manage_docker_services start --dev
-    python -m src.aiforge.utils.manage_docker_services start --dev --searxng
-
-    # 或直接运行脚本
-    python src/aiforge/utils/manage_docker_services.py start --dev
-
-特性说明:
-    ✅ 自动检测Docker环境
-    ✅ 智能构建镜像（避免重复构建）
-    ✅ 实时显示构建进度
-    ✅ SearXNG可选启用
-    ✅ 服务健康检查
-    ✅ 一键清理资源
-        """,
+        epilog=manager._i18n_manager.t("docker.cli.epilog"),
     )
 
     parser.add_argument(
-        "action", choices=["start", "stop", "status", "cleanup", "deep-cleanup"], help="操作类型"
+        "action",
+        choices=["start", "stop", "status", "cleanup", "deep-cleanup"],
+        help=manager._i18n_manager.t("docker.cli.action_help"),
     )
-    parser.add_argument("--dev", action="store_true", help="开发模式启动（代码热重载）")
-    parser.add_argument("--searxng", action="store_true", help="启用SearXNG搜索服务")
+    parser.add_argument(
+        "--dev", action="store_true", help=manager._i18n_manager.t("docker.cli.dev_help")
+    )
+    parser.add_argument(
+        "--searxng", action="store_true", help=manager._i18n_manager.t("docker.cli.searxng_help")
+    )
 
     args = parser.parse_args()
-    manager = DockerServiceManager()
 
     try:
         if args.action == "start":
@@ -574,10 +553,10 @@ def main():
             success = False
 
     except KeyboardInterrupt:
-        print("\n⚠️ 用户中断操作")
+        print(f"\n{manager._i18n_manager.t('docker.user_interrupted')}")
         success = False
     except Exception as e:
-        print(f"❌ 执行异常: {e}")
+        print(manager._i18n_manager.t("docker.execution_exception", error=str(e)))
         success = False
 
     sys.exit(0 if success else 1)

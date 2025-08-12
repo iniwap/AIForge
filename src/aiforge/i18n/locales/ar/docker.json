@@ -1,0 +1,87 @@
+{  
+  "docker": {  
+    "checking_environment": "🔍 فحص بيئة Docker...",  
+    "docker_installed": "✅ تم تثبيت Docker",  
+    "docker_not_installed": "❌ Docker غير مثبت",  
+    "docker_not_in_path": "❌ Docker غير مثبت أو غير موجود في PATH",  
+    "docker_running": "✅ خدمة Docker تعمل",  
+    "docker_not_running": "❌ خدمة Docker لا تعمل، يرجى تشغيل Docker Desktop",  
+    "cannot_connect_docker": "❌ لا يمكن الاتصال بخدمة Docker",  
+    "docker_compose_available": "✅ Docker Compose متاح",  
+    "docker_compose_not_available": "❌ Docker Compose غير متاح",  
+    "docker_compose_not_installed": "❌ Docker Compose غير مثبت",  
+    "compose_file_exists": "✅ docker-compose.yml موجود",  
+    "compose_file_not_exists": "❌ docker-compose.yml غير موجود",  
+    "dev_compose_file_exists": "✅ docker-compose.dev.yml موجود",  
+    "dev_compose_file_not_exists": "ℹ️ docker-compose.dev.yml غير موجود (وضع التطوير غير متاح)",  
+    "aiforge_image_exists": "✅ صورة AIForge موجودة",  
+    "aiforge_image_not_exists": "ℹ️ صورة AIForge غير موجودة، تحتاج إلى بناء",  
+    "cannot_check_image_status": "⚠️ لا يمكن فحص حالة صورة AIForge",  
+    "building_images": "🔨 فحص وبناء الصور الضرورية...",  
+    "image_exists_skip_build": "✅ صورة AIForge موجودة، تخطي البناء",  
+    "start_building": "📦 بدء بناء صورة AIForge...",  
+    "build_time_notice": "ℹ️ قد يستغرق البناء الأول 5-10 دقائق، يرجى الصبر...",  
+    "build_progress": "📦 تقدم البناء:",  
+    "build_success": "✅ نجح بناء الصورة",  
+    "build_failed": "❌ فشل بناء الصورة",  
+    "build_exception": "❌ استثناء في عملية البناء: {error}",  
+    "starting_services": "🚀 بدء تشغيل AIForge Docker المتكامل...",  
+    "docker_not_installed_help": "💡 رابط التحميل: https://www.docker.com/products/docker-desktop",  
+    "docker_not_running_help": "💡 يرجى تشغيل Docker Desktop وانتظار بدء التشغيل الكامل",  
+    "docker_compose_not_available_msg": "❌ Docker Compose غير متاح",  
+    "compose_file_not_exists_msg": "❌ ملف docker-compose.yml غير موجود",  
+    "dev_mode_fallback": "💡 سيتم استخدام وضع الإنتاج للبدء",  
+    "cleaning_old_containers": "🧹 تنظيف الحاويات القديمة...",  
+    "dev_mode_start": "🔧 بدء وضع التطوير (إعادة تحميل الكود الساخن)",  
+    "production_mode_start": "🔨 بدء وضع الإنتاج",  
+    "searxng_enabled": "🔍 تم تمكين خدمة البحث SearXNG",  
+    "searxng_not_enabled": "⚠️ خدمة البحث SearXNG غير مُمكنة",  
+    "service_start_success": "✅ تم بدء خدمات Docker بنجاح",  
+    "waiting_services": "⏳ انتظار بدء الخدمات بالكامل...",  
+    "startup_complete": "🎉 اكتمل بدء تشغيل AIForge Docker المتكامل!",  
+    "ready_to_use": "💡 يمكنك الآن البدء في استخدام AIForge",  
+    "service_start_failed": "❌ فشل بدء خدمة Docker: {error}",  
+    "startup_exception": "❌ استثناء في عملية البدء: {error}",  
+    "stopping_services": "🛑 إيقاف خدمات AIForge Docker...",  
+    "stop_success": "✅ تم إيقاف خدمات Docker بنجاح",  
+    "stop_failed": "❌ فشل إيقاف خدمة Docker: {error}",  
+    "service_status": "📊 حالة خدمة AIForge Docker:",  
+    "cannot_get_status": "❌ لا يمكن الحصول على حالة الخدمة",  
+    "cleaning_resources": "🧹 تنظيف موارد AIForge Docker...",  
+    "cleanup_success": "✅ اكتمل تنظيف موارد Docker",  
+    "cleanup_failed": "❌ فشل التنظيف: {error}",  
+    "deep_cleanup_start": "🔥 تنفيذ التنظيف العميق لـ AIForge...",  
+    "deep_cleanup_warning": "⚠️ سيؤدي هذا إلى حذف موارد Docker المتعلقة بـ AIForge ولكن سيحافظ على الصور الأساسية Python وSearXNG وNginx",  
+    "stopping_all_services": "🛑 إيقاف جميع الخدمات...",  
+    "cleaning_built_images": "🗑️ تنظيف صور AIForge المبنية...",  
+    "cleaning_build_cache": "🧹 تنظيف ذاكرة التخزين المؤقت للبناء...",  
+    "cleaning_dangling_resources": "🌐 تنظيف الموارد المعلقة...",  
+    "deep_cleanup_success": "✅ اكتمل التنظيف العميق، تم الحفاظ على الصور الأساسية",  
+    "deep_cleanup_failed": "❌ فشل التنظيف العميق: {error}",  
+    "removed_images": "✅ تم إزالة {count} من صور AIForge المبنية",  
+    "no_images_to_remove": "ℹ️ لم يتم العثور على صور AIForge مبنية للتنظيف",  
+    "cleanup_images_error": "⚠️ خطأ في تنظيف الصور المبنية: {error}",  
+    "health_check": "🏥 فحص صحة الخدمة:",  
+    "service_running": "✅ {service}: يعمل بشكل طبيعي",  
+    "service_not_running": "❌ {service}: {status}",  
+    "service_status_unknown": "⚠️ {service}: الحالة غير معروفة",  
+    "service_urls": "🌐 عناوين الوصول للخدمة:",  
+    "aiforge_web_url": "- AIForge Web: http://localhost:8000",  
+    "searxng_url": "- SearXNG: http://localhost:55510",  
+    "admin_panel_url": "- لوحة الإدارة: http://localhost:8000/admin",  
+    "pyyaml_not_installed": "⚠️ PyYAML غير مثبت، تخطي تحديث إعدادات SearXNG",  
+    "searxng_config_not_exists": "ℹ️ ملف إعدادات SearXNG غير موجود، تخطي تحديث التنسيق",  
+    "searxng_config_updated": "✅ تم تحديث إعدادات SearXNG لدعم تنسيقات الإخراج المتعددة",  
+    "searxng_config_latest": "✅ إعدادات SearXNG محدثة",  
+    "searxng_config_update_failed": "⚠️ فشل تحديث إعدادات SearXNG: {error}",  
+    "user_interrupted": "⚠️ قاطع المستخدم العملية",  
+    "execution_exception": "❌ استثناء في التنفيذ: {error}",  
+    "cli": {  
+      "description": "إدارة خدمة AIForge Docker المتكاملة",  
+      "action_help": "نوع العملية",  
+      "dev_help": "بدء وضع التطوير (إعادة تحميل الكود الساخن)",  
+      "searxng_help": "تمكين خدمة البحث SearXNG",  
+      "epilog": "أمثلة الاستخدام المتكامل:\n    # بدء وضع الإنتاج بنقرة واحدة (بدون SearXNG)\n    aiforge-docker start\n\n    # بدء وضع الإنتاج بنقرة واحدة (مع SearXNG)\n    aiforge-docker start --searxng\n\n    # بدء وضع التطوير بنقرة واحدة (إعادة تحميل الكود الساخن، مع SearXNG)\n    aiforge-docker start --dev --searxng\n\n    # إيقاف جميع الخدمات\n    aiforge-docker stop\n\n    # عرض حالة الخدمة\n    aiforge-docker status\n\n    # تنظيف موارد Docker\n    aiforge-docker cleanup\n\n    # تنظيف عميق للموارد\n    aiforge-docker deep-cleanup\n\nأمثلة استخدام إصدار التطوير:\n    # استخدام نص البدء (موصى به)\n    ./aiforge-docker.sh start --dev\n    ./aiforge-docker.sh deep-cleanup\n\nإعدادات اللغة:\n    # تحديد اللغة ديناميكيًا عبر متغيرات البيئة\n    AIFORGE_LOCALE=en ./aiforge-docker.sh start\n    AIFORGE_LOCALE=ja ./aiforge-docker.sh status\n    \n    # Windows PowerShell\n    $env:AIFORGE_LOCALE=\"en\"; ./aiforge-docker.bat start\n\nالميزات:\n    ✅ الكشف التلقائي عن بيئة Docker\n    ✅ بناء الصور الذكي (تجنب البناء المكرر)\n    ✅ تقدم البناء في الوقت الفعلي\n    ✅ تمكين SearXNG الاختياري\n    ✅ فحوصات صحة الخدمة\n    ✅ تنظيف الموارد بنقرة واحدة\n    ✅ دعم متعدد اللغات (zh|en|ar|de|es|fr|hi|ja|ko|pt|ru|vi)"  
+    }  
+  }
+}

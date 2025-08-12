@@ -6,10 +6,6 @@ services:
         - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
         - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
         - AIFORGE_LOCALE=${AIFORGE_LOCALE}
-        - SEARXNG_ENABLED=${SEARXNG_ENABLED}
-        - SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}
-        - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}
-        - SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC}
     container_name: aiforge-engine
     ports:
       - "${AIFORGE_WEB_PORT:-8000}:8000"
@@ -31,12 +27,8 @@ services:
       - AIFORGE_DEFAULT_PROVIDER=${AIFORGE_DEFAULT_PROVIDER:-openrouter}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
 
-      # 可选搜索服务配置 (Docker层)
-      - SEARXNG_ENABLED=${SEARXNG_ENABLED:-false}
-      - SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}
-      - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}
-      - SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC:-true}
-    # 移除对 nginx 的硬依赖
+      # SearXNG为远程服务时设置
+      - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL:-}
     networks:
       - aiforge-network
     restart: unless-stopped
@@ -96,10 +88,6 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE}
-      - SEARXNG_ENABLED=${SEARXNG_ENABLED}
-      - SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}
-      - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}
-      - SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC}
     networks:
       - aiforge-network
     profiles: ["cli"]

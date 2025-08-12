@@ -96,6 +96,8 @@ include = [
     "/docker-compose.dev.yml",
     "/docker",
     "nginx",
+    "/aiforge-docker.bat",
+    "/aiforge-docker.sh",
 ]
 
 [dependency-groups]

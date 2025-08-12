@@ -26,11 +26,4 @@ model = "llama3"
 api_key = ""  
 base_url = "http://localhost:11434"  
 timeout = 30  
-max_tokens = 8192  
-  
-[searxng]  
-enabled = ${SEARXNG_ENABLED}  
-local_url = "${SEARXNG_LOCAL_URL}"  
-remote_url = "${SEARXNG_REMOTE_URL}"  
-fallback_to_public = ${SEARXNG_FALLBACK_TO_PUBLIC}  
-timeout = 10
+max_tokens = 8192

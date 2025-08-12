@@ -3,7 +3,7 @@
 <div align="center">  
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![Textual](https://img.shields.io/badge/Textual-4.0.0+%20-purple)](https://textual.textualize.io/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=9)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=9)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=10)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=10)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **将自然语言指令转化为可执行代码的AI驱动自动化引擎**  
@@ -14,11 +14,8 @@
   
 ---  
   
-## 🎯 什么是 AIForge？  
-  
-> ⚠️ **开发状态**: 目前处于积极开发阶段，版本更新比较频繁，敬请关注。  
-  
-> 🚧 **项目状态**: 正在积极开发中，欢迎反馈和贡献！  
+## 🎯 什么是 AIForge？    
+> 🚧 **项目状态**: 目前处于全力开发阶段，版本更新比较频繁，敬请关注。 
 
 AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代码执行之间的壁垒。通过先进的指令分析和自适应执行架构，AIForge 提供：  
   
@@ -99,9 +96,19 @@ aiforge-docker start
     
 # 4. 开发模式（热重载）   
 aiforge-docker start --dev  
+
+# 5. 源码模式执行时（默认英文）
+$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat start --dev  
+./aiforge-docker.sh start --dev  
+
+# 6. 集成SearXNG
+aiforge-docker start --dev --searxng
+
+# 7. 查看帮助
+$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat --help
 ```  
   
-### 基础使用  [5] 
+### 基础使用 
 - 非Docker模式   
 ```python  
 from aiforge import AIForgeEngine    

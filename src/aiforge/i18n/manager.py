@@ -77,7 +77,7 @@ class AIForgeI18nManager:
         env_locale = LocaleDetector.detect_from_env()
         system_locale = LocaleDetector.detect_system_locale()
 
-        detected_locale = env_locale or system_locale or "zh"
+        detected_locale = env_locale or system_locale or "en"
         return detected_locale, "en"
 
     @property
@@ -182,6 +182,7 @@ class AIForgeI18nManager:
             "ui.json",
             "data.json",
             "keywords.json",
+            "docker.json",
         ]
 
         for json_file in json_files:

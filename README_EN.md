@@ -15,10 +15,7 @@
 ---  
   
 ## 🎯 What is AIForge?  
-  
-> ⚠️ **Development Status**: This project is currently in active development. APIs may change frequently as we iterate and improve.  
-
-> 🚧 **Project Status**: Actively developed, feedback and contributions welcome!  
+> 🚧 **Project Status**: We are currently in full development, with quite frequent version updates. Please stay tuned!  
 
 AIForge is an **intelligent execution engine** that bridges the gap between natural language instructions and code execution. Through advanced instruction analysis and adaptive execution architecture, AIForge provides:  
   
@@ -96,6 +93,16 @@ aiforge-docker start
     
 # 4. Development mode (hot reload)   
 aiforge-docker start --dev  
+
+# 5. Source Code Mode（default language=en）
+$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat start --dev  
+./aiforge-docker.sh start --dev  
+
+# 6. Enable SearXNG
+aiforge-docker start --dev --searxng
+
+# 7. Help
+$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat --help
 ```  
   
 ### Basic Usage 

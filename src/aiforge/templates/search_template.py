@@ -98,14 +98,16 @@ def search_web(
     i18n_manager = AIForgeI18nManager.get_instance()
     # 如果指定了 engine_override 且为 SearXNG 相关
     if engine_override and engine_override.startswith("searxng"):
-        if engine_override in ENGINE_CONFIGS:
+        [engine, url] = engine_override.split("#")
+        ENGINE_CONFIGS[engine]["url"] = url
+        if engine in ENGINE_CONFIGS:
             try:
                 ProgressIndicator.get_instance().show_search_process("SearXNG")
                 # 使用 SearXNG 专用的搜索逻辑
                 search_result = _search_searxng_template(
                     search_query,
                     max_results,
-                    ENGINE_CONFIGS[engine_override],
+                    ENGINE_CONFIGS[engine],
                     min_abstract_len,
                     max_abstract_len,
                 )
@@ -114,10 +116,6 @@ def search_web(
                     return search_result
             except Exception:
                 pass
-
-        # SearXNG 失败时的回退逻辑
-        if not ENGINE_CONFIGS.get(engine_override, {}).get("fallback_to_public", True):
-            return None
 
     for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
         try:
@@ -148,6 +146,7 @@ def _search_searxng_template(
 ):
     """SearXNG JSON API 专用搜索模板"""
     try:
+        base_url = engine_config["url"]
         # 使用会话管理，模拟验证方法的成功模式
         session = requests.Session()
         # 完整的浏览器头部信息
@@ -157,11 +156,10 @@ def _search_searxng_template(
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "gzip, deflate",
             "Connection": "keep-alive",
-            "Referer": f"{engine_config['url']}/",
+            "Referer": f"{base_url}/",
         }
 
         # 先建立会话（模拟验证方法）
-        base_url = engine_config["url"]
         session.get(f"{base_url}/", headers=headers, timeout=10)
 
         # 使用 POST 请求，让 SearXNG 使用默认引擎配置
@@ -1406,25 +1404,14 @@ ENGINE_CONFIGS = {
         "abstract_selectors": [".content", ".result_content", "p"],
         "fallback_abstract": True,
     },
-    "searxng_local": {
-        "url": "http://localhost:55510",
+    "searxng": {
+        "url": None,  # 运行时动态设置
         "api_type": "json",
         "result_path": "results",
         "title_path": "title",
         "url_path": "url",
         "content_path": "content",
         "fallback_abstract": True,
-        "local_service": True,
-    },
-    "searxng_remote": {
-        "url": "{searxng_base_url}",
-        "api_type": "json",
-        "result_path": "results",
-        "title_path": "title",
-        "url_path": "url",
-        "content_path": "content",
-        "fallback_abstract": True,
-        "remote_service": True,
     },
 }
 

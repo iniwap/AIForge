@@ -53,50 +53,44 @@ class AIForgeConfigManager:
 
     def get_searxng_config(self) -> Dict[str, Any]:
         """获取 SearXNG 配置"""
-        return self.config.config.get(
-            "searxng",
-            {
-                "enabled": False,
-                "local_url": "http://localhost:55510",
-                "remote_url": None,
-                "fallback_to_public": True,
+        import os
+
+        remote_url = os.environ.get("SEARXNG_REMOTE_URL")
+        if remote_url:
+            return {
+                "url": remote_url,
                 "timeout": 10,
-            },
-        )
+            }
+        else:
+            return {
+                "url": "http://localhost:55510",
+                "timeout": 10,
+            }
 
     def is_searxng_available(self) -> bool:
         """检查 SearXNG 服务是否可用"""
-        searxng_config = self.get_searxng_config()
-        if not searxng_config.get("enabled"):
-            return False
+        import os
 
-        # 如果配置中没有设置任何 URL，直接返回 False
-        if not searxng_config.get("local_url") and not searxng_config.get("remote_url"):
-            return False
+        # 默认的SearXNG服务地址（由--searxng参数启动的服务）
+        searxng_urls = [
+            "http://localhost:55510",  # 本地Nginx代理地址
+            "http://aiforge-searxng:8080",  # Docker内部服务地址
+        ]
 
-        # 检查本地服务
-        if searxng_config.get("local_url"):
+        # 添加远程服务支持
+        remote_url = os.environ.get("SEARXNG_REMOTE_URL")
+        if remote_url:
+            searxng_urls.append(remote_url)
+
+        for url in searxng_urls:
             try:
                 import requests
 
-                response = requests.get(
-                    f"{searxng_config['local_url']}/search?q=test&format=json", timeout=5
-                )
-                return response.status_code == 200
+                response = requests.get(f"{url}/search?q=test&format=json", timeout=5)
+                if response.status_code == 200:
+                    return True
             except Exception:
-                pass
-
-        # 检查远程服务
-        if searxng_config.get("remote_url"):
-            try:
-                import requests
-
-                response = requests.get(
-                    f"{searxng_config['remote_url']}/search?q=test&format=json", timeout=5
-                )
-                return response.status_code == 200
-            except Exception:
-                pass
+                continue
 
         return False
 

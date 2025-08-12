@@ -59,11 +59,6 @@ class AIForgeSearchManager:
             # 使用 SearXNG 搜索
             template_manager = self.components.get("template_manager")
             if template_manager:
-                searxng_config = config_manager.get_searxng_config()
-                engine_key = (
-                    "searxng_local" if searxng_config.get("local_url") else "searxng_remote"
-                )
-
                 search_result = template_manager.get_template(
                     "search_direct",
                     search_query=search_params["search_query"],
@@ -71,7 +66,7 @@ class AIForgeSearchManager:
                     min_items=search_params["min_items"],
                     min_abstract_len=search_params["min_abstract_len"],
                     max_abstract_len=search_params["max_abstract_len"],
-                    engine_override=engine_key,
+                    engine_override=f"searxng#{config_manager.get_searxng_config()['url']}",
                 )
 
                 if search_result and search_result.get("success"):
