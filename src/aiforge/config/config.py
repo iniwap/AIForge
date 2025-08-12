@@ -66,17 +66,22 @@ class AIForgeConfig:
 
     def _load_from_file(self) -> Dict:
         """从文件加载配置"""
+        # 获取默认配置作为基础
+        config = self.get_builtin_default_config()
+
         if not self.config_file.exists():
             self.console.print(f"[red]Configuration file not found: {self.config_file}[/red]")
-            return {}
+            return config  # 返回默认配置而不是空字典
 
         try:
             with open(self.config_file, "rb") as f:
-                config = tomlkit.load(f)
+                file_config = tomlkit.load(f)
+            # 深度合并配置
+            config.update(file_config)
             return config
         except Exception as e:
             self.console.print(f"[red]Failed to load configuration: {str(e)}[/red]")
-            return {}
+            return config  # 返回默认配置而不是空字典
 
     @staticmethod
     def get_builtin_default_config() -> Dict:

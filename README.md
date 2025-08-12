@@ -98,8 +98,9 @@ aiforge-docker start
 aiforge-docker start --dev  
 
 # 5. 源码模式执行时（默认英文）
-$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat start --dev  
-./aiforge-docker.sh start --dev  
+$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat start --dev  # win
+
+./aiforge-docker.sh start --dev  # linux/unix/mac
 
 # 6. 集成SearXNG
 aiforge-docker start --dev --searxng

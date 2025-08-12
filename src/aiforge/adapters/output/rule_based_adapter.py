@@ -153,6 +153,78 @@ class RuleBasedAdapter:
         adapter_method = adapter_methods.get(ui_type, self._adapt_generic)
         return adapter_method(data, template)
 
+    def _adapt_generic(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
+        """通用适配方法，用于处理未知的UI类型"""
+        # 简单地将数据转换为通用格式
+        if isinstance(data, dict):
+            content = data
+        else:
+            content = {"data": data}
+
+        return {
+            "display_items": [
+                {
+                    "type": "generic",
+                    "title": "数据输出",
+                    "content": content,
+                    "priority": 5,
+                }
+            ],
+            "layout_hints": {"layout_type": "vertical", "columns": 1, "spacing": "normal"},
+            "actions": [
+                {"label": "查看详情", "action": "detail", "data": data},
+            ],
+            "summary_text": "通用数据显示",
+        }
+
+    def _adapt_to_list(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
+        """适配为移动端列表格式"""
+        title_field = template.get("title_field", "content")
+        subtitle_field = template.get("subtitle_field", "source")
+        detail_fields = template.get("detail_fields", [])
+
+        # 处理不同的数据结构
+        if "results" in data:
+            items = data["results"]
+        elif "processed_files" in data:
+            items = data["processed_files"]
+        elif isinstance(data, list):
+            items = data
+        else:
+            items = [data]
+
+        list_items = []
+        for i, item in enumerate(items):
+            list_item = {
+                "id": i,
+                "title": item.get(title_field, f"项目 {i+1}"),
+                "subtitle": item.get(subtitle_field, ""),
+                "details": {field: item.get(field, "") for field in detail_fields if field in item},
+                "priority": len(items) - i,
+            }
+            list_items.append(list_item)
+
+        return {
+            "display_items": [
+                {
+                    "type": "list",
+                    "title": "列表视图",
+                    "content": {
+                        "items": list_items,
+                        "layout": "vertical",
+                        "item_spacing": "compact",
+                    },
+                    "priority": 8,
+                }
+            ],
+            "layout_hints": {"layout_type": "list", "columns": 1, "spacing": "compact"},
+            "actions": [
+                {"label": "刷新", "action": "refresh", "data": {}},
+                {"label": "查看详情", "action": "detail", "data": data},
+            ],
+            "summary_text": f"共 {len(list_items)} 个项目",
+        }
+
     def _adapt_to_dashboard(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
         """适配为仪表板格式"""
         sections = template.get("sections", ["analysis"])
@@ -462,3 +534,125 @@ class RuleBasedAdapter:
             "actions": [{"label": "详情", "action": "detail", "data": data}],
             "summary_text": "数据卡片视图",
         }
+
+    def _adapt_to_text(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
+        """适配为终端文本格式"""
+        format_type = template.get("format", "simple_text")
+        fields = template.get("fields", [])
+
+        if format_type == "simple_text":
+            text_content = self._format_simple_text(data, fields)
+        elif format_type == "structured_report":
+            text_content = self._format_structured_report(data, fields)
+        elif format_type == "progress_report":
+            text_content = self._format_progress_report(data, fields)
+        elif format_type == "api_summary":
+            text_content = self._format_api_summary(data, fields)
+        elif format_type == "step_by_step":
+            text_content = self._format_step_by_step(data, fields)
+        elif format_type == "content_summary":
+            text_content = self._format_content_summary(data, fields)
+        else:
+            text_content = self._format_generic_text(data, fields)
+
+        return {
+            "display_items": [
+                {
+                    "type": "text",
+                    "title": "文本输出",
+                    "content": {"text": text_content, "format": "plain", "monospace": True},
+                    "priority": 7,
+                }
+            ],
+            "layout_hints": {"layout_type": "vertical", "columns": 1, "spacing": "normal"},
+            "actions": [
+                {"label": "复制", "action": "copy", "data": {"text": text_content}},
+                {
+                    "label": "导出",
+                    "action": "export",
+                    "data": {"format": "txt", "content": text_content},
+                },
+            ],
+            "summary_text": f"文本输出 ({len(text_content)} 字符)",
+        }
+
+    def _format_simple_text(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化简单文本"""
+        lines = []
+        for field in fields:
+            if field in data:
+                value = data[field]
+                if isinstance(value, (list, dict)):
+                    value = str(value)
+                lines.append(f"{field}: {value}")
+        return "\n".join(lines)
+
+    def _format_structured_report(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化结构化报告"""
+        lines = ["=== 数据分析报告 ===", ""]
+        for field in fields:
+            if field in data:
+                lines.append(f"{field.upper()}:")
+                lines.append(f"  {data[field]}")
+                lines.append("")
+        return "\n".join(lines)
+
+    def _format_progress_report(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化进度报告"""
+        lines = ["=== 处理进度报告 ===", ""]
+        for field in fields:
+            if field in data:
+                lines.append(f"{field}: {data[field]}")
+
+        # 计算进度百分比
+        if "success_count" in data and "total_files" in data:
+            total = data.get("total_files", 1)
+            success = data.get("success_count", 0)
+            percentage = (success / total * 100) if total > 0 else 0
+            lines.append(f"完成率: {percentage:.1f}%")
+
+        return "\n".join(lines)
+
+    def _format_api_summary(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化API摘要"""
+        lines = ["=== API 调用摘要 ===", ""]
+        for field in fields:
+            if field in data:
+                lines.append(f"{field}: {data[field]}")
+        return "\n".join(lines)
+
+    def _format_step_by_step(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化步骤报告"""
+        lines = ["=== 执行步骤 ===", ""]
+        for field in fields:
+            if field in data:
+                value = data[field]
+                if isinstance(value, list):
+                    for i, step in enumerate(value, 1):
+                        lines.append(f"{i}. {step}")
+                else:
+                    lines.append(f"{field}: {value}")
+                lines.append("")
+        return "\n".join(lines)
+
+    def _format_content_summary(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化内容摘要"""
+        lines = ["=== 内容摘要 ===", ""]
+        for field in fields:
+            if field in data:
+                lines.append(f"{field}: {data[field]}")
+        return "\n".join(lines)
+
+    def _format_generic_text(self, data: Dict[str, Any], fields: List[str]) -> str:
+        """格式化通用文本"""
+        if fields:
+            return self._format_simple_text(data, fields)
+        else:
+            # 如果没有指定字段，输出所有数据
+            lines = []
+            for key, value in data.items():
+                if isinstance(value, (list, dict)):
+                    lines.append(f"{key}: {str(value)}")
+                else:
+                    lines.append(f"{key}: {value}")
+            return "\n".join(lines)

@@ -40,7 +40,10 @@ class AIForgeSearchManager:
         return any(search_indicators) or search_params
 
     def _try_searxng_search(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
+        self,
+        standardized_instruction: Dict[str, Any],
+        original_instruction: str,
+        search_params: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         """尝试使用 SearXNG 搜索"""
         config_manager = self.components.get("config_manager")
@@ -48,14 +51,10 @@ class AIForgeSearchManager:
             return None
 
         try:
-            search_params = self.parameter_mapping_service.extract_search_parameters(
-                standardized_instruction, original_instruction
-            )
             if not search_params["search_query"]:
-                return None
+                search_params["search_query"] = original_instruction
 
-            self._progress_indicator.show_search_start(search_params["search_query"])
-
+            self._progress_indicator.show_search_process("SearXNG")
             # 使用 SearXNG 搜索
             template_manager = self.components.get("template_manager")
             if template_manager:
@@ -82,18 +81,16 @@ class AIForgeSearchManager:
             return None
 
     def _try_direct_search_web(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
+        self,
+        standardized_instruction: Dict[str, Any],
+        original_instruction: str,
+        search_params: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         """第一层：直接调用 search_web 函数"""
         try:
-            # 提取搜索参数
-            search_params = self.parameter_mapping_service.extract_search_parameters(
-                standardized_instruction, original_instruction
-            )
             if not search_params["search_query"]:
-                return None
+                search_params["search_query"] = original_instruction
 
-            self._progress_indicator.show_search_start(search_params["search_query"])
             # 直接调用
             template_manager = self.components.get("template_manager")
             if template_manager:
@@ -161,15 +158,13 @@ class AIForgeSearchManager:
             return None
 
     def _try_template_guided_search(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
+        self,
+        standardized_instruction: Dict[str, Any],
+        original_instruction: str,
+        search_params: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         """第三层：使用 get_template_guided_search_instruction"""
         try:
-            # 提取搜索参数
-            search_params = self.parameter_mapping_service.extract_search_parameters(
-                standardized_instruction, original_instruction
-            )
-
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
 
@@ -216,15 +211,13 @@ class AIForgeSearchManager:
             return None, False
 
     def _try_free_form_search(
-        self, standardized_instruction: Dict[str, Any], original_instruction: str
+        self,
+        standardized_instruction: Dict[str, Any],
+        original_instruction: str,
+        search_params: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         """第四层：使用 get_free_form_ai_search_instruction"""
         try:
-            # 提取搜索参数
-            search_params = self.parameter_mapping_service.extract_search_parameters(
-                standardized_instruction, original_instruction
-            )
-
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
 
@@ -408,9 +401,16 @@ class AIForgeSearchManager:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """执行多层级搜索策略"""
+        # 提取搜索参数
+        search_params = self.parameter_mapping_service.extract_search_parameters(
+            standardized_instruction, original_instruction
+        )
+        self._progress_indicator.show_search_start(search_params["search_query"])
 
         # 第0层：尝试 SearXNG（如果可用）
-        searxng_result = self._try_searxng_search(standardized_instruction, original_instruction)
+        searxng_result = self._try_searxng_search(
+            standardized_instruction, original_instruction, search_params
+        )
         if searxng_result:
             return searxng_result
 
@@ -418,7 +418,7 @@ class AIForgeSearchManager:
         if self._i18n_manager.locale == "zh":
             # 非中文环境，暂时无法支持本地直接搜素
             direct_result = self._try_direct_search_web(
-                standardized_instruction, original_instruction
+                standardized_instruction, original_instruction, search_params
             )
             if direct_result:
                 return direct_result
@@ -438,7 +438,7 @@ class AIForgeSearchManager:
             self._i18n_manager.t("search.process_ai_template")
         )
         template_result, success = self._try_template_guided_search(
-            standardized_instruction, original_instruction
+            standardized_instruction, original_instruction, search_params
         )
         if success:
             return template_result
@@ -446,7 +446,7 @@ class AIForgeSearchManager:
         # 第四层：使用 get_free_form_ai_search_instruction
         self._progress_indicator.show_search_process(self._i18n_manager.t("search.process_ai_free"))
         freeform_result, success = self._try_free_form_search(
-            standardized_instruction, original_instruction
+            standardized_instruction, original_instruction, search_params
         )
         if success:
             return freeform_result
