@@ -209,7 +209,7 @@ class DockerServiceManager:
             print(f"❌ 构建过程异常: {e}")
             return False
 
-    def start_services(self, dev_mode: bool = False) -> bool:
+    def start_services(self, dev_mode: bool = False, enable_searxng: bool = False) -> bool:
         """一体化启动服务"""
         print("🚀 AIForge Docker一体化启动...")
         print("=" * 50)
@@ -266,6 +266,13 @@ class DockerServiceManager:
                 cmd.extend(["-f", self.compose_file])
                 print("🔨 生产模式启动")
 
+            # 添加 profile 支持
+            if enable_searxng:
+                cmd.extend(["--profile", "searxng"])
+                print("🔍 启用 SearXNG 搜索服务")
+            else:
+                print("⚠️ SearXNG 搜索服务未启用")
+
             cmd.extend(["up", "-d"])
 
             # 启动服务
@@ -275,17 +282,18 @@ class DockerServiceManager:
                 print("✅ Docker服务启动成功")
 
                 # 显示服务信息
-                self._show_service_urls()
+                self._show_service_urls(enable_searxng)
 
                 # 等待服务稳定
                 print("\n⏳ 等待服务完全启动...")
                 time.sleep(10)
 
                 # 检查服务健康状态
-                self._check_service_health()
+                self._check_service_health(enable_searxng)
 
-                # 更新SearXNG配置
-                self._check_and_update_searxng_formats()
+                # 更新SearXNG配置（仅当启用时）
+                if enable_searxng:
+                    self._check_and_update_searxng_formats()
 
                 print("\n🎉 AIForge Docker服务一体化启动完成！")
                 print("💡 现在可以开始使用AIForge了")
@@ -426,10 +434,13 @@ class DockerServiceManager:
         except Exception as e:
             print(f"⚠️ 清理构建镜像时出错: {e}")
 
-    def _check_service_health(self) -> None:
+    def _check_service_health(self, enable_searxng: bool = False) -> None:
         """检查服务健康状态"""
         print("\n🏥 服务健康检查:")
-        services = {"aiforge-engine": "8000", "aiforge-searxng": "8080", "aiforge-nginx": "55510"}
+        services = {"aiforge-engine": "8000"}
+
+        if enable_searxng:
+            services.update({"aiforge-searxng": "8080", "aiforge-nginx": "55510"})
 
         for service, port in services.items():
             try:
@@ -446,11 +457,12 @@ class DockerServiceManager:
             except Exception:
                 print(f"⚠️ {service}: 状态未知")
 
-    def _show_service_urls(self) -> None:
+    def _show_service_urls(self, enable_searxng: bool = False) -> None:
         """显示服务访问地址"""
         print("\n🌐 服务访问地址:")
         print("- AIForge Web: http://localhost:8000")
-        print("- SearXNG: http://localhost:55510")
+        if enable_searxng:
+            print("- SearXNG: http://localhost:55510")
         print("- 管理面板: http://localhost:8000/admin")
 
     def _check_and_update_searxng_formats(self):
@@ -501,11 +513,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 一体化使用示例:
-    # 一键启动生产模式
+    # 一键启动生产模式（不含SearXNG）
     aiforge-docker start
 
-    # 一键启动开发模式（代码热重载）
-    aiforge-docker start --dev
+    # 一键启动生产模式（含SearXNG）
+    aiforge-docker start --searxng
+
+    # 一键启动开发模式（代码热重载，含SearXNG）
+    aiforge-docker start --dev --searxng
 
     # 停止所有服务
     aiforge-docker stop
@@ -519,6 +534,7 @@ def main():
 开发版本使用示例:
     # 直接运行模块
     python -m src.aiforge.utils.manage_docker_services start --dev
+    python -m src.aiforge.utils.manage_docker_services start --dev --searxng
 
     # 或直接运行脚本
     python src/aiforge/utils/manage_docker_services.py start --dev
@@ -527,7 +543,7 @@ def main():
     ✅ 自动检测Docker环境
     ✅ 智能构建镜像（避免重复构建）
     ✅ 实时显示构建进度
-    ✅ 自动配置SearXNG输出格式
+    ✅ SearXNG可选启用
     ✅ 服务健康检查
     ✅ 一键清理资源
         """,
@@ -537,13 +553,14 @@ def main():
         "action", choices=["start", "stop", "status", "cleanup", "deep-cleanup"], help="操作类型"
     )
     parser.add_argument("--dev", action="store_true", help="开发模式启动（代码热重载）")
+    parser.add_argument("--searxng", action="store_true", help="启用SearXNG搜索服务")
 
     args = parser.parse_args()
     manager = DockerServiceManager()
 
     try:
         if args.action == "start":
-            success = manager.start_services(dev_mode=args.dev)
+            success = manager.start_services(dev_mode=args.dev, enable_searxng=args.searxng)
         elif args.action == "stop":
             success = manager.stop_services()
         elif args.action == "status":

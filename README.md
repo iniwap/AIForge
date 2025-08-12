@@ -16,11 +16,10 @@
   
 ## 🎯 什么是 AIForge？  
   
-> ⚠️ **开发状态**: 本项目目前处于积极开发阶段，版本更新比较频繁，敬请关注。  
+> ⚠️ **开发状态**: 目前处于积极开发阶段，版本更新比较频繁，敬请关注。  
   
 > 🚧 **项目状态**: 正在积极开发中，欢迎反馈和贡献！  
 
-![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
 AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代码执行之间的壁垒。通过先进的指令分析和自适应执行架构，AIForge 提供：  
   
 - 🧠 **深度理解** - 多维度指令解析，精准捕获意图  
@@ -30,7 +29,9 @@ AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代�
 - 🎭 **多提供商** - AI模型和提供商的无缝切换  
  
 > **核心哲学**: *Thought → Code → Reality* - 让思维直接驱动现实世界  
-  
+
+![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
+
 ## ✨ 核心功能  
   
 ### 🏗️ 多界面架构  
@@ -71,51 +72,56 @@ AIForge提供多层安全保障，确保AI代码安全执行：
 - **代码分析**：危险模式检测，安全模块导入  
 - **统一中间件**：可扩展的安全验证框架
 
-## 🚀 快速开始  
-  
-### 安装部署  
-  
-- 非Docker模式
-```bash
-pip install aiforge-engine  
-
-# 包含可选依赖  
-pip install aiforge-engine[all]  # 所有功能  
-pip install aiforge-engine[gui]  # 终端GUI支持  
-pip install aiforge-engine[web]  # Web API支持  
-```
-- Docker模式
-
+## 🚀 快速开始
+    
+### 安装部署
+    
+- 非Docker模式  
 ```bash  
-# 1. 设置 API 密钥  
-echo "OPENROUTER_API_KEY=your-api-key" > .env  
+pip install aiforge-engine    
   
-# 2. 一键启动  
-aiforge-docker start  
-  
-# 3. 开发模式（热重载） 
-aiforge-docker start --dev
-```
-### 基础使用
-- 非Docker模式 
-```python
-from aiforge import AIForgeEngine  
-
-# 使用API密钥快速开始  
-forge = AIForgeEngine(api_key="your-openrouter-apikey")  
-
-# 执行自然语言指令  
-result = forge("搜索全球股市最新趋势并分析写一篇投资建议")  
-print(result)  
+# 包含可选依赖    
+pip install aiforge-engine[all]  # 所有功能    
+pip install aiforge-engine[gui]  # 终端GUI支持    
+pip install aiforge-engine[web]  # Web API支持    
 ```  
-- Docker模式
-```bash  
-# CLI 直接使用  
-aiforge "搜索股市趋势并分析"  
   
-# 指定提供商   
-aiforge --provider deepseek "分析数据" 
-```
+- Docker模式  
+```bash    
+# 1. 安装 AIForge（包含 web 依赖）  
+pip install aiforge-engine[web]  
+  
+# 2. 设置 API 密钥    
+echo "OPENROUTER_API_KEY=your-api-key" > .env    
+    
+# 3. 一键启动    
+aiforge-docker start    
+    
+# 4. 开发模式（热重载）   
+aiforge-docker start --dev  
+```  
+  
+### 基础使用  [5] 
+- 非Docker模式   
+```python  
+from aiforge import AIForgeEngine    
+  
+# 使用API密钥快速开始    
+forge = AIForgeEngine(api_key="your-openrouter-apikey")    
+  
+# 执行自然语言指令    
+result = forge("搜索全球股市最新趋势并分析写一篇投资建议")    
+print(result)    
+```    
+  
+- Docker模式  
+```bash    
+# CLI 直接使用    
+aiforge "搜索股市趋势并分析"    
+    
+# 指定提供商     
+aiforge --provider deepseek "分析数据"   
+```  
 
 ### 高级配置  
 
@@ -134,16 +140,6 @@ result = forge.run(
     "构建实时数据监控系统",  
     system_prompt="你是一位高级软件架构师"  
 )  
-```
-
-- 本地 SearXNG配置
-```bash
-# 启动本地 SearXNG  
-docker run -d -p 55510:8080 searxng/searxng:latest  
-  
-# 配置 AIForge 使用本地 SearXNG  
-export SEARXNG_ENABLED=true  
-export SEARXNG_LOCAL_URL=http://localhost:55510
 ```
   
 ### 配置文件设置  

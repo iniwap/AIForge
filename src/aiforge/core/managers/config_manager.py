@@ -70,6 +70,10 @@ class AIForgeConfigManager:
         if not searxng_config.get("enabled"):
             return False
 
+        # 如果配置中没有设置任何 URL，直接返回 False
+        if not searxng_config.get("local_url") and not searxng_config.get("remote_url"):
+            return False
+
         # 检查本地服务
         if searxng_config.get("local_url"):
             try:

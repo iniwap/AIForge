@@ -5,6 +5,11 @@ services:
       args:
         - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
         - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+        - AIFORGE_LOCALE=${AIFORGE_LOCALE}
+        - SEARXNG_ENABLED=${SEARXNG_ENABLED}
+        - SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}
+        - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}
+        - SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC}
     container_name: aiforge-engine
     ports:
       - "${AIFORGE_WEB_PORT:-8000}:8000"
@@ -26,17 +31,18 @@ services:
       - AIFORGE_DEFAULT_PROVIDER=${AIFORGE_DEFAULT_PROVIDER:-openrouter}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
 
-      # 搜索服务配置 (Docker层)
-      - SEARXNG_ENABLED=true
-      - SEARXNG_LOCAL_URL=http://nginx:80
-    depends_on:
-      - nginx
+      # 可选搜索服务配置 (Docker层)
+      - SEARXNG_ENABLED=${SEARXNG_ENABLED:-false}
+      - SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}
+      - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}
+      - SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC:-true}
+    # 移除对 nginx 的硬依赖
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: [ "web" ]
+    command: ["web"]
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -52,8 +58,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
+    profiles: ["searxng"]
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -70,8 +77,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
+    profiles: ["searxng"]
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -87,10 +95,15 @@ services:
       - AIFORGE_DOCKER_MODE=true
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - AIFORGE_LOCALE=${AIFORGE_LOCALE}
+      - SEARXNG_ENABLED=${SEARXNG_ENABLED}
+      - SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}
+      - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}
+      - SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC}
     networks:
       - aiforge-network
-    profiles: [ "cli" ]
-    command: [ "cli", "--help" ]
+    profiles: ["cli"]
+    command: ["cli", "--help"]
 
 networks:
   aiforge-network:

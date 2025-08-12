@@ -57,6 +57,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "typing-extensions>=4.0.0",
     "rich>=12.0.0",
+    "setuptools",
 ]
 
 [project.optional-dependencies]

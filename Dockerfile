@@ -1,8 +1,13 @@
 FROM python:3.10-slim
 
 # 从.env读取设置docker环境变量
+ARG AIFORGE_LOCALE 
 ARG OPENROUTER_API_KEY  
 ARG DEEPSEEK_API_KEY 
+ARG SEARXNG_ENABLED 
+ARG SEARXNG_LOCAL_URL 
+ARG SEARXNG_REMOTE_URL 
+ARG SEARXNG_FALLBACK_TO_PUBLIC 
 
 WORKDIR /app
 
@@ -38,9 +43,14 @@ COPY src/ ./src/
 RUN mkdir -p /app/aiforge_work /app/config /app/logs
 
 # 复制模板文件并生成默认配置 
-COPY docker/aiforge.toml.template /app/docker/aiforge.toml.template 
-ENV OPENROUTER_API_KEY=${OPENROUTER_API_KEY} 
-ENV DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} 
+COPY docker/aiforge.toml.template /app/docker/aiforge.toml.template   
+ENV AIFORGE_LOCALE=${AIFORGE_LOCALE:-en} 
+ENV OPENROUTER_API_KEY=${OPENROUTER_API_KEY}     
+ENV DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}    
+ENV SEARXNG_ENABLED=${SEARXNG_ENABLED:-false}    
+ENV SEARXNG_LOCAL_URL=${SEARXNG_LOCAL_URL}    
+ENV SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL}    
+ENV SEARXNG_FALLBACK_TO_PUBLIC=${SEARXNG_FALLBACK_TO_PUBLIC:-true}  
 RUN envsubst < /app/docker/aiforge.toml.template > /app/config/aiforge.toml
 
 # 设置环境变量  

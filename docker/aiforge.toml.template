@@ -2,7 +2,7 @@ workdir = "/app/aiforge_work"
 max_tokens = 4096  
 max_rounds = 5  
 default_llm_provider = "openrouter"  
-locale = "en"  
+locale = "${AIFORGE_LOCALE}"   
   
 [llm.openrouter]  
 type = "openai"  
@@ -29,8 +29,8 @@ timeout = 30
 max_tokens = 8192  
   
 [searxng]  
-enabled = false  
-local_url = "http://localhost:55510"  
-remote_url = ""  
-fallback_to_public = true  
-timeout = 10  
+enabled = ${SEARXNG_ENABLED}  
+local_url = "${SEARXNG_LOCAL_URL}"  
+remote_url = "${SEARXNG_REMOTE_URL}"  
+fallback_to_public = ${SEARXNG_FALLBACK_TO_PUBLIC}  
+timeout = 10
