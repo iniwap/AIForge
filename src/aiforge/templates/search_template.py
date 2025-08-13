@@ -111,34 +111,34 @@ def search_web(
                     min_abstract_len,
                     max_abstract_len,
                 )
-
                 if validate_search_result(search_result, min_items):
                     return search_result
             except Exception:
                 pass
+        return None
+    else:
+        for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
+            try:
+                engine_name = i18n_manager.t(f"search.engine_{engine}")
+                ProgressIndicator.get_instance().show_search_process(engine_name)
 
-    for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
-        try:
-            engine_name = i18n_manager.t(f"search.engine_{engine}")
-            ProgressIndicator.get_instance().show_search_process(engine_name)
-
-            search_result = _search_template(
-                search_query,
-                max_results,
-                ENGINE_CONFIGS[engine],
-                min_abstract_len,
-                max_abstract_len,
-            )
-            # 验证搜索结果质量
-            if validate_search_result(search_result, min_items):
-                return search_result
-            else:
+                search_result = _search_template(
+                    search_query,
+                    max_results,
+                    ENGINE_CONFIGS[engine],
+                    min_abstract_len,
+                    max_abstract_len,
+                )
+                # 验证搜索结果质量
+                if validate_search_result(search_result, min_items):
+                    return search_result
+                else:
+                    continue
+            except Exception:
                 continue
-        except Exception:
-            continue
 
-    # 所有搜索引擎都失败，返回 None
-    return None
+        # 所有搜索引擎都失败，返回 None
+        return None
 
 
 def _search_searxng_template(
@@ -158,10 +158,8 @@ def _search_searxng_template(
             "Connection": "keep-alive",
             "Referer": f"{base_url}/",
         }
-
         # 先建立会话（模拟验证方法）
         session.get(f"{base_url}/", headers=headers, timeout=10)
-
         # 使用 POST 请求，让 SearXNG 使用默认引擎配置
         search_data = {
             "q": search_query,
@@ -174,16 +172,13 @@ def _search_searxng_template(
             "time_range": "week",  # 默认时间范围为一周 ，为""不筛选
             # 不指定 engines 参数，让 SearXNG 使用默认配置
         }
-
         response = session.post(f"{base_url}/search", data=search_data, headers=headers, timeout=20)
-
         response.encoding = response.apparent_encoding or "utf-8"
         response.raise_for_status()
 
         # 直接解析 JSON 响应
         data = response.json()
         search_results = data.get(engine_config["result_path"], [])
-
         # 第一阶段：预筛选所有结果，不限制数量
         qualified_results = []
         for item in search_results:  # 处理所有结果
@@ -241,7 +236,6 @@ def _search_searxng_template(
 
         # 第二阶段：按质量排序
         qualified_results.sort(key=lambda x: x["quality_score"], reverse=True)
-
         # 第三阶段：选择top结果进行并发抓取（可选，SearXNG通常已提供较好的摘要）
         top_results = qualified_results[:max_results]
 
@@ -290,7 +284,6 @@ def _search_searxng_template(
             for res in top_results
             if res["title"] and res["url"]
         ]
-
         # 应用现有的排序和过滤逻辑
         results = sort_and_filter_results(results)
 
@@ -634,7 +627,6 @@ def _search_template(
             search_results = soup.select(selector)
             if search_results:
                 break
-
         if not search_results:
             return {
                 "timestamp": time.time(),
@@ -726,7 +718,6 @@ def _search_template(
 
         # 第二阶段：按质量排序
         qualified_results.sort(key=lambda x: x["quality_score"], reverse=True)
-
         # 第三阶段：选择top结果进行并发抓取
         top_results = qualified_results[:max_results]
         tasks = [(item["url"], headers) for item in top_results]
@@ -770,7 +761,6 @@ def _search_template(
 
         # 应用现有的排序和过滤逻辑
         results = sort_and_filter_results(results)
-
         return {
             "timestamp": time.time(),
             "search_query": search_query,

@@ -57,15 +57,13 @@ class AIForgeConfigManager:
 
         remote_url = os.environ.get("SEARXNG_REMOTE_URL")
         if remote_url:
-            return {
-                "url": remote_url,
-                "timeout": 10,
-            }
+            return {"url": remote_url, "timeout": 10}
+
+        # 检查是否在 Docker 环境中
+        if self._is_docker_environment():
+            return {"url": "http://aiforge-searxng:8080", "timeout": 10}
         else:
-            return {
-                "url": "http://localhost:55510",
-                "timeout": 10,
-            }
+            return {"url": "http://localhost:55510", "timeout": 10}
 
     def is_searxng_available(self) -> bool:
         """检查 SearXNG 服务是否可用"""

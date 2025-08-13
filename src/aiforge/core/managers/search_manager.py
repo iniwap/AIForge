@@ -54,7 +54,6 @@ class AIForgeSearchManager:
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
 
-            self._progress_indicator.show_search_process("SearXNG")
             # 使用 SearXNG 搜索
             template_manager = self.components.get("template_manager")
             if template_manager:
