@@ -9,4 +9,5 @@
         "100"
     ],
     "python.formatting.provider": "black",
+    "djlint.showInstallError": false,
 }

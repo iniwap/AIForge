@@ -31,6 +31,9 @@ from .cache.semantic_cache import EnhancedStandardizedCache
 
 # 指令分析导入
 from .instruction.analyzer import AIForgeInstructionAnalyzer
+from .core.managers import AIForgeExecutionManager
+from .utils.web_progress_indicator import WebProgressIndicator
+
 
 __all__ = [
     # 核心组件
@@ -59,6 +62,8 @@ __all__ = [
     "CodeBlockManager",
     "CodeBlock",
     "AIForgePrompt",
+    "AIForgeExecutionManager",
+    "WebProgressIndicator",
 ]
 
 __version__ = "0.0.10"

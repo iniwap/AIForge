@@ -448,7 +448,7 @@ class RuleBasedAdapter:
             data_items = data["data"]
             if isinstance(data_items, list) and data_items:
                 # 如果是列表，合并所有内容
-                content = "\\n".join([str(item) for item in data_items])
+                content = "\n".join([str(item) for item in data_items])
             else:
                 content = str(data_items)
 
@@ -540,7 +540,7 @@ class RuleBasedAdapter:
                     lines.append(f"  内容: {item}")
                 lines.append("")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
     def _format_structured_report(self, data: Dict[str, Any], fields: List[str]) -> str:
         """格式化结构化报告"""
@@ -569,7 +569,7 @@ class RuleBasedAdapter:
                     lines.append(f"  内容: {str(item)[:100]}")
                 lines.append("")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
     def _format_progress_report(self, data: Dict[str, Any], fields: List[str]) -> str:
         """格式化进度报告"""
@@ -591,7 +591,7 @@ class RuleBasedAdapter:
             for key, value in metadata.items():
                 lines.append(f"{key}: {value}")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
     def _format_generic_text(self, data: Dict[str, Any], fields: List[str]) -> str:
         """格式化通用文本"""
@@ -612,4 +612,4 @@ class RuleBasedAdapter:
         else:
             lines.append(f"数据: {str(data_items)[:100]}")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)
