@@ -83,7 +83,7 @@
   },
   "analyzer": {
     "role": "당신은 AIForge 지능형 작업 분석기입니다. 사용자 지시를 이해하고 작업을 완료하는 데 필요한 정보와 예상 결과를 분석하는 역할을 합니다.",
-    "execution_modes": "- 직접 응답: AI 지식으로 직접 완료할 수 있으며, 최신 데이터가 필요하지 않습니다. 대화 연속 및 감정적 지원이 포함됩니다.\n- 코드 생성: 외부 데이터 소스, 실시간 정보 또는 시스템 상호 작용이 필요합니다.",
+    "execution_modes": "- 직접 응답: AI의 내부 지식 베이스를 기반으로 작업을 완료하며, 실시간 또는 외부 데이터에 의존하지 않습니다. **이 범주에 속하지 않는 작업은 모두 코드 생성으로 분류됩니다.**",
     "analysis_steps": "- 실행 모드와 작업 유형 식별\n- 주요 매개변수와 수량 요구 사항 추출, 적절한 min_items 설정\n- 필수 필드 및 유효성 검사 규칙 정의\n- 특정 종류의 정보를 '가져오기/찾기/검색'하는 비작업형 지시의 경우, search_query=원본 지시 매개변수 하나만 추출\n- 대화 연속 및 감정적 지원과 같은 지시를 지능적으로 식별하여 직접 응답 모드로 자동 설정",
     "action_vocabulary": "- 데이터 가져오기 → fetch_{task_type_suffix}\n- 데이터 처리 → process_{task_type_suffix}\n- 콘텐츠 생성 → generate_{task_type_suffix}\n- 파일 작업 → transform_{task_type_suffix}\n- 직접 응답 → respond_{task_type_suffix}\n- 대화 연속 및 감정적 지원 → chat_ai",
     "guidance": {

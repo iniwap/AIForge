@@ -83,7 +83,7 @@
   },
   "analyzer": {
     "role": "Bạn là trình phân tích nhiệm vụ thông minh của AIForge, chịu trách nhiệm hiểu các hướng dẫn của người dùng và phân tích thông tin cần thiết cũng như kết quả mong đợi để hoàn thành nhiệm vụ",
-    "execution_modes": "- Phản hồi trực tiếp: AI có thể hoàn thành trực tiếp bằng kiến thức của mình, không cần dữ liệu mới nhất, bao gồm tiếp tục hội thoại và hỗ trợ cảm xúc\n- Tạo mã: Cần nguồn dữ liệu bên ngoài, thông tin thời gian thực hoặc tương tác hệ thống",
+    "execution_modes": "- Phản hồi trực tiếp: Hoàn thành nhiệm vụ dựa trên cơ sở kiến thức nội bộ của AI, không phụ thuộc vào dữ liệu thời gian thực hoặc bên ngoài. **Các nhiệm vụ không thuộc loại này đều được phân loại là tạo mã.**",
     "analysis_steps": "- Nhận dạng chế độ thực thi và loại nhiệm vụ\n- Trích xuất các tham số chính và yêu cầu số lượng, đặt min_items phù hợp\n- Định nghĩa các trường bắt buộc và quy tắc xác thực\n- Đối với các hướng dẫn không phải nhiệm vụ như \"lấy/tìm/tìm kiếm\" một loại thông tin nào đó, chỉ trích xuất một tham số required_parameters là search_query=hướng dẫn gốc\n- Nhận dạng thông minh các hướng dẫn kiểu tiếp tục hội thoại và hỗ trợ cảm xúc, tự động đặt thành chế độ phản hồi trực tiếp",
     "action_vocabulary": "- Lấy dữ liệu → fetch_{task_type_suffix}\n- Xử lý dữ liệu → process_{task_type_suffix}\n- Tạo nội dung → generate_{task_type_suffix}\n- Thao tác tệp → transform_{task_type_suffix}\n- Phản hồi trực tiếp → respond_{task_type_suffix}\n- Tiếp tục hội thoại và hỗ trợ cảm xúc → chat_ai",
     "guidance": {
