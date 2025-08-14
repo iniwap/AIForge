@@ -136,7 +136,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup"],  
     "target_keywords": ["search", "query"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords"]  
   },  
   "action_keywords": {  
     "search": {  

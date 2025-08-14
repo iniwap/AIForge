@@ -5,6 +5,7 @@ class AIForgeWebApp {
         this.uiAdapter = new WebUIAdapter();  
         this.currentTaskType = null;  
         this.isExecuting = false;  
+        this.executionCompleted = false;
           
         this.initializeEventListeners();  
         this.loadSettings();  
@@ -161,7 +162,7 @@ class AIForgeWebApp {
             alert('请输入指令');  
             return;  
         }  
-    
+        this.executionCompleted = false;
         this.setExecutionState(true);  
         this.clearResults();  
     
@@ -201,7 +202,10 @@ class AIForgeWebApp {
                 },  
                 onComplete: () => {  
                     if (progressLevel !== 'none') {  
-                        this.addProgressMessage('✅ 执行完成', 'complete');  
+                        if (!this.executionCompleted) {  
+                            this.addProgressMessage('✅ 执行完成', 'complete');    
+                            this.executionCompleted = true;  
+                        }  
                     }  
                     this.setExecutionState(false);  
                 }  
@@ -214,12 +218,12 @@ class AIForgeWebApp {
   
     stopExecution() {  
         this.streamingClient.disconnect();  
-        this.addProgressMessage('执行已停止', 'error');  
+        this.addProgressMessage('⏹️ 正在停止执行...', 'info');  
         this.setExecutionState(false);  
-    }  
+    }
   
     setExecutionState(isExecuting) {  
-        this.isExecuting = isExecuting;  
+        this.isExecuting = isExecuting;
         const executeBtn = document.getElementById('executeBtn');  
         const stopBtn = document.getElementById('stopBtn');  
         const executeText = document.getElementById('executeText');  
@@ -262,15 +266,13 @@ class AIForgeWebApp {
         this.disableResultActions();  
     }  
   
-    displayResult(data, container) {  
+    displayResult(data, container) {
         if (!container) {  
             console.error('Result container not found');  
             return;  
-        }  
-        
-        try {  
-            console.log('Displaying result data:', data); // 添加调试日志  
-            
+        }
+
+        try {            
             // 验证数据结构  
             if (!data || typeof data !== 'object') {  
                 throw new Error('Invalid result data structure');  
@@ -284,7 +286,6 @@ class AIForgeWebApp {
             
             // 确定UI类型  
             const uiType = this.determineUIType(resultData, this.currentTaskType);  
-            console.log('Determined UI type:', uiType, 'for data:', resultData);  
             
             // 渲染结果  
             this.uiAdapter.render(resultData, uiType, container);  
@@ -317,7 +318,7 @@ class AIForgeWebApp {
             return 'web_timeline';  
         } else if (data.percentage !== undefined) {  
             return 'web_progress';  
-        } else if (taskType === 'content_generation' && data.content) {  
+        } else if (taskType === 'content_generation') {  
             return 'web_editor';  
         } else {  
             return 'web_card'; // 默认卡片显示  
@@ -336,26 +337,46 @@ class AIForgeWebApp {
   
     copyResult() {  
         if (this.currentResult) {  
-            const text = JSON.stringify(this.currentResult, null, 2);  
-            navigator.clipboard.writeText(text).then(() => {  
-                this.showToast('结果已复制到剪贴板');  
-            });  
+            // 检查是否是编辑器类型，提取原始 Markdown  
+            const result = this.currentResult.result || this.currentResult;  
+            const editorItem = result.display_items?.find(item => item.type === 'editor');  
+            
+            if (editorItem && editorItem.content && editorItem.content.text) {  
+                const markdownContent = editorItem.content.text;  
+                navigator.clipboard.writeText(markdownContent).then(() => {  
+                    this.showToast('Markdown 内容已复制到剪贴板');  
+                });  
+            } else {  
+                // 回退到原有逻辑  
+                const text = JSON.stringify(this.currentResult, null, 2);  
+                navigator.clipboard.writeText(text).then(() => {  
+                    this.showToast('结果已复制到剪贴板');  
+                });  
+            }  
         }  
-    }  
+    }
   
     downloadResult() {  
         if (this.currentResult) {  
-            const text = JSON.stringify(this.currentResult, null, 2);  
-            const blob = new Blob([text], { type: 'application/json' });  
-            const url = URL.createObjectURL(blob);  
-            const a = document.createElement('a');  
-            a.href = url;  
-            a.download = `aiforge-result-${Date.now()}.json`;  
-            a.click();  
-            URL.revokeObjectURL(url);  
+            const result = this.currentResult.result || this.currentResult;  
+            const editorItem = result.display_items?.find(item => item.type === 'editor');  
+            
+            if (editorItem && editorItem.content && editorItem.content.text) {  
+                const markdownContent = editorItem.content.text;  
+                const blob = new Blob([markdownContent], { type: 'text/markdown' });  
+                const url = URL.createObjectURL(blob);  
+                const a = document.createElement('a');  
+                a.href = url;  
+                a.download = 'generated-content.md';  
+                document.body.appendChild(a);  
+                a.click();  
+                document.body.removeChild(a);  
+                URL.revokeObjectURL(url);  
+                this.showToast('Markdown 文件已下载');  
+            }  
         }  
-    }  
-  
+    }
+    
     showSettings() {  
         const settings = this.loadUserSettings();  
         

@@ -229,7 +229,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "pesquisar", "buscar", "obter", "encontrar", "recuperar", "consultar"],  
     "target_keywords": ["search", "query", "pesquisar", "consulta"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "consulta de pesquisa", "consulta", "palavra-chave", "termo de pesquisa", "termo", "palavras-chave"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "consulta de pesquisa", "consulta", "palavra-chave", "termo de pesquisa", "termo", "palavras-chave"]  
   },  
   "action_keywords": {  
     "search": {  

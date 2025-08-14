@@ -249,7 +249,15 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
     """搜索参数映射策略"""
 
     def can_handle(self, param_name: str, context: Optional[Dict[str, Any]] = None) -> bool:
-        search_params = ["search_query", "query", "keyword", "q", "max_results", "min_items"]
+        search_params = [
+            "search_query",
+            "query",
+            "keyword",
+            "q",
+            "max_results",
+            "min_items",
+            "topic",
+        ]
 
         if param_name in search_params:
             return True
@@ -268,8 +276,8 @@ class SearchParameterMappingStrategy(ParameterMappingStrategy):
         context: Optional[Dict[str, Any]] = None,
     ) -> Any:
         mappings = {
-            "query": ["search_query", "keyword", "q"],  # query 接受 search_query
-            "search_query": ["query", "keyword", "q", "search_query"],
+            "query": ["search_query", "keyword", "q", "topic"],  # query 接受 search_query
+            "search_query": ["query", "keyword", "q", "search_query", "topic"],
             # max_results 只接受明确表示"最大"语义的参数，不包括 quantity
             "max_results": ["max_results", "max_limit", "max_count", "max_size"],
             "min_items": ["min_items", "min_count", "quantity"],

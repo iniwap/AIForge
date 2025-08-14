@@ -74,6 +74,7 @@ def start_web_server(
                 host=host,
                 port=port,
                 reload=True,
+                reload_dirs=["src/aiforge", "src/aiforge_web"],
                 log_level="debug" if debug else "info",
             )
         else:

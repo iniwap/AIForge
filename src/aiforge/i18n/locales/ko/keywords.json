@@ -229,7 +229,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "검색", "가져오기", "얻기", "찾기", "검색", "조회"],  
     "target_keywords": ["search", "query", "검색", "쿼리"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "검색 쿼리", "쿼리", "키워드", "검색어", "용어", "키워드들"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "검색 쿼리", "쿼리", "키워드", "검색어", "용어", "키워드들"]  
   },  
   "action_keywords": {  
     "search": {  

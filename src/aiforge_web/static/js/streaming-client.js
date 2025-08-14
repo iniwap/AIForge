@@ -68,7 +68,6 @@ class StreamingClient {
                                     const jsonStr = line.slice(6).trim();  
                                     if (jsonStr) {  
                                         const data = JSON.parse(jsonStr);  
-                                        console.log('Received message:', data); // 调试日志  
                                         this.handleMessage(data, { onProgress, onResult, onError, onComplete });  
                                     }  
                                 } catch (e) {  
@@ -79,14 +78,19 @@ class StreamingClient {
                     }  
                 }  
             }  
-            
         } catch (error) {  
-            console.error('流式执行错误:', error);  
-            onError(error);  
+            // 区分用户主动停止和真正的错误  
+            if (error.name === 'AbortError') {  
+                console.log('流式执行已被用户停止');  
+                // 不调用 onError，避免显示错误消息  
+            } else {  
+                console.error('流式执行错误:', error);  
+                onError(error);  
+            }  
         } finally {  
             onComplete();  
             this.disconnect();  
-        }  
+        }
     }
 
 

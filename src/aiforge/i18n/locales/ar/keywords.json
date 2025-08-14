@@ -230,7 +230,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "بحث", "جلب", "الحصول", "العثور", "استرجاع", "البحث"],  
     "target_keywords": ["search", "query", "بحث", "استعلام"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "استعلام البحث", "استعلام", "كلمة مفتاحية", "مصطلح البحث", "مصطلح", "كلمات مفتاحية"]  
+    "param_keywords": ["search_query", "query", "topic", "keyword", "search_term", "term", "keywords", "استعلام البحث", "استعلام", "كلمة مفتاحية", "مصطلح البحث", "مصطلح", "كلمات مفتاحية"]  
   },  
   "action_keywords": {  
     "search": {  

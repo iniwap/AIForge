@@ -17,67 +17,94 @@ class WebUIAdapter {
     }
 
     renderCard(data, container) {  
-        // 处理来自 RuleBasedAdapter 的数据结构  
-        if (data.display_items && Array.isArray(data.display_items)) {  
-            const cardsHtml = data.display_items.map(item => `  
-                <div class="result-card mb-4">  
-                    <div class="flex items-start justify-between mb-3">  
-                        <h3 class="text-lg font-semibold text-gray-900">${item.title || '执行结果'}</h3>  
-                        <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
+        try {  
+            // 处理来自 RuleBasedAdapter 的数据结构  
+            if (data.display_items && Array.isArray(data.display_items)) {                  
+                const cardsHtml = data.display_items.map((item, index) => {  
+                    
+                    let contentHtml = '';  
+                    if (item.content) {  
+                        contentHtml = this.renderCardContent(item.content);  
+                    }  
+                    
+                    return `  
+                        <div class="result-card mb-4">  
+                            <div class="flex items-start justify-between mb-3">  
+                                <h3 class="text-lg font-semibold text-gray-900">${item.title || '执行结果'}</h3>  
+                                <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
+                            </div>  
+                            ${contentHtml}  
+                        </div>  
+                    `;  
+                }).join('');  
+                
+                const summaryHtml = data.summary_text ? `  
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">  
+                        <p class="text-sm text-blue-800">${data.summary_text}</p>  
                     </div>  
-                    ${item.content ? this.renderCardContent(item.content) : ''}  
-                </div>  
-            `).join('');  
-            
-            const summaryHtml = data.summary_text ? `  
-                <div class="mt-4 p-3 bg-blue-50 rounded-lg">  
-                    <p class="text-sm text-blue-800">${data.summary_text}</p>  
-                </div>  
-            ` : '';  
-            
-            container.innerHTML = cardsHtml + summaryHtml;  
-        } else {  
-            // 回退到原始的简单卡片格式  
-            const cardHtml = `  
+                ` : '';  
+                
+                const finalHtml = cardsHtml + summaryHtml;  
+                container.innerHTML = finalHtml;  
+                
+            } else {  
+                // 回退到原始的简单卡片格式  
+                const cardHtml = `  
+                    <div class="result-card">  
+                        <div class="flex items-start justify-between mb-3">  
+                            <h3 class="text-lg font-semibold text-gray-900">${data.title || '执行结果'}</h3>  
+                            <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
+                        </div>  
+                        ${data.content ? `<div class="text-gray-700 mb-3">${this.formatContent(data.content)}</div>` : ''}  
+                        ${data.metadata ? this.renderMetadata(data.metadata) : ''}  
+                    </div>  
+                `;  
+                container.innerHTML = cardHtml;  
+            }  
+        } catch (error) {  
+            console.error('Error in renderCard:', error);  
+            container.innerHTML = `  
                 <div class="result-card">  
-                    <div class="flex items-start justify-between mb-3">  
-                        <h3 class="text-lg font-semibold text-gray-900">${data.title || '执行结果'}</h3>  
-                        <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
-                    </div>  
-                    ${data.content ? `<div class="text-gray-700 mb-3">${this.formatContent(data.content)}</div>` : ''}  
-                    ${data.metadata ? this.renderMetadata(data.metadata) : ''}  
+                    <h3 class="text-lg font-semibold text-red-900">渲染错误</h3>  
+                    <p class="text-red-700">${error.message}</p>  
+                    <pre class="text-xs text-red-600 mt-2">${JSON.stringify(data, null, 2)}</pre>  
                 </div>  
             `;  
-            container.innerHTML = cardHtml;  
         }  
-    }  
+    }
     
-    renderCardContent(content) {  
-        if (typeof content === 'object' && content.primary) {  
-            let html = `<div class="text-gray-900 font-medium mb-2">${content.primary}</div>`;  
-            
-            if (content.secondary) {  
-                if (typeof content.secondary === 'object') {  
-                    html += `<div class="text-gray-600 text-sm space-y-1">`;  
-                    if (content.secondary.content) {  
-                        html += `<p>${content.secondary.content}</p>`;  
+    renderCardContent(content) {          
+        try {  
+            if (typeof content === 'object' && content.primary) {  
+                let html = `<div class="text-gray-900 font-medium mb-2">${content.primary}</div>`;  
+                
+                if (content.secondary) {  
+                    if (typeof content.secondary === 'object') {  
+                        html += `<div class="text-gray-600 text-sm space-y-1">`;  
+                        if (content.secondary.content) {  
+                            html += `<p>${content.secondary.content}</p>`;  
+                        }  
+                        if (content.secondary.source) {  
+                            html += `<p class="text-xs text-gray-500">来源: ${content.secondary.source}</p>`;  
+                        }  
+                        if (content.secondary.date) {  
+                            html += `<p class="text-xs text-gray-500">时间: ${content.secondary.date}</p>`;  
+                        }  
+                        html += `</div>`;  
+                    } else {  
+                        html += `<div class="text-gray-600 text-sm">${content.secondary}</div>`;  
                     }  
-                    if (content.secondary.source) {  
-                        html += `<p class="text-xs text-gray-500">来源: ${content.secondary.source}</p>`;  
-                    }  
-                    if (content.secondary.date) {  
-                        html += `<p class="text-xs text-gray-500">时间: ${content.secondary.date}</p>`;  
-                    }  
-                    html += `</div>`;  
-                } else {  
-                    html += `<div class="text-gray-600 text-sm">${content.secondary}</div>`;  
                 }  
+                
+                return html;  
             }  
             
-            return html;  
+            const fallbackHtml = this.formatContent(content);  
+            return fallbackHtml;  
+        } catch (error) {  
+            console.error('Error in renderCardContent:', error);  
+            return `<div class="text-red-500">内容渲染错误: ${error.message}</div>`;  
         }  
-        
-        return this.formatContent(content);  
     }
         
     renderTable(data, container) {  
@@ -173,26 +200,47 @@ class WebUIAdapter {
     }  
   
     renderEditor(data, container) {  
-        const editorHtml = `  
-            <div class="result-card">  
-                <div class="flex justify-between items-center mb-4">  
-                    <h3 class="text-lg font-semibold">${data.title || '内容编辑器'}</h3>  
-                    <div class="flex space-x-2">  
-                        <button class="text-sm px-3 py-1 border rounded hover:bg-gray-50" onclick="this.copyContent()">复制</button>  
-                        <button class="text-sm px-3 py-1 border rounded hover:bg-gray-50" onclick="this.downloadContent()">下载</button>  
+        // 检查是否有编辑器类型的 display_items  
+        const editorItem = data.display_items?.find(item => item.type === 'editor');  
+        
+        if (editorItem && editorItem.content && editorItem.content.text) {  
+            const markdownContent = editorItem.content.text;  
+            
+            const editorHtml = `  
+                <div class="result-card">  
+                    <div class="flex justify-between items-center mb-4">  
+                        <h3 class="text-lg font-semibold">${editorItem.title || '生成的内容'}</h3>  
+                        <div class="flex space-x-2">  
+                            <button class="text-sm px-3 py-1 border rounded hover:bg-gray-50" onclick="window.aiforgeApp.copyResult()">📋 复制</button>  
+                            <button class="text-sm px-3 py-1 border rounded hover:bg-gray-50" onclick="window.aiforgeApp.downloadResult()">💾 下载</button>  
+                        </div>  
                     </div>  
+                    <div class="border rounded-lg">  
+                        <div class="markdown-content p-4 max-h-96 overflow-y-auto">${this.renderMarkdown(markdownContent)}</div>  
+                        <textarea class="hidden" id="markdownSource">${markdownContent}</textarea>  
+                    </div>  
+                    ${data.metadata ? this.renderMetadata(data.metadata) : ''}  
                 </div>  
-                <div class="border rounded-lg">  
-                    <textarea   
-                        class="w-full h-64 p-4 border-0 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"  
-                        placeholder="生成的内容将在这里显示..."  
-                    >${data.content || ''}</textarea>  
-                </div>  
-                ${data.metadata ? this.renderMetadata(data.metadata) : ''}  
-            </div>  
-        `;  
-        container.innerHTML = editorHtml;  
+            `;  
+            
+            container.innerHTML = editorHtml;  
+        } else {  
+            // 回退到原有逻辑  
+            this.renderCard(data, container);  
+        }  
     }  
+    
+    renderMarkdown(text) {  
+        // 简单的 Markdown 渲染  
+        return text  
+            .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4">$1</h1>')  
+            .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3">$1</h2>')  
+            .replace(/^### (.*$)/gim, '<h3 class="text-lg font-medium mb-2">$1</h3>')  
+            .replace(/\\*\\*(.*?)\\*\\*/gim, '<strong>$1</strong>')  
+            .replace(/\\*(.*?)\\*/gim, '<em>$1</em>')  
+            .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>')  
+            .replace(/\\n/gim, '<br>');  
+    }
   
     renderDefault(data, container) {  
         const defaultHtml = `  

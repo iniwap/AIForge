@@ -231,7 +231,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "buscar", "obtener", "conseguir", "encontrar", "recuperar", "consultar"],  
     "target_keywords": ["search", "query", "buscar", "consulta"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "consulta de búsqueda", "consulta", "palabra clave", "término de búsqueda", "término", "palabras clave"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "consulta de búsqueda", "consulta", "palabra clave", "término de búsqueda", "término", "palabras clave"]  
   },  
   "action_keywords": {  
     "search": {  

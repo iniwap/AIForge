@@ -228,7 +228,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "tìm kiếm", "lấy", "nhận", "tìm", "truy xuất", "tra cứu"],  
     "target_keywords": ["search", "query", "tìm kiếm", "truy vấn"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "truy vấn tìm kiếm", "truy vấn", "từ khóa", "thuật ngữ tìm kiếm", "thuật ngữ", "từ khóa"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "truy vấn tìm kiếm", "truy vấn", "từ khóa", "thuật ngữ tìm kiếm", "thuật ngữ", "từ khóa"]  
   },  
   "action_keywords": {  
     "search": {  

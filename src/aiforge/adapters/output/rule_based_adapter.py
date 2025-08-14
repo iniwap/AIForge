@@ -16,7 +16,8 @@ class RuleBasedAdapter:
                 "web_card": {
                     "primary_field": "title",
                     "secondary_fields": ["content", "source", "date"],
-                    "max_items": 5,
+                    "max_items": None,  # 移除固定限制
+                    "respect_user_requirements": True,  # 尊重用户需求
                 },
                 "web_table": {
                     "columns": ["title", "content", "source", "date"],
@@ -124,10 +125,19 @@ class RuleBasedAdapter:
     ) -> Dict[str, Any]:
         """搜索结果卡片格式"""
         results = data.get("data", [])
-        max_items = template.get("max_items", 5)
+
+        # 从验证规则中获取用户期望的最小结果数
+        metadata = data.get("metadata", {})
+        validation_rules = metadata.get("validation_rules", {})
+        min_items = validation_rules.get("min_items", 1)
+
+        # 显示所有结果，但不少于用户要求的最小数量
+        display_count = max(len(results), min_items) if results else min_items
+        # 设置合理上限防止页面过长
+        display_count = min(display_count, 20)
 
         display_items = []
-        for i, result in enumerate(results[:max_items]):
+        for i, result in enumerate(results[:display_count]):
             if isinstance(result, dict):
                 title = result.get("title", f"结果 {i+1}")
                 content = result.get("content", "")

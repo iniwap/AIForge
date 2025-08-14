@@ -1,5 +1,7 @@
 import time
 import os
+import json
+
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -338,30 +340,41 @@ async def get_config_status():
 
 @app.post("/api/process/stream")
 async def process_instruction_stream(request: Request):
-    """流式处理指令端点 - 支持进度级别控制"""
+    """流式处理指令端点"""
     if not forge:
         raise HTTPException(status_code=503, detail="AIForge 引擎未初始化，请检查配置")
 
     data = await request.json()
 
-    # 进度级别参数
-    progress_level = data.get("progress_level", "detailed")  # "none", "minimal", "detailed"
+    # 获取组件
+    streaming_manager = StreamingExecutionManager(forge.component_manager.components)
 
-    streaming_manager = StreamingExecutionManager(forge_components)
-
+    # 准备上下文数据
     context_data = {
         "user_id": data.get("user_id"),
         "session_id": data.get("session_id"),
         "task_type": data.get("task_type"),
-        "progress_level": progress_level,  # 传递进度级别到执行管理器
         "device_info": {
             "browser": data.get("browser_info", {}),
             "viewport": data.get("viewport", {}),
         },
     }
 
+    async def generate():
+        try:
+            async for chunk in streaming_manager.execute_with_streaming(
+                data.get("instruction", ""), "web", context_data
+            ):
+                # 检查客户端是否断开连接
+                if await request.is_disconnected():
+                    streaming_manager._client_disconnected = True
+                    break
+                yield chunk
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'服务器错误: {str(e)}'})}\n\n"
+
     return StreamingResponse(
-        streaming_manager.execute_with_streaming(data.get("instruction", ""), "web", context_data),
+        generate(),
         media_type="text/plain",
         headers={
             "Cache-Control": "no-cache",

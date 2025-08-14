@@ -34,6 +34,7 @@ from .instruction.analyzer import AIForgeInstructionAnalyzer
 from .core.managers import AIForgeExecutionManager
 from .utils.web_progress_indicator import WebProgressIndicator
 from .utils.progress_indicator import ProgressIndicatorRegistry
+from .adapters.output.ui_type_recommender import UITypeRecommender
 
 
 __all__ = [
@@ -66,6 +67,7 @@ __all__ = [
     "AIForgeExecutionManager",
     "WebProgressIndicator",
     "ProgressIndicatorRegistry",
+    "UITypeRecommender",
 ]
 
 __version__ = "0.0.10"

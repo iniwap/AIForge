@@ -223,7 +223,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "rechercher", "obtenir", "récupérer", "trouver", "récupérer", "consulter"],  
     "target_keywords": ["search", "query", "rechercher", "requête"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "requête de recherche", "requête", "mot-clé", "terme de recherche", "terme", "mots-clés"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "requête de recherche", "requête", "mot-clé", "terme de recherche", "terme", "mots-clés"]  
   },  
   "action_keywords": {  
     "search": {  

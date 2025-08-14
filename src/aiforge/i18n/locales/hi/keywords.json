@@ -230,7 +230,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "खोजें", "प्राप्त करें", "लाएं", "ढूंढें", "पुनर्प्राप्त", "देखें"],  
     "target_keywords": ["search", "query", "खोज", "क्वेरी"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "खोज क्वेरी", "क्वेरी", "कीवर्ड", "खोज शब्द", "शब्द", "कीवर्ड्स"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "खोज क्वेरी", "क्वेरी", "कीवर्ड", "खोज शब्द", "शब्द", "कीवर्ड्स"]  
   },  
   "action_keywords": {  
     "search": {  

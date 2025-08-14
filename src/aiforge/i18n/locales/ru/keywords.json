@@ -230,7 +230,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "поиск", "получить", "взять", "найти", "извлечь", "найти"],  
     "target_keywords": ["search", "query", "поиск", "запрос"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "поисковый запрос", "запрос", "ключевое слово", "поисковый термин", "термин", "ключевые слова"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "поисковый запрос", "запрос", "ключевое слово", "поисковый термин", "термин", "ключевые слова"]  
   },  
   "action_keywords": {  
     "search": {  

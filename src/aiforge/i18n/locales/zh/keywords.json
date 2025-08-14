@@ -147,7 +147,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "搜索", "获取", "查找"],  
     "target_keywords": ["search", "搜索"],  
-    "param_keywords": ["search_query", "query", "keyword", "搜索查询", "查询", "关键词"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "搜索查询", "查询", "关键词"]  
   },
   "action_keywords": {  
     "search": {  

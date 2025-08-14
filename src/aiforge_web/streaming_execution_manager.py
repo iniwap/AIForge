@@ -4,6 +4,7 @@ import time
 from typing import Dict, Any, AsyncGenerator
 from aiforge import WebProgressIndicator
 from aiforge import ProgressIndicatorRegistry
+from aiforge import UITypeRecommender
 
 
 class StreamingExecutionManager:
@@ -96,10 +97,28 @@ class StreamingExecutionManager:
                     )
 
                     if result:
-                        # 适配 UI 结果
-                        ui_result = await asyncio.to_thread(
-                            forge.adapt_result_for_ui, result, "web_card", "web"
+                        # 从结果的 metadata 中获取任务类型，回退到 context_data
+                        task_type = result.get("metadata", {}).get("task_type") or context_data.get(
+                            "task_type"
                         )
+
+                        if task_type == "content_generation":
+                            # 内容生成任务直接使用 web_editor，跳过 AI 适配以节省 token
+                            ui_result = await asyncio.to_thread(
+                                forge.adapt_result_for_ui, result, "web_editor", "web"
+                            )
+                        else:
+                            # 其他任务类型使用 UITypeRecommender 智能选择
+                            ui_recommender = UITypeRecommender()
+                            recommendations = ui_recommender.recommend_ui_types(
+                                result, task_type or "general", "web"
+                            )
+                            ui_type = recommendations[0][0] if recommendations else "web_card"
+
+                            ui_result = await asyncio.to_thread(
+                                forge.adapt_result_for_ui, result, ui_type, "web"
+                            )
+
                         execution_result = {
                             "success": True,
                             "result": ui_result,
@@ -125,16 +144,31 @@ class StreamingExecutionManager:
             # 启动执行任务
             task = asyncio.create_task(execute_task())
 
-            # 流式返回进度消息
-            while not execution_complete.is_set():
-                try:
-                    # 等待进度消息
-                    message = await asyncio.wait_for(progress_queue.get(), timeout=0.5)
-                    yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
-                except asyncio.TimeoutError:
-                    # 只在详细模式下发送心跳
-                    if progress_level == "detailed":
+            try:
+                # 流式返回进度消息
+                while not execution_complete.is_set():
+                    try:
+                        # 检查客户端是否断开连接
+                        if hasattr(self, "_client_disconnected") and self._client_disconnected:
+                            # 取消后台任务
+                            task.cancel()
+                            yield f"data: {json.dumps({'type': 'cancelled', 'message': '执行已被用户停止'})}\n\n"  # noqa 501
+                            break
+
+                        # 等待进度消息
+                        message = await asyncio.wait_for(progress_queue.get(), timeout=0.5)
+                        yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
+                    except asyncio.TimeoutError:
+                        # 发送心跳保持连接
                         yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': time.time()})}\n\n"  # noqa 501
+            except GeneratorExit:
+                # 客户端断开连接时触发
+                self._client_disconnected = True
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
 
             # 等待执行完成
             await task

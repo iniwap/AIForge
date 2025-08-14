@@ -229,7 +229,7 @@
   "search_keywords": {  
     "action_keywords": ["search", "fetch", "get", "find", "retrieve", "lookup", "検索", "取得", "入手", "見つける", "取り出し", "参照"],  
     "target_keywords": ["search", "query", "検索", "クエリ"],  
-    "param_keywords": ["search_query", "query", "keyword", "search_term", "term", "keywords", "検索クエリ", "クエリ", "キーワード", "検索語", "用語", "キーワード群"]  
+    "param_keywords": ["search_query", "topic", "query", "keyword", "search_term", "term", "keywords", "検索クエリ", "クエリ", "キーワード", "検索語", "用語", "キーワード群"]  
   },  
   "action_keywords": {  
     "search": {  
