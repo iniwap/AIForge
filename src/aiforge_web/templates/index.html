@@ -6,10 +6,6 @@
     <title>AIForge - 智能意图自适应执行引擎</title>  
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">  
     <link href="/static/css/aiforge.css" rel="stylesheet">  
-    <script src="/static/js/config-manager.js"></script>  
-    <script src="/static/js/streaming-client.js"></script>  
-    <script src="/static/js/ui-adapters.js"></script>  
-    <script src="/static/js/main.js"></script>
 </head>  
 <body class="bg-gray-50">  
     <!-- 顶部导航 -->  
@@ -131,6 +127,16 @@
                             <option value="en">English</option>  
                         </select>  
                     </div>  
+                    <div class="mb-4">  
+                        <label for="progressLevelSelect" class="block text-sm font-medium text-gray-700 mb-2">  
+                            进度显示级别  
+                        </label>  
+                        <select id="progressLevelSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">  
+                            <option value="detailed">详细模式 - 显示所有进度信息</option>  
+                            <option value="minimal">简化模式 - 只显示关键节点</option>  
+                            <option value="none">静默模式 - 不显示进度信息</option>  
+                        </select>  
+                    </div>
                 </div>  
                 <div class="flex justify-end space-x-2 mt-6">  
                     <button id="cancelSettings" class="px-4 py-2 border rounded hover:bg-gray-50">取消</button>  
@@ -140,8 +146,9 @@
         </div>  
     </div>  
   
+    <script src="/static/js/config-manager.js"></script> 
     <script src="/static/js/streaming-client.js"></script>  
     <script src="/static/js/ui-adapters.js"></script>  
-    <script src="/static/js/main.js"></script>  
+    <script src="/static/js/main.js"></script> 
 </body>  
 </html>

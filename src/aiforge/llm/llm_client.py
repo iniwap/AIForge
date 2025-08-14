@@ -33,7 +33,10 @@ class AIForgeLLMClient:
         self.usage_stats = {"total_tokens": 0, "rounds": 0}
         self.components = components or {}
         self._i18n_manager = self.components.get("i18n_manager")
-        self._progress_indicator = self.components.get("progress_indicator")
+
+    @property
+    def _progress_indicator(self):
+        return self.components.get("progress_indicator")
 
     def is_usable(self) -> bool:
         """检查客户端是否可用"""

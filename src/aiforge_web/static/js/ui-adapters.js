@@ -14,22 +14,72 @@ class WebUIAdapter {
     render(data, uiType = 'default', container) {  
         const adapter = this.adapters[uiType] || this.adapters['default'];  
         return adapter(data, container);  
-    }  
-  
+    }
+
     renderCard(data, container) {  
-        const cardHtml = `  
-            <div class="result-card">  
-                <div class="flex items-start justify-between mb-3">  
-                    <h3 class="text-lg font-semibold text-gray-900">${data.title || '执行结果'}</h3>  
-                    <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
+        // 处理来自 RuleBasedAdapter 的数据结构  
+        if (data.display_items && Array.isArray(data.display_items)) {  
+            const cardsHtml = data.display_items.map(item => `  
+                <div class="result-card mb-4">  
+                    <div class="flex items-start justify-between mb-3">  
+                        <h3 class="text-lg font-semibold text-gray-900">${item.title || '执行结果'}</h3>  
+                        <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
+                    </div>  
+                    ${item.content ? this.renderCardContent(item.content) : ''}  
                 </div>  
-                ${data.content ? `<div class="text-gray-700 mb-3">${this.formatContent(data.content)}</div>` : ''}  
-                ${data.metadata ? this.renderMetadata(data.metadata) : ''}  
-            </div>  
-        `;  
-        container.innerHTML = cardHtml;  
+            `).join('');  
+            
+            const summaryHtml = data.summary_text ? `  
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg">  
+                    <p class="text-sm text-blue-800">${data.summary_text}</p>  
+                </div>  
+            ` : '';  
+            
+            container.innerHTML = cardsHtml + summaryHtml;  
+        } else {  
+            // 回退到原始的简单卡片格式  
+            const cardHtml = `  
+                <div class="result-card">  
+                    <div class="flex items-start justify-between mb-3">  
+                        <h3 class="text-lg font-semibold text-gray-900">${data.title || '执行结果'}</h3>  
+                        <span class="text-xs text-gray-500">${new Date().toLocaleString()}</span>  
+                    </div>  
+                    ${data.content ? `<div class="text-gray-700 mb-3">${this.formatContent(data.content)}</div>` : ''}  
+                    ${data.metadata ? this.renderMetadata(data.metadata) : ''}  
+                </div>  
+            `;  
+            container.innerHTML = cardHtml;  
+        }  
     }  
-  
+    
+    renderCardContent(content) {  
+        if (typeof content === 'object' && content.primary) {  
+            let html = `<div class="text-gray-900 font-medium mb-2">${content.primary}</div>`;  
+            
+            if (content.secondary) {  
+                if (typeof content.secondary === 'object') {  
+                    html += `<div class="text-gray-600 text-sm space-y-1">`;  
+                    if (content.secondary.content) {  
+                        html += `<p>${content.secondary.content}</p>`;  
+                    }  
+                    if (content.secondary.source) {  
+                        html += `<p class="text-xs text-gray-500">来源: ${content.secondary.source}</p>`;  
+                    }  
+                    if (content.secondary.date) {  
+                        html += `<p class="text-xs text-gray-500">时间: ${content.secondary.date}</p>`;  
+                    }  
+                    html += `</div>`;  
+                } else {  
+                    html += `<div class="text-gray-600 text-sm">${content.secondary}</div>`;  
+                }  
+            }  
+            
+            return html;  
+        }  
+        
+        return this.formatContent(content);  
+    }
+        
     renderTable(data, container) {  
         if (!data.rows || !Array.isArray(data.rows)) {  
             return this.renderDefault(data, container);  

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 import concurrent.futures
 from ..utils import utils
 from ..strategies.search_template_strategy import StandardTemplateStrategy
-from ..utils.progress_indicator import ProgressIndicator
+from ..utils.progress_indicator import ProgressIndicatorRegistry
 from ..i18n.manager import AIForgeI18nManager
 
 
@@ -102,7 +102,7 @@ def search_web(
         ENGINE_CONFIGS[engine]["url"] = url
         if engine in ENGINE_CONFIGS:
             try:
-                ProgressIndicator.get_instance().show_search_process("SearXNG")
+                ProgressIndicatorRegistry.get_current().show_search_process("SearXNG")
                 # 使用 SearXNG 专用的搜索逻辑
                 search_result = _search_searxng_template(
                     search_query,
@@ -120,7 +120,7 @@ def search_web(
         for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
             try:
                 engine_name = i18n_manager.t(f"search.engine_{engine}")
-                ProgressIndicator.get_instance().show_search_process(engine_name)
+                ProgressIndicatorRegistry.get_current().show_search_process(engine_name)
 
                 search_result = _search_template(
                     search_query,

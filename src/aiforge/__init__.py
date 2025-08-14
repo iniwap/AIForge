@@ -33,6 +33,7 @@ from .cache.semantic_cache import EnhancedStandardizedCache
 from .instruction.analyzer import AIForgeInstructionAnalyzer
 from .core.managers import AIForgeExecutionManager
 from .utils.web_progress_indicator import WebProgressIndicator
+from .utils.progress_indicator import ProgressIndicatorRegistry
 
 
 __all__ = [
@@ -64,6 +65,7 @@ __all__ = [
     "AIForgePrompt",
     "AIForgeExecutionManager",
     "WebProgressIndicator",
+    "ProgressIndicatorRegistry",
 ]
 
 __version__ = "0.0.10"

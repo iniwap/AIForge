@@ -128,43 +128,89 @@ class AIForgeWebApp {
         });  
     }  
   
+        loadUserSettings() {  
+        // 从 localStorage 或用户配置中加载设置  
+        const settings = localStorage.getItem('aiforge-user-settings');  
+        if (settings) {  
+            try {  
+                return JSON.parse(settings);  
+            } catch (e) {  
+                console.warn('Failed to parse user settings:', e);  
+            }  
+        }  
+        return {  
+            progressLevel: 'detailed', // 默认值  
+            language: 'zh',  
+            maxRounds: 5  
+        };  
+    }  
+    
+    saveUserSettings(settings) {  
+        localStorage.setItem('aiforge-user-settings', JSON.stringify(settings));  
+    }
+
+    getProgressLevel() {  
+        // 从用户设置中获取进度级别偏好  
+        const settings = this.loadUserSettings();  
+        return settings.progressLevel || 'detailed'; // 默认详细模式  
+    }  
+  
     async executeInstruction() {  
         const instruction = document.getElementById('instructionInput').value.trim();  
         if (!instruction) {  
             alert('请输入指令');  
             return;  
         }  
-  
+    
         this.setExecutionState(true);  
         this.clearResults();  
-  
+    
         const progressContainer = document.getElementById('progressContainer');  
         const resultContainer = document.getElementById('resultContainer');  
-  
+    
+        // 获取用户设置的进度级别  
+        const progressLevel = this.getProgressLevel();  
+        
+        // 根据进度级别决定是否显示连接状态  
+        if (progressLevel !== 'none') {  
+            this.addProgressMessage('🔗 正在连接服务器...', 'info');  
+        }  
+    
         try {  
             await this.streamingClient.executeInstruction(instruction, {  
-                taskType: this.currentTaskType  
+                taskType: this.currentTaskType,  
+                sessionId: Date.now().toString(),  
+                progressLevel: progressLevel  // 传递进度级别到后端  
             }, {  
                 onProgress: (message, type) => {  
-                    this.addProgressMessage(message, type);  
+                    // 根据进度级别决定是否显示进度消息  
+                    if (progressLevel === 'detailed') {  
+                        this.addProgressMessage(message, type);  
+                    } else if (progressLevel === 'minimal' &&   
+                            ['task_start', 'task_complete', 'error'].includes(type)) {  
+                        this.addProgressMessage(message, type);  
+                    }  
+                    // progressLevel === 'none' 时不显示任何进度消息  
                 },  
                 onResult: (data) => {  
                     this.displayResult(data, resultContainer);  
                     this.enableResultActions();  
                 },  
                 onError: (error) => {  
-                    this.addProgressMessage(`错误: ${error.message}`, 'error');  
+                    this.addProgressMessage(`❌ 错误: ${error.message}`, 'error');  
                 },  
                 onComplete: () => {  
-                    this.addProgressMessage('执行完成', 'complete');  
+                    if (progressLevel !== 'none') {  
+                        this.addProgressMessage('✅ 执行完成', 'complete');  
+                    }  
                     this.setExecutionState(false);  
                 }  
             });  
         } catch (error) {  
-            this.addProgressMessage(`执行失败: ${error.message}`, 'error');  
+            this.addProgressMessage(`💥 连接失败: ${error.message}`, 'error');  
             this.setExecutionState(false);  
         }  
-    }  
+    }
   
     stopExecution() {  
         this.streamingClient.disconnect();  
@@ -191,13 +237,24 @@ class AIForgeWebApp {
   
     addProgressMessage(message, type = 'info') {  
         const progressContainer = document.getElementById('progressContainer');  
+        if (!progressContainer) {  
+            console.error('Progress container not found');  
+            return;  
+        }  
+        
         const messageDiv = document.createElement('div');  
         messageDiv.className = `progress-item ${type}`;  
-        messageDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;  
-          
+        messageDiv.innerHTML = `  
+            <span class="timestamp">[${new Date().toLocaleTimeString()}]</span>  
+            <span class="message">${message}</span>  
+        `;  
+        
         progressContainer.appendChild(messageDiv);  
         progressContainer.scrollTop = progressContainer.scrollHeight;  
-    }  
+        
+        // 确保容器可见  
+        progressContainer.style.display = 'block';  
+    }
   
     clearResults() {  
         document.getElementById('progressContainer').innerHTML = '';  
@@ -206,10 +263,49 @@ class AIForgeWebApp {
     }  
   
     displayResult(data, container) {  
-        // 基于现有的 RuleBasedAdapter 逻辑确定 UI 类型  
-        const uiType = this.determineUIType(data, this.currentTaskType);  
-        this.uiAdapter.render(data, uiType, container);  
-        this.currentResult = data;  
+        if (!container) {  
+            console.error('Result container not found');  
+            return;  
+        }  
+        
+        try {  
+            console.log('Displaying result data:', data); // 添加调试日志  
+            
+            // 验证数据结构  
+            if (!data || typeof data !== 'object') {  
+                throw new Error('Invalid result data structure');  
+            }  
+            
+            // 处理嵌套的结果数据  
+            let resultData = data;  
+            if (data.result && typeof data.result === 'object') {  
+                resultData = data.result;  
+            }  
+            
+            // 确定UI类型  
+            const uiType = this.determineUIType(resultData, this.currentTaskType);  
+            console.log('Determined UI type:', uiType, 'for data:', resultData);  
+            
+            // 渲染结果  
+            this.uiAdapter.render(resultData, uiType, container);  
+            this.currentResult = data;  
+            
+            // 启用结果操作按钮  
+            this.enableResultActions();  
+            
+        } catch (error) {  
+            console.error('Failed to display result:', error);  
+            container.innerHTML = `  
+                <div class="error-message">  
+                    <h3>结果显示错误</h3>  
+                    <p>${error.message}</p>  
+                    <details>  
+                        <summary>原始数据</summary>  
+                        <pre>${JSON.stringify(data, null, 2)}</pre>  
+                    </details>  
+                </div>  
+            `;  
+        }  
     }
     determineUIType(data, taskType) {  
         // 基于 AIForge 的 UITypeRecommender 逻辑  
@@ -261,6 +357,13 @@ class AIForgeWebApp {
     }  
   
     showSettings() {  
+        const settings = this.loadUserSettings();  
+        
+        // 更新设置模态框内容，包含进度级别选择  
+        document.getElementById('progressLevelSelect').value = settings.progressLevel || 'detailed';  
+        document.getElementById('maxRounds').value = settings.maxRounds || 5;  
+        document.getElementById('languageSelect').value = settings.language || 'zh';  
+        
         document.getElementById('settingsModal').classList.remove('hidden');  
     }  
   
@@ -269,18 +372,20 @@ class AIForgeWebApp {
     }  
   
     saveSettings() {  
+        const progressLevel = document.getElementById('progressLevelSelect').value;  
         const maxRounds = document.getElementById('maxRounds').value;  
         const language = document.getElementById('languageSelect').value;  
-          
-        localStorage.setItem('aiforge-settings', JSON.stringify({  
+        
+        const settings = {  
+            progressLevel: progressLevel,  
             maxRounds: parseInt(maxRounds),  
             language: language  
-        }));  
-          
+        };  
+        
+        this.saveUserSettings(settings);  
         this.hideSettings();  
         this.showToast('设置已保存');  
-    }  
-  
+    }
     loadSettings() {  
         const settings = localStorage.getItem('aiforge-settings');  
         if (settings) {  

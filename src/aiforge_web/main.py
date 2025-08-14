@@ -59,9 +59,9 @@ def initialize_aiforge_engine():
 
     # 4. 如果都没有，抛出友好的错误信息
     raise ValueError(
-        "AIForge 需要配置才能运行。请选择以下方式之一：\\n"
-        "1. 设置环境变量：OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY\\n"
-        "2. 创建配置文件：aiforge.toml\\n"
+        "AIForge 需要配置才能运行。请选择以下方式之一：\n"
+        "1. 设置环境变量：OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY\n"
+        "2. 创建配置文件：aiforge.toml\n"
         "3. 使用 AIForge 服务密钥：AIFORGE_SERVICE_KEY（即将推出）"
     )
 
@@ -90,20 +90,6 @@ try:
 except Exception as e:
     print(f"❌ AIForge 引擎初始化失败: {e}")
     print("⚠️  Web 服务将以受限模式运行")
-
-# 尝试添加流式路由（如果可用）
-try:
-    from .streaming_api import add_streaming_routes
-
-    if forge_components:
-        add_streaming_routes(app, forge_components)
-        print("✅ 流式 API 路由已加载")
-    else:
-        print("⚠️  流式 API 路由跳过（引擎未初始化）")
-except ImportError:
-    print("⚠️  流式 API 模块不可用，跳过加载")
-except Exception as e:
-    print(f"⚠️  流式 API 路由加载失败: {e}")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -352,21 +338,22 @@ async def get_config_status():
 
 @app.post("/api/process/stream")
 async def process_instruction_stream(request: Request):
-    """流式处理指令端点"""
+    """流式处理指令端点 - 支持进度级别控制"""
     if not forge:
         raise HTTPException(status_code=503, detail="AIForge 引擎未初始化，请检查配置")
 
     data = await request.json()
 
-    # 获取组件
-    components = forge.get_components()
-    streaming_manager = StreamingExecutionManager(components)
+    # 进度级别参数
+    progress_level = data.get("progress_level", "detailed")  # "none", "minimal", "detailed"
 
-    # 准备上下文数据
+    streaming_manager = StreamingExecutionManager(forge_components)
+
     context_data = {
         "user_id": data.get("user_id"),
         "session_id": data.get("session_id"),
         "task_type": data.get("task_type"),
+        "progress_level": progress_level,  # 传递进度级别到执行管理器
         "device_info": {
             "browser": data.get("browser_info", {}),
             "viewport": data.get("viewport", {}),

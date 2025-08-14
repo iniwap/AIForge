@@ -4,6 +4,18 @@ import threading
 from ..i18n.manager import AIForgeI18nManager
 
 
+class ProgressIndicatorRegistry:
+    _current_indicator = None
+
+    @classmethod
+    def set_current(cls, indicator):
+        cls._current_indicator = indicator
+
+    @classmethod
+    def get_current(cls):
+        return cls._current_indicator or ProgressIndicator.get_instance()
+
+
 class ProgressIndicator:
     _instance = None
     _initialized = False

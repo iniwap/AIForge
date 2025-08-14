@@ -23,7 +23,10 @@ class AIForgeExecutionManager:
         self._initialized = True
         self._i18n_manager = components.get("i18n_manager")
         self._ai_forgePrompt = AIForgePrompt(self.components)
-        self._progress_indicator = self.components.get("progress_indicator")
+
+    @property
+    def _progress_indicator(self):
+        return self.components.get("progress_indicator")
 
     def execute_instruction(self, instruction: str) -> Optional[Dict[str, Any]]:
         """统一执行入口"""

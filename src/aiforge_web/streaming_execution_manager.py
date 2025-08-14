@@ -3,6 +3,7 @@ import json
 import time
 from typing import Dict, Any, AsyncGenerator
 from aiforge import WebProgressIndicator
+from aiforge import ProgressIndicatorRegistry
 
 
 class StreamingExecutionManager:
@@ -14,25 +15,57 @@ class StreamingExecutionManager:
     async def execute_with_streaming(
         self, instruction: str, ui_type: str = "web", context_data: Dict[str, Any] = None
     ) -> AsyncGenerator[str, None]:
-        """流式执行指令并返回进度"""
+        """流式执行指令并返回进度 - 支持进度级别控制"""
 
-        # 创建进度队列和执行状态
+        # 获取进度级别设置，默认为详细模式
+        progress_level = (
+            context_data.get("progress_level", "detailed") if context_data else "detailed"
+        )
+
         progress_queue = asyncio.Queue()
         execution_complete = asyncio.Event()
         execution_result = None
         execution_error = None
 
         async def progress_callback(message_data: Dict[str, Any]):
-            """进度回调函数"""
-            await progress_queue.put(message_data)
+            """进度回调函数 - 根据进度级别过滤消息"""
+            try:
+                message_type = message_data.get("type", "progress")
+                progress_type = message_data.get("progress_type", "info")
+
+                # 根据进度级别决定是否发送消息
+                should_send = False
+
+                if progress_level == "none":
+                    # 只发送结果、错误和完成消息
+                    should_send = message_type in ["result", "error", "complete"]
+                elif progress_level == "minimal":
+                    # 只发送关键节点消息
+                    should_send = message_type in [
+                        "result",
+                        "error",
+                        "complete",
+                    ] or progress_type in [
+                        "task_start",
+                        "task_complete",
+                    ]
+                else:  # detailed
+                    # 发送所有消息
+                    should_send = True
+
+                if should_send:
+                    await progress_queue.put(message_data)
+            except Exception:
+                pass
 
         # 替换进度指示器为 Web 流式版本
         original_progress = self.components.get("progress_indicator")
         web_progress = WebProgressIndicator(self.components, progress_callback)
         self.components["progress_indicator"] = web_progress
+        ProgressIndicatorRegistry.set_current(web_progress)  # 注册到全局
 
         try:
-            # 发送开始消息
+            # 发送开始消息（根据进度级别决定是否发送）
             await progress_callback(
                 {
                     "type": "progress",
@@ -77,6 +110,15 @@ class StreamingExecutionManager:
 
                 except Exception as e:
                     execution_error = f"执行错误: {str(e)}"
+                    # 发送错误进度消息
+                    await progress_callback(
+                        {
+                            "type": "progress",
+                            "message": f"❌ 执行失败: {str(e)}",
+                            "progress_type": "error",
+                            "timestamp": time.time(),
+                        }
+                    )
                 finally:
                     execution_complete.set()
 
@@ -90,8 +132,9 @@ class StreamingExecutionManager:
                     message = await asyncio.wait_for(progress_queue.get(), timeout=0.5)
                     yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
                 except asyncio.TimeoutError:
-                    # 发送心跳保持连接
-                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': time.time()})}\n\n"
+                    # 只在详细模式下发送心跳
+                    if progress_level == "detailed":
+                        yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': time.time()})}\n\n"  # noqa 501
 
             # 等待执行完成
             await task
