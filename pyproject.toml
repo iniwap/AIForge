@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiforge-engine"
-version = "0.0.10"
+version = "0.0.11"
 description = "Intelligent Intent Adaptive Execution Engine - 智能意图自适应执行引擎"
 readme = "README_EN.md"
 license = { text = "Apache 2.0" }
@@ -62,11 +62,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gui = ["textual>=0.40.0"]
-web = ["fastapi>=0.100.0", "uvicorn>=0.20.0", "jinja2>=3.1.0"]
 dev = ["python-dotenv>=1.0.0", "pytest>=7.0.0"]
 transformers = ["sentence-transformers>=2.0.0"]
-all = ["sentence-transformers>=2.0.0", "textual>=0.40.0", "fastapi>=0.100.0"]
+all = [
+    "sentence-transformers>=2.0.0", # transformers功能  
+    "aiforge-web>=0.0.11",          # Web界面  
+    "aiforge-gui>=0.0.11",          # GUI界面  
+    "aiforge-deploy>=0.0.11",       # 部署功能  
+]
 
 [project.urls]
 Homepage = "https://github.com/iniwap/AIForge"
@@ -80,26 +83,13 @@ Twitter = "https://twitter.com/iafun_tipixel"
 
 [project.scripts]
 aiforge = "aiforge.cli:main"
-aiforge-docker = "aiforge.utils.manage_docker_services:main"
 
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aiforge"]
 
 [tool.hatch.build.targets.sdist]
-include = [
-    "/src",
-    "/README.md",
-    "/LICENSE",
-    "/pyproject.toml",
-    "/Dockerfile",
-    "/docker-compose.yml",
-    "/docker-compose.dev.yml",
-    "/docker",
-    "nginx",
-    "/aiforge-docker.bat",
-    "/aiforge-docker.sh",
-]
+include = ["/src/aiforge", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [dependency-groups]
 dev = ["python-dotenv>=1.1.1"]

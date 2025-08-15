@@ -35,7 +35,7 @@ from .core.managers import AIForgeExecutionManager
 from .utils.web_progress_indicator import WebProgressIndicator
 from .utils.progress_indicator import ProgressIndicatorRegistry
 from .adapters.output.ui_type_recommender import UITypeRecommender
-
+from .i18n.manager import AIForgeI18nManager
 
 __all__ = [
     # 核心组件
@@ -68,6 +68,7 @@ __all__ = [
     "WebProgressIndicator",
     "ProgressIndicatorRegistry",
     "UITypeRecommender",
+    "AIForgeI18nManager",
 ]
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"

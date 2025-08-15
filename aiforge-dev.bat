@@ -1,4 +1,6 @@
 @echo off  
+chcp 65001  
+
 setlocal enabledelayedexpansion  
   
 REM 设置默认环境变量  
@@ -40,12 +42,6 @@ if "%OPENROUTER_API_KEY%"=="" (
     echo 错误: 请设置 OPENROUTER_API_KEY 环境变量或使用 --api-key 参数  
     echo 示例: aiforge-dev.bat --api-key sk-or-v1-your-key  
     exit /b 1  
-)  
-  
-:start_server  
-echo 启动 AIForge Web 服务器...  
-echo 地址: http://%HOST%:%PORT%  
-echo 语言: %AIFORGE_LOCALE%  
-echo.  
+)
   
 python -m aiforge.cli.main web --host %HOST% --port %PORT% %RELOAD_FLAG% %DEBUG_FLAG%

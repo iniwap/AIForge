@@ -1,45 +1,65 @@
+version: "3.8"
+
 services:
-  aiforge:
+  # 核心CLI服务（无web依赖）
+  aiforge-core:
     build:
       context: .
+      dockerfile: src/aiforge_deploy/docker/templates/Dockerfile
       args:
+        - INSTALL_WEB=false
         - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
         - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-        - AIFORGE_LOCALE=${AIFORGE_LOCALE}
-    container_name: aiforge-engine
+        - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
+    container_name: aiforge-core
+    volumes:
+      - ./aiforge_work:/app/aiforge_work
+      - ./logs:/app/logs
+    environment:
+      - AIFORGE_DOCKER_MODE=true
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
+    networks:
+      - aiforge-network
+    restart: unless-stopped
+    command: ["--help"]
+    profiles: ["core"]
+
+  # Web服务（可选）
+  aiforge-web:
+    build:
+      context: .
+      dockerfile: src/aiforge_deploy/docker/templates/Dockerfile
+      args:
+        - INSTALL_WEB=true
+        - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+        - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+        - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
+    container_name: aiforge-web
     ports:
       - "${AIFORGE_WEB_PORT:-8000}:8000"
     volumes:
       - ./aiforge_work:/app/aiforge_work
       - ./logs:/app/logs
     environment:
-      # Docker环境标识
       - AIFORGE_DOCKER_MODE=true
-
-      # API配置 (Docker层)
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-
-      # 基础应用配置
-      - AIFORGE_MAX_TOKENS=${AIFORGE_MAX_TOKENS:-4096}
-      - AIFORGE_MAX_ROUNDS=${AIFORGE_MAX_ROUNDS:-5}
-      - AIFORGE_DEFAULT_PROVIDER=${AIFORGE_DEFAULT_PROVIDER:-openrouter}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
-
-      # SearXNG为远程服务时设置
-      - SEARXNG_REMOTE_URL=${SEARXNG_REMOTE_URL:-}
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["web"]
+    command: ["web", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    profiles: ["web"]
 
+  # SearXNG搜索引擎
   searxng:
     image: searxng/searxng:latest
     container_name: aiforge-searxng
@@ -50,48 +70,32 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["searxng"]
+    profiles: ["search"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 30s
       timeout: 10s
       retries: 3
 
+  # Nginx代理
   nginx:
     image: nginx:alpine
     container_name: aiforge-nginx
     ports:
       - "55510:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./src/aiforge_deploy/docker/templates/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - searxng
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["searxng"]
+    profiles: ["search"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # CLI服务简化
-  aiforge-cli:
-    build: .
-    container_name: aiforge-cli
-    volumes:
-      - ./aiforge_work:/app/aiforge_work
-      - ./config:/app/config
-    environment:
-      - AIFORGE_DOCKER_MODE=true
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - AIFORGE_LOCALE=${AIFORGE_LOCALE}
-    networks:
-      - aiforge-network
-    profiles: ["cli"]
-    command: ["cli", "--help"]
 
 networks:
   aiforge-network:

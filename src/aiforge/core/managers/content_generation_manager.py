@@ -55,8 +55,17 @@ class AIForgeContentGenerationManager:
         if not search_manager:
             return self._execute_direct_generation(standardized_instruction, instruction)
 
+        ai_min_items = (
+            standardized_instruction.get("expected_output", {})
+            .get("validation_rules", {})
+            .get("min_items", 1)
+        )
+        # 确保内容生成任务至少有足够的搜索结果，但不低于 AI 分析的要求
+        content_min_items = max(ai_min_items, 2)  # 可以设置一个合理的最小值如 2
+
         # 为内容生成任务优化搜索参数，确保足够的结果数量
         content_search_instruction = standardized_instruction.copy()
+
         content_search_instruction.update(
             {
                 "task_type": "data_fetch",
@@ -76,7 +85,7 @@ class AIForgeContentGenerationManager:
                         "required": False,
                     },
                     "min_items": {
-                        "value": 5,
+                        "value": content_min_items,
                         "type": "int",
                         "required": True,
                     },
@@ -94,7 +103,7 @@ class AIForgeContentGenerationManager:
                 "expected_output": {
                     "required_fields": ["title", "content", "url", "pub_time"],
                     "validation_rules": {
-                        "min_items": 5,
+                        "min_items": content_min_items,
                         "non_empty_fields": ["title", "content", "url"],
                         "enable_deduplication": True,
                     },

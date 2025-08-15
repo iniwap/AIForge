@@ -221,7 +221,3 @@ config/*.yml
 config/*.toml
 logs
 logs/*
-
-# 开发模式运行时创建的目录  
-/static/  
-/templates/  

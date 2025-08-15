@@ -78,10 +78,4 @@ if [ -z "$OPENROUTER_API_KEY" ]; then
     exit 1  
 fi  
   
-# 启动服务器  
-echo "启动 AIForge Web 服务器..."  
-echo "地址: http://$HOST:$PORT"  
-echo "语言: $AIFORGE_LOCALE"  
-echo ""  
-  
 python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_FLAG

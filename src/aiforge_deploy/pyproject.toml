@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aiforge-deploy"
+version = "0.0.11"
+description = "AIForge Deployment Management"
+dependencies = ["aiforge-engine", "docker>=6.0.0", "pyyaml>=6.0.0"]
+
+[project.optional-dependencies]
+kubernetes = ["kubernetes>=24.0.0", "helm>=3.0.0"]
+aws = ["boto3>=1.26.0", "awscli>=1.27.0"]
+azure = ["azure-mgmt-containerinstance>=10.0.0", "azure-cli>=2.40.0"]
+gcp = ["google-cloud-container>=2.0.0", "gcloud>=0.18.0"]
+aliyun = ["alibabacloud-ecs20140526>=3.0.0"]
+all = [
+    "kubernetes>=24.0.0",
+    "boto3>=1.26.0",
+    "azure-mgmt-containerinstance>=10.0.0",
+    "google-cloud-container>=2.0.0",
+    "alibabacloud-ecs20140526>=3.0.0",
+]
+
+[project.scripts]
+aiforge-deploy = "aiforge_deploy.cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aiforge_deploy"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src/aiforge_deploy",
+    "/scripts/aiforge-docker.bat",
+    "/scripts/aiforge-docker.sh",
+    "/scripts/aiforge-dev.bat",
+    "/scripts/aiforge-dev.sh",
+    "/README.md",
+    "/LICENSE",
+]

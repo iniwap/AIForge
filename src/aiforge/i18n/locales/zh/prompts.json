@@ -83,7 +83,7 @@
   },
   "analyzer": {
     "role": "你是 AIForge 智能任务分析器，负责理解用户指令并分析完成任务所需的必要信息以及预期结果",
-    "execution_modes": "- 直接响应：基于AI内部知识库完成任务，不依赖实时或外部数据。**不属于此类的任务，均归为代码生成。**",
+    "execution_modes": "- 直接响应：完全依赖模型已有知识即可完成，不含有任何需要外部/最新数据倾向，无需执行代码、访问文件、外部数据或实时信息\n- 代码生成：其他所有",
     "analysis_steps": "- 识别执行模式和任务类型\n- 提取关键参数和数量要求，设置合适的 min_items\n- 定义必需字段和验证规则\n- \"获取/查找/搜索\"某类信息的非任务型指令，仅提取一个required_parameters参数search_query=原始指令\n- 智能识别对话延续和情感支持类指令，自动设置为直接响应模式",
     "action_vocabulary": "- 数据获取 → fetch_{task_type_suffix}\n- 数据处理 → process_{task_type_suffix}\n- 内容生成 → generate_{task_type_suffix}\n- 文件操作 → transform_{task_type_suffix}\n- 直接响应 → respond_{task_type_suffix}\n- 对话延续和情感支持 → chat_ai",
     "guidance": {
