@@ -4,8 +4,8 @@ from typing import Dict, Any, Callable, Optional
 from aiforge.i18n.manager import AIForgeI18nManager
 
 
-class WebProgressIndicator:
-    """Web 流式进度指示器 - 独立实现避免单例冲突"""
+class StreamingProgressIndicator:
+    """流式进度指示器"""
 
     def __init__(
         self, components: Dict[str, Any] = None, stream_callback: Optional[Callable] = None

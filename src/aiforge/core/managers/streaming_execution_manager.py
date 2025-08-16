@@ -2,13 +2,12 @@ import asyncio
 import json
 import time
 from typing import Dict, Any, AsyncGenerator
-from aiforge import WebProgressIndicator
-from aiforge import ProgressIndicatorRegistry
-from aiforge import UITypeRecommender
+from ...utils.streaming_progres_indicator import StreamingProgressIndicator
+from ...utils.progress_indicator import ProgressIndicatorRegistry
 
 
 class StreamingExecutionManager:
-    """流式执行管理器 - 为 Web 界面提供实时进度反馈"""
+    """流式执行管理器 - 为界面提供实时进度反馈"""
 
     def __init__(self, components: Dict[str, Any]):
         self.components = components
@@ -61,7 +60,7 @@ class StreamingExecutionManager:
 
         # 替换进度指示器为 Web 流式版本
         original_progress = self.components.get("progress_indicator")
-        web_progress = WebProgressIndicator(self.components, progress_callback)
+        web_progress = StreamingProgressIndicator(self.components, progress_callback)
         self.components["progress_indicator"] = web_progress
         ProgressIndicatorRegistry.set_current(web_progress)  # 注册到全局
 
@@ -98,27 +97,14 @@ class StreamingExecutionManager:
 
                     if result:
                         # 从结果的 metadata 中获取任务类型，回退到 context_data
-                        task_type = result.get("metadata", {}).get("task_type") or context_data.get(
-                            "task_type"
+                        task_type = result.get("task_type") or context_data.get("task_type")
+
+                        ui_result = await asyncio.to_thread(
+                            forge.adapt_result_for_ui,
+                            result,
+                            "web_editor" if task_type == "content_generation" else None,
+                            "web",
                         )
-
-                        if task_type == "content_generation":
-                            # 内容生成任务直接使用 web_editor，跳过 AI 适配以节省 token
-                            ui_result = await asyncio.to_thread(
-                                forge.adapt_result_for_ui, result, "web_editor", "web"
-                            )
-                        else:
-                            # 其他任务类型使用 UITypeRecommender 智能选择
-                            ui_recommender = UITypeRecommender()
-                            recommendations = ui_recommender.recommend_ui_types(
-                                result, task_type or "general", "web"
-                            )
-                            ui_type = recommendations[0][0] if recommendations else "web_card"
-
-                            ui_result = await asyncio.to_thread(
-                                forge.adapt_result_for_ui, result, ui_type, "web"
-                            )
-
                         execution_result = {
                             "success": True,
                             "result": ui_result,

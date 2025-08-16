@@ -39,42 +39,42 @@ class AIUIAdapter:
         """构建适配提示词"""
         return f"""
 # 任务：数据格式适配
-你需要将原始数据转换为适合特定界面展示的格式。
+你需要将原始数据转换为适合界面展示的语义化格式。
 
 ## 原始数据
 {json.dumps(data, ensure_ascii=False, indent=2)}
-
-## 目标界面类型
-{ui_context}
 
 ## 输出要求
 请返回以下JSON格式：
 {{
     "display_items": [
         {{
-            "type": "text|table|card|list|chart",
+            "type": "text|table|card|list|chart|editor|progress|timeline|dashboard|map|gallery|calendar",
+            "semantic_role": "content_output|data_listing|search_result|task_progress",
+            "data_structure": "plain_text|tabular|key_value|temporal|numerical",
             "title": "显示标题",
             "content": "具体内容",
+            "capabilities": ["basic", "editable", "sortable"],
             "priority": 1-10
         }}
     ],
     "layout_hints": {{
+        "primary_layout": "vertical|horizontal|grid|single_item",
+        "content_type": "text_content|structured_data|search_results",
+        "interaction_level": "low|medium|high",
         "layout_type": "vertical|horizontal|grid",
         "columns": 1-4,
         "spacing": "compact|normal|loose"
     }},
-    "actions": [
-        {{
-            "label": "操作名称",
-            "action": "refresh|export|detail",
-            "data": {{}}
-        }}
-    ],
-    "summary_text": "数据摘要文本"
+    "actions": [...],
+    "summary_text": "数据摘要文本",
+    "data_schema": {{
+        "version": "1.0",
+        "content_type": "...",
+        "structure": "..."
+    }}
 }}
-
-请严格按照JSON格式返回，不要包含其他解释文字。
-"""
+"""  # noqa: E501
 
     def _parse_adaptation_result(self, response: str) -> Dict[str, Any]:
         """解析AI适配结果"""

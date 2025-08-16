@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional, List, Tuple
 
 from .orchestrator import AIForgeOrchestrator
+from .result import convert_to_aiforge_result
 
 
 class AIForgeEngine:
@@ -71,7 +72,10 @@ class AIForgeEngine:
         instruction = self.process_input(raw_input_x, source, context_data)
 
         # 执行任务
-        return self.run(instruction)
+        internal_result = self.run(instruction)
+
+        # 在返回前统一为 AIForgeResult 格式
+        return convert_to_aiforge_result(internal_result, context_data)
 
     def adapt_result_for_ui(
         self, result: Dict[str, Any], ui_type: str = None, context: str = "web"

@@ -8,76 +8,76 @@ class UITypeRecommender:
         self.recommendation_rules = {
             # 数据获取任务
             "data_fetch": {
-                "web_card": {"score": 8, "conditions": ["single_item", "key_value_data"]},
-                "web_table": {"score": 9, "conditions": ["structured_data", "multiple_results"]},
-                "web_map": {"score": 10, "conditions": ["location_data"]},
+                "card": {"score": 8, "conditions": ["single_item", "key_value_data"]},
+                "table": {"score": 9, "conditions": ["structured_data", "multiple_results"]},
+                "map": {"score": 10, "conditions": ["location_data"]},
                 "mobile_list": {"score": 6, "conditions": ["mobile_friendly"]},
                 "terminal_text": {"score": 7, "conditions": ["simple_display"]},
             },
             # 数据分析任务
             "data_analysis": {
-                "web_dashboard": {
+                "dashboard": {
                     "score": 10,
                     "conditions": ["complex_analysis", "multiple_sections"],
                 },
-                "web_chart": {"score": 9, "conditions": ["numerical_data"]},
-                "web_table": {"score": 7, "conditions": ["tabular_metrics"]},
-                "web_timeline": {"score": 5, "conditions": ["few_results"]},
-                "web_card": {"score": 6, "conditions": ["simple_summary"]},
+                "chart": {"score": 9, "conditions": ["numerical_data"]},
+                "table": {"score": 7, "conditions": ["tabular_metrics"]},
+                "timeline": {"score": 5, "conditions": ["few_results"]},
+                "card": {"score": 6, "conditions": ["simple_summary"]},
             },
             # 文件操作任务
             "file_operation": {
-                "web_table": {"score": 9, "conditions": ["multiple_files", "status_tracking"]},
-                "web_progress": {"score": 8, "conditions": ["batch_processing"]},
-                "web_timeline": {"score": 7, "conditions": ["few_results"]},
+                "table": {"score": 9, "conditions": ["multiple_files", "status_tracking"]},
+                "progress": {"score": 8, "conditions": ["batch_processing"]},
+                "timeline": {"score": 7, "conditions": ["few_results"]},
                 "mobile_list": {"score": 6, "conditions": ["mobile_friendly"]},
             },
             # 内容生成任务
             "content_generation": {
-                "web_editor": {"score": 10, "conditions": ["single_item"]},
-                "web_card": {"score": 5, "conditions": ["simple_display"]},
+                "editor": {"score": 10, "conditions": ["single_item"]},
+                "card": {"score": 5, "conditions": ["simple_display"]},
             },
             # 代码生成任务
             "code_generation": {
-                "web_editor": {"score": 10, "conditions": ["single_item"]},
-                "web_card": {"score": 6, "conditions": ["simple_display"]},
+                "editor": {"score": 10, "conditions": ["single_item"]},
+                "card": {"score": 6, "conditions": ["simple_display"]},
             },
             # 数据处理任务
             "data_process": {
-                "web_table": {"score": 8, "conditions": ["structured_data"]},
-                "web_dashboard": {"score": 7, "conditions": ["complex_analysis"]},
-                "web_card": {"score": 6, "conditions": ["simple_summary"]},
+                "table": {"score": 8, "conditions": ["structured_data"]},
+                "dashboard": {"score": 7, "conditions": ["complex_analysis"]},
+                "card": {"score": 6, "conditions": ["simple_summary"]},
             },
             # 自动化任务
             "automation": {
-                "web_timeline": {"score": 9, "conditions": ["few_results"]},
-                "web_calendar": {"score": 8, "conditions": ["time_data"]},
-                "web_progress": {"score": 8, "conditions": ["batch_processing"]},
-                "web_card": {"score": 6, "conditions": ["simple_display"]},
+                "timeline": {"score": 9, "conditions": ["few_results"]},
+                "calendar": {"score": 8, "conditions": ["time_data"]},
+                "progress": {"score": 8, "conditions": ["batch_processing"]},
+                "card": {"score": 6, "conditions": ["simple_display"]},
             },
             # 直接响应任务
             "direct_response": {
-                "web_card": {"score": 9, "conditions": ["single_item"]},
-                "web_editor": {"score": 7, "conditions": ["single_item"]},
+                "card": {"score": 9, "conditions": ["single_item"]},
+                "editor": {"score": 7, "conditions": ["single_item"]},
                 "terminal_text": {"score": 6, "conditions": ["simple_display"]},
             },
             # 搜索任务
             "search": {
-                "web_table": {"score": 9, "conditions": ["multiple_results"]},
-                "web_card": {"score": 8, "conditions": ["few_results"]},
+                "table": {"score": 9, "conditions": ["multiple_results"]},
+                "card": {"score": 8, "conditions": ["few_results"]},
                 "mobile_list": {"score": 7, "conditions": ["mobile_friendly"]},
             },
             # 图像处理任务
             "image_processing": {
-                "web_gallery": {"score": 10, "conditions": ["image_data"]},
-                "web_card": {"score": 9, "conditions": ["single_item"]},
-                "web_dashboard": {"score": 7, "conditions": ["complex_analysis"]},
+                "gallery": {"score": 10, "conditions": ["image_data"]},
+                "card": {"score": 9, "conditions": ["single_item"]},
+                "dashboard": {"score": 7, "conditions": ["complex_analysis"]},
             },
             # API集成任务
             "api_integration": {
-                "web_table": {"score": 8, "conditions": ["structured_data"]},
-                "web_card": {"score": 7, "conditions": ["simple_summary"]},
-                "web_dashboard": {"score": 6, "conditions": ["complex_analysis"]},
+                "table": {"score": 8, "conditions": ["structured_data"]},
+                "card": {"score": 7, "conditions": ["simple_summary"]},
+                "dashboard": {"score": 6, "conditions": ["complex_analysis"]},
             },
         }
 
@@ -86,7 +86,7 @@ class UITypeRecommender:
     ) -> List[Tuple[str, float]]:
         """推荐UI类型，返回按分数排序的列表"""
         if task_type not in self.recommendation_rules:
-            return [("web_card", 5.0), ("terminal_text", 4.0)]
+            return [("card", 5.0), ("terminal_text", 4.0)]
 
         rules = self.recommendation_rules[task_type]
         recommendations = []

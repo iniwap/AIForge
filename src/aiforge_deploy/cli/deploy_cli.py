@@ -64,7 +64,7 @@ def main():
             asyncio.run(handle_cloud_command(deployment_manager, args))
 
     except KeyboardInterrupt:
-        print("\\n用户中断操作")
+        print("\n用户中断操作")
     except Exception as e:
         print(f"执行异常: {str(e)}")
         if args.verbose:

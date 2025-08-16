@@ -32,10 +32,11 @@ from .cache.semantic_cache import EnhancedStandardizedCache
 # 指令分析导入
 from .instruction.analyzer import AIForgeInstructionAnalyzer
 from .core.managers import AIForgeExecutionManager
-from .utils.web_progress_indicator import WebProgressIndicator
 from .utils.progress_indicator import ProgressIndicatorRegistry
-from .adapters.output.ui_type_recommender import UITypeRecommender
 from .i18n.manager import AIForgeI18nManager
+from .core.managers.streaming_execution_manager import StreamingExecutionManager
+from .core.result import AIForgeResult
+
 
 __all__ = [
     # 核心组件
@@ -65,10 +66,10 @@ __all__ = [
     "CodeBlock",
     "AIForgePrompt",
     "AIForgeExecutionManager",
-    "WebProgressIndicator",
     "ProgressIndicatorRegistry",
-    "UITypeRecommender",
     "AIForgeI18nManager",
+    "StreamingExecutionManager",
+    "AIForgeResult",
 ]
 
 __version__ = "0.0.11"

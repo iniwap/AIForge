@@ -355,7 +355,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 await self._show_service_urls(enable_searxng, mode)
 
                 # 等待服务稳定
-                print(f"\\n{self._i18n_manager.t('docker.waiting_services')}")
+                print(f"\n{self._i18n_manager.t('docker.waiting_services')}")
                 await asyncio.sleep(10)
 
                 # 检查服务健康状态 - 需要传递mode参数
@@ -365,7 +365,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 if enable_searxng:
                     await self._check_and_update_searxng_formats()
 
-                print(f"\\n{self._i18n_manager.t('docker.startup_complete')}")
+                print(f"\n{self._i18n_manager.t('docker.startup_complete')}")
                 print(self._i18n_manager.t("docker.ready_to_use"))
 
                 return {
@@ -389,7 +389,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
     async def _show_service_urls(self, enable_searxng: bool = False, mode: str = "web") -> None:
         """显示服务访问地址"""
-        print(f"\\n{self._i18n_manager.t('docker.service_urls')}")
+        print(f"\n{self._i18n_manager.t('docker.service_urls')}")
 
         if mode == "web":
             print(self._i18n_manager.t("docker.aiforge_web_url"))
@@ -404,7 +404,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         self, enable_searxng: bool = False, mode: str = "web"
     ) -> Dict[str, str]:
         """检查服务健康状态"""
-        print(f"\\n{self._i18n_manager.t('docker.health_check')}")
+        print(f"\n{self._i18n_manager.t('docker.health_check')}")
 
         # 根据mode选择要检查的服务
         services = []

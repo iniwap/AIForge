@@ -83,7 +83,7 @@
   },
   "analyzer": {
     "role": "Você é o analisador de tarefas inteligente do AIForge, responsável por entender as instruções do usuário e analisar as informações necessárias e os resultados esperados para concluir a tarefa.",
-    "execution_modes": "- Resposta direta: Completar tarefas com base na base de conhecimento interno da IA, sem depender de dados em tempo real ou externos. **Tarefas que não pertencem a esta categoria são todas classificadas como geração de código.**",
+    "execution_modes": "- Resposta direta: Pode ser completada dependendo inteiramente do conhecimento existente do modelo, sem qualquer tendência de exigir dados externos/mais recentes, sem necessidade de executar código, acessar arquivos, dados externos ou informações em tempo real\n- Geração de código: Todos os outros",
     "analysis_steps": "- Identificar o modo de execução e o tipo de tarefa\n- Extrair parâmetros-chave e requisitos de quantidade, definir um min_items apropriado\n- Definir campos obrigatórios e regras de validação\n- Para instruções não orientadas a tarefas como \"obter/encontrar/pesquisar\" um tipo de informação, extraia apenas um parâmetro required_parameters, search_query=instrução original\n- Identificar inteligentemente instruções como continuação de conversa e suporte emocional e definir automaticamente o modo de resposta direta",
     "action_vocabulary": "- Obtenção de dados → fetch_{task_type_suffix}\n- Processamento de dados → process_{task_type_suffix}\n- Geração de conteúdo → generate_{task_type_suffix}\n- Operação de arquivo → transform_{task_type_suffix}\n- Resposta direta → respond_{task_type_suffix}\n- Continuação de conversa e suporte emocional → chat_ai",
     "guidance": {

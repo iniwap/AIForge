@@ -63,6 +63,110 @@ class TaskTypeDetector:
                 "data_patterns": ["response_data", "status_code", "endpoint", "headers"],
                 "structure_patterns": ["api_response", "http_metadata"],
             },
+            "content_generation": {
+                "data_patterns": [
+                    "generated_content",
+                    "content",
+                    "text",
+                    "article",
+                    "document",
+                    "title",
+                    "summary",
+                    "word_count",
+                    "markdown",
+                    "html",
+                ],
+                "structure_patterns": ["single_content", "structured_content"],
+            },
+            "code_generation": {
+                "data_patterns": [
+                    "generated_code",
+                    "code",
+                    "script",
+                    "function",
+                    "class",
+                    "language",
+                    "syntax",
+                    "lines",
+                    "comments",
+                ],
+                "structure_patterns": ["code_block", "code_file", "code_snippet"],
+            },
+            "data_process": {
+                "data_patterns": [
+                    "processed_data",
+                    "transformed",
+                    "filtered",
+                    "aggregated",
+                    "cleaned",
+                    "normalized",
+                    "validated",
+                ],
+                "structure_patterns": ["processing_result", "batch_processing"],
+            },
+            "automation": {
+                "data_patterns": [
+                    "automation_steps",
+                    "scheduled_tasks",
+                    "workflow",
+                    "trigger",
+                    "condition",
+                    "action",
+                    "execution_time",
+                ],
+                "structure_patterns": ["automation_result", "workflow_status"],
+            },
+            "direct_response": {
+                "data_patterns": [
+                    "response",
+                    "answer",
+                    "explanation",
+                    "suggestion",
+                    "advice",
+                    "recommendation",
+                    "opinion",
+                ],
+                "structure_patterns": ["simple_response", "detailed_response"],
+            },
+            "search": {
+                "data_patterns": [
+                    "search_results",
+                    "query",
+                    "results",
+                    "snippet",
+                    "relevance",
+                    "ranking",
+                    "total_count",
+                ],
+                "structure_patterns": ["search_results", "ranked_results"],
+            },
+            "image_processing": {
+                "data_patterns": [
+                    "processed_images",
+                    "image",
+                    "photo",
+                    "picture",
+                    "thumbnail",
+                    "dimensions",
+                    "format",
+                    "size",
+                    "metadata",
+                ],
+                "structure_patterns": ["image_gallery", "image_metadata"],
+            },
+            "api_integration": {
+                "data_patterns": [
+                    "api_response",
+                    "endpoint",
+                    "method",
+                    "status",
+                    "response_time",
+                    "data_count",
+                    "errors",
+                    "success_rate",
+                ],
+                "structure_patterns": ["api_result", "integration_status"],
+            },
         }
 
     def detect_from_data(self, data: Dict[str, Any]) -> str:
@@ -129,6 +233,33 @@ class TaskTypeDetector:
             return len(data) <= self.MAX_SINGLE_ITEM_KEYS and not any(
                 isinstance(v, list) for v in data.values()
             )
+        elif pattern == "single_content":
+            return len(data) <= 3 and any(
+                key in data for key in ["content", "generated_content", "text"]
+            )
+        elif pattern == "structured_content":
+            return any(key in data for key in ["title", "summary", "sections"])
+        elif pattern == "code_block":
+            return any(key in data for key in ["code", "generated_code", "language"])
+        elif pattern == "processing_result":
+            return any(key in data for key in ["processed", "result", "output"])
+        elif pattern == "automation_result":
+            return any(key in data for key in ["steps", "workflow", "automation"])
+        elif pattern == "simple_response":
+            return len(data) <= 2 and "response" in data
+        elif pattern == "detailed_response":
+            return "response" in data and len(str(data.get("response", ""))) > 100
+        elif pattern == "ranked_results":
+            return isinstance(data.get("results"), list) and any(
+                "relevance" in str(item) or "score" in str(item)
+                for item in data.get("results", [])[:3]
+                if isinstance(item, dict)
+            )
+        elif pattern == "image_gallery":
+            return any(key in data for key in ["images", "gallery", "photos"])
+        elif pattern == "integration_status":
+            return any(key in data for key in ["status", "success_rate", "errors"])
+
         elif pattern == "search_metadata":
             return any(key in data for key in ["query", "total_count", "source"])
         elif pattern == "analysis_report":

@@ -33,7 +33,7 @@ class EnhancedHybridUIAdapter:
         # 2. 智能推荐UI类型（如果未指定）
         if not ui_type:
             recommendations = self.ui_recommender.recommend_ui_types(data, task_type, context)
-            ui_type = recommendations[0][0] if recommendations else "web_card"
+            ui_type = recommendations[0][0] if recommendations else "card"
 
         # 记录适配请求
         self.learning_interface.record_adaptation_request(data, task_type, ui_type)
