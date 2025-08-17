@@ -119,7 +119,8 @@
     "logic_note": "コンテンツには論理と可読性が必要です",
     "tone_maintain_note": "{tone}のトーンを維持する",
     "date_note": "記事内の日付は、検索結果の日付を採用する必要があります",
-    "data_based_note": "検索結果の実際のデータに基づいて分析と作成を行う"
+    "data_based_note": "検索結果の実際のデータに基づいて分析と作成を行う",
+    "content_only_note": "記事本文のみを出力し、提案、トピックタグ、技術的説明、メタ情報など本文以外のコンテンツを含めることを厳禁する"
   },
   "validation": {
     "ai_validation_prompt_template": "以下のコード実行結果が、ユーザーのタスク目標を実際に達成したかどうかを判断してください：\n\n元のユーザー指示：{original_instruction}\nタスクタイプ：{task_type}\n期待される出力要件：{expected_output}\n\n実際の実行結果\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

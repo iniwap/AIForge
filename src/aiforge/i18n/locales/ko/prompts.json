@@ -119,7 +119,8 @@
     "logic_note": "콘텐츠는 논리적이고 읽기 쉬워야 함",
     "tone_maintain_note": "{tone} 어조 유지",
     "date_note": "기사 내의 날짜는 검색 결과의 날짜를 채택해야 함",
-    "data_based_note": "검색 결과의 실제 데이터에 기반하여 분석 및 작성"
+    "data_based_note": "검색 결과의 실제 데이터에 기반하여 분석 및 작성",
+    "content_only_note": "기사 본문 내용만 출력하고, 제안사항, 주제 태그, 기술적 설명이나 메타 정보 등 본문이 아닌 내용 포함을 엄격히 금지"
   },
   "validation": {
     "ai_validation_prompt_template": "다음 코드 실행 결과가 사용자의 작업 목표를 실제로 달성했는지 판단하세요:\n\n원본 사용자 지시: {original_instruction}\n작업 유형: {task_type}\n예상 출력 요구 사항: {expected_output}\n\n실제 실행 결과\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

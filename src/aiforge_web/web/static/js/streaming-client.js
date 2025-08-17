@@ -68,6 +68,7 @@ class StreamingClient {
                                     const jsonStr = line.slice(6).trim();
                                     if (jsonStr) {
                                         const data = JSON.parse(jsonStr);
+                                        console.log('[DEBUG] 前端收到的数据:', data);
                                         this.handleMessage(data, { onProgress, onResult, onError, onComplete });
                                     }
                                 } catch (e) {

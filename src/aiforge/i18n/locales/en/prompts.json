@@ -119,7 +119,8 @@
     "logic_note": "Content should be logical and readable",
     "tone_maintain_note": "Maintain {tone} tone",
     "date_note": "Dates in the article must use dates from search results",
-    "data_based_note": "Analyze and create based on real data from search results"
+    "data_based_note": "Analyze and create based on real data from search results",
+    "content_only_note": "Output only article body content, strictly prohibit including any suggestions, topic tags, technical instructions or meta-information and other non-body content"
   },
   "validation": {
     "ai_validation_prompt_template": "Please determine whether the following code execution result truly accomplishes the user's task objective:\n\nOriginal user instruction: {original_instruction}\nTask type: {task_type}\nExpected output requirements: {expected_output}\n\nActual execution result\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

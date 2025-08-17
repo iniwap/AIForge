@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Union
 
 
 class UITypeRecommender:
@@ -82,9 +82,17 @@ class UITypeRecommender:
         }
 
     def recommend_ui_types(
-        self, data: Dict[str, Any], task_type: str, context: str = "web"
+        self, data: Union[Dict[str, Any], List[Any], str, Any], task_type: str, context: str = "web"
     ) -> List[Tuple[str, float]]:
-        """推荐UI类型，返回按分数排序的列表"""
+        """推荐UI类型，返回按分数排序的列表
+
+        Args:
+            data: AIForgeResult.data 的实际内容，可能是字典、列表、字符串等
+        """
+        # 处理非字典类型的数据
+        if not isinstance(data, dict):
+            return self._recommend_for_non_dict_data(data, task_type, context)
+
         if task_type not in self.recommendation_rules:
             return [("card", 5.0), ("terminal_text", 4.0)]
 
@@ -106,7 +114,31 @@ class UITypeRecommender:
 
         return sorted(recommendations, key=lambda x: x[1], reverse=True)
 
-    def _check_condition(self, data: Dict[str, Any], condition: str, context: str) -> bool:
+    def _recommend_for_non_dict_data(
+        self, data: Any, task_type: str, context: str
+    ) -> List[Tuple[str, float]]:
+        """为非字典类型数据推荐UI类型"""
+        if isinstance(data, str):
+            # 字符串数据推荐
+            if len(data) > 500:
+                return [("editor", 9.0), ("card", 6.0)]
+            else:
+                return [("card", 8.0), ("terminal_text", 6.0)]
+
+        elif isinstance(data, list):
+            # 列表数据推荐
+            if len(data) > 10:
+                return [("table", 9.0), ("mobile_list", 7.0)]
+            elif len(data) <= 3:
+                return [("card", 8.0), ("timeline", 6.0)]
+            else:
+                return [("table", 8.0), ("card", 7.0)]
+
+        else:
+            # 其他类型数据的默认推荐
+            return [("card", 6.0), ("terminal_text", 5.0)]
+
+    def _check_condition(self, data: Any, condition: str, context: str) -> bool:
         """检查特定条件是否满足"""
         # 基础数据结构条件
         if condition == "single_item":

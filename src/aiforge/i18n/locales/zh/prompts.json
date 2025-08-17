@@ -119,7 +119,8 @@
     "logic_note": "内容要有逻辑性和可读性",
     "tone_maintain_note": "保持{tone}的语调",
     "date_note": "文章中的日期必须采用搜索结果的日期",
-    "data_based_note": "基于搜索结果的真实数据进行分析和创作"
+    "data_based_note": "基于搜索结果的真实数据进行分析和创作",
+    "content_only_note": "仅输出文章正文内容，严禁包含任何建议、说明、元信息等非正文内容"
   },
   "validation": {
     "ai_validation_prompt_template": "请判断以下代码执行结果是否真正完成了用户的任务目标：\n\n原始用户指令：{original_instruction}\n任务类型：{task_type}\n预期输出要求：{expected_output}\n\n实际执行结果\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

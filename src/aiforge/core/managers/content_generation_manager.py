@@ -188,15 +188,18 @@ class AIForgeContentGenerationManager:
         structure_note = self._i18n_manager.t("content_generation.structure_note")
         data_based_note = self._i18n_manager.t("content_generation.data_based_note")
         tone_maintain_note = self._i18n_manager.t("content_generation.tone_maintain_note")
-
+        content_only_note = self._i18n_manager.t(
+            "content_generation.tone_mcontent_only_noteaintain_note"
+        )
         return f"""
-        {special_notes_header}：
-        1. {date_note}
-        2. {format_strict_note.format(format=output_format)}
-        3. {structure_note}
-        4. {data_based_note}
-        5. {tone_maintain_note.format(tone=style_params.get('tone', '客观'))}
-        """
+{special_notes_header}：
+1. {date_note}
+2. {format_strict_note.format(format=output_format)}
+3. {structure_note}
+4. {data_based_note}
+5. {content_only_note}
+6. {tone_maintain_note.format(tone=style_params.get('tone', '客观'))}
+"""
 
     def _generate_content_with_search_result(
         self,

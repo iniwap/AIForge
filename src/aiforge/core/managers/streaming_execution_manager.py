@@ -94,15 +94,13 @@ class StreamingExecutionManager:
                     result = await asyncio.to_thread(
                         forge.run_with_input_adaptation, raw_input, "web", context_data or {}
                     )
-
                     if result:
                         # 从结果的 metadata 中获取任务类型，回退到 context_data
-                        task_type = result.get("task_type") or context_data.get("task_type")
-
+                        task_type = result.task_type or context_data.get("task_type")
                         ui_result = await asyncio.to_thread(
                             forge.adapt_result_for_ui,
                             result,
-                            "web_editor" if task_type == "content_generation" else None,
+                            "editor" if task_type == "content_generation" else None,
                             "web",
                         )
                         execution_result = {

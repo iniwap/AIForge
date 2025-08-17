@@ -119,7 +119,8 @@
     "logic_note": "Der Inhalt muss logisch und lesbar sein",
     "tone_maintain_note": "Behalten Sie die Tonlage von {tone} bei",
     "date_note": "Die Daten im Artikel müssen die Daten der Suchergebnisse sein",
-    "data_based_note": "Analysieren und erstellen Sie basierend auf den tatsächlichen Daten der Suchergebnisse"
+    "data_based_note": "Analysieren und erstellen Sie basierend auf den tatsächlichen Daten der Suchergebnisse",
+    "content_only_note": "Nur Artikelinhalt ausgeben, strikt verbieten jegliche Vorschläge, Themen-Tags, technische Anweisungen oder Meta-Informationen und andere Nicht-Inhaltselemente einzuschließen"
   },
   "validation": {
     "ai_validation_prompt_template": "Bitte beurteilen Sie, ob das folgende Code-Ausführungsergebnis das Ziel der Benutzeraufgabe wirklich erreicht hat:\n\nUrsprüngliche Benutzeranweisung: {original_instruction}\nAufgabentyp: {task_type}\nErwartete Ausgabeanforderungen: {expected_output}\n\nTatsächliches Ausführungsergebnis\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

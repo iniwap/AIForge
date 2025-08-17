@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional, List, Tuple
 
 from .orchestrator import AIForgeOrchestrator
-from .result import convert_to_aiforge_result
+from .result import convert_to_aiforge_result, AIForgeResult
 
 
 class AIForgeEngine:
@@ -27,17 +27,18 @@ class AIForgeEngine:
         self.component_manager = AIForgeOrchestrator()
         self.component_manager.initialize_components(config_file, api_key, provider, **kwargs)
 
-    def run(self, instruction: str) -> Optional[Dict[str, Any]]:
+    def run(self, instruction: str) -> Optional[AIForgeResult]:
         """入口：基于标准化指令的统一执行入口"""
         execution_manager = self.component_manager.get_component("execution_manager")
         if not execution_manager:
             return None
 
-        return execution_manager.execute_instruction(instruction)
+        internal_result = execution_manager.execute_instruction(instruction)
+        return convert_to_aiforge_result(internal_result, None)
 
     def generate_and_execute(
         self, instruction: str, system_prompt: str | None = None
-    ) -> Tuple[Optional[Dict[str, Any]], str | None]:
+    ) -> Tuple[Optional[AIForgeResult], str | None]:
         """入口：直接生成代码并返回结果，不使用缓存"""
         if not instruction:
             return None, None
@@ -52,7 +53,8 @@ class AIForgeEngine:
         if not success:
             return None, None
         else:
-            return result, code
+            converted_result = convert_to_aiforge_result(result, None)
+            return converted_result, code
 
     def process_input(
         self, raw_input_x: Any, source: str, context_data: Optional[Dict[str, Any]] = None
@@ -66,19 +68,16 @@ class AIForgeEngine:
 
     def run_with_input_adaptation(
         self, raw_input_x: Any, source: str, context_data: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    ) -> Optional[AIForgeResult]:
         """带输入适配的运行方法"""
         # 适配输入
         instruction = self.process_input(raw_input_x, source, context_data)
 
         # 执行任务
-        internal_result = self.run(instruction)
-
-        # 在返回前统一为 AIForgeResult 格式
-        return convert_to_aiforge_result(internal_result, context_data)
+        return self.run(instruction)
 
     def adapt_result_for_ui(
-        self, result: Dict[str, Any], ui_type: str = None, context: str = "web"
+        self, result: AIForgeResult, ui_type: str = None, context: str = "web"
     ) -> Dict[str, Any]:
         """智能适配结果为UI格式"""
         self.component_manager.init_ui_adapter()
@@ -86,16 +85,6 @@ class AIForgeEngine:
         if ui_adapter:
             return ui_adapter.adapt_data(result, ui_type, context)
         return result
-
-    def recommend_ui_types(
-        self, result: Dict[str, Any], context: str = "web"
-    ) -> List[Tuple[str, float]]:
-        """推荐最适合的UI类型"""
-        self.component_manager.init_ui_adapter()
-        ui_adapter = self.component_manager.get_component("ui_adapter")
-        if ui_adapter:
-            return ui_adapter.recommend_ui_types(result, context)
-        return [("web_card", 5.0)]
 
     def get_ui_adaptation_stats(self) -> Dict[str, Any]:
         """获取UI适配统计信息"""

@@ -119,7 +119,8 @@
     "logic_note": "Nội dung phải có tính logic và dễ đọc",
     "tone_maintain_note": "Giữ giọng điệu {tone}",
     "date_note": "Ngày trong bài viết phải sử dụng ngày từ kết quả tìm kiếm",
-    "data_based_note": "Phân tích và sáng tạo dựa trên dữ liệu thực từ kết quả tìm kiếm"
+    "data_based_note": "Phân tích và sáng tạo dựa trên dữ liệu thực từ kết quả tìm kiếm",
+    "content_only_note": "Chỉ xuất nội dung chính của bài viết, nghiêm cấm bao gồm bất kỳ gợi ý, thẻ chủ đề, hướng dẫn kỹ thuật hoặc thông tin meta và nội dung phi chính văn khác"
   },
   "validation": {
     "ai_validation_prompt_template": "Vui lòng đánh giá xem kết quả thực thi mã sau đây có thực sự hoàn thành mục tiêu nhiệm vụ của người dùng hay không:\n\nHướng dẫn gốc của người dùng: {original_instruction}\nLoại nhiệm vụ: {task_type}\nYêu cầu đầu ra dự kiến: {expected_output}\n\nKết quả thực thi thực tế\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

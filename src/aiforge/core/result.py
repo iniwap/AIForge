@@ -6,7 +6,7 @@ class AIForgeResult:
     """统一的 AIForge 执行结果格式"""
 
     # 定义必需字段
-    REQUIRED_FIELDS = ["data", "status", "summary", "metadata"]
+    REQUIRED_FIELDS = ["data", "status", "summary", "metadata", "task_type"]
 
     def __init__(
         self,
@@ -53,7 +53,7 @@ class AIForgeResult:
 
 def convert_to_aiforge_result(
     internal_result: Any, context_data: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+) -> AIForgeResult:
     """将 AIForge 内部各种格式统一为 AIForgeResult 标准格式
 
     Args:
@@ -69,7 +69,7 @@ def convert_to_aiforge_result(
             data=internal_result,
             summary="执行结果",
             task_type=context_data.get("task_type") if context_data else None,
-        ).to_dict()
+        )
 
     # 提取任务类型
     task_type = None
@@ -97,7 +97,7 @@ def convert_to_aiforge_result(
                 "content_type": content_data.get("content_type", "text/plain"),
             },
             task_type=task_type or "content_generation",
-        ).to_dict()
+        )
 
     # 2. 处理搜索管理器格式
     # 格式：{"data": [results], "status": "success", "summary": "...", "metadata": {...}}
@@ -115,7 +115,7 @@ def convert_to_aiforge_result(
             ),
             metadata=internal_result.get("metadata", {}),
             task_type=task_type or "data_fetch",
-        ).to_dict()
+        )
 
     # 3. 处理执行管理器的直接响应格式
     # 格式：{"data": "ai_response", "status": "success", "summary": "...", "metadata": {...}}
@@ -130,7 +130,7 @@ def convert_to_aiforge_result(
             summary=internal_result.get("summary", "直接响应完成"),
             metadata=internal_result.get("metadata", {}),
             task_type=task_type or "direct_response",
-        ).to_dict()
+        )
 
     # 4. 处理代码执行结果格式
     # 格式：{"success": True, "result": {...}, "code": "..."}
@@ -147,15 +147,18 @@ def convert_to_aiforge_result(
                 "timestamp": time.time(),
             },
             task_type=task_type or "code_execution",
-        ).to_dict()
+        )
 
     # 5. 处理已经是标准 AIForgeResult 格式的数据
     elif all(key in internal_result for key in ["data", "status", "summary", "metadata"]):
-        # 已经是标准格式，确保包含 task_type
-        result = internal_result.copy()
-        if not result.get("task_type"):
-            result["task_type"] = task_type
-        return result
+        # 已经是标准格式，转换为 AIForgeResult 对象
+        return AIForgeResult(
+            data=internal_result.get("data"),
+            status=internal_result.get("status", "success"),
+            summary=internal_result.get("summary", ""),
+            metadata=internal_result.get("metadata", {}),
+            task_type=internal_result.get("task_type") or task_type,
+        )
 
     # 6. 处理通用数据格式
     elif "data" in internal_result:
@@ -165,7 +168,7 @@ def convert_to_aiforge_result(
             summary=internal_result.get("summary", "执行完成"),
             metadata=internal_result.get("metadata", {}),
             task_type=task_type,
-        ).to_dict()
+        )
 
     # 7. 处理文件操作结果格式
     elif "processed_files" in internal_result:
@@ -177,7 +180,7 @@ def convert_to_aiforge_result(
             ),
             metadata=internal_result.get("metadata", {}),
             task_type=task_type or "file_operation",
-        ).to_dict()
+        )
 
     # 8. 处理错误结果格式
     elif "error" in internal_result:
@@ -191,7 +194,7 @@ def convert_to_aiforge_result(
                 **internal_result.get("metadata", {}),
             },
             task_type=task_type,
-        ).to_dict()
+        )
 
     # 9. 回退处理：将整个结果作为数据
     else:
@@ -201,4 +204,4 @@ def convert_to_aiforge_result(
             summary="执行完成",
             metadata={"timestamp": time.time()},
             task_type=task_type,
-        ).to_dict()
+        )

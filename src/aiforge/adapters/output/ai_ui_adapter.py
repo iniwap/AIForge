@@ -11,17 +11,21 @@ class AIUIAdapter:
         self.llm_client = llm_client
         self.cache = {}  # 简单的内存缓存
 
-    def adapt_for_display(self, data: Dict[str, Any], ui_context: str) -> Dict[str, Any]:
-        """根据UI上下文需求，让AI分析并转换数据格式"""
+    def adapt_for_display(self, result_dict: Dict[str, Any], ui_context: str) -> Dict[str, Any]:
+        """根据UI上下文需求，让AI分析并转换数据格式
+
+        Args:
+            result_dict: 完整的AIForgeResult字典格式
+        """
         # 生成缓存键
-        cache_key = self._generate_cache_key(data, ui_context)
+        cache_key = self._generate_cache_key(result_dict, ui_context)
 
         # 检查缓存
         if cache_key in self.cache:
             return self.cache[cache_key]
 
         # AI分析
-        prompt = self._build_adaptation_prompt(data, ui_context)
+        prompt = self._build_adaptation_prompt(result_dict, ui_context)
 
         try:
             response = self.llm_client.generate_code(prompt, "")
@@ -33,13 +37,23 @@ class AIUIAdapter:
             return adapted_result
         except Exception:
             # 失败时返回基础格式
-            return self._create_fallback_format(data, ui_context)
+            return self._create_fallback_format(result_dict, ui_context)
 
-    def _build_adaptation_prompt(self, data: Dict[str, Any], ui_context: str) -> str:
+    def _build_adaptation_prompt(self, result_dict: Dict[str, Any], ui_context: str) -> str:
         """构建适配提示词"""
+        # 从完整结构中提取信息
+        data = result_dict.get("data", {})
+        task_type = result_dict.get("task_type", "general")
+        status = result_dict.get("status", "success")
+
         return f"""
 # 任务：数据格式适配
 你需要将原始数据转换为适合界面展示的语义化格式。
+
+## 任务信息
+- 任务类型: {task_type}
+- 执行状态: {status}
+- UI上下文: {ui_context}
 
 ## 原始数据
 {json.dumps(data, ensure_ascii=False, indent=2)}
@@ -98,18 +112,29 @@ class AIUIAdapter:
             "summary_text": "AI适配解析失败",
         }
 
-    def _generate_cache_key(self, data: Dict[str, Any], ui_context: str) -> str:
+    def _generate_cache_key(self, result_dict: Dict[str, Any], ui_context: str) -> str:
         """生成缓存键"""
-        content = f"{json.dumps(data, sort_keys=True)}_{ui_context}"
+        # 使用关键字段生成缓存键
+        cache_data = {
+            "data": result_dict.get("data"),
+            "task_type": result_dict.get("task_type"),
+            "ui_context": ui_context,
+        }
+        content = json.dumps(cache_data, sort_keys=True)
         return hashlib.md5(content.encode()).hexdigest()[:16]
 
-    def _create_fallback_format(self, data: Dict[str, Any], ui_context: str) -> Dict[str, Any]:
+    def _create_fallback_format(
+        self, result_dict: Dict[str, Any], ui_context: str
+    ) -> Dict[str, Any]:
         """创建回退格式"""
+        data = result_dict.get("data", {})
+        task_type = result_dict.get("task_type", "general")
+
         return {
             "display_items": [
                 {
                     "type": "text",
-                    "title": "原始数据",
+                    "title": f"{task_type} 原始数据",
                     "content": json.dumps(data, ensure_ascii=False, indent=2),
                     "priority": 5,
                 }

@@ -119,7 +119,8 @@
     "logic_note": "El contenido debe ser lógico y legible",
     "tone_maintain_note": "Mantén el tono {tone}",
     "date_note": "La fecha en el artículo debe usar la fecha del resultado de la búsqueda",
-    "data_based_note": "Realiza el análisis y la creación basados en datos reales de los resultados de la búsqueda"
+    "data_based_note": "Realiza el análisis y la creación basados en datos reales de los resultados de la búsqueda",
+    "content_only_note": "Producir solo el contenido del cuerpo del artículo, estrictamente prohibido incluir cualquier sugerencia, etiquetas de temas, instrucciones técnicas o meta-información y otro contenido no corporal"
   },
   "validation": {
     "ai_validation_prompt_template": "Por favor, juzga si el siguiente resultado de ejecución de código realmente ha completado el objetivo de la tarea del usuario:\n\nInstrucción original del usuario: {original_instruction}\nTipo de tarea: {task_type}\nRequisitos de salida esperados: {expected_output}\n\nResultado de la ejecución real\n{actual_result}\n\n{analysis_dimensions}\n\n{json_format_instruction}",

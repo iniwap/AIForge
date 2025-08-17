@@ -5,6 +5,7 @@ from .task_type_detector import TaskTypeDetector
 from .ui_type_recommender import UITypeRecommender
 from ...llm.llm_client import AIForgeLLMClient
 from .learning_Interface import LearningInterface
+from ...core.result import AIForgeResult
 
 
 class EnhancedHybridUIAdapter:
@@ -20,27 +21,33 @@ class EnhancedHybridUIAdapter:
         self.learning_interface = LearningInterface()
 
     def adapt_data(
-        self, result: Dict[str, Any], ui_type: str = None, context: str = "web"
+        self, result: AIForgeResult, ui_type: str = None, context: str = "web"
     ) -> Dict[str, Any]:
         """智能适配数据为UI格式"""
-        data = result.get("data", {})
+        # 正确访问AIForgeResult对象属性
+        task_type = result.task_type
+        actual_data = result.data
 
-        # 1. 智能检测任务类型（如果metadata中没有）
-        task_type = result.get("metadata", {}).get("task_type")
+        # 转换为完整字典格式供需要完整结构的组件使用
+        result_dict = result.to_dict()
+
+        # 1. 智能检测任务类型 - 使用实际数据内容
         if not task_type:
-            task_type = self.task_detector.detect_from_data(data)
+            task_type = self.task_detector.detect_from_data(actual_data)
 
-        # 2. 智能推荐UI类型（如果未指定）
+        # 2. 智能推荐UI类型 - 使用实际数据内容
         if not ui_type:
-            recommendations = self.ui_recommender.recommend_ui_types(data, task_type, context)
+            recommendations = self.ui_recommender.recommend_ui_types(
+                actual_data, task_type, context
+            )
             ui_type = recommendations[0][0] if recommendations else "card"
 
-        # 记录适配请求
-        self.learning_interface.record_adaptation_request(data, task_type, ui_type)
+        # 记录适配请求 - 使用完整字典
+        self.learning_interface.record_adaptation_request(result_dict, task_type, ui_type)
 
-        # 3. 优先使用规则适配
+        # 3. 优先使用规则适配 - 使用完整字典
         if self.rule_based_adapter.can_handle(task_type, ui_type):
-            adapted_result = self.rule_based_adapter.adapt(data, task_type, ui_type)
+            adapted_result = self.rule_based_adapter.adapt(result_dict, task_type, ui_type)
             adapted_result["adaptation_method"] = "rule_based"
             adapted_result["task_type"] = task_type
 
@@ -49,13 +56,15 @@ class EnhancedHybridUIAdapter:
 
             return adapted_result
 
-        # 4. 回退到AI适配
-        adapted_result = self.ai_adapter.adapt_for_display(data, ui_type)
+        # 4. 回退到AI适配 - 使用完整字典
+        adapted_result = self.ai_adapter.adapt_for_display(result_dict, ui_type)
         adapted_result["adaptation_method"] = "ai_based"
         adapted_result["task_type"] = task_type
 
         # 记录AI适配结果
-        self.learning_interface.record_ai_adaptation(task_type, ui_type, data, adapted_result)
+        self.learning_interface.record_ai_adaptation(
+            task_type, ui_type, result_dict, adapted_result
+        )
 
         return adapted_result
 
@@ -67,13 +76,18 @@ class EnhancedHybridUIAdapter:
         self, result: Dict[str, Any], context: str = "web"
     ) -> List[Tuple[str, float]]:
         """为结果推荐最适合的UI类型"""
-        data = result.get("data", {})
-        task_type = result.get("metadata", {}).get("task_type")
+        # 修正数据访问：如果是AIForgeResult字典格式，提取实际数据
+        if isinstance(result, dict) and "data" in result:
+            actual_data = result["data"]
+            task_type = result.get("task_type") or result.get("metadata", {}).get("task_type")
+        else:
+            actual_data = result
+            task_type = None
 
         if not task_type:
-            task_type = self.task_detector.detect_from_data(data)
+            task_type = self.task_detector.detect_from_data(actual_data)
 
-        return self.ui_recommender.recommend_ui_types(data, task_type, context)
+        return self.ui_recommender.recommend_ui_types(actual_data, task_type, context)
 
     def get_adaptation_stats(self) -> Dict[str, Any]:
         """获取适配统计信息"""

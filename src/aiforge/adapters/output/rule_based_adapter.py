@@ -125,6 +125,7 @@ class RuleBasedAdapter:
                     "content_field": "generated_content",
                     "metadata_fields": ["title", "summary", "word_count"],
                     "editable": True,
+                    "syntax_highlighting": True,
                     "data_structure": "long_text",
                     "capabilities": ["editable", "copyable", "downloadable", "regeneratable"],
                 },
@@ -313,21 +314,46 @@ class RuleBasedAdapter:
 
     def can_handle(self, task_type: str, ui_type: str) -> bool:
         """检查是否能处理指定的任务类型和UI类型"""
-        # 移除前缀检查，使用基础类型
         return (
             task_type in self.ui_templates and ui_type in self.ui_templates[task_type]
         ) or task_type == "general"
 
-    def adapt(self, data: Any, task_type: str, ui_type: str) -> Dict[str, Any]:
-        """统一适配入口"""
-        # 第一步：确保输入是标准 AIForgeResult 格式
-        if not AIForgeResult.is_valid_format(data):
-            raise ValueError("Input must be standard AIForgeResult format")
+    def adapt(self, result_dict: Dict[str, Any], task_type: str, ui_type: str) -> Dict[str, Any]:
+        """统一适配入口
 
-        # 第二步：使用 AIForgeResult 中的 task_type
-        actual_task_type = data.get("task_type") or task_type
+        Args:
+            result_dict: 完整的AIForgeResult字典格式
+        """
+        # 格式验证失败时使用基本回退，不抛异常
+        if not AIForgeResult.is_valid_format(result_dict):
+            # 保留原始metadata，只添加转换标记
+            if isinstance(result_dict, dict) and result_dict.get("metadata"):
+                metadata = result_dict["metadata"].copy()
+                metadata["format_converted"] = True
+            else:
+                metadata = {"format_converted": True}
 
-        # 第四步：选择适配方法（使用基础类型）
+            result_dict = {
+                "task_type": task_type,
+                "ui_type": ui_type,
+                "data": (
+                    result_dict.get("data", result_dict)
+                    if isinstance(result_dict, dict)
+                    else {"content": str(result_dict)}
+                ),
+                "status": "success",
+                "summary": (
+                    result_dict.get("summary", "数据处理完成")
+                    if isinstance(result_dict, dict)
+                    else "数据处理完成"
+                ),
+                "metadata": metadata,
+            }
+
+        # 使用 AIForgeResult 中的 task_type
+        actual_task_type = result_dict.get("task_type") or task_type
+
+        # 选择适配方法
         adapter_methods = {
             "table": self._adapt_to_table,
             "card": self._adapt_to_card,
@@ -343,21 +369,28 @@ class RuleBasedAdapter:
             "text": self._adapt_to_text,
         }
 
-        # 获取模板（使用基础类型）
+        # 获取模板
         template = self._get_template(actual_task_type, ui_type)
 
-        # 执行适配
+        # 执行适配 - 传递完整的 result_dict
         adapter_method = adapter_methods.get(ui_type, self._adapt_generic)
-        return adapter_method(data, template)
+        return adapter_method(result_dict, template)
 
     def _get_template(self, task_type: str, ui_type: str) -> Dict[str, Any]:
-        """获取适配模板（使用基础类型）"""
+        """获取适配模板"""
         if task_type in self.ui_templates and ui_type in self.ui_templates[task_type]:
             return self.ui_templates[task_type][ui_type]
         elif ui_type in self.ui_templates.get("general", {}):
             return self.ui_templates["general"][ui_type]
         else:
             return {}
+
+    def get_supported_combinations(self) -> Dict[str, List[str]]:
+        """获取所有支持的任务类型和UI类型组合"""
+        combinations = {}
+        for task_type, ui_types in self.ui_templates.items():
+            combinations[task_type] = list(ui_types.keys())
+        return combinations
 
     def _adapt_to_card(self, data: Dict[str, Any], template: Dict[str, Any]) -> Dict[str, Any]:
         """适配为卡片格式"""
@@ -727,13 +760,27 @@ class RuleBasedAdapter:
             data_items = data["data"]
             if isinstance(data_items, list) and data_items:
                 # 如果是列表，合并所有内容
-                content = "\\n".join([str(item) for item in data_items])
+                content = "\n".join([str(item) for item in data_items])
             else:
                 content = str(data_items)
 
         # 获取元数据
         metadata = {field: data.get(field, "") for field in metadata_fields}
         metadata.update(data.get("metadata", {}))
+
+        # 根据任务类型和内容类型确定格式
+        if template.get("syntax_highlighting"):
+            # 检查是否为代码生成任务
+            task_type = data.get("task_type", "")
+            if task_type == "code_generation":
+                # 可以从元数据中获取具体的编程语言
+                language = data.get("metadata", {}).get("language", "python")
+                content_format = language
+            else:
+                # 内容生成任务使用 markdown
+                content_format = "markdown"
+        else:
+            content_format = "plain"
 
         return {
             "display_items": [
@@ -744,7 +791,7 @@ class RuleBasedAdapter:
                     "title": "生成的内容",
                     "content": {
                         "text": content,
-                        "format": "markdown" if template.get("syntax_highlighting") else "plain",
+                        "format": content_format,
                         "metadata": metadata,
                         "editable": template.get("editable", False),
                     },
@@ -1173,7 +1220,7 @@ class RuleBasedAdapter:
                     lines.append(f"  内容: {item}")
                 lines.append("")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
     def _format_structured_report(self, data: Dict[str, Any], fields: List[str]) -> str:
         """格式化结构化报告"""
@@ -1202,7 +1249,7 @@ class RuleBasedAdapter:
                     lines.append(f"  内容: {str(item)[:100]}")
                 lines.append("")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)
 
     def _format_progress_report(self, data: Dict[str, Any], fields: List[str]) -> str:
         """格式化进度报告"""
@@ -1245,4 +1292,4 @@ class RuleBasedAdapter:
         else:
             lines.append(f"数据: {str(data_items)[:100]}")
 
-        return "\\n".join(lines)
+        return "\n".join(lines)

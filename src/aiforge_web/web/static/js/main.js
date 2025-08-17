@@ -6,9 +6,14 @@ class AIForgeWebApp {
         this.currentTaskType = null;
         this.isExecuting = false;
         this.executionCompleted = false;
+        this.currentResult = null; // 添加这个属性  
 
         this.initializeEventListeners();
+        this.initializeKeyboardShortcuts(); // 添加键盘快捷键  
         this.loadSettings();
+
+        // 设置全局引用以便在 onclick 中使用  
+        window.aiforgeApp = this;
     }
 
     async initializeApp() {
@@ -55,15 +60,6 @@ class AIForgeWebApp {
 
         document.getElementById('cancelSettings').addEventListener('click', () => {
             this.hideSettings();
-        });
-
-        // 结果操作  
-        document.getElementById('copyResultBtn').addEventListener('click', () => {
-            this.copyResult();
-        });
-
-        document.getElementById('downloadResultBtn').addEventListener('click', () => {
-            this.downloadResult();
         });
     }
 
@@ -196,7 +192,6 @@ class AIForgeWebApp {
                 },
                 onResult: (data) => {
                     this.displayResult(data, resultContainer);
-                    this.enableResultActions();
                 },
                 onError: (error) => {
                     this.addProgressMessage(`❌ 错误: ${error.message}`, 'error');
@@ -284,11 +279,9 @@ class AIForgeWebApp {
     clearResults() {
         document.getElementById('progressContainer').innerHTML = '';
         document.getElementById('resultContainer').innerHTML = '<div class="text-gray-500 text-center py-8">执行结果将在这里显示...</div>';
-        this.disableResultActions();
     }
 
     displayResult(data, container) {
-
         if (!container) {
             console.error('Result container not found');
             return;
@@ -300,74 +293,112 @@ class AIForgeWebApp {
                 throw new Error('Invalid result data structure');
             }
 
-            // 处理嵌套的结果数据    
+            // 处理嵌套的结果数据  
             let resultData = data;
             if (data.result && typeof data.result === 'object') {
                 resultData = data.result;
             }
 
-            // 确定UI类型 - 传递前端任务类型仅作参考  
+            // 验证必要的字段  
+            if (!resultData.display_items || !Array.isArray(resultData.display_items)) {
+                throw new Error('Missing or invalid display_items');
+            }
+
+            // 确定UI类型  
             const uiType = this.determineUIType(resultData, this.currentTaskType);
+
+            console.log('渲染信息:', {
+                uiType: uiType,
+                displayItemsCount: resultData.display_items.length,
+                adaptationMethod: resultData.adaptation_method,
+                taskType: resultData.task_type
+            });
 
             // 渲染结果  
             this.uiAdapter.render(resultData, uiType, container);
             this.currentResult = data;
 
-            // 启用结果操作按钮  
-            this.enableResultActions();
+            // 显示适配统计信息  
+            this.showAdaptationStats(resultData);
 
         } catch (error) {
             console.error('Failed to display result:', error);
-            container.innerHTML = `  
-                <div class="error-message">  
-                    <h3>结果显示错误</h3>  
-                    <p>${error.message}</p>  
-                    <details>  
-                        <summary>原始数据</summary>  
-                        <pre>${JSON.stringify(data, null, 2)}</pre>  
-                    </details>  
-                </div>  
-            `;
+            this.renderError(container, error, data);
         }
     }
 
+    showAdaptationStats(resultData) {
+        const statsContainer = document.getElementById('adaptationStats');
+        if (statsContainer) {
+            const stats = {
+                method: resultData.adaptation_method || 'unknown',
+                taskType: resultData.task_type || 'unknown',
+                itemCount: resultData.display_items?.length || 0,
+                hasActions: (resultData.actions?.length || 0) > 0
+            };
+
+            statsContainer.innerHTML = `  
+            <div class="text-xs text-gray-500 p-2 bg-gray-50 rounded">  
+                适配方法: ${stats.method} | 任务类型: ${stats.taskType} |   
+                显示项: ${stats.itemCount} | 操作: ${stats.hasActions ? '有' : '无'}  
+            </div>  
+        `;
+        }
+    }
+
+    renderError(container, error, data) {
+        const errorHtml = `  
+        <div class="error-container">  
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">  
+                <div class="flex items-center">  
+                    <div class="text-red-400 text-xl mr-3">⚠️</div>  
+                    <div>  
+                        <h3 class="text-red-800 font-medium">结果显示错误</h3>  
+                        <p class="text-red-600 text-sm mt-1">${error.message}</p>  
+                    </div>  
+                </div>  
+                <details class="mt-3">  
+                    <summary class="text-red-700 text-sm cursor-pointer">查看原始数据</summary>  
+                    <pre class="text-xs text-red-600 mt-2 bg-red-100 p-2 rounded overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>  
+                </details>  
+                <div class="mt-3">  
+                    <button class="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"   
+                            onclick="window.aiforgeApp.retryRender()">  
+                        🔄 重试渲染  
+                    </button>  
+                </div>  
+            </div>  
+        </div>  
+    `;
+        container.innerHTML = errorHtml;
+    }
     determineUIType(data, frontendTaskType) {
-        // data 是 execution_result，必须有 result 字段  
-        if (!data.result) {
-            console.error('Invalid data structure: missing result field', data);
-            return 'web_card'; // 默认回退  
+        if (!data || !data.display_items) {
+            console.error('Invalid data structure: missing display_items field', data);
+            return 'web_card';
         }
 
-        const resultData = data.result;
-
         console.log('UI类型判断:', {
-            hasDisplayItems: !!(resultData.display_items && resultData.display_items.length > 0),
-            firstItemType: resultData.display_items?.[0]?.type,
-            backendTaskType: resultData.task_type,
-            frontendTaskType: frontendTaskType
+            hasDisplayItems: !!(data.display_items && data.display_items.length > 0),
+            firstItemType: data.display_items?.[0]?.type,
+            backendTaskType: data.task_type,
+            frontendTaskType: frontendTaskType,
+            adaptationMethod: data.adaptation_method
         });
 
         // 优先使用后端已经处理好的 UI 类型  
-        if (resultData.display_items && resultData.display_items.length > 0) {
-            return resultData.display_items[0].type || 'web_card';
+        if (data.display_items && data.display_items.length > 0) {
+            const uiType = data.display_items[0].type;
+            // 确保UI类型有web_前缀  
+            return uiType.startsWith('web_') ? uiType : `web_${uiType}`;
         }
 
         // 回退逻辑使用后端的任务类型  
-        const actualTaskType = resultData.task_type || frontendTaskType;
+        const actualTaskType = data.task_type || frontendTaskType;
         if (actualTaskType === 'content_generation' || actualTaskType === 'code_generation') {
             return 'web_editor';
         }
         return 'web_card';
-    }
-
-    enableResultActions() {
-        document.getElementById('copyResultBtn').disabled = false;
-        document.getElementById('downloadResultBtn').disabled = false;
-    }
-
-    disableResultActions() {
-        document.getElementById('copyResultBtn').disabled = true;
-        document.getElementById('downloadResultBtn').disabled = true;
     }
 
     copyResult() {
@@ -450,16 +481,127 @@ class AIForgeWebApp {
             document.getElementById('languageSelect').value = parsed.language || 'zh';
         }
     }
-    showToast(message) {
-        // 简单的提示消息实现  
+    showToast(message, type = 'success') {
         const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+        const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+        toast.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-2 rounded shadow-lg z-50 transition-opacity`;
         toast.textContent = message;
         document.body.appendChild(toast);
 
+        // 添加淡入效果  
+        setTimeout(() => toast.style.opacity = '1', 10);
+
         setTimeout(() => {
-            toast.remove();
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+    // 处理动作按钮点击  
+    handleAction(actionType, actionData) {
+        console.log('Handling action:', actionType, actionData);
+
+        switch (actionType) {
+            case 'save':
+                this.saveContent(actionData.content);
+                break;
+            case 'export':
+                this.exportContent(actionData.format || 'txt');
+                break;
+            case 'regenerate':
+                this.regenerateContent();
+                break;
+            case 'copy':
+                this.copySpecificContent(actionData.content);
+                break;
+            default:
+                console.warn('Unknown action type:', actionType);
+        }
+    }
+
+    saveContent(content) {
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `aiforge-content-${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.showToast('内容已保存');
+    }
+
+    exportContent(format) {
+        if (this.currentResult) {
+            const result = this.currentResult.result || this.currentResult;
+            const editorItem = result.display_items?.find(item => item.type === 'web_editor');
+
+            if (editorItem && editorItem.content && editorItem.content.text) {
+                const content = editorItem.content.text;
+                const mimeType = format === 'md' ? 'text/markdown' : 'text/plain';
+                const extension = format === 'md' ? 'md' : 'txt';
+
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `aiforge-export-${Date.now()}.${extension}`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast(`内容已导出为 ${extension.toUpperCase()} 文件`);
+            }
+        }
+    }
+
+    regenerateContent() {
+        const instructionInput = document.getElementById('instructionInput');
+        if (instructionInput && instructionInput.value.trim()) {
+            this.executeInstruction();
+            this.showToast('正在重新生成内容...');
+        } else {
+            this.showToast('无法重新生成：缺少原始指令', 'error');
+        }
+    }
+
+    copySpecificContent(content) {
+        if (content) {
+            navigator.clipboard.writeText(content).then(() => {
+                this.showToast('指定内容已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                this.showToast('复制失败', 'error');
+            });
+        }
+    }
+
+    retryRender() {
+        if (this.currentResult) {
+            const resultContainer = document.getElementById('resultContainer');
+            this.displayResult(this.currentResult, resultContainer);
+            this.showToast('正在重试渲染...');
+        }
+    }
+    initializeKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter 执行指令  
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                this.executeInstruction();
+            }
+
+            // Ctrl/Cmd + C 复制结果（当焦点不在输入框时）  
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c' &&
+                !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+                if (this.currentResult) {
+                    e.preventDefault();
+                    this.copyResult();
+                }
+            }
+
+            // Escape 停止执行  
+            if (e.key === 'Escape' && this.isExecuting) {
+                e.preventDefault();
+                this.stopExecution();
+            }
+        });
     }
 }
 
