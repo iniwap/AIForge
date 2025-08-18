@@ -2,6 +2,7 @@
 import os
 from typing import Dict, Any, Optional
 from enum import Enum
+from pathlib import Path
 
 
 class ConnectionMode(Enum):
@@ -14,9 +15,22 @@ class EngineManager:
 
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
+        # GUI模式下强制设置正确的工作目录
+        self._setup_gui_workdir()
+
         self.mode = self._determine_mode()
         self.engine = None
         self._initialize_engine()
+
+    def _setup_gui_workdir(self):
+        """设置GUI模式下的工作目录"""
+        # 强制设置GUI模式下的工作目录为用户主目录
+        gui_workdir = Path.home() / "aiforge_work"
+        gui_workdir.mkdir(exist_ok=True)
+
+        # 确保配置中有正确的工作目录
+        if "workdir" not in self.config:
+            self.config["workdir"] = str(gui_workdir)
 
     def _determine_mode(self) -> ConnectionMode:
         """确定连接模式"""
@@ -35,8 +49,8 @@ class EngineManager:
         try:
             from aiforge import AIForgeEngine
 
-            # 构建引擎配置
-            engine_config = {}
+            # 构建引擎配置，包含GUI特定的工作目录
+            engine_config = {"workdir": self.config.get("workdir")}  # 传递GUI设置的工作目录
 
             # API Key 处理
             api_key = (
@@ -54,6 +68,11 @@ class EngineManager:
 
             if self.config.get("config_file"):
                 engine_config["config_file"] = self.config["config_file"]
+
+            # 传递其他GUI相关配置
+            for key in ["max_rounds", "max_tokens", "locale"]:
+                if key in self.config:
+                    engine_config[key] = self.config[key]
 
             # 初始化引擎
             self.engine = AIForgeEngine(**engine_config)
@@ -90,6 +109,7 @@ class EngineManager:
             "local_engine_available": self.engine is not None,
             "remote_url": self.get_remote_url(),
             "features": self._get_supported_features(),
+            "workdir": self.config.get("workdir"),  # 添加工作目录信息
         }
 
     def _get_supported_features(self) -> Dict[str, bool]:

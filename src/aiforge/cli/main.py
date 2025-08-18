@@ -35,12 +35,14 @@ def main(args: Optional[list] = None) -> int:
 
     # GUI 命令
     gui_parser = subparsers.add_parser("gui", help="启动 GUI 应用")
-    gui_parser.add_argument("--local", action="store_true", help="本地模式")
-    gui_parser.add_argument("--remote-url", help="远程服务器地址")
     gui_parser.add_argument("--theme", default="dark", choices=["dark", "light"], help="界面主题")
+    gui_parser.add_argument("--remote-url", help="远程服务器地址")
+    gui_parser.add_argument("--config", help="配置文件路径")
+    gui_parser.add_argument("--api-key", help="API 密钥")
+    gui_parser.add_argument("--provider", default="openrouter", help="LLM 提供商")
+    gui_parser.add_argument("--debug", action="store_true", help="启用调试模式")
     gui_parser.add_argument("--width", type=int, default=1200, help="窗口宽度")
     gui_parser.add_argument("--height", type=int, default=800, help="窗口高度")
-    gui_parser.add_argument("--debug", action="store_true", help="启用调试模式")
 
     parsed_args = parser.parse_args(args)
 
@@ -106,23 +108,30 @@ def start_gui_app(args) -> int:
     try:
         print("🖥️ 启动 AIForge GUI 应用...")
 
-        # 构建配置
+        # 构建完整配置
         config = {
-            "theme": args.theme,
-            "window_width": args.width,
-            "window_height": args.height,
+            "theme": getattr(args, "theme", "dark"),
+            "window_width": getattr(args, "width", 1200),
+            "window_height": getattr(args, "height", 800),
             "debug": getattr(args, "debug", False),
-            "enable_tray": True,  # 启用托盘功能
+            "enable_tray": True,
         }
 
-        # 根据模式设置配置
-        if args.remote_url:
+        # API配置
+        if hasattr(args, "api_key") and args.api_key:
+            config["api_key"] = args.api_key
+        if hasattr(args, "provider") and args.provider:
+            config["provider"] = args.provider
+        if hasattr(args, "config") and args.config:
+            config["config_file"] = args.config
+
+        # 远程模式配置
+        if hasattr(args, "remote_url") and args.remote_url:
             config["remote_url"] = args.remote_url
             print(f"🌐 远程模式: 连接到 {args.remote_url}")
         else:
             print("🏠 本地模式")
 
-        # 导入并启动 GUI 应用
         from aiforge_gui import AIForgeGUIApp
 
         app = AIForgeGUIApp(config)

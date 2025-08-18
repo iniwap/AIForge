@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """AIForge GUI webview 主入口"""
 
+import os
 import sys
+import time
 import threading
 import webview as pywebview
 import platform
@@ -134,17 +136,73 @@ class AIForgeGUIApp:
 
     def initialize(self):
         """初始化应用"""
-        # 验证资源文件
-        self.resource_manager.setup_resources()
+        try:
+            print("🔧 开始初始化AIForge GUI...")
 
-        # 创建 webview 桥接
-        self.bridge = WebViewBridge(self.engine_manager)
+            # 首先验证运行环境
+            if not self.validate_environment():
+                raise RuntimeError("环境验证失败，无法启动GUI应用")
 
-        # 根据模式启动相应服务
-        if self.engine_manager.is_local_mode():
-            self._start_local_mode()
-        else:
-            self._start_remote_mode()
+            # 验证资源文件
+            print("📁 验证资源文件...")
+            self.resource_manager.setup_resources()
+
+            # 验证引擎管理器
+            print("🤖 初始化引擎管理器...")
+            if not self.engine_manager:
+                raise RuntimeError("引擎管理器初始化失败")
+
+            # 创建 webview 桥接
+            print("🌉 创建WebView桥接...")
+            self.bridge = WebViewBridge(self.engine_manager)
+
+            # 根据模式启动相应服务
+            if self.engine_manager.is_local_mode():
+                self._start_local_mode()
+            else:
+                self._start_remote_mode()
+
+            print("✅ AIForge GUI初始化完成")
+
+        except Exception as e:
+            print(f"❌ GUI初始化失败: {e}")
+            import traceback
+
+            traceback.print_exc()
+            raise
+
+    def validate_environment(self):
+        """验证运行环境"""
+        issues = []
+
+        # 检查API密钥
+        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            issues.append("未设置API密钥 (OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY)")
+
+        # 检查网络连接
+        try:
+            import requests
+
+            requests.get("https://www.baidu.com", timeout=5)
+        except Exception:
+            issues.append("网络连接异常")
+
+        # 检查必要的依赖
+        required_modules = ["webview", "requests", "fastapi"]
+        for module in required_modules:
+            try:
+                __import__(module)
+            except ImportError:
+                issues.append(f"缺少必要依赖: {module}")
+
+        if issues:
+            print("⚠️ 环境检查发现问题:")
+            for issue in issues:
+                print(f"  - {issue}")
+            return False
+
+        return True
 
     def show_window(self, icon=None, item=None):
         """显示窗口"""
@@ -173,22 +231,54 @@ class AIForgeGUIApp:
         """启动本地模式"""
         print("🖥️ 启动本地模式...")
 
-        # 启动内置 API 服务器
-        self.api_server = LocalAPIServer(self.engine_manager)
-        server_thread = threading.Thread(
-            target=self.api_server.start, args=("127.0.0.1", 0), daemon=True
-        )
-        server_thread.start()
+        try:
+            # 启动内置 API 服务器
+            print("🚀 启动内置API服务器...")
+            self.api_server = LocalAPIServer(self.engine_manager)
 
-        # 等待服务器启动
-        self.api_server.wait_for_startup()
+            # 使用线程启动服务器
+            server_thread = threading.Thread(
+                target=self.api_server.start, args=("127.0.0.1", 0), daemon=True
+            )
+            server_thread.start()
 
-        # 获取服务器地址
-        server_url = f"http://127.0.0.1:{self.api_server.port}"
-        print(f"🚀 本地 API 服务器启动: {server_url}")
+            # 等待服务器启动
+            startup_timeout = 30
+            if not self.api_server.wait_for_startup(timeout=startup_timeout):
+                raise RuntimeError(f"API服务器启动超时（{startup_timeout}秒）")
 
-        # 创建 webview 窗口
-        self._create_window(server_url)
+            # 获取服务器地址
+            server_url = f"http://127.0.0.1:{self.api_server.port}"
+            print(f"✅ 本地 API 服务器启动成功: {server_url}")
+
+            # 创建 webview 窗口
+            self._create_window(server_url)
+
+        except Exception as e:
+            print(f"❌ 本地模式启动失败: {e}")
+            raise
+
+    def _start_api_server_with_retry(self, host, port, max_retries=3):
+        """带重试机制的API服务器启动"""
+        for attempt in range(max_retries):
+            try:
+                self.api_server.start(host, port)
+                return
+            except Exception as e:
+                print(f"⚠️ API服务器启动尝试 {attempt + 1}/{max_retries} 失败: {e}")
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(2)  # 等待2秒后重试
+
+    def _test_api_server(self, server_url):
+        """测试API服务器可用性"""
+        try:
+            import requests
+
+            response = requests.get(f"{server_url}/health", timeout=5)
+            return response.status_code == 200
+        except Exception:
+            return False
 
     def _start_remote_mode(self):
         """启动远程模式"""
@@ -207,11 +297,17 @@ class AIForgeGUIApp:
         # 创建托盘图标
         self.create_tray_icon()
         if self.tray:
-            # 在单独线程中运行托盘
             tray_thread = threading.Thread(target=self.tray.run, daemon=True)
             tray_thread.start()
 
-        # 创建 webview 窗口
+        # 确保桥接对象存在
+        if not self.bridge:
+            print("❌ WebView桥接对象未创建")
+            raise RuntimeError("WebView桥接对象未创建")
+
+        print(f"🌉 WebView桥接对象已创建: {type(self.bridge)}")
+
+        # 创建 webview 窗口并传递桥接对象
         self.window = pywebview.create_window(
             title="AIForge - 智能意图自适应执行引擎",
             url=url,
@@ -219,6 +315,7 @@ class AIForgeGUIApp:
             height=self.config.get("window_height", 800),
             resizable=True,
             shadow=True,
+            js_api=self.bridge,  # 关键：确保桥接对象被传递
         )
 
         # 设置窗口关闭事件
@@ -246,7 +343,7 @@ class AIForgeGUIApp:
             pywebview.start(**start_kwargs)
 
         except KeyboardInterrupt:
-            print("\\n👋 AIForge GUI 已退出")
+            print("\n👋 AIForge GUI 已退出")
         except Exception as e:
             print(f"❌ GUI 启动失败: {e}")
             import traceback

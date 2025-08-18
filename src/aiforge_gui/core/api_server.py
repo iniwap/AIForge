@@ -1,8 +1,9 @@
-import time
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-import json
+import threading
+import socket
 import os
 from pathlib import Path
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+import json
 
 
 class LocalAPIServer:
@@ -13,15 +14,46 @@ class LocalAPIServer:
         self.server = None
         self.port = None
         self.running = False
+        self.startup_event = threading.Event()  # 添加启动事件
 
     def start(self, host: str = "127.0.0.1", port: int = 0):
         """启动服务器"""
-        handler = self._create_handler()
-        self.server = HTTPServer((host, port), handler)
-        self.port = self.server.server_port
-        self.running = True
+        try:
+            handler = self._create_handler()
+            self.server = HTTPServer((host, port), handler)
+            self.port = self.server.server_port
+            self.running = True
 
-        self.server.serve_forever()
+            # 设置启动事件，通知等待线程
+            self.startup_event.set()
+            print(f"🚀 API服务器已绑定端口: {self.port}")
+
+            # 开始服务
+            self.server.serve_forever()
+        except Exception as e:
+            print(f"❌ API服务器启动失败: {e}")
+            self.running = False
+            self.startup_event.set()  # 即使失败也要设置事件
+            raise
+
+    def wait_for_startup(self, timeout: int = 10):
+        """等待服务器启动"""
+        if self.startup_event.wait(timeout):
+            if self.running and self.port:
+                # 额外验证端口是否真的可用
+                return self._test_port_available()
+            return False
+        return False
+
+    def _test_port_available(self):
+        """测试端口是否可用"""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(1)
+                result = s.connect_ex(("127.0.0.1", self.port))
+                return result == 0
+        except Exception:
+            return False
 
     def stop(self):
         """停止服务器"""
@@ -29,15 +61,6 @@ class LocalAPIServer:
             self.running = False
             self.server.shutdown()
             self.server.server_close()
-
-    def wait_for_startup(self, timeout: int = 10):
-        """等待服务器启动"""
-        start_time = time.time()
-        while not self.running and (time.time() - start_time) < timeout:
-            time.sleep(0.1)
-
-        if not self.running:
-            raise TimeoutError(f"服务器在 {timeout} 秒内未能启动")
 
     def _create_handler(self):
         """创建请求处理器"""

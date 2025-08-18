@@ -9,10 +9,11 @@ COMMAND="web"
 HOST="127.0.0.1"  
 PORT="8000"  
 RELOAD_FLAG="--reload"  
-DEBUG_FLAG="--debug"  
+WEB_DEBUG_FLAG="--debug"  
 API_KEY=""  
 GUI_MODE="local"  
 REMOTE_URL=""  
+DEBUG_MODE=""  
   
 # 显示帮助信息  
 show_help() {  
@@ -28,8 +29,13 @@ show_help() {
     echo "  --local            本地模式 (默认)"  
     echo "  --remote URL       远程模式，连接到指定服务器"  
     echo ""  
+    echo "Web 选项:"  
+    echo "  --host HOST        服务器地址 (默认: 127.0.0.1)"  
+    echo "  --port PORT        服务器端口 (默认: 8000)"  
+    echo ""  
     echo "通用选项:"  
     echo "  --api-key KEY      OpenRouter API 密钥"  
+    echo "  --debug            启用调试模式"  
     echo "  --help             显示此帮助信息"  
     exit 0  
 }  
@@ -56,6 +62,18 @@ while [[ $# -gt 0 ]]; do
             ;;  
         --api-key)  
             API_KEY="$2"  
+            shift 2  
+            ;;  
+        --debug)  
+            DEBUG_MODE="--debug"  
+            shift  
+            ;;  
+        --host)  
+            HOST="$2"  
+            shift 2  
+            ;;  
+        --port)  
+            PORT="$2"  
             shift 2  
             ;;  
         --help)  
@@ -87,10 +105,10 @@ if [ "$COMMAND" = "gui" ]; then
             echo "示例: $0 gui --remote http://localhost:8000"  
             exit 1  
         fi  
-        python -m aiforge_gui.main --remote-url "$REMOTE_URL"  
+        python -m aiforge.cli.main gui --remote-url "$REMOTE_URL" $DEBUG_MODE  
     else  
-        python -m aiforge_gui.main --local  
+        python -m aiforge.cli.main gui $DEBUG_MODE  
     fi  
 else  
-    python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_FLAG  
+    python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_MODE  
 fi

@@ -23,8 +23,17 @@ class AIForgeGUIApp {
     }  
       
     async checkConnectionMode() {  
+        const statusIndicator = document.getElementById('statusIndicator');  
+        const statusText = document.getElementById('statusText');  
+        
+        statusIndicator.className = 'status-indicator connecting';  
+        statusText.textContent = '连接中...';  
+        
         try {  
-            if (typeof pywebview !== 'undefined') {  
+            // 等待PyWebView就绪  
+            await this.waitForPyWebView();  
+            
+            if (typeof pywebview !== 'undefined' && typeof pywebview.api !== 'undefined') {  
                 const info = await pywebview.api.get_connection_info();  
                 const connectionInfo = JSON.parse(info);  
                 this.isLocal = connectionInfo.mode === 'local';  
@@ -36,13 +45,32 @@ class AIForgeGUIApp {
         } catch (error) {  
             console.error('检查连接模式失败:', error);  
             this.isLocal = false;  
+            statusIndicator.className = 'status-indicator error';  
+            statusText.textContent = '连接失败';  
         }  
     }  
-      
+    
+    waitForPyWebView(timeout = 5000) {  
+        return new Promise((resolve, reject) => {  
+            const startTime = Date.now();  
+            
+            const checkPyWebView = () => {  
+                if (typeof pywebview !== 'undefined' && typeof pywebview.api !== 'undefined') {  
+                    resolve();  
+                } else if (Date.now() - startTime > timeout) {  
+                    reject(new Error('PyWebView initialization timeout'));  
+                } else {  
+                    setTimeout(checkPyWebView, 100);  
+                }  
+            };  
+            
+            checkPyWebView();  
+        });  
+    }
     updateConnectionStatus(info) {  
         const statusIndicator = document.getElementById('statusIndicator');  
         const statusText = document.getElementById('statusText');  
-          
+        
         if (info.mode === 'local') {  
             statusIndicator.className = 'status-indicator local';  
             statusText.textContent = '本地模式';  
@@ -50,7 +78,7 @@ class AIForgeGUIApp {
             statusIndicator.className = 'status-indicator remote';  
             statusText.textContent = '远程模式';  
         }  
-    }  
+    }
       
     initializeUI() {  
         document.getElementById('executeBtn').addEventListener('click', () => {  
@@ -90,48 +118,111 @@ class AIForgeGUIApp {
     }  
       
     async executeInstruction() {  
-        const instruction = document.getElementById('instructionInput').value.trim();  
+        const instructionInput = document.getElementById('instructionInput');  
+        const instruction = instructionInput.value.trim();  
+        
         if (!instruction) {  
             alert('请输入指令');  
             return;  
         }  
-          
+        
+        if (this.isExecuting) {  
+            return;  
+        }  
+    
+        this.setExecuting(true);  
         this.executionCompleted = false;  
-        this.setExecutionState(true);  
-        this.clearResults();  
-          
+        
         try {  
             if (this.isLocal && typeof pywebview !== 'undefined') {  
+                // 本地模式：使用专门的本地执行方法  
                 await this.executeLocalInstruction(instruction);  
             } else {  
+                // 远程模式：使用远程执行方法  
                 await this.executeRemoteInstruction(instruction);  
             }  
         } catch (error) {  
-            this.addProgressMessage(`💥 执行失败: ${error.message}`, 'error');  
-            this.setExecutionState(false);  
+            console.error('执行错误:', error);  
+            this.addProgressMessage(`❌ 执行失败: ${error.message}`, 'error');  
+        } finally {  
+            this.setExecuting(false);  
         }  
-    }  
+    }
+        
+    setExecuting(isExecuting) {  
+        this.isExecuting = isExecuting;  
+        const executeBtn = document.getElementById('executeBtn');  
+        const instructionInput = document.getElementById('instructionInput');  
+        
+        if (executeBtn) {  
+            executeBtn.disabled = isExecuting;  
+            executeBtn.textContent = isExecuting ? '执行中...' : '执行指令';  
+        }  
+        
+        if (instructionInput) {  
+            instructionInput.disabled = isExecuting;  
+        }  
+    }
+        
+    displayError(error) {  
+        const resultContainer = document.getElementById('resultContainer');  
+        resultContainer.innerHTML = `  
+            <div class="error-container bg-red-50 border border-red-200 rounded-lg p-4">  
+                <div class="flex items-center">  
+                    <div class="text-red-400 text-xl mr-3">⚠️</div>  
+                    <div>  
+                        <h3 class="text-red-800 font-medium">执行错误</h3>  
+                        <p class="text-red-600 text-sm mt-1">${error.message}</p>  
+                    </div>  
+                </div>  
+                <div class="mt-3">  
+                    <button class="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"  
+                            onclick="window.aiforgeApp.retryExecution()">  
+                        🔄 重试执行  
+                    </button>  
+                </div>  
+            </div>  
+        `;  
+    }
       
     async executeLocalInstruction(instruction) {  
         try {  
             this.addProgressMessage('🚀 开始本地执行...', 'info');  
-              
+            
+            // 验证WebView API可用性  
+            if (typeof pywebview === 'undefined') {  
+                throw new Error('pywebview对象不可用');  
+            }  
+            
+            if (typeof pywebview.api === 'undefined') {  
+                throw new Error('pywebview.api对象不可用');  
+            }  
+            
+            if (typeof pywebview.api.execute_instruction !== 'function') {  
+                throw new Error('execute_instruction方法不可用');  
+            }  
+            
+            console.log('开始调用WebView API执行指令:', instruction);  
             const result = await pywebview.api.execute_instruction(instruction, '{}');  
+            console.log('WebView API返回结果:', result);  
+            
             const resultData = JSON.parse(result);  
-              
+            
             if (resultData.success) {  
-                this.displayResult(resultData.data, document.getElementById('resultContainer'));  
+                const resultContainer = document.getElementById('resultContent');  
+                this.displayResult(resultData.data, resultContainer);  
                 this.addProgressMessage('✅ 执行完成', 'complete');  
             } else {  
                 this.addProgressMessage(`❌ 错误: ${resultData.error}`, 'error');  
             }  
         } catch (error) {  
+            console.error('本地执行错误详情:', error);  
             this.addProgressMessage(`❌ 本地执行错误: ${error.message}`, 'error');  
         } finally {  
-            this.setExecutionState(false);  
+            this.setExecuting(false);  
         }  
-    }  
-      
+    }
+        
     async executeRemoteInstruction(instruction) {  
         await this.streamingClient.executeInstruction(instruction, {  
             taskType: this.currentTaskType,  
@@ -151,7 +242,7 @@ class AIForgeGUIApp {
                     this.addProgressMessage('✅ 执行完成', 'complete');  
                     this.executionCompleted = true;  
                 }  
-                this.setExecutionState(false);  
+                this.setExecution(false);  
             }  
         });  
     }  
@@ -159,10 +250,10 @@ class AIForgeGUIApp {
     stopExecution() {  
         this.streamingClient.disconnect();  
         this.addProgressMessage('⏹️ 正在停止执行...', 'info');  
-        this.setExecutionState(false);  
+        this.setExecution(false);  
     }  
       
-    setExecutionState(isExecuting) {  
+    setExecution(isExecuting) {  
         this.isExecuting = isExecuting;  
         const executeBtn = document.getElementById('executeBtn');  
         const instructionInput = document.getElementById('instructionInput');  

@@ -1,5 +1,7 @@
 # webview JavaScript-Python 桥接
 import json
+import time
+import threading
 from pathlib import Path
 from typing import Dict, Any
 
@@ -8,6 +10,8 @@ class WebViewBridge:
     """webview JavaScript-Python 桥接"""
 
     def __init__(self, engine_manager):
+        self.execution_lock = threading.Lock()
+        self.current_execution = None
         self.engine_manager = engine_manager
         self.settings_file = str(Path.home() / ".aiforge" / "gui" / "settings.json")
         Path(self.settings_file).parent.mkdir(parents=True, exist_ok=True)
@@ -20,41 +24,59 @@ class WebViewBridge:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def execute_instruction(self, instruction: str, options: str = "{}") -> str:
-        """执行指令（仅本地模式）"""
+    def execute_instruction(self, instruction: str, options: str = "{}", *args, **kwargs) -> str:
+        """执行指令，增加错误处理和状态管理"""
         if not self.engine_manager.is_local_mode():
             return json.dumps({"error": "远程模式请使用 Web API"})
 
-        try:
-            # 解析 options_dict（用于元数据记录）
-            options_dict = json.loads(options) if options else {}
-            engine = self.engine_manager.get_engine()
+        with self.execution_lock:
+            try:
+                print(f"🎯 开始执行指令: {instruction}")
 
-            if not engine:
-                return json.dumps({"error": "本地引擎未初始化"})
+                # 获取引擎实例
+                engine = self.engine_manager.get_engine()
+                if not engine:
+                    return json.dumps({"success": False, "error": "引擎未初始化", "data": None})
 
-            # 直接调用核心的 run 方法，只传递指令
-            result = engine.run(instruction)
+                # 设置执行状态
+                self.current_execution = {
+                    "instruction": instruction,
+                    "start_time": time.time(),
+                    "status": "running",
+                }
 
-            # 适配结果
-            if result:
-                adapted_result = engine.adapt_result_for_ui(result, "webview", "gui")
+                # 使用引擎的run方法执行指令
+                result = engine.run(instruction)
+
+                # 更新执行状态
+                self.current_execution["status"] = "completed"
+                self.current_execution["end_time"] = time.time()
+
+                print("✅ 指令执行完成")
                 return json.dumps(
                     {
                         "success": True,
-                        "data": adapted_result,
-                        "metadata": {
-                            "source": "local",
-                            "task_type": getattr(result, "task_type", "unknown"),
-                            "client_options": options_dict,  # 仅用于记录客户端传递的选项
-                        },
+                        "data": result,
+                        "execution_time": self.current_execution["end_time"]
+                        - self.current_execution["start_time"],
                     }
                 )
-            else:
-                return json.dumps({"error": "执行失败：未获得结果"})
 
-        except Exception as e:
-            return json.dumps({"error": f"执行错误: {str(e)}"})
+            except Exception as e:
+                print(f"❌ 指令执行失败: {e}")
+                import traceback
+
+                traceback.print_exc()
+
+                if self.current_execution:
+                    self.current_execution["status"] = "failed"
+                    self.current_execution["error"] = str(e)
+
+                return json.dumps({"success": False, "error": str(e), "data": None})
+            finally:
+                # 清理执行状态
+                if self.current_execution and self.current_execution.get("status") != "running":
+                    self.current_execution = None
 
     def get_system_info(self) -> str:
         """获取系统信息"""
@@ -179,7 +201,7 @@ class WebViewBridge:
             "windowHeight": 800,
         }
 
-        if self.settings_file.exists():
+        if Path(self.settings_file).exists():
             try:
                 with open(self.settings_file, "r", encoding="utf-8") as f:
                     saved_settings = json.load(f)
@@ -209,7 +231,7 @@ class WebViewBridge:
     def reset_settings(self) -> str:
         """重置设置为默认值"""
         try:
-            if self.settings_file.exists():
+            if Path(self.settings_file).exists():
                 self.settings_file.unlink()
 
             default_settings = self._load_settings_from_file()
