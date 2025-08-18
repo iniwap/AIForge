@@ -1,59 +1,62 @@
 #!/bin/bash  
   
-# 设置默认环境变量  
 export PYTHONWARNINGS="ignore::RuntimeWarning:runpy"  
 export PYTHONPATH="src"  
 export AIFORGE_LOCALE="${AIFORGE_LOCALE:-zh}"  
   
 # 默认参数  
+COMMAND="web"  
 HOST="127.0.0.1"  
 PORT="8000"  
 RELOAD_FLAG="--reload"  
 DEBUG_FLAG="--debug"  
 API_KEY=""  
+GUI_MODE="local"  
+REMOTE_URL=""  
   
 # 显示帮助信息  
 show_help() {  
     echo "AIForge 开发服务器启动脚本"  
     echo ""  
-    echo "用法: $0 [选项]"  
+    echo "用法: $0 [web|gui] [选项]"  
     echo ""  
-    echo "选项:"  
+    echo "命令:"  
+    echo "  web                启动 Web 服务器 (默认)"  
+    echo "  gui                启动 GUI 应用"  
+    echo ""  
+    echo "GUI 选项:"  
+    echo "  --local            本地模式 (默认)"  
+    echo "  --remote URL       远程模式，连接到指定服务器"  
+    echo ""  
+    echo "通用选项:"  
     echo "  --api-key KEY      OpenRouter API 密钥"  
-    echo "  --host HOST        服务器地址 (默认: 127.0.0.1)"  
-    echo "  --port PORT        服务器端口 (默认: 8000)"  
-    echo "  --no-reload        禁用热重载"  
-    echo "  --no-debug         禁用调试模式"  
     echo "  --help             显示此帮助信息"  
-    echo ""  
-    echo "环境变量:"  
-    echo "  OPENROUTER_API_KEY  OpenRouter API 密钥 (必需)"  
-    echo "  AIFORGE_LOCALE      界面语言 (默认: zh)"  
     exit 0  
 }  
   
 # 解析命令行参数  
 while [[ $# -gt 0 ]]; do  
     case $1 in  
+        gui)  
+            COMMAND="gui"  
+            shift  
+            ;;  
+        web)  
+            COMMAND="web"  
+            shift  
+            ;;  
+        --local)  
+            GUI_MODE="local"  
+            shift  
+            ;;  
+        --remote)  
+            GUI_MODE="remote"  
+            REMOTE_URL="$2"  
+            shift 2  
+            ;;  
         --api-key)  
             API_KEY="$2"  
             shift 2  
-            ;;  
-        --host)  
-            HOST="$2"  
-            shift 2  
-            ;;  
-        --port)  
-            PORT="$2"  
-            shift 2  
-            ;;  
-        --no-reload)  
-            RELOAD_FLAG=""  
-            shift  
-            ;;  
-        --no-debug)  
-            DEBUG_FLAG=""  
-            shift  
             ;;  
         --help)  
             show_help  
@@ -66,16 +69,28 @@ while [[ $# -gt 0 ]]; do
     esac  
 done  
   
-# 如果通过参数提供了 API Key，则设置环境变量  
+# 设置 API Key  
 if [ -n "$API_KEY" ]; then  
     export OPENROUTER_API_KEY="$API_KEY"  
 fi  
   
-# 检查 API Key  
 if [ -z "$OPENROUTER_API_KEY" ]; then  
     echo "错误: 请设置 OPENROUTER_API_KEY 环境变量或使用 --api-key 参数"  
-    echo "示例: ./aiforge-dev.sh --api-key sk-or-v1-your-key"  
     exit 1  
 fi  
   
-python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_FLAG
+# 启动相应服务  
+if [ "$COMMAND" = "gui" ]; then  
+    if [ "$GUI_MODE" = "remote" ]; then  
+        if [ -z "$REMOTE_URL" ]; then  
+            echo "错误: 远程模式需要指定服务器地址"  
+            echo "示例: $0 gui --remote http://localhost:8000"  
+            exit 1  
+        fi  
+        python -m aiforge_gui.main --remote-url "$REMOTE_URL"  
+    else  
+        python -m aiforge_gui.main --local  
+    fi  
+else  
+    python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_FLAG  
+fi

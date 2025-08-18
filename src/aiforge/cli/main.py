@@ -33,6 +33,15 @@ def main(args: Optional[list] = None) -> int:
     cli_parser = subparsers.add_parser("cli", help="CLI 模式")
     cli_parser.add_argument("instruction", help="要执行的指令")
 
+    # GUI 命令
+    gui_parser = subparsers.add_parser("gui", help="启动 GUI 应用")
+    gui_parser.add_argument("--local", action="store_true", help="本地模式")
+    gui_parser.add_argument("--remote-url", help="远程服务器地址")
+    gui_parser.add_argument("--theme", default="dark", choices=["dark", "light"], help="界面主题")
+    gui_parser.add_argument("--width", type=int, default=1200, help="窗口宽度")
+    gui_parser.add_argument("--height", type=int, default=800, help="窗口高度")
+    gui_parser.add_argument("--debug", action="store_true", help="启用调试模式")
+
     parsed_args = parser.parse_args(args)
 
     if parsed_args.command == "web":
@@ -42,6 +51,8 @@ def main(args: Optional[list] = None) -> int:
             getattr(parsed_args, "reload", False),
             getattr(parsed_args, "debug", False),
         )
+    elif parsed_args.command == "gui":
+        return start_gui_app(parsed_args)
     elif parsed_args.command == "cli" or parsed_args.instruction:
         instruction = parsed_args.instruction or getattr(parsed_args, "instruction", None)
         if instruction:
@@ -87,6 +98,44 @@ def start_web_server(
         return 1
     except Exception as e:
         print(f"❌ Web 服务启动失败: {e}")
+        return 1
+
+
+def start_gui_app(args) -> int:
+    """启动 GUI 应用"""
+    try:
+        print("🖥️ 启动 AIForge GUI 应用...")
+
+        # 构建配置
+        config = {
+            "theme": args.theme,
+            "window_width": args.width,
+            "window_height": args.height,
+            "debug": getattr(args, "debug", False),
+            "enable_tray": True,  # 启用托盘功能
+        }
+
+        # 根据模式设置配置
+        if args.remote_url:
+            config["remote_url"] = args.remote_url
+            print(f"🌐 远程模式: 连接到 {args.remote_url}")
+        else:
+            print("🏠 本地模式")
+
+        # 导入并启动 GUI 应用
+        from aiforge_gui import AIForgeGUIApp
+
+        app = AIForgeGUIApp(config)
+        app.run()
+        return 0
+
+    except ImportError as e:
+        print("❌ GUI 服务需要安装相关依赖")
+        print("   请运行: pip install aiforge-engine[gui]")
+        print(f"   详细错误: {e}")
+        return 1
+    except Exception as e:
+        print(f"❌ GUI 应用启动失败: {e}")
         return 1
 
 

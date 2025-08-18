@@ -64,11 +64,22 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["python-dotenv>=1.0.0", "pytest>=7.0.0"]
 transformers = ["sentence-transformers>=2.0.0"]
+web = ["fastapi>=0.100.0", "uvicorn>=0.20.0", "jinja2>=3.1.0"]
+gui = [
+    "pywebview>=4.0.0",
+    "pystray>=0.19.0",
+    "pillow>=8.0.0",
+    "pywin32>=306;platform_system=='Windows'",
+]
+deploy = ["docker>=6.0.0", "pyyaml>=6.0.0"]
 all = [
-    "sentence-transformers>=2.0.0", # transformers功能  
-    "aiforge-web>=0.0.11",          # Web界面  
-    "aiforge-gui>=0.0.11",          # GUI界面  
-    "aiforge-deploy>=0.0.11",       # 部署功能  
+    "sentence-transformers>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "jinja2>=3.1.0",
+    "pywebview>=4.0.0",
+    "docker>=6.0.0",
+    "pyyaml>=6.0.0",
 ]
 
 [project.urls]
@@ -84,12 +95,24 @@ Twitter = "https://twitter.com/iafun_tipixel"
 [project.scripts]
 aiforge = "aiforge.cli:main"
 
-
 [tool.hatch.build.targets.wheel]
-packages = ["src/aiforge"]
+packages = [
+    "src/aiforge",
+    "src/aiforge_web",
+    "src/aiforge_gui",
+    "src/aiforge_deploy",
+]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src/aiforge", "/README.md", "/LICENSE", "/pyproject.toml"]
+include = [
+    "/src/aiforge",
+    "/src/aiforge_web",
+    "/src/aiforge_gui",
+    "/src/aiforge_deploy",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
 
 [dependency-groups]
 dev = ["python-dotenv>=1.1.1"]

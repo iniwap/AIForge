@@ -1,0 +1,457 @@
+/* 样式文件 */
+/* AIForge GUI 样式 - 自包含版本 */  
+* {  
+    margin: 0;  
+    padding: 0;  
+    box-sizing: border-box;  
+}  
+  
+body {  
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;  
+    line-height: 1.6;  
+    color: #333;  
+    background-color: #f5f5f5;  
+}  
+  
+body.dark {  
+    color: #e0e0e0;  
+    background-color: #1a1a1a;  
+}  
+  
+#app {  
+    min-height: 100vh;  
+    display: flex;  
+    flex-direction: column;  
+}  
+  
+/* 头部样式 */  
+.header {  
+    background: #fff;  
+    border-bottom: 1px solid #e0e0e0;  
+    padding: 1rem 2rem;  
+    display: flex;  
+    justify-content: space-between;  
+    align-items: center;  
+}  
+  
+body.dark .header {  
+    background: #2d2d2d;  
+    border-bottom-color: #404040;  
+}  
+  
+.header h1 {  
+    font-size: 1.5rem;  
+    font-weight: 600;  
+    color: #2563eb;  
+}  
+  
+body.dark .header h1 {  
+    color: #60a5fa;  
+}  
+  
+.connection-status {  
+    display: flex;  
+    align-items: center;  
+    gap: 0.5rem;  
+}  
+  
+.status-indicator {  
+    width: 8px;  
+    height: 8px;  
+    border-radius: 50%;  
+    background: #aaa;  
+}  
+  
+.status-indicator.local {  
+    background: #10b981;  
+}  
+  
+.status-indicator.remote {  
+    background: #f59e0b;  
+}  
+  
+/* 主内容区域 */  
+.main-content {  
+    flex: 1;  
+    display: grid;  
+    grid-template-columns: 1fr 2fr;  
+    gap: 2rem;  
+    padding: 2rem;  
+    max-width: 1400px;  
+    margin: 0 auto;  
+    width: 100%;  
+}  
+  
+.input-section, .output-section {  
+    background: #fff;  
+    border-radius: 8px;  
+    padding: 1.5rem;  
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);  
+}  
+  
+body.dark .input-section,  
+body.dark .output-section {  
+    background: #2d2d2d;  
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);  
+}  
+  
+/* 任务选择器 */  
+.task-selector {  
+    margin-bottom: 1rem;  
+}  
+  
+.task-selector label {  
+    display: block;  
+    margin-bottom: 0.5rem;  
+    font-weight: 500;  
+}  
+  
+.task-selector select {  
+    width: 100%;  
+    padding: 0.5rem;  
+    border: 1px solid #d1d5db;  
+    border-radius: 4px;  
+    background: #fff;  
+}  
+  
+body.dark .task-selector select {  
+    background: #374151;  
+    border-color: #4b5563;  
+    color: #e0e0e0;  
+}  
+  
+/* 指令输入 */  
+.instruction-input {  
+    display: flex;  
+    flex-direction: column;  
+    gap: 1rem;  
+}  
+  
+.instruction-input textarea {  
+    width: 100%;  
+    padding: 0.75rem;  
+    border: 1px solid #d1d5db;  
+    border-radius: 4px;  
+    resize: vertical;  
+    font-family: inherit;  
+}  
+  
+body.dark .instruction-input textarea {  
+    background: #374151;  
+    border-color: #4b5563;  
+    color: #e0e0e0;  
+}  
+  
+.execute-btn {  
+    padding: 0.75rem 1.5rem;  
+    background: #2563eb;  
+    color: white;  
+    border: none;  
+    border-radius: 4px;  
+    font-weight: 500;  
+    cursor: pointer;  
+    transition: background-color 0.2s;  
+}  
+  
+.execute-btn:hover {  
+    background: #1d4ed8;  
+}  
+  
+.execute-btn:disabled {  
+    background: #9ca3af;  
+    cursor: not-allowed;  
+}  
+  
+/* 进度和结果容器 */  
+.progress-container, .result-container {  
+    margin-bottom: 2rem;  
+}  
+  
+.progress-container h3, .result-container h3 {  
+    margin-bottom: 1rem;  
+    font-size: 1.125rem;  
+    font-weight: 600;  
+}  
+  
+#progressMessages {  
+    max-height: 200px;  
+    overflow-y: auto;  
+    border: 1px solid #e5e7eb;  
+    border-radius: 4px;  
+    padding: 0.5rem;  
+    background: #f9fafb;  
+}  
+  
+body.dark #progressMessages {  
+    background: #374151;  
+    border-color: #4b5563;  
+}  
+  
+.progress-message {  
+    padding: 0.25rem 0;  
+    font-size: 0.875rem;  
+}  
+  
+.progress-message.error {  
+    color: #dc2626;  
+}  
+  
+.progress-message.complete {  
+    color: #059669;  
+}  
+  
+/* 结果卡片 */  
+.result-card {  
+    background: #fff;  
+    border: 1px solid #e5e7eb;  
+    border-radius: 8px;  
+    padding: 1.5rem;  
+    margin-bottom: 1rem;  
+}  
+  
+body.dark .result-card {  
+    background: #374151;  
+    border-color: #4b5563;  
+}  
+  
+.card-header {  
+    display: flex;  
+    justify-content: space-between;  
+    align-items: center;  
+    margin-bottom: 1rem;  
+}  
+  
+.card-header h3 {  
+    font-size: 1.125rem;  
+    font-weight: 600;  
+}  
+  
+.card-actions {  
+    display: flex;  
+    gap: 0.5rem;  
+}  
+  
+.action-btn {  
+    padding: 0.25rem 0.75rem;  
+    border: 1px solid #d1d5db;  
+    border-radius: 4px;  
+    background: #fff;  
+    cursor: pointer;  
+    font-size: 0.875rem;  
+}  
+  
+body.dark .action-btn {  
+    background: #4b5563;  
+    border-color: #6b7280;  
+    color: #e0e0e0;  
+}  
+  
+.action-btn:hover {  
+    background: #f3f4f6;  
+}  
+  
+body.dark .action-btn:hover {  
+    background: #6b7280;  
+}  
+  
+/* 表格样式 */  
+.result-table {  
+    width: 100%;  
+    border-collapse: collapse;  
+    margin-top: 1rem;  
+}  
+  
+.result-table th,  
+.result-table td {  
+    padding: 0.75rem;  
+    text-align: left;  
+    border-bottom: 1px solid #e5e7eb;  
+}  
+  
+body.dark .result-table th,  
+body.dark .result-table td {  
+    border-bottom-color: #4b5563;  
+}  
+  
+.result-table th {  
+    background: #f9fafb;  
+    font-weight: 600;  
+}  
+  
+body.dark .result-table th {  
+    background: #4b5563;  
+}  
+  
+/* 底部样式 */  
+.footer {  
+    background: #fff;  
+    border-top: 1px solid #e0e0e0;  
+    padding: 1rem 2rem;  
+    display: flex;  
+    justify-content: space-between;  
+    align-items: center;  
+}  
+  
+body.dark .footer {  
+    background: #2d2d2d;  
+    border-top-color: #404040;  
+}  
+  
+.settings-btn {  
+    padding: 0.5rem 1rem;  
+    border: 1px solid #d1d5db;  
+    border-radius: 4px;  
+    background: #fff;  
+    cursor: pointer;  
+}  
+  
+body.dark .settings-btn {  
+    background: #4b5563;  
+    border-color: #6b7280;  
+    color: #e0e0e0;  
+}  
+  
+.version {  
+    font-size: 0.875rem;  
+    color: #6b7280;  
+}  
+  
+/* 模态框样式 */  
+.modal {  
+    display: none;  
+    position: fixed;  
+    z-index: 1000;  
+    left: 0;  
+    top: 0;  
+    width: 100%;  
+    height: 100%;  
+    background-color: rgba(0, 0, 0, 0.5);  
+}
+.modal-content {  
+    background: #fff;  
+    margin: 15% auto;  
+    padding: 2rem;  
+    border-radius: 8px;  
+    width: 90%;  
+    max-width: 500px;  
+    position: relative;  
+}  
+  
+body.dark .modal-content {  
+    background: #2d2d2d;  
+    color: #e0e0e0;  
+}  
+  
+.close {  
+    position: absolute;  
+    top: 1rem;  
+    right: 1rem;  
+    font-size: 1.5rem;  
+    cursor: pointer;  
+    color: #6b7280;  
+}  
+  
+body.dark .close {  
+    color: #9ca3af;  
+}  
+  
+.close:hover {  
+    color: #374151;  
+}  
+  
+body.dark .close:hover {  
+    color: #d1d5db;  
+}  
+  
+.settings-form {  
+    margin-top: 1rem;  
+}  
+  
+.form-group {  
+    margin-bottom: 1rem;  
+}  
+  
+.form-group label {  
+    display: block;  
+    margin-bottom: 0.5rem;  
+    font-weight: 500;  
+}  
+  
+.form-group select,  
+.form-group input {  
+    width: 100%;  
+    padding: 0.5rem;  
+    border: 1px solid #d1d5db;  
+    border-radius: 4px;  
+    background: #fff;  
+}  
+  
+body.dark .form-group select,  
+body.dark .form-group input {  
+    background: #374151;  
+    border-color: #4b5563;  
+    color: #e0e0e0;  
+}  
+  
+.save-btn {  
+    padding: 0.75rem 1.5rem;  
+    background: #2563eb;  
+    color: white;  
+    border: none;  
+    border-radius: 4px;  
+    font-weight: 500;  
+    cursor: pointer;  
+    width: 100%;  
+    margin-top: 1rem;  
+}  
+  
+.save-btn:hover {  
+    background: #1d4ed8;  
+}  
+  
+/* 响应式设计 */  
+@media (max-width: 768px) {  
+    .main-content {  
+        grid-template-columns: 1fr;  
+        gap: 1rem;  
+        padding: 1rem;  
+    }  
+      
+    .header {  
+        padding: 1rem;  
+    }  
+      
+    .header h1 {  
+        font-size: 1.25rem;  
+    }  
+      
+    .modal-content {  
+        margin: 10% auto;  
+        width: 95%;  
+    }  
+}  
+  
+/* 工具类 */  
+.text-gray {  
+    color: #6b7280;  
+}  
+  
+.text-green {  
+    color: #059669;  
+}  
+  
+.text-red {  
+    color: #dc2626;  
+}  
+  
+body.dark .text-gray {  
+    color: #9ca3af;  
+}  
+  
+body.dark .text-green {  
+    color: #10b981;  
+}  
+  
+body.dark .text-red {  
+    color: #f87171;  
+}

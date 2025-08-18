@@ -1,0 +1,94 @@
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>AIForge - 智能意图自适应执行引擎</title>  
+    <link rel="stylesheet" href="/static/css/aiforge.css">  
+</head>  
+<body class="dark">  
+    <div id="app">  
+        <header class="header">  
+            <h1>🚀 AIForge GUI</h1>  
+            <div class="connection-status" id="connectionStatus">  
+                <span class="status-indicator" id="statusIndicator"></span>  
+                <span id="statusText">连接中...</span>  
+            </div>  
+        </header>  
+          
+        <main class="main-content">  
+            <div class="input-section">  
+                <div class="task-selector">  
+                    <label for="taskType">任务类型:</label>  
+                    <select id="taskType">  
+                        <option value="auto">自动检测</option>  
+                        <option value="content_generation">内容生成</option>  
+                        <option value="data_fetch">数据获取</option>  
+                        <option value="search">搜索</option>  
+                        <option value="code_generation">代码生成</option>  
+                        <option value="direct_response">直接回答</option>  
+                    </select>  
+                </div>
+                <div class="instruction-input">  
+                    <textarea id="instructionInput"   
+                              placeholder="请输入您的指令..."   
+                              rows="4"></textarea>  
+                    <button id="executeBtn" class="execute-btn">执行</button>  
+                </div>  
+            </div>  
+              
+            <div class="output-section">  
+                <div class="progress-container" id="progressContainer">  
+                    <h3>执行进度</h3>  
+                    <div id="progressMessages"></div>  
+                </div>  
+                  
+                <div class="result-container" id="resultContainer">  
+                    <h3>执行结果</h3>  
+                    <div id="resultContent">执行结果将在这里显示...</div>  
+                </div>  
+            </div>  
+        </main>  
+          
+        <footer class="footer">  
+            <button id="settingsBtn" class="settings-btn">⚙️ 设置</button>  
+            <span class="version">AIForge GUI v0.0.11</span>  
+        </footer>  
+    </div>  
+      
+    <!-- 设置模态框 -->  
+    <div id="settingsModal" class="modal">  
+        <div class="modal-content">  
+            <span class="close">&times;</span>  
+            <h2>设置</h2>  
+            <div class="settings-form">  
+                <div class="form-group">  
+                    <label for="themeSelect">主题:</label>  
+                    <select id="themeSelect">  
+                        <option value="dark">深色</option>  
+                        <option value="light">浅色</option>  
+                    </select>  
+                </div>  
+                <div class="form-group">  
+                    <label for="progressLevel">进度显示:</label>  
+                    <select id="progressLevel">  
+                        <option value="detailed">详细</option>  
+                        <option value="minimal">简化</option>  
+                        <option value="none">无</option>  
+                    </select>  
+                </div>  
+                <div class="form-group">  
+                    <label for="remoteUrl">远程服务器:</label>  
+                    <input type="text" id="remoteUrl" placeholder="http://localhost:8000">  
+                </div>  
+                <button id="saveSettings" class="save-btn">保存</button>  
+            </div>  
+        </div>  
+    </div>  
+      
+    <script src="/static/js/ui-adapters.js"></script>  
+    <script src="/static/js/streaming-client.js"></script>  
+    <script src="/static/js/config-manager.js"></script>  
+    <script src="/static/js/main.js"></script>  
+</body>  
+</html>

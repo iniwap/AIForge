@@ -216,8 +216,5 @@ backups/
 searxng
 searxng/settings.yml  
 searxng/limiter.toml  
-config
-config/*.yml  
-config/*.toml
 logs
 logs/*
