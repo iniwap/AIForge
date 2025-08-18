@@ -24,7 +24,7 @@ AIForge is an **intelligent execution engine** that bridges the gap between natu
 - ⚡ **Instant Execution** - Rapid code generation with real-time environment interaction    
 - 🔮 **Smart Caching** - Semantic similarity-based intelligent code reuse  
 - 🌊 **Self-Evolution** - Continuous learning optimization with error self-healing  
-- 🎭 **Multi-Provider** - Seamless switching between AI models and providers  
+- 🎭 **Multi-Provider** - OpenAI、DeepSeek、OpenRouter、Ollama   
 
  ![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
    
@@ -34,7 +34,7 @@ AIForge is an **intelligent execution engine** that bridges the gap between natu
 - **CLI Interface** - Command-line tool for direct execution  
 - **Python API** - Programmatic integration for applications  
 - **Web API** - FastAPI-based REST interface  
-- **Terminal GUI** - Interactive text-based user interface  
+- **Desktop GUI** - Desktop app gui  
   
 ### 🤖 LLM Provider Support  
 - **OpenAI** - GPT models integration  
@@ -71,62 +71,34 @@ AIForge provides multi-layer security for safe AI code execution:
     
 ### Installation & Deployment
     
-- Non-Docker Mode  
 ```bash  
 pip install aiforge-engine    
   
 # With optional dependencies    
 pip install aiforge-engine[all]  # All features    
 pip install aiforge-engine[gui]  # Terminal GUI support    
-pip install aiforge-engine[web]  # Web API support    
-```  
-  
-- Docker Mode  
-```bash    
-# 1. Install AIForge (with web dependencies)  
-pip install aiforge-engine[web]  
-  
-# 2. Set API key    
-echo "OPENROUTER_API_KEY=your-api-key" > .env    
-    
-# 3. One-click startup    
-aiforge-docker start    
-    
-# 4. Development mode (hot reload)   
-aiforge-docker start --dev  
-
-# 5. Source Code Mode（default language=en）
-$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat start --dev  
-./aiforge-docker.sh start --dev  
-
-# 6. Enable SearXNG
-aiforge-docker start --dev --searxng
-
-# 7. Help
-$env:AIFORGE_LOCALE="zh"; ./aiforge-docker.bat --help
+pip install aiforge-engine[web]  # Web API support  
+pip install aiforge-engine[deploy]  # Deploy support    
 ```  
   
 ### Basic Usage 
-- Non-Docker Mode   
-```python  
+
+```python
+# 直接模式
 from aiforge import AIForgeEngine    
+print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest global stock market trends and write an investment analysis"))
+
+ # CLI
+aiforge "Search for the latest global stock market trends and write an investment analysis" --api-key sk-or-v1-xxx
   
-# Quick start with API key    
-forge = AIForgeEngine(api_key="your-openrouter-apikey")    
+# Web
+aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
   
-# Execute natural language instruction    
-result = forge("Search for the latest global stock market trends and write an investment analysis")    
-print(result)    
-```    
-  
-- Docker Mode  
-```bash    
-# Direct CLI usage    
-aiforge "Search stock market trends and analyze"    
-    
-# Specify provider     
-aiforge --provider deepseek "Analyze data"   
+# Desktop GUI
+aiforge gui --api-key sk-or-v1-xxx
+
 ```  
+
 ### Advanced Configuration  
   
     # Provider-specific configuration  

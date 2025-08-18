@@ -19,10 +19,11 @@ def main(args: Optional[list] = None) -> int:
     parser.add_argument("instruction", nargs="?", help="要执行的自然语言指令")
     parser.add_argument("--provider", help="指定 LLM 提供商")
     parser.add_argument("--config", help="配置文件路径")
+    parser.add_argument("--api-key", help="API 密钥")
 
     subparsers = parser.add_subparsers(dest="command", help="可用命令")
 
-    # Web 服务命令 - 添加开发模式参数支持
+    # Web 服务命令
     web_parser = subparsers.add_parser("web", help="启动 Web 服务")
     web_parser.add_argument("--host", default="0.0.0.0", help="服务器地址")
     web_parser.add_argument("--port", type=int, default=8000, help="服务器端口")
@@ -32,6 +33,9 @@ def main(args: Optional[list] = None) -> int:
     # CLI 命令
     cli_parser = subparsers.add_parser("cli", help="CLI 模式")
     cli_parser.add_argument("instruction", help="要执行的指令")
+    cli_parser.add_argument("--provider", help="指定 LLM 提供商")
+    cli_parser.add_argument("--config", help="配置文件路径")
+    cli_parser.add_argument("--api-key", help="API 密钥")
 
     # GUI 命令
     gui_parser = subparsers.add_parser("gui", help="启动 GUI 应用")
@@ -106,8 +110,6 @@ def start_web_server(
 def start_gui_app(args) -> int:
     """启动 GUI 应用"""
     try:
-        print("🖥️ 启动 AIForge GUI 应用...")
-
         # 构建完整配置
         config = {
             "theme": getattr(args, "theme", "dark"),
@@ -128,9 +130,6 @@ def start_gui_app(args) -> int:
         # 远程模式配置
         if hasattr(args, "remote_url") and args.remote_url:
             config["remote_url"] = args.remote_url
-            print(f"🌐 远程模式: 连接到 {args.remote_url}")
-        else:
-            print("🏠 本地模式")
 
         from aiforge_gui import AIForgeGUIApp
 
@@ -155,6 +154,8 @@ def execute_instruction(instruction: str, args) -> int:
 
         # 初始化引擎
         engine_kwargs = {}
+        if args.api_key:
+            engine_kwargs["api_key"] = args.api_key
         if args.provider:
             engine_kwargs["provider"] = args.provider
         if args.config:

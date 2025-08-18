@@ -76,7 +76,6 @@ class EngineManager:
 
             # 初始化引擎
             self.engine = AIForgeEngine(**engine_config)
-            print("✅ 本地 AIForge 引擎初始化成功")
 
         except Exception as e:
             print(f"❌ 本地引擎初始化失败: {e}")
@@ -104,13 +103,25 @@ class EngineManager:
 
     def get_connection_info(self) -> Dict[str, Any]:
         """获取连接信息"""
-        return {
+        info = {
             "mode": self.mode.value,
             "local_engine_available": self.engine is not None,
             "remote_url": self.get_remote_url(),
             "features": self._get_supported_features(),
-            "workdir": self.config.get("workdir"),  # 添加工作目录信息
+            "workdir": self.config.get("workdir"),
         }
+
+        # 添加本地 API 服务器 URL 信息
+        if self.mode == ConnectionMode.LOCAL:
+            api_server = getattr(self, "_api_server", None)
+            if api_server and hasattr(api_server, "port") and api_server.port:
+                info["api_server_url"] = f"http://127.0.0.1:{api_server.port}"
+            else:
+                info["api_server_url"] = None
+        else:
+            info["api_server_url"] = None
+
+        return info
 
     def _get_supported_features(self) -> Dict[str, bool]:
         """获取支持的功能"""

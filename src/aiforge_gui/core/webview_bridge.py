@@ -53,10 +53,13 @@ class WebViewBridge:
                 self.current_execution["end_time"] = time.time()
 
                 print("✅ 指令执行完成")
+                adapted_result = engine.adapt_result_for_ui(
+                    result, "editor" if result.task_type == "content_generation" else None, "gui"
+                )
                 return json.dumps(
                     {
                         "success": True,
-                        "data": result,
+                        "data": adapted_result,  # 使用适配后的结果
                         "execution_time": self.current_execution["end_time"]
                         - self.current_execution["start_time"],
                     }

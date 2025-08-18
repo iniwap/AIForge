@@ -29,6 +29,7 @@ class AIForgeGUIApp:
         self.bridge = None
         self.window = None
         self.tray = None
+        self.window_created = False  # 新增：跟踪窗口创建状态
 
         self.icon_path = self.resource_manager.get_icon_path()
 
@@ -134,26 +135,50 @@ class AIForgeGUIApp:
         except Exception:
             pass
 
+    def _set_window_icon_macos(self):
+        """macOS 平台设置窗口图标和确保窗口显示"""
+        if platform.system() != "Darwin":
+            return
+
+        try:
+            # 等待窗口创建完成
+            time.sleep(0.5)
+
+            if pywebview.windows and len(pywebview.windows) > 0:
+                window = pywebview.windows[0]
+
+                # 强制显示窗口
+                window.show()
+
+                # 尝试将窗口置于前台
+                try:
+                    # 在 macOS 上，可能需要额外的操作来确保窗口显示
+                    import AppKit
+
+                    app = AppKit.NSApplication.sharedApplication()
+                    app.activateIgnoringOtherApps_(True)
+                except ImportError:
+                    # 如果没有 PyObjC，使用基本的显示方法
+                    pass
+
+        except Exception:
+            pass
+
     def initialize(self):
         """初始化应用"""
         try:
-            print("🔧 开始初始化AIForge GUI...")
-
             # 首先验证运行环境
             if not self.validate_environment():
                 raise RuntimeError("环境验证失败，无法启动GUI应用")
 
             # 验证资源文件
-            print("📁 验证资源文件...")
             self.resource_manager.setup_resources()
 
             # 验证引擎管理器
-            print("🤖 初始化引擎管理器...")
             if not self.engine_manager:
                 raise RuntimeError("引擎管理器初始化失败")
 
             # 创建 webview 桥接
-            print("🌉 创建WebView桥接...")
             self.bridge = WebViewBridge(self.engine_manager)
 
             # 根据模式启动相应服务
@@ -208,6 +233,15 @@ class AIForgeGUIApp:
         """显示窗口"""
         if pywebview.windows and len(pywebview.windows) > 0:
             pywebview.windows[0].show()
+            # macOS 特殊处理
+            if platform.system() == "Darwin":
+                try:
+                    import AppKit
+
+                    app = AppKit.NSApplication.sharedApplication()
+                    app.activateIgnoringOtherApps_(True)
+                except ImportError:
+                    pass
 
     def hide_window(self, icon=None, item=None):
         """隐藏窗口"""
@@ -216,10 +250,14 @@ class AIForgeGUIApp:
 
     def on_window_closed(self):
         """窗口关闭事件处理"""
-        # 窗口关闭时隐藏到托盘而不是退出
-        if pywebview.windows and len(pywebview.windows) > 0:
-            self.hide_window()
-        return False  # 阻止窗口真正关闭
+        # 只有在窗口已经正常创建并显示后才隐藏到托盘
+        if self.window_created and self.tray:
+            if pywebview.windows and len(pywebview.windows) > 0:
+                self.hide_window()
+            return False  # 阻止窗口真正关闭
+        else:
+            # 如果托盘未创建或窗口未正常创建，则直接退出
+            return True
 
     def quit_application(self, icon=None, item=None):
         """退出应用"""
@@ -229,12 +267,12 @@ class AIForgeGUIApp:
 
     def _start_local_mode(self):
         """启动本地模式"""
-        print("🖥️ 启动本地模式...")
-
         try:
             # 启动内置 API 服务器
-            print("🚀 启动内置API服务器...")
             self.api_server = LocalAPIServer(self.engine_manager)
+
+            # 将 API 服务器引用传递给 EngineManager
+            self.engine_manager._api_server = self.api_server
 
             # 使用线程启动服务器
             server_thread = threading.Thread(
@@ -294,18 +332,10 @@ class AIForgeGUIApp:
 
     def _create_window(self, url: str):
         """创建 webview 窗口"""
-        # 创建托盘图标
-        self.create_tray_icon()
-        if self.tray:
-            tray_thread = threading.Thread(target=self.tray.run, daemon=True)
-            tray_thread.start()
-
         # 确保桥接对象存在
         if not self.bridge:
             print("❌ WebView桥接对象未创建")
             raise RuntimeError("WebView桥接对象未创建")
-
-        print(f"🌉 WebView桥接对象已创建: {type(self.bridge)}")
 
         # 创建 webview 窗口并传递桥接对象
         self.window = pywebview.create_window(
@@ -315,12 +345,42 @@ class AIForgeGUIApp:
             height=self.config.get("window_height", 800),
             resizable=True,
             shadow=True,
-            js_api=self.bridge,  # 关键：确保桥接对象被传递
+            js_api=self.bridge,
         )
 
-        # 设置窗口关闭事件
+        # 设置窗口事件处理
         if pywebview.windows:
-            pywebview.windows[0].events.closed += self.on_window_closed
+            window = pywebview.windows[0]
+            window.events.closed += self.on_window_closed
+
+            # 监听窗口加载完成事件
+            def on_loaded():
+                print("🌐 WebView 页面加载完成")
+                # 等待一小段时间确保 API 完全注入
+                time.sleep(0.1)
+                # 触发自定义就绪事件
+                try:
+                    window.evaluate_js("document.dispatchEvent(new Event('pywebviewready'))")
+                except Exception:
+                    pass
+
+            window.events.loaded += on_loaded
+
+        # 标记窗口已创建
+        self.window_created = True
+
+        # 延迟创建托盘图标，确保窗口先显示
+        def delayed_tray_creation():
+            time.sleep(2.0)  # 等待窗口完全显示
+            if self.config.get("enable_tray", True):  # 允许配置禁用托盘
+                self.create_tray_icon()
+                if self.tray:
+                    print("🔧 延迟创建系统托盘图标")
+                    tray_thread = threading.Thread(target=self.tray.run, daemon=True)
+                    tray_thread.start()
+
+        # 启动延迟托盘创建线程
+        threading.Thread(target=delayed_tray_creation, daemon=True).start()
 
     def run(self):
         """运行应用"""
@@ -338,6 +398,10 @@ class AIForgeGUIApp:
             # Windows 平台需要在启动后设置图标
             if platform.system() == "Windows":
                 threading.Thread(target=self._set_window_icon_windows, daemon=True).start()
+
+            # macOS 平台需要特殊处理窗口显示
+            if platform.system() == "Darwin":
+                threading.Thread(target=self._set_window_icon_macos, daemon=True).start()
 
             # 启动 pywebview
             pywebview.start(**start_kwargs)

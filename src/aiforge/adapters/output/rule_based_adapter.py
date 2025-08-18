@@ -11,7 +11,7 @@ class RuleBasedAdapter:
         self.task_type_detector = TaskTypeDetector()
         self.ui_type_recommender = UITypeRecommender()
 
-        # 统一的语义化UI模板定义（移除前缀）
+        # 统一的语义化UI模板定义
         self.ui_templates = {
             # 数据获取任务
             "data_fetch": {

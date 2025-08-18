@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import json
+import time
 
 
 class LocalAPIServer:
@@ -26,8 +27,6 @@ class LocalAPIServer:
 
             # 设置启动事件，通知等待线程
             self.startup_event.set()
-            print(f"🚀 API服务器已绑定端口: {self.port}")
-
             # 开始服务
             self.server.serve_forever()
         except Exception as e:
@@ -144,9 +143,20 @@ class LocalAPIServer:
                             engine = engine_manager.get_engine()
                             if engine:
                                 result = engine.run(instruction)
-                                adapted_result = engine.adapt_result_for_ui(
-                                    result, "webview", "gui"
-                                )
+                                # 确保结果正确序列化
+                                if hasattr(result, "to_dict"):
+                                    adapted_result = result.to_dict()
+                                else:
+                                    adapted_result = engine.adapt_result_for_ui(
+                                        result,
+                                        (
+                                            "editor"
+                                            if result.task_type == "content_generation"
+                                            else None
+                                        ),
+                                        "gui",
+                                    )
+
                                 self._send_json(
                                     {
                                         "success": True,
@@ -163,8 +173,113 @@ class LocalAPIServer:
 
                     except Exception as e:
                         self._send_json({"error": str(e)}, 500)
+                elif self.path == "/api/v1/core/execute/stream":
+                    # 添加流式执行支持
+                    self._handle_streaming_execute()
                 else:
                     self.send_error(404)
+
+            def _handle_streaming_execute(self):
+                """处理流式执行请求"""
+                try:
+                    content_length = int(self.headers["Content-Length"])
+                    post_data = self.rfile.read(content_length)
+                    data = json.loads(post_data.decode("utf-8"))
+
+                    instruction = data.get("instruction", "")
+                    if not instruction:
+                        self.send_error(400)
+                        return
+
+                    # 设置 SSE 响应头
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/event-stream")
+                    self.send_header("Cache-Control", "no-cache")
+                    self.send_header("Connection", "keep-alive")
+                    self.end_headers()
+
+                    # 发送进度消息 - 添加连接检查
+                    def send_progress(message, msg_type="progress"):
+                        try:
+                            if self.wfile.closed:
+                                return False
+                            event_data = {
+                                "type": msg_type,
+                                "message": message,
+                                "timestamp": time.time(),
+                            }
+                            self.wfile.write(f"data: {json.dumps(event_data)}\\n\\n".encode())
+                            self.wfile.flush()
+                            return True
+                        except (BrokenPipeError, ConnectionResetError):
+                            return False
+
+                    try:
+                        if not send_progress("🚀 开始执行指令...", "progress"):
+                            return  # 客户端已断开
+
+                        if engine_manager.is_local_mode():
+                            engine = engine_manager.get_engine()
+                            if engine:
+                                if not send_progress("🤖 正在处理指令...", "progress"):
+                                    return
+
+                                result = engine.run(instruction)
+
+                                if not send_progress("✅ 指令执行完成", "progress"):
+                                    return
+
+                                # 发送结果 - 也需要检查连接
+                                if hasattr(result, "to_dict"):
+                                    result_data = result.to_dict()
+                                else:
+                                    result_data = engine.adapt_result_for_ui(
+                                        result,
+                                        (
+                                            "editor"
+                                            if result.task_type == "content_generation"
+                                            else None
+                                        ),
+                                        "gui",
+                                    )
+
+                                result_event = {
+                                    "type": "result",
+                                    "data": {
+                                        "success": True,
+                                        "result": result_data,
+                                        "metadata": {"source": "local"},
+                                    },
+                                }
+
+                                try:
+                                    if not self.wfile.closed:
+                                        self.wfile.write(
+                                            f"data: {json.dumps(result_event)}\n\n".encode()
+                                        )
+                                        # 发送完成信号
+                                        complete_event = {"type": "complete"}
+                                        self.wfile.write(
+                                            f"data: {json.dumps(complete_event)}\n\n".encode()
+                                        )
+                                except (BrokenPipeError, ConnectionResetError):
+                                    pass  # 客户端断开，静默处理
+                            else:
+                                send_progress("❌ 引擎不可用", "error")
+                        else:
+                            send_progress("❌ 远程模式不支持", "error")
+
+                    except Exception as e:
+                        # 只在连接仍然有效时发送错误消息
+                        send_progress(f"❌ 执行错误: {str(e)}", "error")
+
+                except Exception:
+                    # 避免在连接断开时调用 send_error
+                    try:
+                        if not self.wfile.closed:
+                            self.send_error(500)
+                    except (BrokenPipeError, ConnectionResetError):
+                        pass  # 静默处理连接断开
 
             def _send_json(self, data, status=200):
                 """发送 JSON 响应"""
