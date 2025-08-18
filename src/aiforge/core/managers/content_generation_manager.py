@@ -188,9 +188,7 @@ class AIForgeContentGenerationManager:
         structure_note = self._i18n_manager.t("content_generation.structure_note")
         data_based_note = self._i18n_manager.t("content_generation.data_based_note")
         tone_maintain_note = self._i18n_manager.t("content_generation.tone_maintain_note")
-        content_only_note = self._i18n_manager.t(
-            "content_generation.tone_mcontent_only_noteaintain_note"
-        )
+        content_only_note = self._i18n_manager.t("content_generation.content_only_note")
         return f"""
 {special_notes_header}：
 1. {date_note}
