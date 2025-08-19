@@ -3,6 +3,7 @@ import os
 from typing import Dict, Any, Optional
 from enum import Enum
 from pathlib import Path
+from .streaming_execution_manager import GUIStreamingExecutionManager
 
 
 class ConnectionMode(Enum):
@@ -76,10 +77,18 @@ class EngineManager:
 
             # 初始化引擎
             self.engine = AIForgeEngine(**engine_config)
+            # 初始化 GUI 专用流式执行管理器
+            self.streaming_manager = GUIStreamingExecutionManager(self.engine)
 
         except Exception as e:
             print(f"❌ 本地引擎初始化失败: {e}")
             raise
+
+    def get_streaming_manager(self):
+        """获取流式执行管理器（仅本地模式）"""
+        if self.mode == ConnectionMode.LOCAL:
+            return self.streaming_manager
+        return None
 
     def is_local_mode(self) -> bool:
         """是否为本地模式"""

@@ -114,6 +114,8 @@ class WebUIAdapter {
 
     // 统一的摘要渲染  
     renderSummary(summaryText, adaptationInfo = {}) {
+        return '';
+        /*
         if (!summaryText && !adaptationInfo.adaptation_method) return '';
 
         return `  
@@ -131,6 +133,7 @@ class WebUIAdapter {
                 ` : ''}  
             </div>  
         `;
+        */
     }
 
     renderCard(data, container) {
@@ -807,6 +810,8 @@ class WebUIAdapter {
         return this.formatContent(content);
     }
     renderMetadata(metadata) {
+        return '';
+        /*
         const importantFields = ['summary', 'word_count', 'output_format', 'search_results_count', 'timestamp'];
         const otherFields = Object.keys(metadata).filter(key => !importantFields.includes(key));
 
@@ -829,6 +834,7 @@ class WebUIAdapter {
             </div>  
         </div>  
     `;
+    */
     }
 
     formatFieldName(key) {

@@ -15,7 +15,8 @@ class LocalAPIServer:
         self.server = None
         self.port = None
         self.running = False
-        self.startup_event = threading.Event()  # 添加启动事件
+        self.startup_event = threading.Event()
+        self.shutting_down = False
 
     def start(self, host: str = "127.0.0.1", port: int = 0):
         """启动服务器"""
@@ -56,6 +57,7 @@ class LocalAPIServer:
 
     def stop(self):
         """停止服务器"""
+        self.shutting_down = True
         if self.server:
             self.running = False
             self.server.shutdown()
@@ -180,7 +182,7 @@ class LocalAPIServer:
                     self.send_error(404)
 
             def _handle_streaming_execute(self):
-                """处理流式执行请求"""
+                """处理流式执行请求 - 使用优化的流式管理器"""
                 try:
                     content_length = int(self.headers["Content-Length"])
                     post_data = self.rfile.read(content_length)
@@ -198,88 +200,105 @@ class LocalAPIServer:
                     self.send_header("Connection", "keep-alive")
                     self.end_headers()
 
-                    # 发送进度消息 - 添加连接检查
-                    def send_progress(message, msg_type="progress"):
-                        try:
-                            if self.wfile.closed:
-                                return False
-                            event_data = {
-                                "type": msg_type,
-                                "message": message,
-                                "timestamp": time.time(),
-                            }
-                            self.wfile.write(f"data: {json.dumps(event_data)}\\n\\n".encode())
-                            self.wfile.flush()
-                            return True
-                        except (BrokenPipeError, ConnectionResetError):
-                            return False
-
                     try:
-                        if not send_progress("🚀 开始执行指令...", "progress"):
-                            return  # 客户端已断开
-
                         if engine_manager.is_local_mode():
-                            engine = engine_manager.get_engine()
-                            if engine:
-                                if not send_progress("🤖 正在处理指令...", "progress"):
-                                    return
-
-                                result = engine.run(instruction)
-
-                                if not send_progress("✅ 指令执行完成", "progress"):
-                                    return
-
-                                # 发送结果 - 也需要检查连接
-                                if hasattr(result, "to_dict"):
-                                    result_data = result.to_dict()
-                                else:
-                                    result_data = engine.adapt_result_for_ui(
-                                        result,
-                                        (
-                                            "editor"
-                                            if result.task_type == "content_generation"
-                                            else None
-                                        ),
-                                        "gui",
-                                    )
-
-                                result_event = {
-                                    "type": "result",
-                                    "data": {
-                                        "success": True,
-                                        "result": result_data,
-                                        "metadata": {"source": "local"},
-                                    },
+                            streaming_manager = engine_manager.get_streaming_manager()
+                            if streaming_manager:
+                                # 准备上下文数据
+                                context_data = {
+                                    "task_type": data.get("task_type"),
+                                    "session_id": data.get("session_id", str(time.time())),
+                                    "progress_level": "detailed",
                                 }
 
+                                # 使用异步生成器处理流式执行
+                                import asyncio
+
+                                loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(loop)
+
                                 try:
-                                    if not self.wfile.closed:
-                                        self.wfile.write(
-                                            f"data: {json.dumps(result_event)}\n\n".encode()
-                                        )
-                                        # 发送完成信号
-                                        complete_event = {"type": "complete"}
-                                        self.wfile.write(
-                                            f"data: {json.dumps(complete_event)}\n\n".encode()
-                                        )
-                                except (BrokenPipeError, ConnectionResetError):
-                                    pass  # 客户端断开，静默处理
+
+                                    async def stream_execution():
+                                        async for (
+                                            sse_data
+                                        ) in streaming_manager.execute_with_streaming(
+                                            instruction, context_data
+                                        ):
+                                            if not self.wfile.closed:
+                                                self.wfile.write(sse_data.encode())
+                                                self.wfile.flush()
+                                            else:
+                                                streaming_manager._client_disconnected = True
+                                                break
+
+                                    loop.run_until_complete(stream_execution())
+                                finally:
+                                    loop.close()
                             else:
-                                send_progress("❌ 引擎不可用", "error")
+                                error_data = json.dumps(
+                                    {
+                                        "type": "error",
+                                        "message": "流式管理器不可用",
+                                        "timestamp": time.time(),
+                                    }
+                                )
+                                self.wfile.write(f"data: {error_data}\n\n".encode())
                         else:
-                            send_progress("❌ 远程模式不支持", "error")
+                            error_data = json.dumps(
+                                {
+                                    "type": "error",
+                                    "message": "远程模式不支持流式执行",
+                                    "timestamp": time.time(),
+                                }
+                            )
+                            self.wfile.write(f"data: {error_data}\n\n".encode())
 
                     except Exception as e:
+                        # 如果服务器正在关闭，静默处理错误
+                        if (
+                            self.server
+                            and hasattr(self.server, "shutting_down")
+                            and self.server.shutting_down
+                        ):
+                            return
+                        error_data = json.dumps(
+                            {
+                                "type": "error",
+                                "message": f"流式执行错误: {str(e)}",
+                                "timestamp": time.time(),
+                            }
+                        )
                         # 只在连接仍然有效时发送错误消息
-                        send_progress(f"❌ 执行错误: {str(e)}", "error")
+                        try:
+                            if not self.wfile.closed:
+                                error_data = json.dumps(
+                                    {
+                                        "type": "error",
+                                        "message": f"流式执行错误: {str(e)}",
+                                        "timestamp": time.time(),
+                                    }
+                                )
+                                self.wfile.write(f"data: {error_data}\n\n".encode())
+                        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                            # 静默处理所有连接相关错误
+                            pass
 
                 except Exception:
-                    # 避免在连接断开时调用 send_error
+                    # 避免在连接断开或服务器关闭时调用 send_error
+                    if (
+                        self.server
+                        and hasattr(self.server, "shutting_down")
+                        and self.server.shutting_down
+                    ):
+                        return
+
                     try:
                         if not self.wfile.closed:
                             self.send_error(500)
-                    except (BrokenPipeError, ConnectionResetError):
-                        pass  # 静默处理连接断开
+                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                        # 静默处理连接断开
+                        pass
 
             def _send_json(self, data, status=200):
                 """发送 JSON 响应"""
@@ -291,6 +310,10 @@ class LocalAPIServer:
 
             def log_message(self, format, *args):
                 """静默日志输出"""
+                # 检查是否是连接相关错误且服务器正在关闭
+                if hasattr(self.server, "shutting_down") and self.server.shutting_down:
+                    return
+                # 其他情况保持静默（原有行为）
                 pass
 
         return AIForgeHandler

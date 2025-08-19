@@ -94,6 +94,7 @@ Twitter = "https://twitter.com/iafun_tipixel"
 
 [project.scripts]
 aiforge = "aiforge.cli:main"
+aiforge-deploy = "aiforge_deploy.cli.deploy_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = [

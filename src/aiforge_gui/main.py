@@ -68,7 +68,7 @@ class AIForgeGUIApp:
             import time
 
             # 等待窗口创建完成
-            time.sleep(1.0)
+            time.sleep(1.5)
 
             if pywebview.windows and len(pywebview.windows) > 0:
                 # 获取窗口句柄
@@ -361,6 +361,9 @@ class AIForgeGUIApp:
                 # 触发自定义就绪事件
                 try:
                     window.evaluate_js("document.dispatchEvent(new Event('pywebviewready'))")
+                    # Windows 图标设置
+                    if platform.system() == "Windows":
+                        threading.Thread(target=self._set_window_icon_windows, daemon=True).start()
                 except Exception:
                     pass
 
@@ -375,7 +378,6 @@ class AIForgeGUIApp:
             if self.config.get("enable_tray", True):  # 允许配置禁用托盘
                 self.create_tray_icon()
                 if self.tray:
-                    print("🔧 延迟创建系统托盘图标")
                     tray_thread = threading.Thread(target=self.tray.run, daemon=True)
                     tray_thread.start()
 
@@ -397,10 +399,9 @@ class AIForgeGUIApp:
 
             # Windows 平台需要在启动后设置图标
             if platform.system() == "Windows":
-                threading.Thread(target=self._set_window_icon_windows, daemon=True).start()
-
+                pass
             # macOS 平台需要特殊处理窗口显示
-            if platform.system() == "Darwin":
+            elif platform.system() == "Darwin":
                 threading.Thread(target=self._set_window_icon_macos, daemon=True).start()
 
             # 启动 pywebview

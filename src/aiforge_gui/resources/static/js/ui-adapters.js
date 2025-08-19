@@ -114,6 +114,8 @@ class WebUIAdapter {
 
     // 统一的摘要渲染  
     renderSummary(summaryText, adaptationInfo = {}) {
+        return '';
+        /*
         if (!summaryText && !adaptationInfo.adaptation_method) return '';
 
         return `  
@@ -131,6 +133,7 @@ class WebUIAdapter {
                 ` : ''}  
             </div>  
         `;
+        */
     }
 
     renderCard(data, container) {
@@ -395,44 +398,40 @@ class WebUIAdapter {
     }
 
     renderMarkdown(text) {
-        // 首先移除代码块标记，但更精确地匹配  
+        // 移除代码块标记
         text = text.replace(/```markdown\s*\n/gi, '');
         text = text.replace(/```\s*$/gm, '');
 
         // 处理表格
-        // 先找到完整表格并替换为HTML表格
         text = text.replace(/^\|(.*)\|\s*\n\|([-:| ]+)\|\s*\n(\|.*\|\s*\n)+/gm, (match) => {
             const rows = match.trim().split('\n');
             const headerRow = rows[0];
-            const alignmentRow = rows[1];
             const dataRows = rows.slice(2);
 
-            // 处理表头
             const header = headerRow
                 .split('|')
                 .filter(cell => cell.trim() !== '')
                 .map(cell => `<th class="border px-4 py-2 bg-gray-100">${cell.trim()}</th>`)
                 .join('');
 
-            // 处理数据行
             const body = dataRows
                 .map(row => {
                     return '<tr>' +
                         row.split('|')
-                            .filter(cell => cell.trim() !== '')
-                            .map(cell => `<td class="border px-4 py-2">${cell.trim()}</td>`)
-                            .join('') +
+                        .filter(cell => cell.trim() !== '')
+                        .map(cell => `<td class="border px-4 py-2">${cell.trim()}</td>`)
+                        .join('') +
                         '</tr>';
                 })
                 .join('');
 
             return `<table class="border-collapse table-auto w-full my-4">
-                  <thead><tr>${header}</tr></thead>
-                  <tbody>${body}</tbody>
-                </table>`;
+                <thead><tr>${header}</tr></thead>
+                <tbody>${body}</tbody>
+            </table>`;
         });
 
-        // 处理标题  
+        // 处理标题
         text = text.replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4">$1</h1>');
         text = text.replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3">$1</h2>');
         text = text.replace(/^### (.*$)/gim, '<h3 class="text-lg font-medium mb-2">$1</h3>');
@@ -440,14 +439,26 @@ class WebUIAdapter {
         // 处理链接
         text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" class="text-blue-600 hover:underline">$1</a>');
 
-        // 处理粗体和斜体（先处理粗体再处理斜体，避免嵌套问题）
+        // 处理粗体和斜体
         text = text.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
         text = text.replace(/\*(.*?)\*/gim, '<em>$1</em>');
 
         // 处理行内代码
         text = text.replace(/`([^`]+)`/gim, '<code class="bg-gray-100 px-1 rounded">$1</code>');
 
-        // 处理无序列表（将列表项分组并包装在<ul>中）
+        // 处理分隔线
+        text = text.replace(/^---+$/gm, '<hr class="my-4 border-gray-300">');
+
+        // 处理引用块
+        text = text.replace(/(?:^> (.+)(?:\n|$))+/gm, (match) => {
+            const content = match.split('\n')
+                .filter(line => line.startsWith('> '))
+                .map(line => line.substring(2))
+                .join('<br>');
+            return `<blockquote class="border-l-4 border-gray-300 pl-4 py-2 my-4 bg-gray-50">${content}</blockquote>`;
+        });
+
+        // 处理无序列表
         text = text.replace(/(?:^- (.+)(?:\n|$))+/gm, (match) => {
             const items = match.split('\n')
                 .filter(line => line.startsWith('- '))
@@ -465,30 +476,23 @@ class WebUIAdapter {
             return `<ol class="list-decimal my-2">${items}</ol>`;
         });
 
-        // 处理分隔线  
-        text = text.replace(/^---+$/gm, '<hr class="my-4 border-gray-300">');
-
-        // 处理引用块
-        text = text.replace(/(?:^> (.+)(?:\n|$))+/gm, (match) => {
-            const content = match.split('\n')
-                .filter(line => line.startsWith('> '))
-                .map(line => line.substring(2))
-                .join('<br>');
-            return `<blockquote class="border-l-4 border-gray-300 pl-4 py-2 my-4 bg-gray-50">${content}</blockquote>`;
+        // 确保处理完所有块级元素后，再处理剩余的段落文本
+        // 这个正则确保只匹配未被其他规则转换的文本行
+        const lines = text.split('\n');
+        const processedLines = lines.map(line => {
+            const trimmedLine = line.trim();
+            // 排除已处理过的标签或空行
+            if (trimmedLine === '' || trimmedLine.startsWith('<') && trimmedLine.endsWith('>')) {
+                return line;
+            }
+            // 匹配并处理段落
+            return `<p class="my-2">${line}</p>`;
         });
-
-        // 处理段落（非其他元素的连续文本）
-        text = text.replace(/^([^<].*?)$/gm, (match, p1) => {
-            if (p1.trim() === '') return '';
-            return `<p class="my-2">${p1}</p>`;
-        });
-
-        // 最后处理换行，但不再全部替换为<br>，因为我们已经处理了段落
-        // 仅保留段落内的显式换行（Markdown中的两个空格后的换行）
-        text = text.replace(/  \n/g, '<br>');
+        text = processedLines.join('\n');
 
         // 清理多余的换行
         text = text.replace(/\n+/g, '\n');
+        text = text.replace(/(<p class="my-2">)(\s*<[^>]+>\s*)(<\/p>)/g, '$2'); // 移除包裹着块级元素的段落标签
 
         return text;
     }
@@ -807,6 +811,8 @@ class WebUIAdapter {
         return this.formatContent(content);
     }
     renderMetadata(metadata) {
+        return '';
+        /*
         const importantFields = ['summary', 'word_count', 'output_format', 'search_results_count', 'timestamp'];
         const otherFields = Object.keys(metadata).filter(key => !importantFields.includes(key));
 
@@ -829,6 +835,7 @@ class WebUIAdapter {
             </div>  
         </div>  
     `;
+    */
     }
 
     formatFieldName(key) {

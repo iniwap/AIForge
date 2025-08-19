@@ -98,6 +98,43 @@ aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000
 aiforge gui --api-key sk-or-v1-xxx
 
 ```  
+### Command List  
+- **AIForge Command Usage Comparison Table**  
+  
+| Feature | Development Mode | Package Mode | Core Parameters |  
+|---------|------------------|--------------|-----------------|  
+| **Web Service** | `./aiforge-dev.sh web` | `aiforge web` | `--host 0.0.0.0 --port 8000 --reload --debug --api-key` |  
+| **GUI Application** | `./aiforge-dev.sh gui` | `aiforge gui` | `--theme dark --remote-url --width 1200 --height 800 --debug --api-key` |  
+| **GUI Remote** | `./aiforge-dev.sh gui --remote URL` | `aiforge gui --remote-url URL` | `--remote-url http://server:port` |  
+| **GUI Auto Remote** | `./aiforge-dev.sh gui --auto-remote` | - | `--auto-remote --api-key` (Development mode only) |  
+| **Docker Deployment** | `./aiforge-dev.sh deploy docker start` | `aiforge-deploy docker start` | `--dev --searxng --mode web --host --port --deep` |  
+| **K8S Deployment** | `./aiforge-dev.sh deploy k8s deploy` | `aiforge-deploy k8s deploy` | `--namespace aiforge --replicas 1` |  
+| **AWS Cloud Deploy** | `./aiforge-dev.sh deploy cloud aws deploy` | `aiforge-deploy cloud aws deploy` | `--region us-west-2 --instance-type t3.medium` |  
+| **Azure Cloud Deploy** | `./aiforge-dev.sh deploy cloud azure deploy` | `aiforge-deploy cloud azure deploy` | `--region eastus --instance-type` |  
+| **GCP Cloud Deploy** | `./aiforge-dev.sh deploy cloud gcp deploy` | `aiforge-deploy cloud gcp deploy` | `--region us-central1-a --instance-type` |  
+| **Aliyun Cloud Deploy** | `./aiforge-dev.sh deploy cloud aliyun deploy` | `aiforge-deploy cloud aliyun deploy` | `--region cn-hangzhou --instance-type` |  
+| **Direct Execution** | `python -m aiforge.cli.main "instruction"` | `aiforge "instruction"` | `--provider openrouter --config --api-key` |  
+| **CLI Mode** | `python -m aiforge.cli.main cli "instruction"` | `aiforge cli "instruction"` | `--provider --config --api-key` |  
+  
+- **Common Parameters**  
+  
+| Parameter Category | Parameter | Description | Default Value |  
+|-------------------|-----------|-------------|---------------|  
+| **Authentication** | `--api-key` | LLM provider API key | Environment variable |  
+| **Configuration** | `--provider` | LLM provider (openrouter/deepseek/ollama) | openrouter |  
+| **Configuration** | `--config` | Configuration file path | - |  
+| **Debug** | `--debug` | Enable debug mode | false |  
+| **Debug** | `--verbose, -v` | Verbose output | false |  
+  
+- **Environment Variable Support**  
+  
+| Environment Variable | Description | Example |  
+|---------------------|-------------|---------|  
+| `OPENROUTER_API_KEY` | OpenRouter API key | sk-or-v1-xxx |  
+| `DEEPSEEK_API_KEY` | DeepSeek API key | sk-xxx |  
+| `AIFORGE_API_KEY` | AIForge universal API key | - |  
+| `AIFORGE_LOCALE` | Interface language | zh/en |  
+| `AIFORGE_DOCKER_MODE` | Docker mode identifier | true |
 
 ### Advanced Configuration  
   

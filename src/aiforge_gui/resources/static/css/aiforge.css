@@ -455,3 +455,7 @@ body.dark .text-green {
 body.dark .text-red {  
     color: #f87171;  
 }
+
+.hidden {  
+    display: none !important;  
+}

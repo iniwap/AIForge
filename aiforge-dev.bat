@@ -18,6 +18,7 @@ set "API_KEY="
 set "REMOTE_URL="  
 set "GUI_MODE=local"  
 set "DEBUG_MODE="  
+set "AUTO_REMOTE=false"  
   
 :parse_args  
 if "%~1"=="" goto :check_command  
@@ -31,6 +32,13 @@ if "%~1"=="web" (
     shift  
     goto :parse_args  
 )  
+if "%~1"=="deploy" (  
+    set "COMMAND=deploy"  
+    shift  
+    REM 将剩余参数传递给部署模块  
+    python -m aiforge_deploy.cli.deploy_cli %*  
+    exit /b %ERRORLEVEL%  
+)  
 if "%~1"=="--local" (  
     set "GUI_MODE=local"  
     shift  
@@ -40,6 +48,13 @@ if "%~1"=="--remote" (
     set "GUI_MODE=remote"  
     set "REMOTE_URL=%~2"  
     shift  
+    shift  
+    goto :parse_args  
+)  
+if "%~1"=="--auto-remote" (  
+    set "GUI_MODE=remote"  
+    set "AUTO_REMOTE=true"  
+    set "REMOTE_URL=http://127.0.0.1:8000"  
     shift  
     goto :parse_args  
 )  
@@ -69,19 +84,26 @@ if "%~1"=="--port" (
 if "%~1"=="--help" (  
     echo AIForge 开发服务器启动脚本  
     echo.  
-    echo 用法: %0 [web^|gui] [选项]  
+    echo 用法: %0 [web^|gui^|deploy] [选项]  
     echo.  
     echo 命令:  
     echo   web                启动 Web 服务器 (默认)  
     echo   gui                启动 GUI 应用  
+    echo   deploy             部署管理  
     echo.  
     echo GUI 选项:  
     echo   --local            本地模式 (默认)  
     echo   --remote URL       远程模式，连接到指定服务器  
+    echo   --auto-remote      自动启动远程模式（先启动web服务）  
     echo.  
     echo Web 选项:  
     echo   --host HOST        服务器地址 (默认: 127.0.0.1)  
     echo   --port PORT        服务器端口 (默认: 8000)  
+    echo.  
+    echo 部署选项:  
+    echo   docker start       启动 Docker 部署  
+    echo   k8s deploy         Kubernetes 部署  
+    echo   cloud aws deploy   云部署  
     echo.  
     echo 通用选项:  
     echo   --api-key KEY      OpenRouter API 密钥  
@@ -105,12 +127,43 @@ if "%OPENROUTER_API_KEY%"=="" (
   
 if "%COMMAND%"=="gui" (  
     if "%GUI_MODE%"=="remote" (  
-        if "%REMOTE_URL%"=="" (  
-            echo 错误: 远程模式需要指定服务器地址  
-            echo 示例: %0 gui --remote http://localhost:8000  
-            exit /b 1  
+        if "%AUTO_REMOTE%"=="true" (  
+            echo 🚀 自动启动远程模式...  
+            echo 📡 启动 Web 服务器...  
+              
+            REM 后台启动 web 服务  
+            start /B python -m aiforge.cli.main web --host %HOST% --port %PORT% %RELOAD_FLAG% %DEBUG_MODE%  
+              
+            REM 等待 web 服务启动  
+            echo ⏳ 等待 Web 服务启动...  
+            timeout /t 5 /nobreak >nul  
+              
+            REM 检查 web 服务是否启动成功  
+            curl -s "http://%HOST%:%PORT%/api/health" >nul 2>&1  
+            if errorlevel 1 (  
+                echo ❌ Web 服务启动失败  
+                taskkill /f /im python.exe >nul 2>&1  
+                exit /b 1  
+            )  
+              
+            echo ✅ Web 服务启动成功  
+            echo 🖥️  启动 GUI 应用...  
+              
+            REM 启动 GUI 连接到 web 服务  
+            python -m aiforge.cli.main gui --remote-url %REMOTE_URL% %DEBUG_MODE%  
+              
+            REM GUI 关闭后清理 web 服务  
+            echo 🧹 清理后台服务...  
+            taskkill /f /im python.exe >nul 2>&1  
+        ) else (  
+            if "%REMOTE_URL%"=="" (  
+                echo 错误: 远程模式需要指定服务器地址  
+                echo 示例: %0 gui --remote http://localhost:8000  
+                echo 或使用: %0 gui --auto-remote  
+                exit /b 1  
+            )  
+            python -m aiforge.cli.main gui --remote-url %REMOTE_URL% %DEBUG_MODE%  
         )  
-        python -m aiforge.cli.main gui --remote-url %REMOTE_URL% %DEBUG_MODE%  
     ) else (  
         python -m aiforge.cli.main gui %DEBUG_MODE%  
     )  

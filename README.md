@@ -80,23 +80,84 @@ pip install aiforge-engine[deploy] # 部署支持
 ```
   
 ### 基础使用 
+- 生产模式（安装包）
 ```python
 # 直接模式
 from aiforge import AIForgeEngine    
 print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
 
- # CLI 模式
+# CLI 模式
 aiforge "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx
   
 # Web 服务
 aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
-  
+
+# Web Docker
+aiforge-deploy docker start --searxng
+
 # 桌面应用
 aiforge gui --api-key sk-or-v1-xxx
 
 ```  
+- 开发模式（源码模式）
+```python
+# 直接模式
+from aiforge import AIForgeEngine    
+print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
 
-### 高级配置  
+# CLI 模式
+./aiforge-dev.sh "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx # win:./aiforge-dev.bat
+  
+# Web 服务
+./aiforge-dev.sh web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
+
+# Web Docker
+aiforge-deploy docker start --searxng --dev
+
+# 桌面应用
+./aiforge-dev.sh gui --api-key sk-or-v1-xxx --debug
+
+```  
+
+### 命令列表
+- **AIForge 命令使用对比表**  
+  
+| 功能 | 开发模式 | 安装包模式 | 核心参数 |  
+|------|----------|------------|--------------|  
+| **Web服务** | `./aiforge-dev.sh web` | `aiforge web` | `--host 0.0.0.0 --port 8000 --reload --debug --api-key` |  
+| **GUI应用** | `./aiforge-dev.sh gui` | `aiforge gui` | `--theme dark --remote-url --width 1200 --height 800 --debug --api-key` |  
+| **GUI远程** | `./aiforge-dev.sh gui --remote URL` | `aiforge gui --remote-url URL` | `--remote-url http://server:port` |  
+| **GUI自动远程** | `./aiforge-dev.sh gui --auto-remote` | - | `--auto-remote --api-key` (仅开发模式) |  
+| **Docker部署** | `./aiforge-dev.sh deploy docker start` | `aiforge-deploy docker start` | `--dev --searxng --mode web --host --port --deep` |  
+| **K8S部署** | `./aiforge-dev.sh deploy k8s deploy` | `aiforge-deploy k8s deploy` | `--namespace aiforge --replicas 1` |  
+| **云部署AWS** | `./aiforge-dev.sh deploy cloud aws deploy` | `aiforge-deploy cloud aws deploy` | `--region us-west-2 --instance-type t3.medium` |  
+| **云部署Azure** | `./aiforge-dev.sh deploy cloud azure deploy` | `aiforge-deploy cloud azure deploy` | `--region eastus --instance-type` |  
+| **云部署GCP** | `./aiforge-dev.sh deploy cloud gcp deploy` | `aiforge-deploy cloud gcp deploy` | `--region us-central1-a --instance-type` |  
+| **云部署阿里云** | `./aiforge-dev.sh deploy cloud aliyun deploy` | `aiforge-deploy cloud aliyun deploy` | `--region cn-hangzhou --instance-type` |  
+| **直接执行** | `python -m aiforge.cli.main "指令内容"` | `aiforge "指令内容"` | `--provider openrouter --config --api-key` |  
+| **CLI模式** |`python -m aiforge.cli.main cli "指令内容"` | `aiforge cli "指令内容"` | `--provider --config --api-key` |  
+  
+- **通用参数说明** 
+  
+| 参数类别 | 参数 | 说明 | 默认值 |  
+|----------|------|------|--------|  
+| **认证** | `--api-key` | LLM 提供商 API 密钥 | 环境变量 |  
+| **配置** | `--provider` | LLM 提供商 (openrouter/deepseek/ollama) | openrouter |  
+| **配置** | `--config` | 配置文件路径 | - |  
+| **调试** | `--debug` | 启用调试模式 | false |  
+| **调试** | `--verbose, -v` | 详细输出 | false |  
+  
+- **环境变量支持**  
+  
+| 环境变量 | 说明 | 示例 |  
+|----------|------|------|  
+| `OPENROUTER_API_KEY` | OpenRouter API 密钥 | sk-or-v1-xxx |  
+| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | sk-xxx |  
+| `AIFORGE_API_KEY` | AIForge 通用 API 密钥 | - |  
+| `AIFORGE_LOCALE` | 界面语言 | zh/en |  
+| `AIFORGE_DOCKER_MODE` | Docker 模式标识 | true |
+
+### 高级使用 
 
 - 高级参数传递
 ```python
