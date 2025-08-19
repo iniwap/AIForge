@@ -99,10 +99,10 @@ async def handle_docker_command(deployment_manager, args):
         # 显示部署模式信息
         if result.get("success") and "mode" in deploy_kwargs:
             mode = deploy_kwargs["mode"]
-            if mode == "core":
-                print("📦 已启动核心CLI模式（无Web界面）")
-            elif mode == "web":
+            if mode == "web":
                 print("🌐 已启动Web界面模式")
+            else:
+                print("📦 已启动核心CLI模式（无Web界面）")
 
     elif args.action == "stop":
         result = await deployment_manager.stop(DeploymentType.DOCKER)
@@ -115,11 +115,10 @@ async def handle_docker_command(deployment_manager, args):
     elif args.action == "cleanup":
         if getattr(args, "deep", False):
             # 深度清理
-            result = await deployment_manager.providers[DeploymentType.DOCKER].deep_cleanup()
+            result = await deployment_manager.deep_cleanup(DeploymentType.DOCKER)
         else:
             # 普通清理
             result = await deployment_manager.cleanup(DeploymentType.DOCKER)
-        print(f"Docker清理结果: {'成功' if result else '失败'}")
 
 
 async def handle_k8s_command(deployment_manager, args):

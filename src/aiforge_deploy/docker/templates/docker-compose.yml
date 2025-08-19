@@ -1,10 +1,8 @@
-version: "3.8"
-
 services:
   # 核心CLI服务（无web依赖）
   aiforge-core:
     build:
-      context: .
+      context: ${PWD}
       dockerfile: ${AIFORGE_DOCKERFILE_PATH:-Dockerfile}
       args:
         - INSTALL_WEB=false
@@ -22,13 +20,12 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["tail", "-f", "/dev/null"]
-    profiles: ["core"]
+    command: [ "tail", "-f", "/dev/null" ]
 
   # Web服务（可选）
   aiforge-web:
     build:
-      context: .
+      context: ${PWD}
       dockerfile: ${AIFORGE_DOCKERFILE_PATH:-Dockerfile}
       args:
         - INSTALL_WEB=true
@@ -48,14 +45,14 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["web", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "web", "--host", "0.0.0.0", "--port", "8000" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    profiles: ["web"]
+    profiles: [ "web" ]
 
   # SearXNG搜索引擎
   searxng:
@@ -68,9 +65,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["search"]
+    profiles: [ "search" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -88,9 +85,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["search"]
+    profiles: [ "search" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
       interval: 30s
       timeout: 10s
       retries: 3

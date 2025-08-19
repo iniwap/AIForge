@@ -130,7 +130,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             print(self._i18n_manager.t("docker.docker_not_running_help"))
             return {"success": False, "message": "Docker not running"}
 
-        if not checks["compose_available"]:
+        if not checks["docker_compose_available"]:
             print(f"\n{self._i18n_manager.t('docker.docker_compose_not_available_msg')}")
             return {"success": False, "message": "Docker Compose not available"}
 
@@ -279,7 +279,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             if self._is_source_environment():
                 dockerfile_path = os.path.join(templates_dir, "Dockerfile")
             else:
-                dockerfile_path = self._get_template_path("Dockerfile")
+                dockerfile_path = self._get_template_path("Dockerfile.package")
 
             env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
 
@@ -379,7 +379,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             if self._is_source_environment():
                 dockerfile_path = os.path.join(templates_dir, "Dockerfile")
             else:
-                dockerfile_path = self._get_template_path("Dockerfile")
+                dockerfile_path = self._get_template_path("Dockerfile.package")
 
             env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
 

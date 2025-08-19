@@ -126,6 +126,14 @@ class DeploymentManager:
         provider = self._get_provider(deployment_type)
         return await provider.stop()
 
+    async def deep_cleanup(self, deployment_type: DeploymentType) -> bool:
+        """深度清理部署资源"""
+        provider = self._get_provider(deployment_type)
+        if hasattr(provider, "deep_cleanup"):
+            return await provider.deep_cleanup()
+        else:
+            return await provider.cleanup()
+
     async def cleanup(self, deployment_type: DeploymentType) -> bool:
         """清理部署资源"""
         provider = self._get_provider(deployment_type)

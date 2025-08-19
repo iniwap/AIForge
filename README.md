@@ -122,7 +122,7 @@ aiforge-deploy docker start --searxng --dev
 ### 命令列表
 - **AIForge 命令使用对比表**  
   
-| 功能 | 开发模式 | 安装包模式 | 核心参数 |  
+| 功能 | 开发模式（源码） | 生产模式（安装包） | 核心参数 |  
 |------|----------|------------|--------------|  
 | **Web服务** | `./aiforge-dev.sh web` | `aiforge web` | `--host 0.0.0.0 --port 8000 --reload --debug --api-key` |  
 | **GUI应用** | `./aiforge-dev.sh gui` | `aiforge gui` | `--theme dark --remote-url --width 1200 --height 800 --debug --api-key` |  

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   aiforge-core:
     volumes:
@@ -23,5 +21,4 @@ services:
       - AIFORGE_RELOAD=true
       - AIFORGE_LOG_LEVEL=DEBUG
     # 开发模式下使用不同的启动命令，支持热重载
-    command:
-      ["web", "--reload", "--debug", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "web", "--reload", "--debug", "--host", "0.0.0.0", "--port", "8000" ]
