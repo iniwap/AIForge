@@ -1,8 +1,8 @@
+import os
 import asyncio
 from pathlib import Path
 from typing import Dict, Any
 from ..core.deployment_manager import BaseDeploymentProvider
-from .compose_generator import ComposeGenerator
 from aiforge import AIForgeI18nManager
 
 
@@ -12,28 +12,66 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
     def __init__(self, config_manager):
         super().__init__(config_manager)
         self.deployment_type = "docker"
-        self.compose_generator = ComposeGenerator(config_manager)
 
         # 获取i18n管理器
         self._i18n_manager = AIForgeI18nManager.get_instance()
 
-        # 获取Docker配置
+        # 获取用户传递的Docker配置（可能为None）
         self.docker_config = config_manager.get_docker_config()
 
-        # 设置compose文件路径
-        if self._is_source_environment():
-            self.compose_file = "docker-compose.yml"
-            self.dev_compose_file = "docker-compose.dev.yml"
+        # 根据用户配置或默认配置设置compose文件路径
+        self._setup_compose_file_paths()
+
+    def _setup_compose_file_paths(self):
+        """设置compose文件路径"""
+
+        # 检查用户是否传递了自定义的 docker-compose.yml 文件路径
+        user_compose_path = self.config_manager.get_user_docker_compose_file_path()
+
+        if user_compose_path:
+            # 用户传递了自定义的 docker-compose.yml 文件路径
+            if Path(user_compose_path).exists():
+                self.compose_file = user_compose_path
+            else:
+                self.compose_file = self._get_default_compose_file()
         else:
-            self.compose_file = self._get_template_path("docker-compose.yml")
-            self.dev_compose_file = self._get_template_path("docker-compose.dev.yml")
+            # 使用默认配置
+            self.compose_file = self._get_default_compose_file()
+
+        # dev_compose_file 始终使用默认值（用户不需要自定义）
+        self.dev_compose_file = self._get_default_dev_compose_file()
+
+    def _get_default_compose_file(self) -> str:
+        """获取默认的compose文件路径"""
+        if self._is_source_environment():
+            current_file = Path(__file__)
+            templates_dir = current_file.parent / "templates"
+            return str(templates_dir / "docker-compose.yml")
+        else:
+            return self._get_template_path("docker-compose.yml")
+
+    def _get_default_dev_compose_file(self) -> str:
+        """获取默认的dev compose文件路径"""
+        if self._is_source_environment():
+            current_file = Path(__file__)
+            templates_dir = current_file.parent / "templates"
+            return str(templates_dir / "docker-compose.dev.yml")
+        else:
+            return self._get_template_path("docker-compose.dev.yml")
 
     def _is_source_environment(self) -> bool:
         """检查是否在源码环境"""
         current_dir = Path.cwd()
         return (
             (current_dir / "src" / "aiforge").exists()
-            and (current_dir / "docker-compose.yml").exists()
+            and (
+                current_dir
+                / "src"
+                / "aiforge_deploy"
+                / "docker"
+                / "templates"
+                / "docker-compose.yml"
+            ).exists()
             and (current_dir / "pyproject.toml").exists()
         )
 
@@ -45,7 +83,26 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             with resources.path("aiforge_deploy.docker.templates", filename) as path:
                 return str(path)
         except Exception:
+            # 如果无法从包资源获取，回退到当前目录
             return filename
+
+    def get_effective_docker_config(self) -> Dict[str, Any]:
+        """获取有效的Docker配置（用户配置 + 默认配置）"""
+        if self.docker_config and "compose_content" in self.docker_config:
+            # 用户提供了 docker-compose.yml 内容
+            return {
+                "compose_content": self.docker_config["compose_content"],
+                "compose_file": self.compose_file,
+                "dev_compose_file": self.dev_compose_file,
+            }
+        else:
+            # 返回默认Docker配置
+            return {
+                "compose_file": self.compose_file,
+                "dev_compose_file": self.dev_compose_file,
+                "build_args": {},
+                "services": {},
+            }
 
     async def deploy(self, **kwargs) -> Dict[str, Any]:
         """部署Docker服务"""
@@ -55,12 +112,6 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
         print(self._i18n_manager.t("docker.starting_services"))
         print("=" * 50)
-
-        # 显示部署模式
-        if mode == "core":
-            print("📦 部署模式: 核心CLI（无Web依赖）")
-        elif mode == "web":
-            print("🌐 部署模式: Web界面")
 
         # 1. 环境检查
         env_check = await self._check_environment()
@@ -221,6 +272,17 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(f"\n{self._i18n_manager.t('docker.building_images')}")
 
         try:
+            # 设置环境变量
+            env_vars = os.environ.copy()
+            current_file = Path(__file__)
+            templates_dir = current_file.parent / "templates"
+            if self._is_source_environment():
+                dockerfile_path = os.path.join(templates_dir, "Dockerfile")
+            else:
+                dockerfile_path = self._get_template_path("Dockerfile")
+
+            env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
+
             # 检查是否需要构建
             result = await asyncio.create_subprocess_exec(
                 "docker",
@@ -249,9 +311,12 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 cmd.extend(["-f", self.compose_file])
             cmd.extend(["build", "--no-cache"])
 
-            # 异步实时显示构建进度
+            # 异步实时显示构建进度，传递环境变量
             process = await asyncio.create_subprocess_exec(
-                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                env=env_vars,  # 传递环境变量
             )
 
             print(self._i18n_manager.t("docker.build_progress"))
@@ -305,13 +370,37 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.starting_services"))
 
         try:
+            # 设置环境变量 - 根据运行环境动态设置路径
+            env_vars = os.environ.copy()
+
+            # 设置 Dockerfile 路径
+            current_file = Path(__file__)
+            templates_dir = current_file.parent / "templates"
+            if self._is_source_environment():
+                dockerfile_path = os.path.join(templates_dir, "Dockerfile")
+            else:
+                dockerfile_path = self._get_template_path("Dockerfile")
+
+            env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
+
+            # 设置 nginx.conf 路径（仅在启用 searxng 时需要）
+            if enable_searxng:
+                if self._is_source_environment():
+                    nginx_conf_path = os.path.join(templates_dir, "nginx/nginx.conf")
+                else:
+                    nginx_conf_path = self._get_template_path("nginx.conf")
+                env_vars["AIFORGE_NGINX_CONF_PATH"] = nginx_conf_path
+
             # 先清理可能存在的旧容器
             print(self._i18n_manager.t("docker.cleaning_old_containers"))
             await asyncio.create_subprocess_exec(
                 "docker-compose",
+                "-f",
+                self.compose_file,
                 "down",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=env_vars,
             )
 
             # 构建启动命令
@@ -323,27 +412,27 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 cmd.extend(["-f", self.compose_file])
                 print(self._i18n_manager.t("docker.production_mode_start"))
 
-            # 根据mode参数选择profile - 这是关键修改
+            # 根据mode参数选择profile
             if mode == "core":
                 cmd.extend(["--profile", "core"])
-                print("📦 启动核心CLI模式（无Web界面）")
             elif mode == "web":
                 cmd.extend(["--profile", "web"])
-                print("🌐 启动Web界面模式")
-            # 如果mode不是core或web，则使用默认行为（不指定profile）
 
             # 添加搜索引擎支持
             if enable_searxng:
-                cmd.extend(["--profile", "search"])  # 注意：这里应该是"search"而不是"searxng"
+                cmd.extend(["--profile", "search"])
                 print(self._i18n_manager.t("docker.searxng_enabled"))
             else:
                 print(self._i18n_manager.t("docker.searxng_not_enabled"))
 
             cmd.extend(["up", "-d"])
 
-            # 异步执行启动命令
+            # 异步执行启动命令，传递环境变量
             process = await asyncio.create_subprocess_exec(
-                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env_vars,  # 关键：传递环境变量
             )
 
             stdout, stderr = await process.communicate()
@@ -485,7 +574,6 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             print(self._i18n_manager.t("docker.searxng_config_update_failed", error=str(e)))
             return False
 
-    # 其他必要的方法实现...
     async def stop(self) -> bool:
         """停止服务"""
         if not Path(self.compose_file).exists():
@@ -517,13 +605,22 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
         try:
             # 停止并移除容器
-            cmd1 = ["docker-compose", "down", "-v"]
+            cmd1 = ["docker-compose", "-f", self.compose_file, "down", "-v"]
             process1 = await asyncio.create_subprocess_exec(
                 *cmd1, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             await process1.wait()
 
-            cmd2 = ["docker-compose", "--profile", "searxng", "down", "-v", "--remove-orphans"]
+            cmd2 = [
+                "docker-compose",
+                "-f",
+                self.compose_file,
+                "--profile",
+                "search",
+                "down",
+                "-v",
+                "--remove-orphans",
+            ]
             process2 = await asyncio.create_subprocess_exec(
                 *cmd2, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
@@ -559,16 +656,21 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             print(self._i18n_manager.t("docker.stopping_all_services"))
             await asyncio.create_subprocess_exec(
                 "docker-compose",
+                "-f",
+                self.compose_file,
                 "down",
                 "-v",
                 "--remove-orphans",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
+
             await asyncio.create_subprocess_exec(
                 "docker-compose",
+                "-f",
+                self.compose_file,
                 "--profile",
-                "searxng",
+                "search",
                 "down",
                 "-v",
                 "--remove-orphans",
@@ -663,3 +765,22 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
         except Exception as e:
             print(self._i18n_manager.t("docker.cleanup_images_error", error=str(e)))
+
+    async def status(self) -> Dict[str, Any]:
+        """获取部署状态"""
+        try:
+            # 检查服务状态
+            services_status = await self._check_services_health(False, "web")
+
+            return {
+                "success": True,
+                "status": (
+                    "running"
+                    if any(status == "running" for status in services_status.values())
+                    else "stopped"
+                ),
+                "services": services_status,
+                "compose_file": self.compose_file,
+            }
+        except Exception as e:
+            return {"success": False, "status": "unknown", "error": str(e)}

@@ -35,10 +35,10 @@ if "%~1"=="web" (
 if "%~1"=="deploy" (  
     set "COMMAND=deploy"  
     shift  
-    REM 将剩余参数传递给部署模块  
-    python -m aiforge_deploy.cli.deploy_cli %*  
+    REM
+    python -m aiforge_deploy.cli.deploy_cli %2 %3 %4 %5 %6 %7 %8 %9  
     exit /b %ERRORLEVEL%  
-)  
+)
 if "%~1"=="--local" (  
     set "GUI_MODE=local"  
     shift  
@@ -115,14 +115,17 @@ REM 跳过未知参数
 shift  
 goto :parse_args  
   
-:check_command  
-if not "%API_KEY%"=="" (  
-    set "OPENROUTER_API_KEY=%API_KEY%"  
-)  
+:check_command    
+if not "%API_KEY%"=="" (    
+    set "OPENROUTER_API_KEY=%API_KEY%"    
+)    
   
-if "%OPENROUTER_API_KEY%"=="" (  
-    echo 错误: 请设置 OPENROUTER_API_KEY 环境变量或使用 --api-key 参数  
-    exit /b 1  
+REM 只有在非部署命令时才检查 API 密钥  
+if not "%COMMAND%"=="deploy" (  
+    if "%OPENROUTER_API_KEY%"=="" (    
+        echo 错误: 请设置 OPENROUTER_API_KEY 环境变量或使用 --api-key 参数    
+        exit /b 1    
+    )    
 )  
   
 if "%COMMAND%"=="gui" (  
@@ -167,6 +170,10 @@ if "%COMMAND%"=="gui" (
     ) else (  
         python -m aiforge.cli.main gui %DEBUG_MODE%  
     )  
+) else if "%COMMAND%"=="deploy" (  
+    REM 部署命令已经在 parse_args 中处理，这里不应该到达  
+    echo 错误: 部署命令处理异常  
+    exit /b 1
 ) else (  
     python -m aiforge.cli.main web --host %HOST% --port %PORT% %RELOAD_FLAG% %DEBUG_MODE%  
 )

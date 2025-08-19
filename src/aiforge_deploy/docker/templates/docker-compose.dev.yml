@@ -1,15 +1,27 @@
+version: "3.8"
+
 services:
-  aiforge:
+  aiforge-core:
     volumes:
-      # 开发模式：挂载源代码目录，实现代码热更新  
+      # 开发模式：挂载源代码目录，实现代码热更新
       - ./src:/app/src
       - ./templates:/app/templates
       - ./static:/app/static
-      - ./aiforge_work:/app/aiforge_work
-      - ./logs:/app/logs
     environment:
       - AIFORGE_DEBUG=true
       - AIFORGE_RELOAD=true
       - AIFORGE_LOG_LEVEL=DEBUG
-    # 开发模式下使用不同的启动命令，支持热重载  
-    command: [ "web", "--reload", "--debug" ]
+
+  aiforge-web:
+    volumes:
+      # 开发模式：挂载源代码目录，实现代码热更新
+      - ./src:/app/src
+      - ./templates:/app/templates
+      - ./static:/app/static
+    environment:
+      - AIFORGE_DEBUG=true
+      - AIFORGE_RELOAD=true
+      - AIFORGE_LOG_LEVEL=DEBUG
+    # 开发模式下使用不同的启动命令，支持热重载
+    command:
+      ["web", "--reload", "--debug", "--host", "0.0.0.0", "--port", "8000"]

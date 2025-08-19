@@ -5,36 +5,33 @@ services:
   aiforge-core:
     build:
       context: .
-      dockerfile: src/aiforge_deploy/docker/templates/Dockerfile
+      dockerfile: ${AIFORGE_DOCKERFILE_PATH:-Dockerfile}
       args:
         - INSTALL_WEB=false
-        - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-        - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
         - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
     container_name: aiforge-core
     volumes:
       - ./aiforge_work:/app/aiforge_work
       - ./logs:/app/logs
+      - ./aiforge.toml:/app/aiforge.toml:ro
     environment:
       - AIFORGE_DOCKER_MODE=true
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["--help"]
+    command: ["tail", "-f", "/dev/null"]
     profiles: ["core"]
 
   # Web服务（可选）
   aiforge-web:
     build:
       context: .
-      dockerfile: src/aiforge_deploy/docker/templates/Dockerfile
+      dockerfile: ${AIFORGE_DOCKERFILE_PATH:-Dockerfile}
       args:
         - INSTALL_WEB=true
-        - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-        - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
         - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
     container_name: aiforge-web
     ports:
@@ -42,10 +39,11 @@ services:
     volumes:
       - ./aiforge_work:/app/aiforge_work
       - ./logs:/app/logs
+      - ./aiforge.toml:/app/aiforge.toml:ro
     environment:
       - AIFORGE_DOCKER_MODE=true
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
     networks:
       - aiforge-network
@@ -84,7 +82,7 @@ services:
     ports:
       - "55510:80"
     volumes:
-      - ./src/aiforge_deploy/docker/templates/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${AIFORGE_NGINX_CONF_PATH:-/etc/nginx/conf.d/default.conf}:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - searxng
     networks:

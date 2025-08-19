@@ -182,7 +182,7 @@ class AIForgeI18nManager:
             "ui.json",
             "data.json",
             "keywords.json",
-            "docker.json",
+            "deploy.json",
         ]
 
         for json_file in json_files:

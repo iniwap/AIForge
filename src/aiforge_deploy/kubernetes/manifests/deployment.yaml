@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiforge-engine
+  namespace: aiforge
+  labels:
+    app: aiforge-engine
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aiforge-engine
+  template:
+    metadata:
+      labels:
+        app: aiforge-engine
+        version: v1
+    spec:
+      containers:
+        - name: aiforge-engine
+          image: aiforge/aiforge-engine:latest
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          env:
+            - name: AIFORGE_DOCKER_MODE
+              value: "false"
+            - name: AIFORGE_LOCALE
+              value: "zh"
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aiforge-secrets
+                  key: openrouter-api-key
+                  optional: true
+            - name: DEEPSEEK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aiforge-secrets
+                  key: deepseek-api-key
+                  optional: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: aiforge-work
+              mountPath: /app/aiforge_work
+            - name: logs
+              mountPath: /app/logs
+      volumes:
+        - name: aiforge-work
+          persistentVolumeClaim:
+            claimName: aiforge-work-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: aiforge-logs-pvc
+      restartPolicy: Always

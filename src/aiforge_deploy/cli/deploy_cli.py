@@ -14,7 +14,10 @@ def main():
     )
 
     # 全局选项
-    parser.add_argument("--config", help="部署配置文件路径")
+    parser.add_argument("--config", help="统一部署配置文件路径 (TOML)")
+    parser.add_argument("--docker-compose", help="Docker Compose 配置文件路径")
+    parser.add_argument("--k8s-config", help="Kubernetes 配置文件路径")
+    parser.add_argument("--terraform-config", help="Terraform 配置文件路径")
     parser.add_argument("--verbose", "-v", action="store_true", help="详细输出")
 
     subparsers = parser.add_subparsers(dest="command", help="部署命令", required=True)
@@ -52,7 +55,12 @@ def main():
     try:
         # 初始化配置和部署管理器
         config_manager = DeploymentConfigManager()
-        config_manager.initialize_deployment_config(deployment_config_file=args.config)
+        config_manager.initialize_deployment_config(
+            deployment_config_file=args.config,
+            docker_compose_file=args.docker_compose,
+            kubernetes_config_file=args.k8s_config,
+            terraform_config_file=args.terraform_config,
+        )
         deployment_manager = DeploymentManager(config_manager)
 
         # 执行相应的部署命令
@@ -62,9 +70,6 @@ def main():
             asyncio.run(handle_k8s_command(deployment_manager, args))
         elif args.command == "cloud":
             asyncio.run(handle_cloud_command(deployment_manager, args))
-
-    except KeyboardInterrupt:
-        print("\n用户中断操作")
     except Exception as e:
         print(f"执行异常: {str(e)}")
         if args.verbose:

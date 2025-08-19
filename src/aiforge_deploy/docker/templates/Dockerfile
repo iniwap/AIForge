@@ -1,10 +1,8 @@
 FROM python:3.10-slim  
 
-# 构建参数 - 无默认值，完全通过构建时传递  
+# 构建相关参数  
 ARG INSTALL_WEB  
-ARG AIFORGE_LOCALE   
-ARG OPENROUTER_API_KEY    
-ARG DEEPSEEK_API_KEY   
+ARG AIFORGE_LOCALE  
 
 WORKDIR /app  
 
@@ -19,7 +17,6 @@ ENV AIFORGE_DOCKER_MODE=true
 RUN apt-get update && \  
     apt-get install -y --no-install-recommends \  
     curl \  
-    gettext-base \  
     && rm -rf /var/lib/apt/lists/* \  
     && apt-get clean  
 
@@ -42,20 +39,13 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY src/ ./src/  
 
 # 创建工作目录  
-RUN mkdir -p /app/aiforge_work /app/config /app/logs  
+RUN mkdir -p /app/aiforge_work /app/logs  
 
-# 复制模板文件并生成默认配置  
-COPY src/aiforge_deploy/docker/templates/aiforge.toml.template /app/docker/aiforge.toml.template     
-ENV AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}   
-ENV OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}       
-ENV DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}      
-RUN envsubst < /app/docker/aiforge.toml.template > /app/config/aiforge.toml  
-
-# 动态健康检查脚本  
+# 健康检查脚本  
 RUN if [ "$INSTALL_WEB" = "true" ]; then \  
     echo '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1' > /app/healthcheck.sh; \  
     else \  
-    echo '#!/bin/bash\naiforge --help > /dev/null 2>&1 || exit 1' > /app/healthcheck.sh; \  
+    echo '#!/bin/bash\nps aux | grep -v grep | grep -q "tail.*dev.*null" || exit 1' > /app/healthcheck.sh; \  
     fi && \  
     chmod +x /app/healthcheck.sh  
 

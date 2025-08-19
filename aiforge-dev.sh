@@ -107,15 +107,18 @@ while [[ $# -gt 0 ]]; do
     esac  
 done  
   
-# 设置 API Key  
-if [ -n "$API_KEY" ]; then  
-    export OPENROUTER_API_KEY="$API_KEY"  
-fi  
+# 设置 API Key    
+if [ -n "$API_KEY" ]; then    
+    export OPENROUTER_API_KEY="$API_KEY"    
+fi    
   
-if [ -z "$OPENROUTER_API_KEY" ]; then  
-    echo "错误: 请设置 OPENROUTER_API_KEY 环境变量或使用 --api-key 参数"  
-    exit 1  
-fi  
+# 只有在非部署命令时才检查 API 密钥  
+if [ "$COMMAND" != "deploy" ]; then  
+    if [ -z "$OPENROUTER_API_KEY" ]; then    
+        echo "错误: 请设置 OPENROUTER_API_KEY 环境变量或使用 --api-key 参数"    
+        exit 1    
+    fi    
+fi 
   
 # 启动相应服务  
 if [ "$COMMAND" = "gui" ]; then  
@@ -160,6 +163,10 @@ if [ "$COMMAND" = "gui" ]; then
     else  
         python -m aiforge.cli.main gui $DEBUG_MODE  
     fi  
+elif [ "$COMMAND" = "deploy" ]; then  
+    # 部署命令已经在参数解析中处理，这里不应该到达  
+    echo "错误: 部署命令处理异常"  
+    exit 1  
 else  
     python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_MODE  
 fi
