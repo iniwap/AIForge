@@ -33,16 +33,60 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         templates_dir = current_file.parent / "templates"
 
         if self._is_source_environment():
-            dockerfile_path = str(templates_dir / "Dockerfile")  # 使用Path操作，最后转为字符串
+            dockerfile_path = str(templates_dir / "Dockerfile")
         else:
             dockerfile_path = self._get_template_path("Dockerfile.package")
 
         env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
         return env_vars, templates_dir
 
+    def _get_docker_working_directory(self) -> Path:
+        """获取Docker部署的工作目录"""
+        if self._is_source_environment():
+            # 源码模式：使用templates目录
+            current_file = Path(__file__)
+            return current_file.parent / "templates"
+        else:
+            # 安装包模式：使用当前工作目录
+            return Path.cwd()
+
+    def _ensure_docker_runtime_directories(self) -> bool:
+        """确保Docker运行时目录存在"""
+        work_dir = self._get_docker_working_directory()
+
+        try:
+            # 只创建必要的运行时目录，不管理aiforge.toml
+            (work_dir / "aiforge_config").mkdir(exist_ok=True)
+            (work_dir / "aiforge_work").mkdir(exist_ok=True)
+            (work_dir / "logs").mkdir(exist_ok=True)
+            (work_dir / "searxng").mkdir(exist_ok=True)
+
+            return True
+        except Exception as e:
+            print(f"创建Docker运行时目录失败: {e}")
+            return False
+
+    def _create_default_searxng_config(self, settings_path: Path) -> None:
+        """创建默认的SearXNG配置文件"""
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+
+        default_settings = {
+            "search": {"formats": ["html", "json", "csv", "rss"]},
+            "server": {
+                "secret_key": "change_me_in_production",
+                "bind_address": "0.0.0.0",
+                "port": 8080,
+            },
+            "ui": {"default_locale": "en"},
+        }
+
+        import yaml
+
+        with open(settings_path, "w", encoding="utf-8") as f:
+            yaml.dump(default_settings, f, default_flow_style=False, allow_unicode=True)
+
     def _setup_compose_file_paths(self):
         """设置compose文件路径"""
-
         # 检查用户是否传递了自定义的 docker-compose.yml 文件路径
         user_compose_path = self.config_manager.get_user_docker_compose_file_path()
 
@@ -290,84 +334,94 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(f"\n{self._i18n_manager.t('docker.building_images')}")
 
         try:
-            # 设置环境变量
-            env_vars, _ = self._get_base_env_vars()
+            work_dir = self._get_docker_working_directory()
+            original_cwd = Path.cwd()
 
-            # 检查是否需要构建
-            result = await asyncio.create_subprocess_exec(
-                "docker",
-                "images",
-                "--format",
-                "{{.Repository}}:{{.Tag}}",
-                "--filter",
-                f"label=com.docker.compose.project={self.project_name}",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, _ = await result.communicate()
+            try:
+                os.chdir(work_dir)
 
-            if stdout.decode().strip():
-                print(self._i18n_manager.t("docker.image_exists_skip_build"))
-                return {"success": True, "message": "Images already exist"}
+                # 设置环境变量
+                env_vars, _ = self._get_base_env_vars()
 
-            print(self._i18n_manager.t("docker.start_building"))
-            print(self._i18n_manager.t("docker.build_time_notice"))
+                # 检查是否需要构建
+                result = await asyncio.create_subprocess_exec(
+                    "docker",
+                    "images",
+                    "--format",
+                    "{{.Repository}}:{{.Tag}}",
+                    "--filter",
+                    f"label=com.docker.compose.project={self.project_name}",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, _ = await result.communicate()
 
-            # 构建命令
-            cmd = ["docker-compose"]
-            if dev_mode and Path(self.dev_compose_file).exists():
-                cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
-            else:
-                cmd.extend(["-f", self.compose_file])
-            cmd.extend(["build", "--no-cache"])
+                if stdout.decode().strip():
+                    print(self._i18n_manager.t("docker.image_exists_skip_build"))
+                    return {"success": True, "message": "Images already exist"}
 
-            # 异步实时显示构建进度，传递环境变量
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
-                env=env_vars,  # 传递环境变量
-            )
+                print(self._i18n_manager.t("docker.start_building"))
+                print(self._i18n_manager.t("docker.build_time_notice"))
 
-            print(self._i18n_manager.t("docker.build_progress"))
-            output_lines = []
+                # 构建命令
+                cmd = ["docker-compose", "-p", self.project_name]
+                if dev_mode and Path(self.dev_compose_file).exists():
+                    cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
+                else:
+                    cmd.extend(["-f", self.compose_file])
+                cmd.extend(["build", "--no-cache"])
 
-            while True:
-                line = await process.stdout.readline()
-                if not line:
-                    break
+                # 异步实时显示构建进度
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                    env=env_vars,
+                )
 
-                line_str = line.decode().strip()
-                if line_str:
-                    output_lines.append(line_str)
-                    if "Step" in line_str:
-                        print(f"🔧 {line_str}")
-                    elif "Successfully built" in line_str or "Successfully tagged" in line_str:
-                        print(f"✅ {line_str}")
-                    elif "ERROR" in line_str or "FAILED" in line_str:
-                        print(f"❌ {line_str}")
-                    elif any(
-                        keyword in line_str
-                        for keyword in ["Downloading", "Extracting", "Pull complete"]
-                    ):
-                        print(f"⬇️ {line_str}")
+                print(self._i18n_manager.t("docker.build_progress"))
+                output_lines = []
 
-            await process.wait()
+                while True:
+                    line = await process.stdout.readline()
+                    if not line:
+                        break
 
-            if process.returncode == 0:
-                print(self._i18n_manager.t("docker.build_success"))
-                return {
-                    "success": True,
-                    "message": "Build successful",
-                    "output": "\n".join(output_lines),
-                }
-            else:
-                print(self._i18n_manager.t("docker.build_failed"))
-                return {
-                    "success": False,
-                    "message": "Build failed",
-                    "output": "\n".join(output_lines),
-                }
+                    line_str = line.decode().strip()
+                    if line_str:
+                        output_lines.append(line_str)
+                        if "Step" in line_str:
+                            print(f"🔧 {line_str}")
+                        elif "Successfully built" in line_str or "Successfully tagged" in line_str:
+                            print(f"✅ {line_str}")
+                        elif "ERROR" in line_str or "FAILED" in line_str:
+                            print(f"❌ {line_str}")
+                        elif any(
+                            keyword in line_str
+                            for keyword in ["Downloading", "Extracting", "Pull complete"]
+                        ):
+                            print(f"⬇️ {line_str}")
+
+                await process.wait()
+
+                if process.returncode == 0:
+                    print(self._i18n_manager.t("docker.build_success"))
+                    return {
+                        "success": True,
+                        "message": "Build successful",
+                        "output": "\n".join(output_lines),
+                    }
+                else:
+                    print(self._i18n_manager.t("docker.build_failed"))
+                    return {
+                        "success": False,
+                        "message": "Build failed",
+                        "output": "\n".join(output_lines),
+                    }
+
+            finally:
+                # 恢复原始工作目录
+                os.chdir(original_cwd)
 
         except Exception as e:
             print(self._i18n_manager.t("docker.build_exception", error=str(e)))
@@ -380,97 +434,115 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.starting_services"))
 
         try:
-            # 设置环境变量 - 根据运行环境动态设置路径
-            env_vars, templates_dir = self._get_base_env_vars()
+            work_dir = self._get_docker_working_directory()
+            original_cwd = Path.cwd()
 
-            # 设置 nginx.conf 路径（仅在启用 searxng 时需要）
-            if enable_searxng:
-                if self._is_source_environment():
-                    nginx_conf_path = os.path.join(templates_dir, "nginx/nginx.conf")
-                else:
-                    nginx_conf_path = self._get_template_path("nginx.conf")
-                env_vars["AIFORGE_NGINX_CONF_PATH"] = nginx_conf_path
+            try:
+                os.chdir(work_dir)
 
-            # 先清理可能存在的旧容器
-            print(self._i18n_manager.t("docker.cleaning_old_containers"))
-            await asyncio.create_subprocess_exec(
-                "docker-compose",
-                "-p",
-                self.project_name,  # 明确指定项目名
-                "-f",
-                self.compose_file,
-                "down",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=env_vars,
-            )
+                # 确保运行时目录存在
+                if not self._ensure_docker_runtime_directories():
+                    return {
+                        "success": False,
+                        "message": "Failed to prepare Docker runtime directories",
+                    }
 
-            # 构建启动命令
-            cmd = ["docker-compose", "-p", self.project_name]  # 明确指定项目名
-            if dev_mode:
-                cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
-                print(self._i18n_manager.t("docker.dev_mode_start"))
-            else:
-                cmd.extend(["-f", self.compose_file])
-                print(self._i18n_manager.t("docker.production_mode_start"))
+                # 设置环境变量
+                env_vars, templates_dir = self._get_base_env_vars()
 
-            # 根据mode参数选择profile
-            if enable_web:
-                cmd.extend(["--profile", "web"])
-
-            # 添加搜索引擎支持
-            if enable_searxng:
-                cmd.extend(["--profile", "search"])
-                print(self._i18n_manager.t("docker.searxng_enabled"))
-            else:
-                print(self._i18n_manager.t("docker.searxng_not_enabled"))
-
-            cmd.extend(["up", "-d"])
-
-            # 异步执行启动命令，传递环境变量
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=env_vars,  # 关键：传递环境变量
-            )
-
-            stdout, stderr = await process.communicate()
-
-            if process.returncode == 0:
-                print(self._i18n_manager.t("docker.service_start_success"))
-
-                # 显示服务信息 - 需要传递mode参数
-                await self._show_service_urls(enable_searxng, enable_web)
-
-                # 等待服务稳定
-                print(f"\n{self._i18n_manager.t('docker.waiting_services')}")
-                await asyncio.sleep(10)
-
-                # 检查服务健康状态 - 需要传递mode参数
-                health_status = await self._check_services_health(enable_searxng, enable_web)
-
-                # 更新SearXNG配置（仅当启用时）
+                # 设置nginx.conf路径（仅在启用searxng时需要）
                 if enable_searxng:
-                    await self._check_and_update_searxng_formats()
+                    if self._is_source_environment():
+                        nginx_conf_path = str(templates_dir / "nginx" / "nginx.conf")
+                    else:
+                        nginx_conf_path = self._get_template_path("nginx.conf")
+                    env_vars["AIFORGE_NGINX_CONF_PATH"] = nginx_conf_path
 
-                print(f"\n{self._i18n_manager.t('docker.startup_complete')}")
-                print(self._i18n_manager.t("docker.ready_to_use"))
+                # 先清理可能存在的旧容器
+                print(self._i18n_manager.t("docker.cleaning_old_containers"))
+                await asyncio.create_subprocess_exec(
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "down",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
 
-                return {
-                    "success": True,
-                    "message": "Services started successfully",
-                    "mode": enable_web,
-                    "health_status": health_status,
-                    "output": stdout.decode() if stdout else "",
-                }
-            else:
-                print(self._i18n_manager.t("docker.service_start_failed", error=stderr.decode()))
-                return {
-                    "success": False,
-                    "message": "Service start failed",
-                    "error": stderr.decode() if stderr else "",
-                }
+                # 构建启动命令
+                cmd = ["docker-compose", "-p", self.project_name]
+                if dev_mode:
+                    cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
+                    print(self._i18n_manager.t("docker.dev_mode_start"))
+                else:
+                    cmd.extend(["-f", self.compose_file])
+                    print(self._i18n_manager.t("docker.production_mode_start"))
+
+                # 根据参数选择profile
+                if enable_web:
+                    cmd.extend(["--profile", "web"])
+
+                if enable_searxng:
+                    cmd.extend(["--profile", "search"])
+                    print(self._i18n_manager.t("docker.searxng_enabled"))
+                else:
+                    print(self._i18n_manager.t("docker.searxng_not_enabled"))
+
+                cmd.extend(["up", "-d"])
+
+                # 执行启动命令
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
+
+                stdout, stderr = await process.communicate()
+
+                if process.returncode == 0:
+                    print(self._i18n_manager.t("docker.service_start_success"))
+
+                    # 显示服务信息
+                    await self._show_service_urls(enable_searxng, enable_web)
+
+                    # 等待服务稳定
+                    print(f"\n{self._i18n_manager.t('docker.waiting_services')}")
+                    await asyncio.sleep(10)
+
+                    # 检查服务健康状态
+                    health_status = await self._check_services_health(enable_searxng, enable_web)
+
+                    # 更新SearXNG配置（仅当启用时）
+                    if enable_searxng:
+                        await self._check_and_update_searxng_formats()
+
+                    print(f"\n{self._i18n_manager.t('docker.startup_complete')}")
+                    print(self._i18n_manager.t("docker.ready_to_use"))
+
+                    return {
+                        "success": True,
+                        "message": "Services started successfully",
+                        "mode": enable_web,
+                        "health_status": health_status,
+                        "output": stdout.decode() if stdout else "",
+                    }
+                else:
+                    print(
+                        self._i18n_manager.t("docker.service_start_failed", error=stderr.decode())
+                    )
+                    return {
+                        "success": False,
+                        "message": "Service start failed",
+                        "error": stderr.decode() if stderr else "",
+                    }
+
+            finally:
+                # 恢复原始工作目录
+                os.chdir(original_cwd)
 
         except Exception as e:
             print(self._i18n_manager.t("docker.startup_exception", error=str(e)))
@@ -493,7 +565,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         self, enable_searxng: bool = False, enable_web: bool = True
     ) -> Dict[str, str]:
         """检查服务健康状态"""
-        print(f"\\n{self._i18n_manager.t('docker.health_check')}")
+        print(f"\n{self._i18n_manager.t('docker.health_check')}")
 
         services = ["aiforge-core"]
         if enable_web:
@@ -546,12 +618,15 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             print(self._i18n_manager.t("docker.pyyaml_not_installed"))
             return False
 
-        # 保持原始路径：根目录下的searxng/settings.yml
-        settings_file = Path("searxng/settings.yml")
+        # 使用正确的工作目录路径
+        work_dir = self._get_docker_working_directory()
+        settings_file = work_dir / "searxng" / "settings.yml"
 
         if not settings_file.exists():
             print(self._i18n_manager.t("docker.searxng_config_not_exists"))
-            return False
+            # 创建默认配置
+            self._create_default_searxng_config(settings_file)
+            return True
 
         try:
             with open(settings_file, "r", encoding="utf-8") as f:
@@ -588,19 +663,32 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.stopping_services"))
 
         try:
-            env_vars, _ = self._get_base_env_vars()
-            cmd = ["docker-compose", "-p", self.project_name, "-f", self.compose_file, "down"]
-            process = await asyncio.create_subprocess_exec(
-                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env_vars
-            )
-            await process.wait()
+            work_dir = self._get_docker_working_directory()
+            original_cwd = Path.cwd()
 
-            if process.returncode == 0:
-                print(self._i18n_manager.t("docker.stop_success"))
-                return True
-            else:
-                print(self._i18n_manager.t("docker.stop_failed", error="Process failed"))
-                return False
+            try:
+                os.chdir(work_dir)
+                env_vars, _ = self._get_base_env_vars()
+
+                cmd = ["docker-compose", "-p", self.project_name, "-f", self.compose_file, "down"]
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
+                await process.wait()
+
+                if process.returncode == 0:
+                    print(self._i18n_manager.t("docker.stop_success"))
+                    return True
+                else:
+                    print(self._i18n_manager.t("docker.stop_failed", error="Process failed"))
+                    return False
+
+            finally:
+                os.chdir(original_cwd)
+
         except Exception as e:
             print(self._i18n_manager.t("docker.stop_failed", error=str(e)))
             return False
@@ -610,57 +698,72 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.cleaning_resources"))
 
         try:
-            env_vars, _ = self._get_base_env_vars()
+            work_dir = self._get_docker_working_directory()
+            original_cwd = Path.cwd()
 
-            # 停止并移除容器
-            cmd1 = [
-                "docker-compose",
-                "-p",
-                self.project_name,
-                "-f",
-                self.compose_file,
-                "down",
-                "-v",
-            ]
-            process1 = await asyncio.create_subprocess_exec(
-                *cmd1, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env_vars
-            )
-            await process1.wait()
+            try:
+                os.chdir(work_dir)
+                env_vars, _ = self._get_base_env_vars()
 
-            # 清理search profile的服务
-            cmd2 = [
-                "docker-compose",
-                "-p",
-                self.project_name,
-                "-f",
-                self.compose_file,
-                "--profile",
-                "search",
-                "down",
-                "-v",
-                "--remove-orphans",
-            ]
-            process2 = await asyncio.create_subprocess_exec(
-                *cmd2, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env_vars
-            )
-            await process2.wait()
+                # 停止并移除容器
+                cmd1 = [
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "down",
+                    "-v",
+                ]
+                process1 = await asyncio.create_subprocess_exec(
+                    *cmd1,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
+                await process1.wait()
 
-            # 清理相关镜像 - 使用项目名标签
-            cmd3 = [
-                "docker",
-                "image",
-                "prune",
-                "-f",
-                "--filter",
-                f"label=com.docker.compose.project={self.project_name}",
-            ]
-            process3 = await asyncio.create_subprocess_exec(
-                *cmd3, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-            )
-            await process3.wait()
+                # 清理search profile的服务
+                cmd2 = [
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "--profile",
+                    "search",
+                    "down",
+                    "-v",
+                    "--remove-orphans",
+                ]
+                process2 = await asyncio.create_subprocess_exec(
+                    *cmd2,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
+                await process2.wait()
 
-            print(self._i18n_manager.t("docker.cleanup_success"))
-            return True
+                # 清理相关镜像
+                cmd3 = [
+                    "docker",
+                    "image",
+                    "prune",
+                    "-f",
+                    "--filter",
+                    f"label=com.docker.compose.project={self.project_name}",
+                ]
+                process3 = await asyncio.create_subprocess_exec(
+                    *cmd3, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                )
+                await process3.wait()
+
+                print(self._i18n_manager.t("docker.cleanup_success"))
+                return True
+
+            finally:
+                os.chdir(original_cwd)
+
         except Exception as e:
             print(self._i18n_manager.t("docker.cleanup_failed", error=str(e)))
             return False
@@ -671,76 +774,85 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.deep_cleanup_warning"))
 
         try:
-            env_vars, _ = self._get_base_env_vars()
+            work_dir = self._get_docker_working_directory()
+            original_cwd = Path.cwd()
 
-            # 1. 停止所有服务
-            print(self._i18n_manager.t("docker.stopping_all_services"))
-            await asyncio.create_subprocess_exec(
-                "docker-compose",
-                "-p",
-                self.project_name,
-                "-f",
-                self.compose_file,
-                "down",
-                "-v",
-                "--remove-orphans",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=env_vars,
-            )
+            try:
+                os.chdir(work_dir)
+                env_vars, _ = self._get_base_env_vars()
 
-            await asyncio.create_subprocess_exec(
-                "docker-compose",
-                "-p",
-                self.project_name,
-                "-f",
-                self.compose_file,
-                "--profile",
-                "search",
-                "down",
-                "-v",
-                "--remove-orphans",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env=env_vars,
-            )
+                # 1. 停止所有服务
+                print(self._i18n_manager.t("docker.stopping_all_services"))
+                await asyncio.create_subprocess_exec(
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "down",
+                    "-v",
+                    "--remove-orphans",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
 
-            # 2. 清理AIForge构建的镜像
-            print(self._i18n_manager.t("docker.cleaning_built_images"))
-            await self._remove_aiforge_built_images_only()
+                await asyncio.create_subprocess_exec(
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "--profile",
+                    "search",
+                    "down",
+                    "-v",
+                    "--remove-orphans",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
 
-            # 3. 清理构建缓存
-            print(self._i18n_manager.t("docker.cleaning_build_cache"))
-            await asyncio.create_subprocess_exec(
-                "docker",
-                "builder",
-                "prune",
-                "-f",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+                # 2. 清理AIForge构建的镜像
+                print(self._i18n_manager.t("docker.cleaning_built_images"))
+                await self._remove_aiforge_built_images_only()
 
-            # 4. 清理悬空资源
-            print(self._i18n_manager.t("docker.cleaning_dangling_resources"))
-            await asyncio.create_subprocess_exec(
-                "docker",
-                "image",
-                "prune",
-                "-f",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await asyncio.create_subprocess_exec(
-                "docker",
-                "volume",
-                "prune",
-                "-f",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+                # 3. 清理构建缓存
+                print(self._i18n_manager.t("docker.cleaning_build_cache"))
+                await asyncio.create_subprocess_exec(
+                    "docker",
+                    "builder",
+                    "prune",
+                    "-f",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
 
-            print(self._i18n_manager.t("docker.deep_cleanup_success"))
-            return True
+                # 4. 清理悬空资源
+                print(self._i18n_manager.t("docker.cleaning_dangling_resources"))
+                await asyncio.create_subprocess_exec(
+                    "docker",
+                    "image",
+                    "prune",
+                    "-f",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                await asyncio.create_subprocess_exec(
+                    "docker",
+                    "volume",
+                    "prune",
+                    "-f",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+
+                print(self._i18n_manager.t("docker.deep_cleanup_success"))
+                return True
+
+            finally:
+                # 恢复原始工作目录
+                os.chdir(original_cwd)
 
         except Exception as e:
             print(self._i18n_manager.t("docker.deep_cleanup_failed", error=str(e)))

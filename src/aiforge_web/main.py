@@ -14,43 +14,20 @@ from aiforge import AIForgeEngine
 
 def initialize_aiforge_engine():
     """智能初始化 AIForge 引擎，适配多种环境和配置方式"""
-    # 保持原有的初始化逻辑
-    is_docker = os.path.exists("/.dockerenv") or os.environ.get("AIFORGE_DOCKER_MODE") == "true"
+    api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("AIFORGE_API_KEY")
 
-    if is_docker:
-        docker_config_path = "/app/config/aiforge.toml"
-        if os.path.exists(docker_config_path):
-            return AIForgeEngine(config_file=docker_config_path)
-
-    local_config_paths = ["aiforge.toml", "config/aiforge.toml", "../aiforge.toml"]
-    for config_path in local_config_paths:
-        if os.path.exists(config_path):
-            return AIForgeEngine(config_file=config_path)
-
-    api_key = (
-        os.environ.get("OPENROUTER_API_KEY")
-        or os.environ.get("DEEPSEEK_API_KEY")
-        or os.environ.get("AIFORGE_API_KEY")
-    )
+    # 优先使用CLI传递的provider
+    provider = os.environ.get("AIFORGE_PROVIDER", "openrouter")
 
     if api_key:
-        if api_key.startswith("sk-or-"):
-            return AIForgeEngine(api_key=api_key, provider="openrouter")
-        elif "deepseek" in api_key.lower():
-            return AIForgeEngine(api_key=api_key, provider="deepseek")
+        return AIForgeEngine(api_key=api_key, provider=provider)
+    else:
+        aiforge_service_key = os.environ.get("AIFORGE_SERVICE_KEY")
+        if aiforge_service_key:
+            return initialize_with_service_key(aiforge_service_key)
         else:
-            return AIForgeEngine(api_key=api_key, provider="openrouter")
-
-    aiforge_service_key = os.environ.get("AIFORGE_SERVICE_KEY")
-    if aiforge_service_key:
-        return initialize_with_service_key(aiforge_service_key)
-
-    raise ValueError(
-        "AIForge 需要配置才能运行。请选择以下方式之一：\n"
-        "1. 设置环境变量：OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY\n"
-        "2. 创建配置文件：aiforge.toml\n"
-        "3. 使用 AIForge 服务密钥：AIFORGE_SERVICE_KEY（即将推出）"
-    )
+            # 没有API key，尝试使用配置文件
+            return AIForgeEngine()
 
 
 def initialize_with_service_key(service_key: str):

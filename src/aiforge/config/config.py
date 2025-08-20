@@ -66,22 +66,32 @@ class AIForgeConfig:
 
     def _load_from_file(self) -> Dict:
         """从文件加载配置"""
-        # 获取默认配置作为基础
+        # 总是从默认配置开始
         config = self.get_builtin_default_config()
 
         if not self.config_file.exists():
-            self.console.print(f"[red]Configuration file not found: {self.config_file}[/red]")
-            return config  # 返回默认配置而不是空字典
+            self.console.print(
+                f"[yellow]Configuration file not found: {self.config_file}, using defaults[/yellow]"
+            )
+            return config
 
         try:
             with open(self.config_file, "rb") as f:
                 file_config = tomlkit.load(f)
             # 深度合并配置
-            config.update(file_config)
+            self._deep_merge_dict(config, file_config)
             return config
         except Exception as e:
             self.console.print(f"[red]Failed to load configuration: {str(e)}[/red]")
-            return config  # 返回默认配置而不是空字典
+            return config
+
+    def _deep_merge_dict(self, base_dict: dict, update_dict: dict):
+        """深度合并字典"""
+        for key, value in update_dict.items():
+            if key in base_dict and isinstance(base_dict[key], dict) and isinstance(value, dict):
+                self._deep_merge_dict(base_dict[key], value)
+            else:
+                base_dict[key] = value
 
     @staticmethod
     def get_builtin_default_config() -> Dict:

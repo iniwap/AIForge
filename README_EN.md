@@ -81,21 +81,44 @@ pip install aiforge-engine[web]  # Web API support
 pip install aiforge-engine[deploy]  # Deploy support    
 ```  
   
-### Basic Usage 
+### Basic Usage
 
+- Product(Package)
 ```python
-# 直接模式
+# Direct
 from aiforge import AIForgeEngine    
-print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest global stock market trends and write an investment analysis"))
+print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
 
- # CLI
-aiforge "Search for the latest global stock market trends and write an investment analysis" --api-key sk-or-v1-xxx
+# CLI 
+aiforge "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx
   
-# Web
+# Web 
 aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
-  
+
+# Web Docker
+aiforge-deploy docker start --searxng
+
 # Desktop GUI
 aiforge gui --api-key sk-or-v1-xxx
+
+```  
+- Develop（Source Code）
+```python
+# Direct
+from aiforge import AIForgeEngine    
+print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
+
+# CLI
+./aiforge-dev.sh "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx # win:./aiforge-dev.bat
+  
+# Web 
+./aiforge-dev.sh web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
+
+# Web Docker
+./aiforge-dev.sh docker start --searxng --dev
+
+# Desktop GUI
+./aiforge-dev.sh gui --api-key sk-or-v1-xxx --debug
 
 ```  
 ### Command List  

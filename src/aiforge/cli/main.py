@@ -2,6 +2,7 @@
 """AIForge CLI 主入口点"""
 
 import sys
+import os
 import argparse
 from typing import Optional
 
@@ -29,6 +30,8 @@ def main(args: Optional[list] = None) -> int:
     web_parser.add_argument("--port", type=int, default=8000, help="服务器端口")
     web_parser.add_argument("--reload", action="store_true", help="启用热重载")
     web_parser.add_argument("--debug", action="store_true", help="启用调试模式")
+    web_parser.add_argument("--provider", help="指定 LLM 提供商")
+    web_parser.add_argument("--api-key", help="API 密钥")
 
     # CLI 命令
     cli_parser = subparsers.add_parser("cli", help="CLI 模式")
@@ -56,6 +59,8 @@ def main(args: Optional[list] = None) -> int:
             parsed_args.port,
             getattr(parsed_args, "reload", False),
             getattr(parsed_args, "debug", False),
+            getattr(parsed_args, "provider", None),
+            getattr(parsed_args, "api_key", None),
         )
     elif parsed_args.command == "gui":
         return start_gui_app(parsed_args)
@@ -72,9 +77,24 @@ def main(args: Optional[list] = None) -> int:
 
 
 def start_web_server(
-    host: str = "0.0.0.0", port: int = 8000, reload: bool = False, debug: bool = False
+    host: str = "0.0.0.0",
+    port: int = 8000,
+    reload: bool = False,
+    debug: bool = False,
+    provider: str = None,
+    api_key: str = None,
 ) -> int:
     """启动 Web 服务器"""
+
+    # 设置环境变量传递给Web服务
+    if api_key:
+        if not provider:
+            os.environ["OPENROUTER_API_KEY"] = api_key
+            os.environ["AIFORGE_PROVIDER"] = "openrouter"
+        else:
+            os.environ["AIFORGE_API_KEY"] = api_key
+            os.environ["AIFORGE_PROVIDER"] = provider
+
     try:
         import uvicorn
 
