@@ -3,6 +3,7 @@ import time
 from rich.console import Console
 from typing import Dict, Any
 from .conversation_manager import ConversationManager
+from .adapters.adapter_factory import AdapterFactory
 
 
 class AIForgeLLMClient:
@@ -34,6 +35,10 @@ class AIForgeLLMClient:
         self.components = components or {}
         self._i18n_manager = self.components.get("i18n_manager")
 
+        self.adapter = AdapterFactory.create_adapter(
+            {"type": client_type, "api_key": api_key, "model": model, "base_url": base_url}
+        )
+
     @property
     def _progress_indicator(self):
         return self.components.get("progress_indicator")
@@ -52,9 +57,7 @@ class AIForgeLLMClient:
         max_retries: int = 2,
         context_type: str = "generation",
     ) -> str | None:
-        """生成代码的核心方法"""
-
-        # 添加进度指示器
+        """使用适配器的生成代码方法"""
 
         self._progress_indicator.show_llm_request(self.name)
 
@@ -63,26 +66,19 @@ class AIForgeLLMClient:
                 if attempt == 0:
                     self._progress_indicator.show_llm_generating()
 
-                headers = {
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                }
-
+                # 准备消息
                 messages = []
-
-                # 添加系统提示
                 if system_prompt:
                     messages.append({"role": "system", "content": system_prompt})
 
-                # 根据参数决定是否使用历史
                 if use_history:
                     context_messages = self.conversation_manager.get_context_messages()
                     messages.extend(context_messages)
 
-                # 添加当前指令
                 if instruction:
                     messages.append({"role": "user", "content": instruction})
 
+                # 基础payload
                 payload = {
                     "model": self.model,
                     "messages": messages,
@@ -90,17 +86,23 @@ class AIForgeLLMClient:
                     "max_tokens": self.max_tokens,
                 }
 
+                # 使用适配器准备请求
+                adapted_payload, headers = self.adapter.prepare_request(messages, payload)
+                endpoint = self.adapter.get_endpoint(self.base_url)
+
                 response = requests.post(
-                    f"{self.base_url}/chat/completions",
+                    endpoint,
                     headers=headers,
-                    json=payload,
+                    json=adapted_payload,
                     timeout=self.timeout,
                 )
 
                 if response.status_code == 200:
                     self._progress_indicator.show_llm_complete()
                     result = response.json()
-                    assistant_response = result["choices"][0]["message"]["content"]
+
+                    # 使用适配器解析响应
+                    assistant_response = self.adapter.parse_response(result)
 
                     # 记录到对话历史
                     if use_history:
@@ -115,53 +117,29 @@ class AIForgeLLMClient:
 
                     return assistant_response
                 else:
-                    # 只对网络错误进行重试
-                    if response.status_code >= 500:  # 服务器错误才重试
-                        wait_time = (2**attempt) * 1
-                        error_message = self._i18n_manager.t(
-                            "llm_client.server_error_retry",
-                            name=self.name,
-                            status_code=response.status_code,
-                            attempt=attempt + 1,
-                            wait_time=wait_time,
-                        )
+                    # 使用适配器处理错误
+                    can_retry, error_msg = self.adapter.handle_error(
+                        response.status_code, response.json() if response.content else {}
+                    )
 
-                        self.console.print(f"[yellow]{error_message}[/yellow]")
+                    if can_retry and attempt < max_retries - 1:
+                        wait_time = (2**attempt) * 1
+                        self.console.print(f"[yellow]{error_msg}，{wait_time}秒后重试...[/yellow]")
                         time.sleep(wait_time)
                         continue
                     else:
-                        # 客户端错误不重试
-                        error_message = self._i18n_manager.t(
-                            "llm_client.client_error",
-                            name=self.name,
-                            status_code=response.status_code,
-                        )
-
-                        self.console.print(f"[red]{error_message}[/red]")
+                        self.console.print(f"[red]{error_msg}[/red]")
                         return None
 
-            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                # 只对网络异常重试
-                error_message = self._i18n_manager.t(
-                    "llm_client.network_error_retry",
-                    name=self.name,
-                    error=str(e),
-                    attempt=attempt + 1,
-                )
-
-                self.console.print(f"[yellow]{error_message}[/yellow]")
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                # 网络异常处理保持不变
                 if attempt < max_retries - 1:
                     time.sleep(1)
                     continue
                 else:
                     return None
             except Exception as e:
-                # 其他异常不重试
-                error_message = self._i18n_manager.t(
-                    "llm_client.request_failed", name=self.name, error=str(e)
-                )
-
-                self.console.print(f"[red]{error_message}[/red]")
+                self.console.print(f"[red]请求失败: {str(e)}[/red]")
                 return None
 
         return None

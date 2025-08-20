@@ -88,10 +88,10 @@ pip install aiforge-engine[web,deploy] # Web + deploy
 ```python
 # Direct
 from aiforge import AIForgeEngine    
-print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
+print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest global stock market trends and write an investment analysis"))
 
 # CLI 
-aiforge "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx
+aiforge "Search for the latest global stock market trends and write an investment analysis" --api-key sk-or-v1-xxx
   
 # Web 
 aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
@@ -107,10 +107,10 @@ aiforge gui --api-key sk-or-v1-xxx
 ```python
 # Direct
 from aiforge import AIForgeEngine    
-print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
+print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest global stock market trends and write an investment analysis"))
 
 # CLI
-./aiforge-dev.sh "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx # win:./aiforge-dev.bat
+./aiforge-dev.sh "Search for the latest global stock market trends and write an investment analysis" --api-key sk-or-v1-xxx # win:./aiforge-dev.bat
   
 # Web 
 ./aiforge-dev.sh web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  

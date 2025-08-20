@@ -64,7 +64,29 @@ class AIForgeLLMManager:
         """创建LLM客户端"""
         client_type = config.get("type", "openai")
 
-        if client_type in ["openai", "deepseek", "grok", "gemini", "qwen"]:
+        # 创建适配器进行配置验证
+        from .adapters.adapter_factory import AdapterFactory
+
+        adapter = AdapterFactory.create_adapter(config)
+
+        if not adapter.validate_config():
+            validation_failed_message = self._i18n_manager.t(
+                "llm_manager.validation_failed", name=name, client_type=client_type
+            )
+            self.console.print(f"[red]{validation_failed_message}[/red]")
+            return None
+
+        # 根据客户端类型创建相应的客户端
+        if client_type in [
+            "openai",
+            "deepseek",
+            "grok",
+            "gemini",
+            "qwen",
+            "claude",
+            "cohere",
+            "mistral",
+        ]:
             return AIForgeLLMClient(
                 name=name,
                 api_key=config.get("api_key", ""),
@@ -82,7 +104,7 @@ class AIForgeLLMManager:
                 model=config.get("model"),
                 timeout=config.get("timeout", 30),
                 max_tokens=config.get("max_tokens", 8192),
-                components=self.components,  # 添加 components 参数
+                components=self.components,
             )
         else:
             unsupported_message = self._i18n_manager.t(

@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Tuple
 from rich.console import Console
 
 from ...llm.llm_client import AIForgeLLMClient
-from ...optimization.feedback_optimizer import FeedbackOptimizer
+from .feedback_optimizer import FeedbackOptimizer
 
 
 class TaskExecutor:

@@ -24,7 +24,7 @@ max_tokens = 8192
 
 [llm.qwen]
 type = "openai"
-model = "openai/qwen-plus"
+model = "qwen-plus"
 api_key = ""
 base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 timeout = 30
@@ -53,6 +53,31 @@ api_key = ""
 base_url = "https://api.deepseek.com"
 timeout = 30
 max_tokens = 8192
+
+[llm.claude]
+type = "claude"
+model = "claude-3-sonnet-20240229"
+api_key = ""
+base_url = "https://api.anthropic.com/v1"
+timeout = 30
+max_tokens = 4096
+
+[llm.cohere]
+type = "cohere"
+model = "command-r-plus"
+api_key = ""
+base_url = "https://api.cohere.ai/v1"
+timeout = 30
+max_tokens = 4096
+
+[llm.mistral]
+type = "mistral"
+model = "mistral-large-latest"
+api_key = ""
+base_url = "https://api.mistral.ai/v1"
+timeout = 30
+max_tokens = 4096
+
 
 [cache.code]
 enabled = true
