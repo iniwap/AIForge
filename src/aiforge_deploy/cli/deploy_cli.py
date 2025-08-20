@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """AIForge 统一部署CLI"""
 
+import sys
 import asyncio
 import argparse
 from ..core.deployment_manager import DeploymentManager, DeploymentType
@@ -362,3 +363,7 @@ async def handle_cloud_command(deployment_manager, args, i18n_manager):
             print(i18n_manager.t("deploy_cli.messages.cloud_destroy_success"))
         else:
             print(i18n_manager.t("deploy_cli.messages.cloud_destroy_error"))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

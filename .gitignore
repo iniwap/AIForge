@@ -219,3 +219,7 @@ searxng/limiter.toml
 logs
 logs/*
 /config/
+aiforge.toml/
+aiforge.toml/*
+aiforge_config
+aiforge_config/*

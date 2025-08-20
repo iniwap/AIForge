@@ -45,7 +45,7 @@ RUN mkdir -p /app/aiforge_work /app/logs
 RUN if [ "$INSTALL_WEB" = "true" ]; then \  
     echo '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1' > /app/healthcheck.sh; \  
     else \  
-    echo '#!/bin/bash\nps aux | grep -v grep | grep -q "tail.*dev.*null" || exit 1' > /app/healthcheck.sh; \  
+    echo '#!/bin/bash\nps aux | grep -v grep | grep -q "sleep.*infinity" || exit 1' > /app/healthcheck.sh; \
     fi && \  
     chmod +x /app/healthcheck.sh  
 

@@ -1,5 +1,5 @@
 services:
-  # 核心CLI服务（无web依赖）
+  # 核心CLI服务（无web依赖）  
   aiforge-core:
     build:
       context: ${PWD}
@@ -21,9 +21,15 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["tail", "-f", "/dev/null"]
+    entrypoint: [ "sleep", "infinity" ]
+    healthcheck:
+      test: [ "CMD", "ps", "aux", "|", "grep", "-v", "grep", "|", "grep", "-q", "sleep.*infinity" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Web服务（可选）
+  # Web服务（可选）  
   aiforge-web:
     build:
       context: ${PWD}
@@ -47,16 +53,16 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["web", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "web", "--host", "0.0.0.0", "--port", "8000" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v1/health/" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    profiles: ["web"]
+    profiles: [ "web" ]
 
-  # SearXNG搜索引擎
+  # SearXNG搜索引擎  
   searxng:
     image: searxng/searxng:latest
     container_name: aiforge-searxng
@@ -67,14 +73,14 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["search"]
+    profiles: [ "search" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Nginx代理
+  # Nginx代理  
   nginx:
     image: nginx:alpine
     container_name: aiforge-nginx
@@ -87,9 +93,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["search"]
+    profiles: [ "search" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
       interval: 30s
       timeout: 10s
       retries: 3

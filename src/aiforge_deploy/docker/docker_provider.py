@@ -43,9 +43,8 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
     def _get_docker_working_directory(self) -> Path:
         """获取Docker部署的工作目录"""
         if self._is_source_environment():
-            # 源码模式：使用templates目录
-            current_file = Path(__file__)
-            return current_file.parent / "templates"
+            # 源码模式：使用项目根目录
+            return Path.cwd()  # 假设命令从项目根目录执行
         else:
             # 安装包模式：使用当前工作目录
             return Path.cwd()
@@ -583,7 +582,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     "docker",
                     "ps",
                     "--filter",
-                    f"name={self.project_name}.*{service}",
+                    f"name=^{service}$",  # 使用精确匹配
                     "--format",
                     "{{.Status}}",
                 ]
