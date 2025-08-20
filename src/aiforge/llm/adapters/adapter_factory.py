@@ -6,7 +6,7 @@ from .qwen_adapter import QwenAdapter
 from .grok_adapter import GrokAdapter
 from .claude_adapter import ClaudeAdapter
 from .cohere_adapter import CohereAdapter
-from mistral_adapter import MistralAdapter
+from .mistral_adapter import MistralAdapter
 from .base_adapter import LLMProviderAdapter
 
 
