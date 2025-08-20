@@ -201,9 +201,9 @@ class AIForgeGUIApp:
         issues = []
 
         # 检查API密钥
-        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+        api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("AIFORGE_API_KEY")
         if not api_key:
-            issues.append("未设置API密钥 (OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY)")
+            issues.append("未设置API密钥 (OPENROUTER_API_KEY 或 AIFORGE_API_KEY)")
 
         # 检查网络连接
         try:
@@ -287,8 +287,6 @@ class AIForgeGUIApp:
 
             # 获取服务器地址
             server_url = f"http://127.0.0.1:{self.api_server.port}"
-            print(f"✅ 本地 API 服务器启动成功: {server_url}")
-
             # 创建 webview 窗口
             self._create_window(server_url)
 
@@ -355,7 +353,6 @@ class AIForgeGUIApp:
 
             # 监听窗口加载完成事件
             def on_loaded():
-                print("🌐 WebView 页面加载完成")
                 # 等待一小段时间确保 API 完全注入
                 time.sleep(0.1)
                 # 触发自定义就绪事件

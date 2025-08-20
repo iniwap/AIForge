@@ -98,7 +98,12 @@ def start_web_server(
     try:
         import uvicorn
 
-        print(f"🚀 启动 AIForge Web 服务器 http://{host}:{port}")
+        print("🚀 启动 AIForge Web 服务器")
+        if host == "0.0.0.0":
+            print(f"📡 本地访问: http://127.0.0.1:{port}")
+            print(f"🌐 网络访问: http://{host}:{port}")
+        else:
+            print(f"🏠 访问地址: http://{host}:{port}")
         if reload:
             print("🔄 热重载模式已启用")
         if debug:
@@ -140,12 +145,24 @@ def start_gui_app(args) -> int:
         }
 
         # API配置
+        api_key = None
+        provider = None
         if hasattr(args, "api_key") and args.api_key:
             config["api_key"] = args.api_key
+            api_key = args.api_key
         if hasattr(args, "provider") and args.provider:
             config["provider"] = args.provider
+            provider = args.provider
         if hasattr(args, "config") and args.config:
             config["config_file"] = args.config
+
+        if api_key:
+            if not provider:
+                os.environ["OPENROUTER_API_KEY"] = api_key
+                os.environ["AIFORGE_PROVIDER"] = "openrouter"
+            else:
+                os.environ["AIFORGE_API_KEY"] = api_key
+                os.environ["AIFORGE_PROVIDER"] = provider
 
         # 远程模式配置
         if hasattr(args, "remote_url") and args.remote_url:

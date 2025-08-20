@@ -4,7 +4,7 @@
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![PyWebView](https://img.shields.io/badge/PyWebView-4.0.0+%20-purple)](https://pywebview.flowrl.com/)
  [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=9)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=9)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=11)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=11)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **Transform natural language instructions into executable code with AI-powered automation**  
@@ -79,6 +79,7 @@ pip install aiforge-engine[all]  # All features
 pip install aiforge-engine[gui]  # Terminal GUI support    
 pip install aiforge-engine[web]  # Web API support  
 pip install aiforge-engine[deploy]  # Deploy support    
+pip install aiforge-engine[web,deploy] # Web + deploy
 ```  
   
 ### Basic Usage
@@ -126,8 +127,8 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市
   
 | Feature | Development Mode | Package Mode | Core Parameters |  
 |---------|------------------|--------------|-----------------|  
-| **Web Service** | `./aiforge-dev.sh web` | `aiforge web` | `--host 0.0.0.0 --port 8000 --reload --debug --api-key` |  
-| **GUI Application** | `./aiforge-dev.sh gui` | `aiforge gui` | `--theme dark --remote-url --width 1200 --height 800 --debug --api-key` |  
+| **Web Service** | `./aiforge-dev.sh web` | `aiforge web` | `--host 0.0.0.0 --port 8000 --reload --debug --api-key --provider` |  
+| **GUI Application** | `./aiforge-dev.sh gui` | `aiforge gui` | `--theme dark --remote-url --width 1200 --height 800 --debug --api-key --provider` |  
 | **GUI Remote** | `./aiforge-dev.sh gui --remote URL` | `aiforge gui --remote-url URL` | `--remote-url http://server:port` |  
 | **GUI Auto Remote** | `./aiforge-dev.sh gui --auto-remote` | - | `--auto-remote --api-key` (Development mode only) |  
 | **Docker Deployment** | `./aiforge-dev.sh deploy docker start` | `aiforge-deploy docker start` | `--dev --searxng --mode web --host --port --deep` |  

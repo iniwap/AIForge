@@ -104,8 +104,15 @@ class LocalAPIServer:
                     self.send_header("Content-type", "text/html; charset=utf-8")
                     self.end_headers()
                     self.wfile.write(content.encode("utf-8"))
+                except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
+                    # 静默处理连接断开，避免在GUI关闭时产生错误日志
+                    return
                 except Exception as e:
-                    self.send_error(500, f"Error serving index: {e}")
+                    try:
+                        self.send_error(500, f"Error serving index: {e}")
+                    except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError):
+                        # 连接已断开，无法发送错误响应
+                        pass
 
             def _handle_api_get(self):
                 """处理 API GET 请求"""

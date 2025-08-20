@@ -218,4 +218,4 @@ searxng/settings.yml
 searxng/limiter.toml  
 logs
 logs/*
-config
+/config/
