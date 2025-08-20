@@ -12,6 +12,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
     def __init__(self, config_manager):
         super().__init__(config_manager)
         self.deployment_type = "docker"
+        self.project_name = "aiforge"
 
         # 获取i18n管理器
         self._i18n_manager = AIForgeI18nManager.get_instance()
@@ -21,6 +22,23 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
         # 根据用户配置或默认配置设置compose文件路径
         self._setup_compose_file_paths()
+
+    def _get_base_env_vars(self) -> tuple[Dict[str, str], Path]:
+        """获取基础环境变量和模板目录"""
+        env_vars = os.environ.copy()
+        env_vars["COMPOSE_PROJECT_NAME"] = self.project_name
+
+        # 设置Dockerfile路径 - 统一使用Path对象
+        current_file = Path(__file__)
+        templates_dir = current_file.parent / "templates"
+
+        if self._is_source_environment():
+            dockerfile_path = str(templates_dir / "Dockerfile")  # 使用Path操作，最后转为字符串
+        else:
+            dockerfile_path = self._get_template_path("Dockerfile.package")
+
+        env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
+        return env_vars, templates_dir
 
     def _setup_compose_file_paths(self):
         """设置compose文件路径"""
@@ -273,15 +291,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
         try:
             # 设置环境变量
-            env_vars = os.environ.copy()
-            current_file = Path(__file__)
-            templates_dir = current_file.parent / "templates"
-            if self._is_source_environment():
-                dockerfile_path = os.path.join(templates_dir, "Dockerfile")
-            else:
-                dockerfile_path = self._get_template_path("Dockerfile.package")
-
-            env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
+            env_vars, _ = self._get_base_env_vars()
 
             # 检查是否需要构建
             result = await asyncio.create_subprocess_exec(
@@ -290,7 +300,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 "--format",
                 "{{.Repository}}:{{.Tag}}",
                 "--filter",
-                "reference=*aiforge*",
+                f"label=com.docker.compose.project={self.project_name}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -364,24 +374,14 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             return {"success": False, "message": f"Build exception: {str(e)}"}
 
     async def _start_services(
-        self, dev_mode: bool = False, enable_searxng: bool = False, mode: str = "web"
+        self, dev_mode: bool = False, enable_searxng: bool = False, enable_web: bool = True
     ) -> Dict[str, Any]:
         """启动Docker服务"""
         print(self._i18n_manager.t("docker.starting_services"))
 
         try:
             # 设置环境变量 - 根据运行环境动态设置路径
-            env_vars = os.environ.copy()
-
-            # 设置 Dockerfile 路径
-            current_file = Path(__file__)
-            templates_dir = current_file.parent / "templates"
-            if self._is_source_environment():
-                dockerfile_path = os.path.join(templates_dir, "Dockerfile")
-            else:
-                dockerfile_path = self._get_template_path("Dockerfile.package")
-
-            env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
+            env_vars, templates_dir = self._get_base_env_vars()
 
             # 设置 nginx.conf 路径（仅在启用 searxng 时需要）
             if enable_searxng:
@@ -395,6 +395,8 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             print(self._i18n_manager.t("docker.cleaning_old_containers"))
             await asyncio.create_subprocess_exec(
                 "docker-compose",
+                "-p",
+                self.project_name,  # 明确指定项目名
                 "-f",
                 self.compose_file,
                 "down",
@@ -404,7 +406,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             )
 
             # 构建启动命令
-            cmd = ["docker-compose"]
+            cmd = ["docker-compose", "-p", self.project_name]  # 明确指定项目名
             if dev_mode:
                 cmd.extend(["-f", self.compose_file, "-f", self.dev_compose_file])
                 print(self._i18n_manager.t("docker.dev_mode_start"))
@@ -413,9 +415,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 print(self._i18n_manager.t("docker.production_mode_start"))
 
             # 根据mode参数选择profile
-            if mode == "core":
-                cmd.extend(["--profile", "core"])
-            elif mode == "web":
+            if enable_web:
                 cmd.extend(["--profile", "web"])
 
             # 添加搜索引擎支持
@@ -441,14 +441,14 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 print(self._i18n_manager.t("docker.service_start_success"))
 
                 # 显示服务信息 - 需要传递mode参数
-                await self._show_service_urls(enable_searxng, mode)
+                await self._show_service_urls(enable_searxng, enable_web)
 
                 # 等待服务稳定
                 print(f"\n{self._i18n_manager.t('docker.waiting_services')}")
                 await asyncio.sleep(10)
 
                 # 检查服务健康状态 - 需要传递mode参数
-                health_status = await self._check_services_health(enable_searxng, mode)
+                health_status = await self._check_services_health(enable_searxng, enable_web)
 
                 # 更新SearXNG配置（仅当启用时）
                 if enable_searxng:
@@ -460,7 +460,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 return {
                     "success": True,
                     "message": "Services started successfully",
-                    "mode": mode,  # 返回使用的模式
+                    "mode": enable_web,
                     "health_status": health_status,
                     "output": stdout.decode() if stdout else "",
                 }
@@ -476,31 +476,28 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             print(self._i18n_manager.t("docker.startup_exception", error=str(e)))
             return {"success": False, "message": f"Start exception: {str(e)}"}
 
-    async def _show_service_urls(self, enable_searxng: bool = False, mode: str = "web") -> None:
+    async def _show_service_urls(
+        self, enable_searxng: bool = False, enable_web: bool = True
+    ) -> None:
         """显示服务访问地址"""
         print(f"\n{self._i18n_manager.t('docker.service_urls')}")
 
-        if mode == "web":
+        if enable_web:
             print(self._i18n_manager.t("docker.aiforge_web_url"))
             print(self._i18n_manager.t("docker.admin_panel_url"))
-        elif mode == "core":
-            print("📦 CLI模式: docker exec -it aiforge-core aiforge --help")
 
         if enable_searxng:
             print(self._i18n_manager.t("docker.searxng_url"))
 
     async def _check_services_health(
-        self, enable_searxng: bool = False, mode: str = "web"
+        self, enable_searxng: bool = False, enable_web: bool = True
     ) -> Dict[str, str]:
         """检查服务健康状态"""
-        print(f"\n{self._i18n_manager.t('docker.health_check')}")
+        print(f"\\n{self._i18n_manager.t('docker.health_check')}")
 
-        # 根据mode选择要检查的服务
-        services = []
-        if mode == "web":
-            services = ["aiforge-web"]  # 或者根据实际的服务名称
-        elif mode == "core":
-            services = ["aiforge-core"]
+        services = ["aiforge-core"]
+        if enable_web:
+            services.append("aiforge-web")
 
         if enable_searxng:
             services.extend(["aiforge-searxng", "aiforge-nginx"])
@@ -509,7 +506,15 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
         for service in services:
             try:
-                cmd = ["docker", "ps", "--filter", f"name={service}", "--format", "{{.Status}}"]
+                # 使用更灵活的容器名称匹配
+                cmd = [
+                    "docker",
+                    "ps",
+                    "--filter",
+                    f"name={self.project_name}.*{service}",
+                    "--format",
+                    "{{.Status}}",
+                ]
                 process = await asyncio.create_subprocess_exec(
                     *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
@@ -583,9 +588,10 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.stopping_services"))
 
         try:
-            cmd = ["docker-compose", "-f", self.compose_file, "down"]
+            env_vars, _ = self._get_base_env_vars()
+            cmd = ["docker-compose", "-p", self.project_name, "-f", self.compose_file, "down"]
             process = await asyncio.create_subprocess_exec(
-                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env_vars
             )
             await process.wait()
 
@@ -604,15 +610,28 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.cleaning_resources"))
 
         try:
+            env_vars, _ = self._get_base_env_vars()
+
             # 停止并移除容器
-            cmd1 = ["docker-compose", "-f", self.compose_file, "down", "-v"]
+            cmd1 = [
+                "docker-compose",
+                "-p",
+                self.project_name,
+                "-f",
+                self.compose_file,
+                "down",
+                "-v",
+            ]
             process1 = await asyncio.create_subprocess_exec(
-                *cmd1, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                *cmd1, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env_vars
             )
             await process1.wait()
 
+            # 清理search profile的服务
             cmd2 = [
                 "docker-compose",
+                "-p",
+                self.project_name,
                 "-f",
                 self.compose_file,
                 "--profile",
@@ -622,18 +641,18 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 "--remove-orphans",
             ]
             process2 = await asyncio.create_subprocess_exec(
-                *cmd2, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                *cmd2, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, env=env_vars
             )
             await process2.wait()
 
-            # 清理相关镜像
+            # 清理相关镜像 - 使用项目名标签
             cmd3 = [
                 "docker",
                 "image",
                 "prune",
                 "-f",
                 "--filter",
-                "label=com.docker.compose.project=aiforge",
+                f"label=com.docker.compose.project={self.project_name}",
             ]
             process3 = await asyncio.create_subprocess_exec(
                 *cmd3, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
@@ -652,10 +671,14 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         print(self._i18n_manager.t("docker.deep_cleanup_warning"))
 
         try:
+            env_vars, _ = self._get_base_env_vars()
+
             # 1. 停止所有服务
             print(self._i18n_manager.t("docker.stopping_all_services"))
             await asyncio.create_subprocess_exec(
                 "docker-compose",
+                "-p",
+                self.project_name,
                 "-f",
                 self.compose_file,
                 "down",
@@ -663,10 +686,13 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 "--remove-orphans",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=env_vars,
             )
 
             await asyncio.create_subprocess_exec(
                 "docker-compose",
+                "-p",
+                self.project_name,
                 "-f",
                 self.compose_file,
                 "--profile",
@@ -676,9 +702,10 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 "--remove-orphans",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                env=env_vars,
             )
 
-            # 2. 只清理AIForge构建的镜像，保留基础镜像
+            # 2. 清理AIForge构建的镜像
             print(self._i18n_manager.t("docker.cleaning_built_images"))
             await self._remove_aiforge_built_images_only()
 
@@ -722,9 +749,12 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
     async def _remove_aiforge_built_images_only(self):
         """只移除AIForge构建的镜像，保留基础镜像"""
         try:
+            # 查找带有项目标签的镜像
             result = await asyncio.create_subprocess_exec(
                 "docker",
                 "images",
+                "--filter",
+                f"label=com.docker.compose.project={self.project_name}",
                 "--format",
                 "{{.Repository}}:{{.Tag}}\t{{.ID}}",
                 stdout=asyncio.subprocess.PIPE,
@@ -733,6 +763,19 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             stdout, _ = await result.communicate()
 
             if not stdout or not stdout.decode().strip():
+                # 如果没有找到带标签的镜像，回退到名称匹配
+                result = await asyncio.create_subprocess_exec(
+                    "docker",
+                    "images",
+                    "--format",
+                    "{{.Repository}}:{{.Tag}}\t{{.ID}}",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, _ = await result.communicate()
+
+            if not stdout or not stdout.decode().strip():
+                print(self._i18n_manager.t("docker.no_images_found"))
                 return
 
             preserve_images = {"python", "searxng/searxng", "nginx"}
@@ -743,20 +786,24 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     repo_tag, image_id = line.split("\t", 1)
                     repo = repo_tag.split(":")[0]
 
+                    # 只删除包含aiforge关键词的镜像，但保留基础镜像
                     if any(keyword in repo.lower() for keyword in ["aiforge"]):
                         if not any(base in repo.lower() for base in preserve_images):
                             images_to_remove.append(image_id)
 
             # 删除镜像
             for image_id in images_to_remove:
-                await asyncio.create_subprocess_exec(
-                    "docker",
-                    "rmi",
-                    "-f",
-                    image_id,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+                try:
+                    await asyncio.create_subprocess_exec(
+                        "docker",
+                        "rmi",
+                        "-f",
+                        image_id,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                except Exception as e:
+                    print(f"Failed to remove image {image_id}: {e}")
 
             if images_to_remove:
                 print(self._i18n_manager.t("docker.removed_images", count=len(images_to_remove)))
@@ -770,7 +817,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         """获取部署状态"""
         try:
             # 检查服务状态
-            services_status = await self._check_services_health(False, "web")
+            services_status = await self._check_services_health(False, True)
 
             return {
                 "success": True,

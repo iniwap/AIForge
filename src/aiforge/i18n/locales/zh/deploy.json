@@ -179,5 +179,69 @@
     "gcp_cleaning_resources": "🧹 清理 GCP 资源...",  
     "gcp_cleanup_complete": "✅ GCP 资源清理完成",  
     "gcp_cleanup_failed": "❌ GCP 资源清理失败: {error}"  
-  }
+  },
+  "deploy_cli": {  
+    "description": "AIForge 统一部署管理工具",  
+    "global_options": {  
+      "config": "统一部署配置文件路径 (TOML)",  
+      "docker_compose": "Docker Compose 配置文件路径",  
+      "k8s_config": "Kubernetes 配置文件路径",  
+      "terraform_config": "Terraform 配置文件路径",  
+      "verbose": "详细输出"  
+    },  
+    "commands": {  
+      "docker": "Docker部署",  
+      "k8s": "Kubernetes部署",  
+      "cloud": "云部署"  
+    },  
+    "docker_options": {  
+      "dev": "开发模式",  
+      "searxng": "启用SearXNG",  
+      "host": "服务器地址",  
+      "port": "服务器端口",  
+      "deep": "深度清理（仅用于cleanup）",  
+      "core_only": "仅启动核心CLI服务（默认启动Web界面）",  
+      "web_optional": "使web组件可选"  
+    },  
+    "k8s_options": {  
+      "namespace": "命名空间",  
+      "replicas": "副本数量"  
+    },  
+    "cloud_options": {  
+      "region": "部署区域",  
+      "instance_type": "实例类型"  
+    },  
+    "messages": {  
+      "execution_error": "执行异常: {error}",  
+      "docker_deploy_result": "Docker部署结果: {result}",  
+      "docker_stop_result": "Docker停止结果: {result}",  
+      "docker_status": "Docker状态: {status}",  
+      "k8s_deploy_result": "K8s部署结果: {result}",  
+      "k8s_status": "K8s状态: 找到 {count} 个Pod",  
+      "k8s_delete_result": "K8s删除结果: {result}",  
+      "k8s_upgrade_result": "K8s升级结果: {result}",  
+      "k8s_upgrade_failed": "K8s升级失败: 无法停止现有部署",  
+      "cloud_deploy_success": "{provider}部署成功!",  
+      "cloud_deploy_failed": "{provider}部署失败: {message}",  
+      "cloud_status": "{provider}状态: 找到 {count} 个实例",  
+      "cloud_status_failed": "获取{provider}状态失败: {error}",  
+      "cloud_destroy_result": "{provider}销毁结果: {result}",  
+      "cloud_destroy_success": "所有云资源已清理完成",  
+      "cloud_destroy_error": "销毁过程中遇到错误，请检查云控制台",  
+      "success": "成功",  
+      "failed": "失败",  
+      "unknown_error": "未知错误",  
+      "unsupported_provider": "不支持的云提供商: {provider}",  
+      "core_mode_started": "📦 已启动核心CLI模式（仅core服务）",  
+      "web_mode_started": "🌐 已启动Web界面模式（core + web服务，默认）",  
+      "deployed_to_namespace": "部署到命名空间: {namespace}",  
+      "replica_count": "副本数量: {replicas}",  
+      "error_message": "错误信息: {message}",  
+      "pod_status": "  Pod {name}: {status}",  
+      "instance_id": "实例ID: {instance_id}",  
+      "app_deploy_complete": "应用部署完成",  
+      "app_deploy_failed": "应用部署失败: {error}",  
+      "instance_status": "  实例 {instance_id}: {state} (IP: {public_ip})"  
+    }  
+  }  
 }

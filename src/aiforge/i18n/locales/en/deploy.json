@@ -179,5 +179,69 @@
     "gcp_cleaning_resources": "🧹 Cleaning up GCP resources...",  
     "gcp_cleanup_complete": "✅ GCP resource cleanup completed",  
     "gcp_cleanup_failed": "❌ GCP resource cleanup failed: {error}"  
-  }
+  },
+  "deploy_cli": {  
+    "description": "AIForge Unified Deployment Management Tool",  
+    "global_options": {  
+      "config": "Unified deployment configuration file path (TOML)",  
+      "docker_compose": "Docker Compose configuration file path",  
+      "k8s_config": "Kubernetes configuration file path",  
+      "terraform_config": "Terraform configuration file path",  
+      "verbose": "Verbose output"  
+    },  
+    "commands": {  
+      "docker": "Docker deployment",  
+      "k8s": "Kubernetes deployment",  
+      "cloud": "Cloud deployment"  
+    },  
+    "docker_options": {  
+      "dev": "Development mode",  
+      "searxng": "Enable SearXNG",  
+      "host": "Server address",  
+      "port": "Server port",  
+      "deep": "Deep cleanup (for cleanup only)",  
+      "core_only": "Start core CLI service only (default starts Web interface)",  
+      "web_optional": "Make web component optional"  
+    },  
+    "k8s_options": {  
+      "namespace": "Namespace",  
+      "replicas": "Number of replicas"  
+    },  
+    "cloud_options": {  
+      "region": "Deployment region",  
+      "instance_type": "Instance type"  
+    },  
+    "messages": {  
+      "execution_error": "Execution error: {error}",  
+      "docker_deploy_result": "Docker deployment result: {result}",  
+      "docker_stop_result": "Docker stop result: {result}",  
+      "docker_status": "Docker status: {status}",  
+      "k8s_deploy_result": "K8s deployment result: {result}",  
+      "k8s_status": "K8s status: found {count} pods",  
+      "k8s_delete_result": "K8s deletion result: {result}",  
+      "k8s_upgrade_result": "K8s upgrade result: {result}",  
+      "k8s_upgrade_failed": "K8s upgrade failed: unable to stop existing deployment",  
+      "cloud_deploy_success": "{provider} deployment successful!",  
+      "cloud_deploy_failed": "{provider} deployment failed: {message}",  
+      "cloud_status": "{provider} status: found {count} instances",  
+      "cloud_status_failed": "Failed to get {provider} status: {error}",  
+      "cloud_destroy_result": "{provider} destruction result: {result}",  
+      "cloud_destroy_success": "All cloud resources have been cleaned up",  
+      "cloud_destroy_error": "Errors encountered during destruction, please check cloud console",  
+      "success": "Success",  
+      "failed": "Failed",  
+      "unknown_error": "Unknown error",  
+      "unsupported_provider": "Unsupported cloud provider: {provider}",  
+      "core_mode_started": "📦 Core CLI mode started (core service only)",  
+      "web_mode_started": "🌐 Web interface mode started (core + web services, default)",  
+      "deployed_to_namespace": "Deployed to namespace: {namespace}",  
+      "replica_count": "Replica count: {replicas}",  
+      "error_message": "Error message: {message}",  
+      "pod_status": "  Pod {name}: {status}",  
+      "instance_id": "Instance ID: {instance_id}",  
+      "app_deploy_complete": "Application deployment complete",  
+      "app_deploy_failed": "Application deployment failed: {error}",  
+      "instance_status": "  Instance {instance_id}: {state} (IP: {public_ip})"  
+    }  
+  }  
 }
