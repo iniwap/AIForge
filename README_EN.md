@@ -97,6 +97,7 @@ aiforge "Search for the latest global stock market trends and write an investmen
 aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
 
 # Web Docker
+export OPENROUTER_API_KEY="your-key-here"
 aiforge-deploy docker start --searxng
 
 # Desktop GUI
@@ -116,6 +117,7 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest gl
 ./aiforge-dev.sh web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
 
 # Web Docker
+export OPENROUTER_API_KEY="your-key-here"
 ./aiforge-dev.sh docker start --searxng --dev
 
 # Desktop GUI

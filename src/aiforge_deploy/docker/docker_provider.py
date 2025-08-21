@@ -23,31 +23,93 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         # 根据用户配置或默认配置设置compose文件路径
         self._setup_compose_file_paths()
 
+    def _get_dockerfile_mode(self) -> str:
+        """检测当前使用的 Dockerfile 模式"""
+        if self._is_source_environment():
+            return "source"
+        else:
+            return "package"
+
     def _get_base_env_vars(self) -> tuple[Dict[str, str], Path]:
-        """获取基础环境变量和模板目录"""
+        """获取基础环境变量 - 考虑文件可写性"""
         env_vars = os.environ.copy()
         env_vars["COMPOSE_PROJECT_NAME"] = self.project_name
 
-        # 设置Dockerfile路径 - 统一使用Path对象
         current_file = Path(__file__)
         templates_dir = current_file.parent / "templates"
+        work_dir = self._get_docker_working_directory()
+        dockerfile_mode = self._get_dockerfile_mode()
 
-        if self._is_source_environment():
+        if dockerfile_mode == "source":
+            env_vars.update(
+                {
+                    "AIFORGE_CONFIG_DIR": str(work_dir / "aiforge_config"),
+                    "AIFORGE_WORK_DIR": str(work_dir / "aiforge_work"),
+                    "AIFORGE_LOGS_DIR": str(work_dir / "logs"),
+                    "AIFORGE_SEARXNG_DIR": str(work_dir / "searxng"),
+                    "AIFORGE_NGINX_DIR": str(work_dir / "nginx"),
+                }
+            )
+        else:
+            env_vars.update(
+                {
+                    "AIFORGE_CONFIG_DIR": str(work_dir / "config"),
+                    "AIFORGE_WORK_DIR": str(work_dir / "work"),
+                    "AIFORGE_LOGS_DIR": str(work_dir / "logs"),
+                    "AIFORGE_SEARXNG_DIR": str(work_dir / "searxng"),
+                    "AIFORGE_NGINX_DIR": str(work_dir / "nginx"),
+                }
+            )
+
+        # Dockerfile 路径设置
+        if dockerfile_mode == "source":
             dockerfile_path = str(templates_dir / "Dockerfile")
         else:
-            dockerfile_path = self._get_template_path("Dockerfile.package")
+            dockerfile_path = str(templates_dir / "Dockerfile.package")
 
         env_vars["AIFORGE_DOCKERFILE_PATH"] = dockerfile_path
         return env_vars, templates_dir
 
     def _get_docker_working_directory(self) -> Path:
-        """获取Docker部署的工作目录"""
-        if self._is_source_environment():
-            # 源码模式：使用项目根目录
-            return Path.cwd()  # 假设命令从项目根目录执行
-        else:
-            # 安装包模式：使用当前工作目录
+        """根据 Dockerfile 模式获取正确的工作目录"""
+        dockerfile_mode = self._get_dockerfile_mode()
+
+        if dockerfile_mode == "source":
+            # 源码模式：使用项目根目录，所有文件都可写
+            current_dir = Path.cwd()
+            while current_dir != current_dir.parent:
+                if (current_dir / "pyproject.toml").exists():
+                    return current_dir
+                current_dir = current_dir.parent
             return Path.cwd()
+        else:
+            # 安装包模式：必须使用用户数据目录，确保文件可写
+            data_dir = Path.home() / ".aiforge"
+            data_dir.mkdir(parents=True, exist_ok=True)
+            return data_dir
+
+    def _ensure_nginx_config(self, templates_dir: Path) -> str:
+        """确保 nginx 配置文件在可写目录中"""
+        work_dir = self._get_docker_working_directory()
+        nginx_dir = work_dir / "nginx"
+        nginx_config_path = nginx_dir / "nginx.conf"
+
+        # 确保目录存在
+        nginx_dir.mkdir(parents=True, exist_ok=True)
+
+        # 如果配置文件不存在，从模板复制
+        if not nginx_config_path.exists():
+            if self._is_source_environment():
+                template_path = templates_dir / "nginx" / "nginx.conf"
+            else:
+                template_path = Path(self._get_template_path("nginx.conf"))
+
+            # 复制模板文件到可写目录
+            import shutil
+
+            shutil.copy2(template_path, nginx_config_path)
+
+        return str(nginx_config_path)
 
     def _ensure_docker_runtime_directories(self) -> bool:
         """确保Docker运行时目录存在"""
@@ -59,6 +121,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
             (work_dir / "aiforge_work").mkdir(exist_ok=True)
             (work_dir / "logs").mkdir(exist_ok=True)
             (work_dir / "searxng").mkdir(exist_ok=True)
+            (work_dir / "nginx").mkdir(exist_ok=True)
 
             return True
         except Exception as e:
@@ -451,10 +514,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
                 # 设置nginx.conf路径（仅在启用searxng时需要）
                 if enable_searxng:
-                    if self._is_source_environment():
-                        nginx_conf_path = str(templates_dir / "nginx" / "nginx.conf")
-                    else:
-                        nginx_conf_path = self._get_template_path("nginx.conf")
+                    nginx_conf_path = self._ensure_nginx_config(templates_dir)
                     env_vars["AIFORGE_NGINX_CONF_PATH"] = nginx_conf_path
 
                 # 先清理可能存在的旧容器

@@ -94,6 +94,7 @@ aiforge "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1
 aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
 
 # Web Docker
+export OPENROUTER_API_KEY="your-key-here"
 aiforge-deploy docker start --searxng
 
 # 桌面应用
@@ -113,6 +114,7 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市
 ./aiforge-dev.sh web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
 
 # Web Docker
+export OPENROUTER_API_KEY="your-key-here"
 ./aiforge-dev.sh docker start --searxng --dev
 
 # 桌面应用

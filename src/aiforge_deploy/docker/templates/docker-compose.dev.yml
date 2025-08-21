@@ -5,7 +5,7 @@ services:
       - ./src:/app/src
       - ${AIFORGE_CONFIG_DIR:-./aiforge_config}:/app/config
       - ${AIFORGE_WORK_DIR:-./aiforge_work}:/app/aiforge_work
-      - ./logs:/app/logs
+      - ${AIFORGE_LOGS_DIR:-./logs}:/app/logs
     environment:
       - AIFORGE_DOCKER_MODE=true
       - AIFORGE_CONFIG_DIR=/app/config
@@ -22,7 +22,7 @@ services:
       - ./src:/app/src
       - ${AIFORGE_CONFIG_DIR:-./aiforge_config}:/app/config
       - ${AIFORGE_WORK_DIR:-./aiforge_work}:/app/aiforge_work
-      - ./logs:/app/logs
+      - ${AIFORGE_LOGS_DIR:-./logs}:/app/logs
     environment:
       - AIFORGE_DOCKER_MODE=true
       - AIFORGE_CONFIG_DIR=/app/config

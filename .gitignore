@@ -208,18 +208,17 @@ __marimo__/
 
 .DS_Store
 .git-backup/
-aiforge_work/
-backups/
 
 #不再上传，因为model.safetensors太大了，不方便传上去，需要用户手动预下载
 **/sentence_transformers/paraphrase-MiniLM-L6-v2/*
-searxng
-searxng/settings.yml  
-searxng/limiter.toml  
-logs
-logs/*
+# AIForge 运行时目录  
+aiforge_work/  
+aiforge_config/  
+logs/  
+searxng/  
+backups/  
+  
+# 配置文件  
+aiforge.toml
+aiforge.toml/  
 /config/
-aiforge.toml/
-aiforge.toml/*
-aiforge_config
-aiforge_config/*
