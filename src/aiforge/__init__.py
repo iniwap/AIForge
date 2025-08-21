@@ -34,9 +34,9 @@ from .instruction.analyzer import AIForgeInstructionAnalyzer
 from .core.managers import AIForgeExecutionManager
 from .utils.progress_indicator import ProgressIndicatorRegistry
 from .i18n.manager import AIForgeI18nManager
-from .core.managers.streaming_execution_manager import StreamingExecutionManager
+from .core.managers.streaming_execution_manager import AIForgeStreamingExecutionManager
 from .core.result import AIForgeResult
-
+from .core.managers.shutdown_manager import AIForgeShutdownManager
 
 __all__ = [
     # 核心组件
@@ -68,8 +68,9 @@ __all__ = [
     "AIForgeExecutionManager",
     "ProgressIndicatorRegistry",
     "AIForgeI18nManager",
-    "StreamingExecutionManager",
+    "AIForgeStreamingExecutionManager",
     "AIForgeResult",
+    "AIForgeShutdownManager",
 ]
 
 __version__ = "0.0.12"

@@ -1,8 +1,9 @@
 class StreamingClient {
-    constructor(baseUrl = '') {
+    constructor(baseUrl = '', sessionManager = null) {
         this.baseUrl = baseUrl;
         this.isConnected = false;
         this.abortController = null;
+        this.sessionManager = sessionManager;
     }
     disconnect() {
         this.isConnected = false;
@@ -23,20 +24,24 @@ class StreamingClient {
             this.disconnect();
             this.abortController = new AbortController();
 
-            const response = await fetch(`${this.baseUrl}/api/v1/core/execute/stream`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    instruction: instruction,
-                    task_type: contextData.taskType,
-                    user_id: contextData.user_id,
-                    session_id: contextData.session_id
-                }),
-                signal: this.abortController.signal
+            const requestBody = {  
+                instruction: instruction,  
+                task_type: contextData.taskType,  
+                user_id: contextData.user_id,  
+                session_id: this.sessionManager ? this.sessionManager.sessionId : contextData.session_id  
+            };  
+    
+            const headers = this.sessionManager ?   
+                this.sessionManager.getHeaders() :   
+                { 'Content-Type': 'application/json' };  
+    
+            const response = await fetch(`${this.baseUrl}/api/v1/core/execute/stream`, {  
+                method: 'POST',  
+                headers: headers,  
+                body: JSON.stringify(requestBody),  
+                signal: this.abortController.signal  
             });
-
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -127,11 +132,24 @@ class StreamingClient {
                     callbacks.onHeartbeat();
                 }
                 break;
-
+            // 检查停止消息  
+            case 'stopped':
+                console.log('执行已被服务器停止');  
+                if (callbacks.onComplete) {  
+                    callbacks.onComplete();  
+                }  
+                this.disconnect();  
+                break;  
             default:
                 console.warn('Unknown message type:', data.type);
         }
     }
+    async stopExecution() {  
+        this.disconnect();  
+        if (this.sessionManager) {  
+            return await this.sessionManager.stopExecution();  
+        }  
+    }  
 }
 
 // 导出供其他模块使用  

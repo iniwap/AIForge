@@ -15,6 +15,7 @@ from .config.settings import GUISettings
 from .utils.resource_manager import ResourceManager
 import pystray
 from PIL import Image
+from aiforge import AIForgeShutdownManager
 
 
 class AIForgeGUIApp:
@@ -29,7 +30,7 @@ class AIForgeGUIApp:
         self.bridge = None
         self.window = None
         self.tray = None
-        self.window_created = False  # 新增：跟踪窗口创建状态
+        self.window_created = False
 
         self.icon_path = self.resource_manager.get_icon_path()
 
@@ -250,13 +251,16 @@ class AIForgeGUIApp:
 
     def on_window_closed(self):
         """窗口关闭事件处理"""
-        # 只有在窗口已经正常创建并显示后才隐藏到托盘
-        if self.window_created and self.tray:
+        # 执行优雅关闭流程
+        self._cleanup()
+
+        # 只有在窗口已经正常创建并且用户选择最小化到托盘时才隐藏
+        if self.window_created and self.tray and self.config.get("minimize_to_tray", False):
             if pywebview.windows and len(pywebview.windows) > 0:
                 self.hide_window()
             return False  # 阻止窗口真正关闭
         else:
-            # 如果托盘未创建或窗口未正常创建，则直接退出
+            # 直接退出应用
             return True
 
     def quit_application(self, icon=None, item=None):
@@ -416,9 +420,36 @@ class AIForgeGUIApp:
             self._cleanup()
 
     def _cleanup(self):
-        """清理资源"""
+        """完整的清理资源流程"""
+        self.console.print("[yellow]🔄 开始优雅关闭流程...[/yellow]")
+
+        # 1. 首先触发全局停止信号
+        AIForgeShutdownManager.get_instance().initiate_shutdown()
+
+        # 2. 等待当前任务完成或超时
+        max_wait_time = 5.0  # 最多等待5秒
+        start_time = time.time()
+
+        while time.time() - start_time < max_wait_time:
+            # 检查是否还有活跃的任务
+            if self.engine_manager and self.engine_manager.get_engine():
+                engine = self.engine_manager.get_engine()
+                if hasattr(engine, "task_manager") and hasattr(engine.task_manager, "active_tasks"):
+                    if not engine.task_manager.active_tasks:
+                        break
+            time.sleep(0.1)
+
+        # 3. 强制停止所有组件
+        if self.engine_manager and self.engine_manager.get_engine():
+            engine = self.engine_manager.get_engine()
+            if hasattr(engine, "stop"):
+                engine.stop()
+
+        # 4. 停止API服务器
         if self.api_server:
             self.api_server.stop()
+
+        # 5. 停止系统托盘
         if self.tray:
             self.tray.stop()
 

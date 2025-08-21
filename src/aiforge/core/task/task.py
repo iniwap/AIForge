@@ -5,6 +5,7 @@ from rich.console import Console
 from ...llm.llm_client import AIForgeLLMClient
 from ..prompt import AIForgePrompt
 from .executor import TaskExecutor
+from ..managers.shutdown_manager import AIForgeShutdownManager
 
 
 class AIForgeTask:
@@ -45,6 +46,9 @@ class AIForgeTask:
         expected_output: Dict[str, Any] = None,
     ):
         """执行方法"""
+        if AIForgeShutdownManager.get_instance().is_shutting_down():
+            return False, None, ""
+
         if instruction and system_prompt:
             self.instruction = instruction
             self.system_prompt = system_prompt
@@ -89,6 +93,9 @@ class AIForgeTask:
         final_code = ""
 
         while rounds <= self.max_rounds:
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                break
+
             if rounds > 1:
                 time.sleep(0.1)
                 # 在新轮次开始时清理错误历史
@@ -128,6 +135,9 @@ class AIForgeTask:
                     self.console.print(f"🎉 {success_message}", style="bold green")
                 break
             else:
+                if AIForgeShutdownManager.get_instance().is_shutting_down():
+                    break
+
                 if rounds >= self.max_rounds:
                     all_failed_message = self._i18n_manager.t("task.all_rounds_failed_no_result")
                     self.console.print(f"⚠️ {all_failed_message}", style="yellow")

@@ -1,7 +1,8 @@
 class AIForgeWebApp {
     constructor() {
         this.configManager = new ConfigManager();
-        this.streamingClient = new StreamingClient();
+        this.sessionManager = new SessionManager();
+        this.streamingClient = new StreamingClient('',this.sessionManager);
         this.uiAdapter = new WebUIAdapter();
         this.currentTaskType = null;
         this.isExecuting = false;
@@ -61,7 +62,24 @@ class AIForgeWebApp {
         document.getElementById('cancelSettings').addEventListener('click', () => {
             this.hideSettings();
         });
+        
+        const stopButton = document.getElementById('stopButton');  
+        if (stopButton) {  
+            stopButton.addEventListener('click', () => this.stopExecution());  
+        }  
     }
+
+    async stopExecution() {  
+        if (this.isExecuting) {  
+            try {  
+                await this.streamingClient.stopExecution();  
+                this.isExecuting = false;  
+                console.warn('执行已停止');  
+            } catch (error) {  
+                console.error('停止执行失败:', error);  
+            }  
+        }  
+    }  
 
     selectTaskType(taskType) {
         // 更新按钮状态（仅用于UI展示和示例指令）  
@@ -153,6 +171,21 @@ class AIForgeWebApp {
         return settings.progressLevel || 'detailed'; // 默认详细模式  
     }
 
+    getBrowserInfo() {  
+        return {  
+            userAgent: navigator.userAgent,  
+            language: navigator.language,  
+            platform: navigator.platform  
+        };  
+    }  
+  
+    getViewportInfo() {  
+        return {  
+            width: window.innerWidth,  
+            height: window.innerHeight  
+        };  
+    }  
+
     async executeInstruction() {
         const instruction = document.getElementById('instructionInput').value.trim();
         if (!instruction) {
@@ -175,11 +208,17 @@ class AIForgeWebApp {
         }
 
         try {
-            await this.streamingClient.executeInstruction(instruction, {
-                taskType: this.currentTaskType,
-                sessionId: Date.now().toString(),
-                progressLevel: progressLevel  // 传递进度级别到后端  
-            }, {
+            // 准备上下文数据，包含会话信息  
+            const contextData = {  
+                taskType: this.currentTaskType,  
+                user_id: this.sessionManager.sessionId, // 使用会话ID作为用户ID  
+                session_id: this.sessionManager.sessionId,  
+                browser_info: this.getBrowserInfo(),  
+                viewport: this.getViewportInfo(),
+                progressLevel: progressLevel
+            };  
+
+            await this.streamingClient.executeInstruction(instruction, contextData, {
                 onProgress: (message, type) => {
                     // 根据进度级别决定是否显示进度消息  
                     if (progressLevel === 'detailed') {

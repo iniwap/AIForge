@@ -1,13 +1,15 @@
 import requests
 import time
+import threading
 from rich.console import Console
-from typing import Dict, Any
+from typing import Dict, Any, Set
 from .conversation_manager import ConversationManager
 from .adapters.adapter_factory import AdapterFactory
+from ..core.managers.shutdown_manager import AIForgeShutdownManager
 
 
 class AIForgeLLMClient:
-    """AIForge LLM 客户端"""
+    """AIForge LLM 客户端 - 支持请求取消"""
 
     def __init__(
         self,
@@ -29,15 +31,32 @@ class AIForgeLLMClient:
         self.console = Console()
         self.client_type = client_type
 
-        # 使用智能对话管理器
+        # 请求会话管理
+        self._session = requests.Session()
+        self._active_requests: Set[requests.Response] = set()
+        self._request_lock = threading.Lock()
+        self._is_cancelled = threading.Event()
+
+        # 注册到全局关闭管理器
+        AIForgeShutdownManager.get_instance().register_cleanup_callback(self._cancel_all_requests)
+
         self.conversation_manager = ConversationManager()
         self.usage_stats = {"total_tokens": 0, "rounds": 0}
         self.components = components or {}
         self._i18n_manager = self.components.get("i18n_manager")
-
         self.adapter = AdapterFactory.create_adapter(
             {"type": client_type, "api_key": api_key, "model": model, "base_url": base_url}
         )
+
+    def _cancel_all_requests(self):
+        """取消所有活跃请求"""
+        self._is_cancelled.set()
+        with self._request_lock:
+            # 关闭会话，这会取消所有待处理的请求
+            try:
+                self._session.close()
+            except Exception:
+                pass
 
     @property
     def _progress_indicator(self):
@@ -57,11 +76,22 @@ class AIForgeLLMClient:
         max_retries: int = 2,
         context_type: str = "generation",
     ) -> str | None:
-        """使用适配器的生成代码方法"""
+        """生成代码 - 支持取消"""
+
+        # 检查是否已被取消
+        if self._is_cancelled.is_set() or AIForgeShutdownManager.get_instance().is_shutting_down():
+            return None
 
         self._progress_indicator.show_llm_request(self.name)
 
         for attempt in range(max_retries):
+            # 每次重试前检查取消状态
+            if (
+                self._is_cancelled.is_set()
+                or AIForgeShutdownManager.get_instance().is_shutting_down()
+            ):
+                return None
+
             try:
                 if attempt == 0:
                     self._progress_indicator.show_llm_generating()
@@ -90,12 +120,20 @@ class AIForgeLLMClient:
                 adapted_payload, headers = self.adapter.prepare_request(messages, payload)
                 endpoint = self.adapter.get_endpoint(self.base_url)
 
-                response = requests.post(
+                # 发送请求 - 使用会话以支持取消
+                response = self._session.post(
                     endpoint,
                     headers=headers,
                     json=adapted_payload,
                     timeout=self.timeout,
                 )
+
+                # 检查请求是否在处理过程中被取消
+                if (
+                    self._is_cancelled.is_set()
+                    or AIForgeShutdownManager.get_instance().is_shutting_down()
+                ):
+                    return None
 
                 if response.status_code == 200:
                     self._progress_indicator.show_llm_complete()
@@ -117,7 +155,7 @@ class AIForgeLLMClient:
 
                     return assistant_response
                 else:
-                    # 使用适配器处理错误
+                    # 错误处理逻辑保持不变...
                     can_retry, error_msg = self.adapter.handle_error(
                         response.status_code, response.json() if response.content else {}
                     )
@@ -125,24 +163,50 @@ class AIForgeLLMClient:
                     if can_retry and attempt < max_retries - 1:
                         wait_time = (2**attempt) * 1
                         self.console.print(f"[yellow]{error_msg}，{wait_time}秒后重试...[/yellow]")
-                        time.sleep(wait_time)
+
+                        # 等待时也要检查取消状态
+                        for _ in range(wait_time * 10):  # 0.1秒间隔检查
+                            if (
+                                self._is_cancelled.is_set()
+                                or AIForgeShutdownManager.get_instance().is_shutting_down()
+                            ):
+                                return None
+                            time.sleep(0.1)
                         continue
                     else:
                         self.console.print(f"[red]{error_msg}[/red]")
                         return None
 
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-                # 网络异常处理保持不变
+                if (
+                    self._is_cancelled.is_set()
+                    or AIForgeShutdownManager.get_instance().is_shutting_down()
+                ):
+                    return None
                 if attempt < max_retries - 1:
                     time.sleep(1)
                     continue
                 else:
                     return None
             except Exception as e:
-                self.console.print(f"[red]请求失败: {str(e)}[/red]")
+                if (
+                    self._is_cancelled.is_set()
+                    or AIForgeShutdownManager.get_instance().is_shutting_down()
+                ):
+                    return None
+                error_message = self._i18n_manager.t(
+                    "llm_client.request_failed", name=self.name, error=str(e)
+                )
+
+                self.console.print(f"[red]{error_message}[/red]")
                 return None
 
         return None
+
+    def __del__(self):
+        """析构函数 - 清理资源"""
+        AIForgeShutdownManager.get_instance().unregister_cleanup_callback(self._cancel_all_requests)
+        self._cancel_all_requests()
 
     def send_feedback(self, feedback: str, is_error: bool = True, metadata: Dict[str, Any] = None):
         """发送反馈信息，使用特殊的历史管理"""

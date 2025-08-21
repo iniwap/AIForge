@@ -92,7 +92,7 @@ class AIForgeLLMManager:
                 api_key=config.get("api_key", ""),
                 base_url=config.get("base_url"),
                 model=config.get("model"),
-                timeout=config.get("timeout", 30),
+                timeout=config.get("timeout", 60),
                 max_tokens=config.get("max_tokens", 8192),
                 client_type=client_type,
                 components=self.components,
@@ -102,7 +102,7 @@ class AIForgeLLMManager:
                 name=name,
                 base_url=config.get("base_url", "http://localhost:11434"),
                 model=config.get("model"),
-                timeout=config.get("timeout", 30),
+                timeout=config.get("timeout", 60),
                 max_tokens=config.get("max_tokens", 8192),
                 components=self.components,
             )

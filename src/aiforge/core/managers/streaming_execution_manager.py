@@ -4,13 +4,15 @@ import time
 from typing import Dict, Any, AsyncGenerator
 from ...utils.streaming_progres_indicator import StreamingProgressIndicator
 from ...utils.progress_indicator import ProgressIndicatorRegistry
+from ..engine import AIForgeEngine
 
 
-class StreamingExecutionManager:
+class AIForgeStreamingExecutionManager:
     """流式执行管理器 - 为界面提供实时进度反馈"""
 
-    def __init__(self, components: Dict[str, Any]):
+    def __init__(self, components: Dict[str, Any], engine: AIForgeEngine = None):
         self.components = components
+        self.engine = engine
 
     async def execute_with_streaming(
         self, instruction: str, ui_type: str = "web", context_data: Dict[str, Any] = None
@@ -88,17 +90,14 @@ class StreamingExecutionManager:
                         "request_id": context_data.get("session_id") if context_data else None,
                     }
 
-                    # 使用全局 forge 实例执行（避免重复初始化）
-                    from aiforge_web.main import forge
-
                     result = await asyncio.to_thread(
-                        forge.run_with_input_adaptation, raw_input, "web", context_data or {}
+                        self.engine.run_with_input_adaptation, raw_input, "web", context_data or {}
                     )
                     if result:
                         # 从结果的 metadata 中获取任务类型，回退到 context_data
                         task_type = result.task_type or context_data.get("task_type")
                         ui_result = await asyncio.to_thread(
-                            forge.adapt_result_for_ui,
+                            self.engine.adapt_result_for_ui,
                             result,
                             "editor" if task_type == "content_generation" else None,
                             "web",

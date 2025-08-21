@@ -11,7 +11,7 @@ type = "openai"
 model = "deepseek/deepseek-chat-v3-0324:free"
 api_key = ""
 base_url = "https://openrouter.ai/api/v1"
-timeout = 30
+timeout = 60
 max_tokens = 8192
 
 [llm.grok]
@@ -19,7 +19,7 @@ type = "grok"
 model = "xai/grok-3"
 api_key = ""
 base_url = "https://api.x.ai/v1/"
-timeout = 30
+timeout = 60
 max_tokens = 8192
 
 [llm.qwen]
@@ -27,15 +27,15 @@ type = "openai"
 model = "qwen-plus"
 api_key = ""
 base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-timeout = 30
+timeout = 60
 max_tokens = 8192
 
 [llm.gemini]
 type = "gemini"
-model = "gemini/gemini-2.0-flash"
+model = "gemini/gemini-2.5-flash"
 api_key = ""
 base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
-timeout = 30
+timeout = 60
 max_tokens = 8192
 
 [llm.ollama]
@@ -43,7 +43,7 @@ type = "ollama"
 model = "llama3"
 api_key = ""
 base_url = "http://localhost:11434"
-timeout = 30
+timeout = 60
 max_tokens = 8192
 
 [llm.deepseek]
@@ -51,15 +51,15 @@ type = "deepseek"
 model = "deepseek-chat"
 api_key = ""
 base_url = "https://api.deepseek.com"
-timeout = 30
+timeout = 60
 max_tokens = 8192
 
 [llm.claude]
 type = "claude"
-model = "claude-3-sonnet-20240229"
+model = "claude-4-sonnet"
 api_key = ""
 base_url = "https://api.anthropic.com/v1"
-timeout = 30
+timeout = 60
 max_tokens = 4096
 
 [llm.cohere]
@@ -67,7 +67,7 @@ type = "cohere"
 model = "command-r-plus"
 api_key = ""
 base_url = "https://api.cohere.ai/v1"
-timeout = 30
+timeout = 60
 max_tokens = 4096
 
 [llm.mistral]
@@ -75,7 +75,7 @@ type = "mistral"
 model = "mistral-large-latest"
 api_key = ""
 base_url = "https://api.mistral.ai/v1"
-timeout = 30
+timeout = 60
 max_tokens = 4096
 
 

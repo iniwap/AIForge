@@ -4,6 +4,7 @@ from rich.console import Console
 
 from ...llm.llm_client import AIForgeLLMClient
 from .feedback_optimizer import FeedbackOptimizer
+from ..managers.shutdown_manager import AIForgeShutdownManager
 
 
 class TaskExecutor:
@@ -108,6 +109,10 @@ class TaskExecutor:
         optimization_attempt = 1
 
         while optimization_attempt <= max_optimization_attempts:
+            # 每次循环开始时检查停止信号
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                return False, None, "", False
+
             round_attempt_message = self._i18n_manager.t(
                 "executor.round_attempt",
                 round_num=round_num,
@@ -118,8 +123,11 @@ class TaskExecutor:
             generating_code_message = self._i18n_manager.t("executor.generating_code")
             self.console.print(f"🤖 {generating_code_message}", style="dim white")
 
+            # 生成代码前再次检查停止信号
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                return False, None, "", False
+
             if optimization_attempt == 1:
-                # 首次生成，不使用历史
                 response = self.client.generate_code(instruction, system_prompt, use_history=False)
             else:
                 response = self.client.generate_code(
@@ -129,7 +137,11 @@ class TaskExecutor:
                     context_type="feedback",
                 )
 
+            # 检查LLM响应是否因停止而返回None
             if not response:
+                if AIForgeShutdownManager.get_instance().is_shutting_down():
+                    return False, None, "", False
+
                 no_response_message = self._i18n_manager.t(
                     "executor.no_llm_response", optimization_attempt=optimization_attempt
                 )
@@ -137,7 +149,11 @@ class TaskExecutor:
                 optimization_attempt += 1
                 continue
 
-            # 通过执行引擎提取代码块
+            # 代码执行前检查停止信号
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                return False, None, "", False
+
+            # 其余执行逻辑保持不变，但在关键点添加停止检查...
             code_blocks = self.execution_engine.extract_code_blocks(response)
             if not code_blocks:
                 no_code_blocks_message = self._i18n_manager.t(
@@ -152,9 +168,18 @@ class TaskExecutor:
             )
             self.console.print(f"📝 {found_blocks_message}")
 
+            # 执行代码块前检查停止信号
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                return False, None, "", False
+
             # 处理代码块执行
             self.process_code_execution(code_blocks)
 
+            # 验证前检查停止信号
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                return False, None, "", False
+
+            # 其余验证逻辑...
             if not self.task_execution_history:
                 execution_failed_message = self._i18n_manager.t(
                     "executor.code_execution_failed", optimization_attempt=optimization_attempt
@@ -181,7 +206,7 @@ class TaskExecutor:
                 optimization_attempt += 1
                 continue
 
-            # 通过执行引擎处理执行结果
+            # 处理和验证结果...
             processed_result = self.execution_engine.process_execution_result(
                 last_execution["result"].get("result"),
                 instruction,
@@ -189,7 +214,10 @@ class TaskExecutor:
             )
             last_execution["result"]["result"] = processed_result
 
-            # 通过执行引擎验证执行结果
+            # 验证前最后检查停止信号
+            if AIForgeShutdownManager.get_instance().is_shutting_down():
+                return False, None, "", False
+
             is_valid, validation_type, failure_reason, validation_details = (
                 self.execution_engine.validate_execution_result(
                     last_execution["result"],
@@ -222,6 +250,10 @@ class TaskExecutor:
                 last_execution["success"] = False
 
                 if optimization_attempt < max_optimization_attempts:
+                    # 检查停止信号
+                    if AIForgeShutdownManager.get_instance().is_shutting_down():
+                        return False, None, "", False
+
                     validation_failed_message = self._i18n_manager.t(
                         "executor.validation_failed",
                         optimization_attempt=optimization_attempt,
