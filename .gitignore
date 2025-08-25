@@ -216,7 +216,8 @@ aiforge_work/
 aiforge_config/  
 logs/  
 searxng/  
-backups/  
+backups/
+nginx/  
   
 # 配置文件  
 aiforge.toml
