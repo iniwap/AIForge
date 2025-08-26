@@ -3,38 +3,44 @@ import time
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import StreamingResponse
 
-from ..dependencies import get_forge_engine, get_session_id
-from aiforge import AIForgeEngine
-from ...core.session_manager import UserSessionManager
-from ...core.config import get_default_engine_config
 from aiforge import AIForgeStreamingExecutionManager
+
+from ..dependencies import (
+    get_session_id,
+    get_session_manager,
+    get_session_aware_engine,
+)
+from aiforge import AIForgeEngine
 
 
 router = APIRouter(prefix="/api/v1/core", tags=["core"])
 
 
 @router.post("/stop/{session_id}")
-async def stop_session_execution(session_id: str):
+async def stop_session_execution(session_id: str, session_manager=Depends(get_session_manager)):
     """停止指定会话的执行"""
-    session_manager = UserSessionManager.get_instance()
-    session_manager.initiate_session_shutdown(session_id)
+    context = session_manager.get_session(session_id)
+    if context and "shutdown_manager" in context.components:
+        context.components["shutdown_manager"].initiate_shutdown()
     return {"success": True, "message": f"会话 {session_id} 停止信号已发送"}
 
 
 @router.post("/stop")
-async def stop_current_execution(request: Request):
+async def stop_current_execution(request: Request, session_manager=Depends(get_session_manager)):
     """停止当前请求会话的执行"""
     session_id = get_session_id(request)
-    session_manager = UserSessionManager.get_instance()
-    session_manager.initiate_session_shutdown(session_id)
+    context = session_manager.get_session(session_id)
+    if context and "shutdown_manager" in context.components:
+        context.components["shutdown_manager"].initiate_shutdown()
     return {"success": True, "message": "当前会话停止信号已发送"}
 
 
 @router.post("/execute")
-async def execute_instruction(request: Request, forge: AIForgeEngine = Depends(get_forge_engine)):
+async def execute_instruction(
+    request: Request, engine: AIForgeEngine = Depends(get_session_aware_engine)
+):
     """通用指令执行接口"""
     data = await request.json()
-    session_id = get_session_id(request)
 
     # 准备输入数据
     raw_input = {
@@ -42,13 +48,13 @@ async def execute_instruction(request: Request, forge: AIForgeEngine = Depends(g
         "method": "POST",
         "user_agent": request.headers.get("user-agent", "AIForge-Web"),
         "ip_address": request.client.host,
-        "request_id": session_id,
+        "request_id": engine._session_context.session_id,
     }
 
     # 准备上下文数据
     context_data = {
-        "user_id": data.get("user_id"),
-        "session_id": session_id,
+        "user_id": engine._session_context.user_id,
+        "session_id": engine._session_context.session_id,
         "task_type": data.get("task_type"),
         "device_info": {
             "browser": data.get("browser_info", {}),
@@ -57,13 +63,17 @@ async def execute_instruction(request: Request, forge: AIForgeEngine = Depends(g
     }
 
     try:
-        # 使用用户专属的引擎实例执行
-        result = forge.run_with_input_adaptation(raw_input, "web", context_data)
+        # 直接使用注入的会话感知引擎
+        result = engine.run_with_input_adaptation(raw_input, "web", context_data)
 
         if result:
-            ui_result = forge.adapt_result_for_ui(
+            ui_result = engine.adapt_result_for_ui(
                 result,
-                "editor" if result.task_type == "content_generation" else None,
+                (
+                    "editor"
+                    if hasattr(result, "task_type") and result.task_type == "content_generation"
+                    else None
+                ),
                 "web",
             )
 
@@ -72,7 +82,7 @@ async def execute_instruction(request: Request, forge: AIForgeEngine = Depends(g
                 "result": ui_result,
                 "metadata": {
                     "source": "web",
-                    "session_id": session_id,
+                    "session_id": engine._session_context.session_id,
                     "processed_at": time.time(),
                 },
             }
@@ -84,27 +94,25 @@ async def execute_instruction(request: Request, forge: AIForgeEngine = Depends(g
 
 
 @router.post("/execute/stream")
-async def execute_instruction_stream(request: Request):
+async def execute_instruction_stream(
+    request: Request, engine: AIForgeEngine = Depends(get_session_aware_engine)
+):
     """流式执行接口"""
     data = await request.json()
-    session_id = get_session_id(request)
 
-    # 获取用户专属引擎
-    session_manager = UserSessionManager.get_instance()
-    default_engine_config = get_default_engine_config()
-    forge = session_manager.get_or_create_engine(session_id, **default_engine_config)
-    session_shutdown = session_manager.get_session_shutdown_manager(session_id)
-    components = forge.component_manager.components
-    components["shutdown_manager"] = session_shutdown
+    # 获取会话上下文
+    session_context = engine._session_context
 
-    # 使用会话隔离的流式管理器
+    # 获取或创建会话级关闭管理器
+    shutdown_manager = session_context.get_component("shutdown_manager")
 
-    streaming_manager = AIForgeStreamingExecutionManager(components, forge)
+    # 创建流式管理器
+    streaming_manager = AIForgeStreamingExecutionManager(session_context.components, engine)
 
     # 准备上下文数据
     context_data = {
-        "user_id": data.get("user_id"),
-        "session_id": session_id,
+        "user_id": session_context.user_id,
+        "session_id": session_context.session_id,
         "task_type": data.get("task_type"),
         "device_info": {
             "browser": data.get("browser_info", {}),
@@ -118,17 +126,18 @@ async def execute_instruction_stream(request: Request):
                 data.get("instruction", ""), "web", context_data
             ):
                 # 检查会话级停止信号
-                if session_shutdown and session_shutdown.is_shutting_down():
-                    yield f"data: {json.dumps({'type': 'stopped', 'message': '执行已被停止'}, ensure_ascii=False)}\\n\\n"  # noqa 501
+                if shutdown_manager and shutdown_manager.is_shutting_down():
+                    yield f"data: {json.dumps({'type': 'stopped', 'message': '执行已被停止'}, ensure_ascii=False)}\n\n"  # noqa 501
                     break
 
                 if await request.is_disconnected():
                     streaming_manager._client_disconnected = True
-                    session_manager.initiate_session_shutdown(session_id)
+                    if shutdown_manager:
+                        shutdown_manager.initiate_shutdown()
                     break
                 yield chunk
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': f'服务器错误: {str(e)}'}, ensure_ascii=False)}\\n\\n"  # noqa 501
+            yield f"data: {json.dumps({'type': 'error', 'message': f'服务器错误: {str(e)}'}, ensure_ascii=False)}\n\n"  # noqa 501
 
     return StreamingResponse(
         generate(),
@@ -142,17 +151,17 @@ async def execute_instruction_stream(request: Request):
 
 
 @router.post("/session/cleanup/{session_id}")
-async def cleanup_session(session_id: str):
+async def cleanup_session(session_id: str, session_manager=Depends(get_session_manager)):
     """清理指定会话"""
-    UserSessionManager.get_instance().cleanup_session(session_id)
+    session_manager.cleanup_session(session_id)
     return {"success": True, "message": f"会话 {session_id} 已清理"}
 
 
 @router.get("/session/stats")
-async def get_session_stats():
+async def get_session_stats(session_manager=Depends(get_session_manager)):
     """获取会话统计信息"""
     return {
-        "active_sessions": UserSessionManager.get_instance().get_active_sessions_count(),
+        "active_sessions": session_manager.get_active_sessions_count(),
         "timestamp": time.time(),
     }
 

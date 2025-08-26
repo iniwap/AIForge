@@ -7,12 +7,14 @@ import os
 class FileSecurityController:
     """文件安全控制器"""
 
-    def __init__(self, config_manager):
-        self.config_manager = config_manager
-        self.file_config = config_manager.get_security_file_access_config()
+    def __init__(self, components: Dict[str, Any] = None):
+        self.components = components
+        self.config_manager = self.components.get("config_manager")
+
+        self.file_config = self.config_manager.get_security_file_access_config()
 
         # 初始化工作目录和允许路径
-        self.workdir = Path(str(config_manager.get_workdir()))
+        self.workdir = Path(str(self.config_manager.get_workdir()))
         self.user_allowed_paths = self.file_config.get("default_allowed_paths", [])
 
         # 初始化文件操作检测模式

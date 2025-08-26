@@ -16,24 +16,11 @@ class ExecutionStrategyManager:
 
     def _register_default_strategies(self):
         """注册默认策略"""
-        parameter_mapping_service = self.components.get("parameter_mapping_service")
 
-        self.register_strategy(
-            ParameterizedFunctionStrategy(
-                parameter_mapping_service, self.components.get("config_manager")
-            )
-        )
-        self.register_strategy(
-            ClassInstantiationStrategy(
-                parameter_mapping_service, self.components.get("config_manager")
-            )
-        )
-        self.register_strategy(
-            DirectResultStrategy(parameter_mapping_service, self.components.get("config_manager"))
-        )
-        self.register_strategy(
-            FileOperationStrategy(parameter_mapping_service, self.components.get("config_manager"))
-        )
+        self.register_strategy(ParameterizedFunctionStrategy(self.components))
+        self.register_strategy(ClassInstantiationStrategy(self.components))
+        self.register_strategy(DirectResultStrategy(self.components))
+        self.register_strategy(FileOperationStrategy(self.components))
 
     def register_strategy(self, strategy: ExecutionStrategy):
         """注册执行策略"""

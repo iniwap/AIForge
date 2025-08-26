@@ -3,37 +3,13 @@ from typing import Set, Callable
 
 
 class AIForgeShutdownManager:
-    """全局关闭管理器 - 单例模式"""
-
-    _instance = None
-    _lock = threading.RLock()
-    _initialized = False
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-        return cls._instance
+    """关闭管理器 - 非单例模式"""
 
     def __init__(self):
-        # 防止重复初始化
-        if self._initialized:
-            return
-
-        with self._lock:
-            if not self._initialized:
-                self._shutdown_event = threading.Event()
-                self._cleanup_callbacks: Set[Callable] = set()
-                self._callback_lock = threading.Lock()
-                AIForgeShutdownManager._initialized = True
-
-    @classmethod
-    def get_instance(cls):
-        """获取单例实例"""
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        """初始化关闭管理器实例"""
+        self._shutdown_event = threading.Event()
+        self._cleanup_callbacks: Set[Callable] = set()
+        self._callback_lock = threading.Lock()
 
     def register_cleanup_callback(self, callback: Callable):
         """注册清理回调"""
@@ -63,7 +39,6 @@ class AIForgeShutdownManager:
 
     def reset(self):
         """重置关闭状态（主要用于测试）"""
-        with self._lock:
-            self._shutdown_event.clear()
-            with self._callback_lock:
-                self._cleanup_callbacks.clear()
+        self._shutdown_event.clear()
+        with self._callback_lock:
+            self._cleanup_callbacks.clear()

@@ -89,6 +89,12 @@ class TemplateManager:
                         "required": True,
                         "description": "期望输出",
                     },
+                    "i18n_manager": {
+                        "type": "AIForgeI18nManager",
+                        "required": True,
+                        "default": None,
+                        "description": "i18n实例",
+                    },
                     "max_results": {"type": "int", "required": False, "description": "最大结果数"},
                     "min_abstract_len": {
                         "type": "str",
@@ -110,6 +116,12 @@ class TemplateManager:
                         "type": "dict",
                         "required": True,
                         "description": "期望输出",
+                    },
+                    "i18n_manager": {
+                        "type": "AIForgeI18nManager",
+                        "required": True,
+                        "default": None,
+                        "description": "i18n实例",
                     },
                     "max_results": {"type": "int", "required": False, "description": "最大结果数"},
                     "min_abstract_len": {
@@ -157,6 +169,18 @@ class TemplateManager:
                         "required": False,
                         "default": None,
                         "description": "覆盖默认搜索引擎",
+                    },
+                    "progress_indicator": {
+                        "type": "ProgressIndicator",
+                        "required": True,
+                        "default": None,
+                        "description": "进度实例",
+                    },
+                    "i18n_manager": {
+                        "type": "AIForgeI18nManager",
+                        "required": True,
+                        "default": None,
+                        "description": "i18n实例",
                     },
                 },
             )
@@ -346,23 +370,3 @@ class TemplateManager:
             return parameters
         except Exception:
             return {}
-
-
-# 全局模板管理器实例
-template_manager = TemplateManager()
-
-
-# 便捷函数
-def get_template(template_id: str, **kwargs) -> Optional[str]:
-    """获取模板指令的便捷函数"""
-    return template_manager.get_template(template_id, **kwargs)
-
-
-def execute_template(template_id: str, **kwargs) -> Any:
-    """执行模板的便捷函数"""
-    return template_manager.execute_template(template_id, **kwargs)
-
-
-def list_templates(template_type: Optional[TemplateType] = None) -> List[Dict[str, Any]]:
-    """列出模板的便捷函数"""
-    return template_manager.list_templates(template_type)

@@ -86,7 +86,7 @@ def start_web_server(
 ) -> int:
     """启动 Web 服务器"""
 
-    # 设置环境变量传递给Web服务
+    # 可选设置环境变量（不强制要求）
     if api_key:
         if not provider:
             os.environ["OPENROUTER_API_KEY"] = api_key
@@ -104,15 +104,24 @@ def start_web_server(
             print(f"🌐 网络访问: http://{host}:{port}")
         else:
             print(f"🏠 访问地址: http://{host}:{port}")
+
+        # 如果没有 API 密钥，显示提示信息
+        if (
+            not api_key
+            and not os.environ.get("OPENROUTER_API_KEY")
+            and not os.environ.get("AIFORGE_API_KEY")
+        ):
+            print("⚠️  未检测到 API 密钥，请在 Web 界面中配置")
+
         if reload:
             print("🔄 热重载模式已启用")
         if debug:
             print("🐛 调试模式已启用")
 
-        # 使用模块字符串而不是 app 对象以支持热重载
+        # 启动服务器（保持现有逻辑）
         if reload:
             uvicorn.run(
-                "aiforge_web.main:app",  # 使用字符串路径
+                "aiforge_web.main:app",
                 host=host,
                 port=port,
                 reload=True,
@@ -144,7 +153,7 @@ def start_gui_app(args) -> int:
             "enable_tray": True,
         }
 
-        # API配置
+        # API配置（可选）
         api_key = None
         provider = None
         if hasattr(args, "api_key") and args.api_key:
@@ -156,6 +165,7 @@ def start_gui_app(args) -> int:
         if hasattr(args, "config") and args.config:
             config["config_file"] = args.config
 
+        # 可选设置环境变量（不强制要求）
         if api_key:
             if not provider:
                 os.environ["OPENROUTER_API_KEY"] = api_key

@@ -48,7 +48,7 @@ def clean_text(text):
         return ""
 
 
-def clean_date_text(text):
+def clean_date_text(i18n_manager, text):
     """专为日期清理文本，保留日期格式关键字符"""
     if not text:
         return ""
@@ -64,9 +64,6 @@ def clean_date_text(text):
         text = html.unescape(text)
 
         # 获取国际化的日期前缀模式
-        from ..i18n.manager import AIForgeI18nManager
-
-        i18n_manager = AIForgeI18nManager.get_instance()
         date_prefixes = i18n_manager.t(
             "datetime.date_prefixes",
             default=[
@@ -97,15 +94,12 @@ def clean_date_text(text):
         return ""
 
 
-def is_valid_date(date_str, timestamp=None):
+def is_valid_date(i18n_manager, date_str, timestamp=None):
     """验证日期字符串是否可转换为有效日期"""
     if not date_str:
         return False
 
     # 获取国际化的"未知"标识符
-    from ..i18n.manager import AIForgeI18nManager
-
-    i18n_manager = AIForgeI18nManager.get_instance()
     unknown_identifiers = i18n_manager.t(
         "datetime.unknown_identifiers", default=["unknown", "none", "n/a", "null", "None"]
     )
@@ -113,7 +107,7 @@ def is_valid_date(date_str, timestamp=None):
     if str(date_str).lower() in [identifier.lower() for identifier in unknown_identifiers]:
         return False
 
-    date_str = clean_date_text(str(date_str))
+    date_str = clean_date_text(i18n_manager, str(date_str))
 
     if timestamp is None:
         timestamp = time.time()
@@ -128,18 +122,14 @@ def is_valid_date(date_str, timestamp=None):
     return False
 
 
-def calculate_actual_date(pub_time, timestamp):
+def calculate_actual_date(i18n_manager, pub_time, timestamp):
     """将发布日期转换为 datetime 对象"""
     if not pub_time or not timestamp:
         return None
 
     try:
-        pub_time_cleaned = clean_date_text(str(pub_time))
+        pub_time_cleaned = clean_date_text(i18n_manager, str(pub_time))
         reference_date = datetime.fromtimestamp(timestamp)
-
-        from ..i18n.manager import AIForgeI18nManager
-
-        i18n_manager = AIForgeI18nManager.get_instance()
 
         # 优先处理 Unix 时间戳
         if re.match(r"^\d{10}$", pub_time_cleaned):
@@ -254,12 +244,12 @@ def calculate_actual_date(pub_time, timestamp):
     return None
 
 
-def is_within_days(date_str, days=7):
+def is_within_days(i18n_manager, date_str, days=7):
     """检查日期是否在指定天数内"""
     if not date_str:
         return False
     try:
-        timestamp = parse_date_to_timestamp(date_str)
+        timestamp = parse_date_to_timestamp(i18n_manager, date_str)
         if timestamp == 0:
             return False
         days_ago = (datetime.now() - timedelta(days=days)).timestamp()
@@ -268,14 +258,10 @@ def is_within_days(date_str, days=7):
         return False
 
 
-def parse_date_to_timestamp(date_str):
+def parse_date_to_timestamp(i18n_manager, date_str):
     """将日期字符串转换为时间戳用于排序，增加更多日期格式识别"""
     if not date_str:
         return 0
-
-    from ..i18n.manager import AIForgeI18nManager
-
-    i18n_manager = AIForgeI18nManager.get_instance()
 
     # 获取国际化的日期前缀
     date_prefixes = i18n_manager.t("datetime.date_prefixes")

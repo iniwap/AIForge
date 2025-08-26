@@ -111,7 +111,9 @@ class SecureProcessRunner:
 
         # 创建网络策略
         policy_config = self._build_policy_config(network_config)
-        network_policy = NetworkPolicyFactory.create_policy(policy_level, policy_config)
+        network_policy = NetworkPolicyFactory.create_policy(
+            policy_level, policy_config, self._i18n_manager
+        )
 
         # 基础环境变量
         restricted_env = {

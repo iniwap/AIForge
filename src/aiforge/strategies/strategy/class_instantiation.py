@@ -7,8 +7,8 @@ from ..execution_strategy import ExecutionStrategy
 class ClassInstantiationStrategy(ExecutionStrategy):
     """类实例化执行策略"""
 
-    def __init__(self, parameter_mapping_service=None, config_manager=None):
-        super().__init__(parameter_mapping_service, config_manager)
+    def __init__(self, components: Dict[str, Any] = None):
+        super().__init__(components)
 
     def can_handle(self, module: Any, standardized_instruction: Dict[str, Any]) -> bool:
         return self._has_executable_classes(module)

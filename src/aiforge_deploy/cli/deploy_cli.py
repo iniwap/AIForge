@@ -6,13 +6,13 @@ import asyncio
 import argparse
 from ..core.deployment_manager import DeploymentManager, DeploymentType
 from ..core.config_manager import DeploymentConfigManager
-from aiforge import AIForgeI18nManager
+from aiforge import GlobalI18nManager
 
 
 def main():
     """统一部署CLI入口"""
     # 获取i18n管理器
-    i18n_manager = AIForgeI18nManager.get_instance()
+    i18n_manager = GlobalI18nManager.get_instance()
 
     parser = argparse.ArgumentParser(
         description=i18n_manager.t("deploy_cli.description"),

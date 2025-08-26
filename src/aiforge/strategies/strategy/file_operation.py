@@ -217,8 +217,8 @@ class FileOperationTransactionManager:
 class FileOperationStrategy(ExecutionStrategy):
     """文件操作执行策略"""
 
-    def __init__(self, parameter_mapping_service=None, config_manager=None):
-        super().__init__(parameter_mapping_service, config_manager)
+    def __init__(self, components: Dict[str, Any] = None):
+        super().__init__(components)
 
         self.supported_operations = {
             "copy": self._copy_file,

@@ -10,11 +10,11 @@ from .code_controller import CodeSecurityController
 class SecurityMiddleware:
     """安全中间件 - 统一安全验证入口"""
 
-    def __init__(self, config_manager):
-        self.config_manager = config_manager
-        self.network_controller = NetworkSecurityController(config_manager)
-        self.file_controller = FileSecurityController(config_manager)
-        self.code_controller = CodeSecurityController(config_manager)
+    def __init__(self, components: Dict[str, Any] = None):
+        self.components = components
+        self.network_controller = NetworkSecurityController(components)
+        self.file_controller = FileSecurityController(components)
+        self.code_controller = CodeSecurityController(components)
         self._validation_cache = {}
 
     def validate_execution(

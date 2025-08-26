@@ -68,6 +68,8 @@ class AIForgeSearchManager:
                     min_abstract_len=search_params["min_abstract_len"],
                     max_abstract_len=search_params["max_abstract_len"],
                     engine_override=f"searxng#{config_manager.get_searxng_config()['url']}",
+                    progress_indicator=self._progress_indicator,
+                    i18n_manager=self._i18n_manager,
                 )
 
                 if search_result and search_result.get("success"):
@@ -165,7 +167,7 @@ class AIForgeSearchManager:
         original_instruction: str,
         search_params: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
-        """第三层：使用 get_template_guided_search_instruction"""
+        """第三层：模板指导"""
         try:
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
@@ -177,6 +179,7 @@ class AIForgeSearchManager:
                     "search_guided",
                     search_query=search_params["search_query"],
                     expected_output=standardized_instruction.get("expected_output"),
+                    i18n_manager=self._i18n_manager,
                     max_results=search_params["max_results"],
                     min_abstract_len=search_params["min_abstract_len"],
                 )
@@ -218,7 +221,7 @@ class AIForgeSearchManager:
         original_instruction: str,
         search_params: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
-        """第四层：使用 get_free_form_ai_search_instruction"""
+        """第四层：使用 AI自由模板"""
         try:
             if not search_params["search_query"]:
                 search_params["search_query"] = original_instruction
@@ -230,6 +233,7 @@ class AIForgeSearchManager:
                     "search_free_form",
                     search_query=search_params["search_query"],
                     expected_output=standardized_instruction.get("expected_output"),
+                    i18n_manager=self._i18n_manager,
                     max_results=search_params["max_results"],
                     min_abstract_len=search_params["min_abstract_len"],
                 )
@@ -435,7 +439,7 @@ class AIForgeSearchManager:
         ):
             return cache_result
 
-        # 第三层：使用 get_template_guided_search_instruction
+        # 第三层：使用 模板指导
         self._progress_indicator.show_search_process(
             self._i18n_manager.t("search.process_ai_template")
         )

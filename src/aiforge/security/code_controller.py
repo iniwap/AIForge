@@ -8,20 +8,16 @@ from .security_constants import SecurityConstants
 class CodeSecurityController:
     """代码安全控制器"""
 
-    def __init__(self, config_manager, components: Dict[str, Any] = None):
-        self.config_manager = config_manager
-        self.security_config = config_manager.get_security_config()
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+    def __init__(self, components: Dict[str, Any] = None):
+        self.components = components
+        self.config_manager = self.components.get("config_manager")
+        self.security_config = self.config_manager.get_security_config()
+        self._i18n_manager = components.get("i18n_manager")
 
     def validate_code_access(self, code: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """代码安全验证入口"""
         function_params = context.get("function_params", [])
-        analyzer = DataFlowAnalyzer(function_params)
+        analyzer = DataFlowAnalyzer(function_params, self.components)
 
         # 只进行代码相关的危险函数检测
         security_issues = []

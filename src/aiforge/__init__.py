@@ -32,8 +32,7 @@ from .cache.semantic_cache import EnhancedStandardizedCache
 # 指令分析导入
 from .instruction.analyzer import AIForgeInstructionAnalyzer
 from .core.managers import AIForgeExecutionManager
-from .utils.progress_indicator import ProgressIndicatorRegistry
-from .i18n.manager import AIForgeI18nManager
+from .i18n.manager import AIForgeI18nManager, GlobalI18nManager
 from .core.managers.streaming_execution_manager import AIForgeStreamingExecutionManager
 from .core.result import AIForgeResult
 from .core.managers.shutdown_manager import AIForgeShutdownManager
@@ -66,8 +65,8 @@ __all__ = [
     "CodeBlock",
     "AIForgePrompt",
     "AIForgeExecutionManager",
-    "ProgressIndicatorRegistry",
     "AIForgeI18nManager",
+    "GlobalI18nManager",
     "AIForgeStreamingExecutionManager",
     "AIForgeResult",
     "AIForgeShutdownManager",

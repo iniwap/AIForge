@@ -3,7 +3,6 @@ import json
 import time
 from typing import Dict, Any, AsyncGenerator
 from ...utils.streaming_progres_indicator import StreamingProgressIndicator
-from ...utils.progress_indicator import ProgressIndicatorRegistry
 from ..engine import AIForgeEngine
 
 
@@ -64,7 +63,6 @@ class AIForgeStreamingExecutionManager:
         original_progress = self.components.get("progress_indicator")
         web_progress = StreamingProgressIndicator(self.components, progress_callback)
         self.components["progress_indicator"] = web_progress
-        ProgressIndicatorRegistry.set_current(web_progress)  # 注册到全局
 
         try:
             # 发送开始消息（根据进度级别决定是否发送）

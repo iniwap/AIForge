@@ -101,3 +101,307 @@
 .hidden {  
     display: none !important;  
 }
+/* 快速配置区域样式 */  
+.quick-config {  
+    display: flex;  
+    align-items: center;  
+    gap: 12px;  
+}  
+  
+.config-select {  
+    padding: 6px 12px;  
+    border: 1px solid #d1d5db;  
+    border-radius: 6px;  
+    background: white;  
+    font-size: 14px;  
+    min-width: 120px;  
+    transition: border-color 0.2s, box-shadow 0.2s;  
+}  
+  
+.config-select:focus {  
+    outline: none;  
+    border-color: #3b82f6;  
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);  
+}  
+  
+.config-status {  
+    padding: 4px 12px;  
+    border-radius: 4px;  
+    font-size: 12px;  
+    font-weight: 600;  
+}  
+  
+.config-status.status-ok {  
+    background: #dcfce7;  
+    color: #166534;  
+    border: 1px solid #bbf7d0;  
+}  
+  
+.config-status.status-warning {  
+    background: #fef3c7;  
+    color: #92400e;  
+    border: 1px solid #fde68a;  
+}  
+  
+/* 配置模态框增强样式 */  
+.config-modal {  
+    max-width: 600px;  
+    width: 90%;  
+}  
+  
+.config-form {  
+    display: flex;  
+    flex-direction: column;  
+    gap: 24px;  
+}  
+  
+.config-section {  
+    background: #f9fafb;  
+    padding: 20px;  
+    border-radius: 8px;  
+    border: 1px solid #e5e7eb;  
+}  
+  
+.config-section h3 {  
+    margin: 0 0 16px 0;  
+    color: #374151;  
+    font-size: 16px;  
+    font-weight: 600;  
+    display: flex;  
+    align-items: center;  
+    gap: 8px;  
+}  
+  
+/* 表单组样式增强 */  
+.form-group {  
+    margin-bottom: 16px;  
+}  
+  
+.form-group:last-child {  
+    margin-bottom: 0;  
+}  
+  
+.form-group label {  
+    display: block;  
+    margin-bottom: 6px;  
+    font-size: 14px;  
+    color: #374151;  
+    font-weight: 500;  
+}  
+  
+.form-group input,  
+.form-group select {  
+    width: 100%;  
+    padding: 10px 12px;  
+    border: 1px solid #d1d5db;  
+    border-radius: 6px;  
+    background: white;  
+    font-size: 14px;  
+    transition: border-color 0.2s, box-shadow 0.2s;  
+}  
+  
+.form-group input:focus,  
+.form-group select:focus {  
+    outline: none;  
+    border-color: #3b82f6;  
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);  
+}  
+  
+/* 检查按钮样式 */  
+.check-btn {  
+    background: #6b7280;  
+    color: white;  
+    border: none;  
+    padding: 6px 12px;  
+    border-radius: 4px;  
+    cursor: pointer;  
+    font-size: 12px;  
+    margin-top: 8px;  
+    transition: background-color 0.2s;  
+}  
+  
+.check-btn:hover {  
+    background: #4b5563;  
+}  
+  
+/* 表单操作按钮区域 */  
+.form-actions {  
+    display: flex;  
+    justify-content: flex-end;  
+    gap: 12px;  
+    padding-top: 20px;  
+    border-top: 1px solid #e5e7eb;  
+}  
+  
+.cancel-btn {  
+    background: #6b7280;  
+    color: white;  
+    border: none;  
+    padding: 10px 20px;  
+    border-radius: 6px;  
+    cursor: pointer;  
+    font-size: 14px;  
+    transition: background-color 0.2s;  
+}  
+  
+.cancel-btn:hover {  
+    background: #4b5563;  
+}  
+  
+.save-btn {  
+    background: #3b82f6;  
+    color: white;  
+    border: none;  
+    padding: 10px 20px;  
+    border-radius: 6px;  
+    cursor: pointer;  
+    font-size: 14px;  
+    font-weight: 500;  
+    transition: background-color 0.2s;  
+}  
+  
+.save-btn:hover {  
+    background: #2563eb;  
+}  
+  
+/* 配置提醒区域样式 */  
+.config-alert {  
+    background: #fef3c7;  
+    border: 1px solid #f59e0b;  
+    border-radius: 8px;  
+    padding: 16px;  
+    margin-bottom: 20px;  
+    display: flex;  
+    align-items: center;  
+    justify-content: center;  
+}  
+  
+.config-alert.hidden {  
+    display: none;  
+}  
+  
+.alert-content {  
+    display: flex;  
+    align-items: center;  
+    gap: 12px;  
+}  
+  
+.alert-icon {  
+    font-size: 20px;  
+}  
+  
+.alert-text {  
+    color: #92400e;  
+    font-weight: 500;  
+}  
+  
+.alert-btn {  
+    background: #f59e0b;  
+    color: white;  
+    border: none;  
+    padding: 8px 16px;  
+    border-radius: 6px;  
+    cursor: pointer;  
+    font-size: 14px;  
+    transition: background-color 0.2s;  
+}  
+  
+.alert-btn:hover {  
+    background: #d97706;  
+}  
+  
+/* Toast 通知样式 */  
+.toast {  
+    position: fixed;  
+    top: 20px;  
+    right: 20px;  
+    padding: 12px 16px;  
+    border-radius: 6px;  
+    color: white;  
+    font-size: 14px;  
+    font-weight: 500;  
+    z-index: 1000;  
+    opacity: 0;  
+    transition: opacity 0.3s ease;  
+    max-width: 300px;  
+    word-wrap: break-word;  
+}  
+  
+.toast.success {  
+    background: #10b981;  
+}  
+  
+.toast.error {  
+    background: #ef4444;  
+}  
+  
+.toast.warning {  
+    background: #f59e0b;  
+}  
+  
+.toast.info {  
+    background: #3b82f6;  
+}  
+  
+.toast.show {  
+    opacity: 1;  
+}  
+  
+/* 响应式设计 */  
+@media (max-width: 768px) {  
+    .quick-config {  
+        flex-direction: column;  
+        gap: 8px;  
+        width: 100%;  
+    }  
+  
+    .config-select {  
+        width: 100%;  
+    }  
+  
+    .config-modal {  
+        width: 95%;  
+        max-width: none;  
+    }  
+  
+    .config-section {  
+        padding: 16px;  
+    }  
+  
+    .form-actions {  
+        flex-direction: column;  
+    }  
+  
+    .cancel-btn,  
+    .save-btn {  
+        width: 100%;  
+    }  
+  
+    .alert-content {  
+        flex-direction: column;  
+        text-align: center;  
+    }  
+}  
+  
+/* 模态框覆盖样式调整 */  
+#settingsModal {  
+    z-index: 50;  
+}  
+  
+#settingsModal .relative {  
+    z-index: 51;  
+}  
+  
+/* 与 Tailwind CSS 的兼容性调整 */  
+.config-form .space-y-4 > * + * {  
+    margin-top: 1rem;  
+}  
+  
+.config-form .grid.grid-cols-2 {  
+    display: grid;  
+    grid-template-columns: repeat(2, minmax(0, 1fr));  
+}  
+  
+.config-form .gap-3 {  
+    gap: 0.75rem;  
+}

@@ -1,7 +1,6 @@
 import asyncio
 import time
 from typing import Dict, Any, Callable, Optional
-from aiforge.i18n.manager import AIForgeI18nManager
 
 
 class StreamingProgressIndicator:
@@ -13,12 +12,8 @@ class StreamingProgressIndicator:
         self._show_progress = True
         self.components = components or {}
         self.stream_callback = stream_callback
-
         # 获取 i18n 管理器
-        if components and "i18n_manager" in components:
-            self._i18n_manager = components["i18n_manager"]
-        else:
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = components["i18n_manager"]
 
     def _send_progress(self, message: str, progress_type: str = "info"):
         """发送进度消息到流"""

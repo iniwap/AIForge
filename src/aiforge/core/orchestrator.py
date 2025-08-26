@@ -22,6 +22,7 @@ from ..execution.engine import AIForgeExecutionEngine
 from .managers.content_generation_manager import AIForgeContentGenerationManager
 from ..i18n.manager import AIForgeI18nManager
 from ..utils.progress_indicator import ProgressIndicator
+from .managers.shutdown_manager import AIForgeShutdownManager
 
 
 class AIForgeOrchestrator:
@@ -37,6 +38,7 @@ class AIForgeOrchestrator:
 
         # 1. 基础配置和核心服务
         self._init_config_manager(config_file, api_key, provider, **kwargs)
+        self._init_shutdown_manager()
         self._init_i18n_manager()
         self._init_progress_indicator()
         self._init_llm_manager()
@@ -72,8 +74,13 @@ class AIForgeOrchestrator:
             config_file, api_key, provider, **kwargs
         )
 
+    def _init_shutdown_manager(self):
+        """初始化关闭管理器"""
+        shutdown_manager = AIForgeShutdownManager()
+        self.components["shutdown_manager"] = shutdown_manager
+
     def _init_progress_indicator(self):
-        progress_indicator = ProgressIndicator.get_instance(self.components)
+        progress_indicator = ProgressIndicator(self.components)
         self.components["progress_indicator"] = progress_indicator
 
     def _init_i18n_manager(self):

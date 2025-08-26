@@ -8,17 +8,12 @@ from urllib.parse import urlparse
 class NetworkSecurityController:
     """网络安全控制器"""
 
-    def __init__(self, config_manager, components: Dict[str, Any] = None):
+    def __init__(self, components: Dict[str, Any] = None):
+        self.components = components
+        self._i18n_manager = self.components.get("i18n_manager")
 
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
-
-        self.config_manager = config_manager
-        self.security_config = config_manager.get_security_config()
+        self.config_manager = self.components.get("config_manager")
+        self.security_config = self.config_manager.get_security_config()
         self.network_config = self.security_config.get("network", {})
 
         # 基础配置

@@ -3,7 +3,7 @@ import asyncio
 from pathlib import Path
 from typing import Dict, Any
 from ..core.deployment_manager import BaseDeploymentProvider
-from aiforge import AIForgeI18nManager
+from aiforge import GlobalI18nManager
 
 
 class DockerDeploymentProvider(BaseDeploymentProvider):
@@ -15,7 +15,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
         self.project_name = "aiforge"
 
         # 获取i18n管理器
-        self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = GlobalI18nManager.get_instance()
 
         # 获取用户传递的Docker配置（可能为None）
         self.docker_config = config_manager.get_docker_config()

@@ -4,7 +4,6 @@ from rich.console import Console
 
 from ...llm.llm_client import AIForgeLLMClient
 from .feedback_optimizer import FeedbackOptimizer
-from ..managers.shutdown_manager import AIForgeShutdownManager
 
 
 class TaskExecutor:
@@ -21,12 +20,8 @@ class TaskExecutor:
         self.client = llm_client
         self.console = Console()
 
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ...i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = components.get("i18n_manager")
+        self._shutdown_manager = components.get("shutdown_manager")
 
         # 通过components获取执行引擎，如果没有则创建新的
         if components and "execution_engine" in components:
@@ -110,7 +105,7 @@ class TaskExecutor:
 
         while optimization_attempt <= max_optimization_attempts:
             # 每次循环开始时检查停止信号
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 return False, None, "", False
 
             round_attempt_message = self._i18n_manager.t(
@@ -124,7 +119,7 @@ class TaskExecutor:
             self.console.print(f"🤖 {generating_code_message}", style="dim white")
 
             # 生成代码前再次检查停止信号
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 return False, None, "", False
 
             if optimization_attempt == 1:
@@ -139,7 +134,7 @@ class TaskExecutor:
 
             # 检查LLM响应是否因停止而返回None
             if not response:
-                if AIForgeShutdownManager.get_instance().is_shutting_down():
+                if self._shutdown_manager.is_shutting_down():
                     return False, None, "", False
 
                 no_response_message = self._i18n_manager.t(
@@ -150,7 +145,7 @@ class TaskExecutor:
                 continue
 
             # 代码执行前检查停止信号
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 return False, None, "", False
 
             # 其余执行逻辑保持不变，但在关键点添加停止检查...
@@ -169,14 +164,14 @@ class TaskExecutor:
             self.console.print(f"📝 {found_blocks_message}")
 
             # 执行代码块前检查停止信号
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 return False, None, "", False
 
             # 处理代码块执行
             self.process_code_execution(code_blocks)
 
             # 验证前检查停止信号
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 return False, None, "", False
 
             # 其余验证逻辑...
@@ -215,7 +210,7 @@ class TaskExecutor:
             last_execution["result"]["result"] = processed_result
 
             # 验证前最后检查停止信号
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 return False, None, "", False
 
             is_valid, validation_type, failure_reason, validation_details = (
@@ -251,7 +246,7 @@ class TaskExecutor:
 
                 if optimization_attempt < max_optimization_attempts:
                     # 检查停止信号
-                    if AIForgeShutdownManager.get_instance().is_shutting_down():
+                    if self._shutdown_manager.is_shutting_down():
                         return False, None, "", False
 
                     validation_failed_message = self._i18n_manager.t(

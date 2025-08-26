@@ -5,7 +5,6 @@ from rich.console import Console
 from typing import Dict, Any, Set
 from .conversation_manager import ConversationManager
 from .adapters.adapter_factory import AdapterFactory
-from ..core.managers.shutdown_manager import AIForgeShutdownManager
 
 
 class AIForgeLLMClient:
@@ -37,8 +36,9 @@ class AIForgeLLMClient:
         self._request_lock = threading.Lock()
         self._is_cancelled = threading.Event()
 
+        self._shutdown_manager = components.get("shutdown_manager")
         # 注册到全局关闭管理器
-        AIForgeShutdownManager.get_instance().register_cleanup_callback(self._cancel_all_requests)
+        self._shutdown_manager.register_cleanup_callback(self._cancel_all_requests)
 
         self.conversation_manager = ConversationManager()
         self.usage_stats = {"total_tokens": 0, "rounds": 0}
@@ -79,17 +79,14 @@ class AIForgeLLMClient:
         """生成代码 - 支持取消"""
 
         # 检查是否已被取消
-        if self._is_cancelled.is_set() or AIForgeShutdownManager.get_instance().is_shutting_down():
+        if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
             return None
 
         self._progress_indicator.show_llm_request(self.name)
 
         for attempt in range(max_retries):
             # 每次重试前检查取消状态
-            if (
-                self._is_cancelled.is_set()
-                or AIForgeShutdownManager.get_instance().is_shutting_down()
-            ):
+            if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
                 return None
 
             try:
@@ -129,10 +126,7 @@ class AIForgeLLMClient:
                 )
 
                 # 检查请求是否在处理过程中被取消
-                if (
-                    self._is_cancelled.is_set()
-                    or AIForgeShutdownManager.get_instance().is_shutting_down()
-                ):
+                if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
                     return None
 
                 if response.status_code == 200:
@@ -168,7 +162,7 @@ class AIForgeLLMClient:
                         for _ in range(wait_time * 10):  # 0.1秒间隔检查
                             if (
                                 self._is_cancelled.is_set()
-                                or AIForgeShutdownManager.get_instance().is_shutting_down()
+                                or self._shutdown_manager.is_shutting_down()
                             ):
                                 return None
                             time.sleep(0.1)
@@ -178,10 +172,7 @@ class AIForgeLLMClient:
                         return None
 
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-                if (
-                    self._is_cancelled.is_set()
-                    or AIForgeShutdownManager.get_instance().is_shutting_down()
-                ):
+                if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
                     return None
                 if attempt < max_retries - 1:
                     time.sleep(1)
@@ -189,10 +180,7 @@ class AIForgeLLMClient:
                 else:
                     return None
             except Exception as e:
-                if (
-                    self._is_cancelled.is_set()
-                    or AIForgeShutdownManager.get_instance().is_shutting_down()
-                ):
+                if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
                     return None
                 error_message = self._i18n_manager.t(
                     "llm_client.request_failed", name=self.name, error=str(e)
@@ -205,7 +193,7 @@ class AIForgeLLMClient:
 
     def __del__(self):
         """析构函数 - 清理资源"""
-        AIForgeShutdownManager.get_instance().unregister_cleanup_callback(self._cancel_all_requests)
+        self._shutdown_manager.unregister_cleanup_callback(self._cancel_all_requests)
         self._cancel_all_requests()
 
     def send_feedback(self, feedback: str, is_error: bool = True, metadata: Dict[str, Any] = None):

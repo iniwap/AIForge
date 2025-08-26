@@ -14,15 +14,10 @@ class AIForgeResultProcessor:
 
     def __init__(self, console: Console = None, components: Dict[str, Any] = None):
         self.components = components or {}
-        self.formatter = AIForgeResultFormatter(console) if console else None
+        self.formatter = AIForgeResultFormatter(console, components) if console else None
         self.result_validator = ResultValidator(self.components)
         self.expected_output = None
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = components.get("i18n_manager")
 
     def set_expected_output(self, expected_output: Dict[str, Any]):
         """设置预期输出规则"""

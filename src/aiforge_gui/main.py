@@ -15,7 +15,6 @@ from .config.settings import GUISettings
 from .utils.resource_manager import ResourceManager
 import pystray
 from PIL import Image
-from aiforge import AIForgeShutdownManager
 
 
 class AIForgeGUIApp:
@@ -199,12 +198,13 @@ class AIForgeGUIApp:
 
     def validate_environment(self):
         """验证运行环境"""
-        issues = []
+        warnings = []
+        errors = []
 
-        # 检查API密钥
+        # 检查API密钥 - 改为警告
         api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("AIFORGE_API_KEY")
         if not api_key:
-            issues.append("未设置API密钥 (OPENROUTER_API_KEY 或 AIFORGE_API_KEY)")
+            warnings.append("未设置API密钥，请在界面中配置后使用")
 
         # 检查网络连接
         try:
@@ -212,20 +212,27 @@ class AIForgeGUIApp:
 
             requests.get("https://www.baidu.com", timeout=5)
         except Exception:
-            issues.append("网络连接异常")
+            warnings.append("网络连接异常，可能影响在线功能")
 
-        # 检查必要的依赖
+        # 检查必要的依赖 - 这些仍然是错误
         required_modules = ["webview", "requests", "fastapi"]
         for module in required_modules:
             try:
                 __import__(module)
             except ImportError:
-                issues.append(f"缺少必要依赖: {module}")
+                errors.append(f"缺少必要依赖: {module}")
 
-        if issues:
-            print("⚠️ 环境检查发现问题:")
-            for issue in issues:
-                print(f"  - {issue}")
+        # 显示警告信息
+        if warnings:
+            print("⚠️ 环境检查警告:")
+            for warning in warnings:
+                print(f"  - {warning}")
+
+        # 显示错误信息
+        if errors:
+            print("❌ 环境检查发现严重问题:")
+            for error in errors:
+                print(f"  - {error}")
             return False
 
         return True
@@ -421,17 +428,20 @@ class AIForgeGUIApp:
 
     def _cleanup(self):
         """完整的清理资源流程"""
-        self.console.print("[yellow]🔄 开始优雅关闭流程...[/yellow]")
 
-        # 1. 首先触发全局停止信号
-        AIForgeShutdownManager.get_instance().initiate_shutdown()
+        # 1. 从引擎获取shutdown_manager，而不是使用全局单例
+        shutdown_manager = None
+        if self.engine_manager:
+            shutdown_manager = self.engine_manager.get_shutdown_manager()
+
+        if shutdown_manager:
+            shutdown_manager.initiate_shutdown()
 
         # 2. 等待当前任务完成或超时
-        max_wait_time = 5.0  # 最多等待5秒
+        max_wait_time = 5.0
         start_time = time.time()
 
         while time.time() - start_time < max_wait_time:
-            # 检查是否还有活跃的任务
             if self.engine_manager and self.engine_manager.get_engine():
                 engine = self.engine_manager.get_engine()
                 if hasattr(engine, "task_manager") and hasattr(engine.task_manager, "active_tasks"):
@@ -442,16 +452,37 @@ class AIForgeGUIApp:
         # 3. 强制停止所有组件
         if self.engine_manager and self.engine_manager.get_engine():
             engine = self.engine_manager.get_engine()
-            if hasattr(engine, "stop"):
-                engine.stop()
+            if hasattr(engine, "cleanup"):
+                try:
+                    engine.cleanup()
+                except Exception:
+                    pass
+            elif hasattr(engine, "stop"):
+                try:
+                    engine.stop()
+                except Exception:
+                    pass
+            elif hasattr(engine, "component_manager") and hasattr(
+                engine.component_manager, "cleanup_components"
+            ):
+                try:
+                    engine.component_manager.cleanup_components()
+                except Exception:
+                    pass
 
         # 4. 停止API服务器
         if self.api_server:
-            self.api_server.stop()
+            try:
+                self.api_server.stop()
+            except Exception:
+                pass
 
         # 5. 停止系统托盘
         if self.tray:
-            self.tray.stop()
+            try:
+                self.tray.stop()
+            except Exception:
+                pass
 
 
 def main():

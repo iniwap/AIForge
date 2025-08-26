@@ -5,7 +5,6 @@ from rich.console import Console
 from ...llm.llm_client import AIForgeLLMClient
 from ..prompt import AIForgePrompt
 from .executor import TaskExecutor
-from ..managers.shutdown_manager import AIForgeShutdownManager
 
 
 class AIForgeTask:
@@ -26,6 +25,7 @@ class AIForgeTask:
         self.components = components or {}
         self.console = Console()
         self._i18n_manager = self.components.get("i18n_manager")
+        self._shutdown_manager = components.get("shutdown_manager")
 
         # 使用拆分后的执行器，传递 components 参数
         self.executor = TaskExecutor(
@@ -46,7 +46,7 @@ class AIForgeTask:
         expected_output: Dict[str, Any] = None,
     ):
         """执行方法"""
-        if AIForgeShutdownManager.get_instance().is_shutting_down():
+        if self._shutdown_manager.is_shutting_down():
             return False, None, ""
 
         if instruction and system_prompt:
@@ -93,7 +93,7 @@ class AIForgeTask:
         final_code = ""
 
         while rounds <= self.max_rounds:
-            if AIForgeShutdownManager.get_instance().is_shutting_down():
+            if self._shutdown_manager.is_shutting_down():
                 break
 
             if rounds > 1:
@@ -135,7 +135,7 @@ class AIForgeTask:
                     self.console.print(f"🎉 {success_message}", style="bold green")
                 break
             else:
-                if AIForgeShutdownManager.get_instance().is_shutting_down():
+                if self._shutdown_manager.is_shutting_down():
                     break
 
                 if rounds >= self.max_rounds:

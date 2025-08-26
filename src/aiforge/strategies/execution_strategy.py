@@ -7,10 +7,11 @@ from ..security.security_middleware import SecurityMiddleware
 class ExecutionStrategy(ABC):
     """执行策略接口"""
 
-    def __init__(self, parameter_mapping_service=None, config_manager=None):
-        self.config_manager = config_manager
-        self.parameter_mapping_service = parameter_mapping_service
-        self._security_middleware = SecurityMiddleware(self.config_manager)
+    def __init__(self, components: Dict[str, Any] = None):
+        self.components = components
+        self.config_manager = self.components.get("config_manager")
+        self.parameter_mapping_service = self.components.get("parameter_mapping_service")
+        self._security_middleware = SecurityMiddleware(self.components)
         self._last_validation_result = None
 
     @abstractmethod

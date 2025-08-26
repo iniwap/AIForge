@@ -1,12 +1,11 @@
 import threading
 import time
 from typing import Dict, Optional, List
-from aiforge import AIForgeEngine
-from aiforge.core.managers.shutdown_manager import AIForgeShutdownManager
+from .session_context import SessionContext
 
 
-class UserSessionManager:
-    """用户会话管理器 - 单例模式"""
+class SessionManager:
+    """多用户会话管理器"""
 
     _instance = None
     _lock = threading.RLock()
@@ -26,13 +25,11 @@ class UserSessionManager:
 
         with self._lock:
             if not self._initialized:
-                self._sessions: Dict[str, AIForgeEngine] = {}
+                self._sessions: Dict[str, SessionContext] = {}
                 self._session_lock = threading.RLock()
-                self._session_timestamps: Dict[str, float] = {}
-                self._session_shutdown_managers: Dict[str, AIForgeShutdownManager] = {}
-                self._cleanup_interval = 3600  # 1小时清理一次
-                self._session_timeout = 7200  # 2小时会话超时
-                UserSessionManager._initialized = True
+                self._session_timeout = 7200
+                self._max_sessions = 1000
+                SessionManager._initialized = True
 
     @classmethod
     def get_instance(cls):
@@ -41,69 +38,97 @@ class UserSessionManager:
             cls._instance = cls()
         return cls._instance
 
-    def get_or_create_engine(self, session_id: str, **engine_kwargs) -> AIForgeEngine:
-        """获取或创建用户专属的 AIForge 引擎实例"""
+    def create_session(
+        self, session_id: str, user_id: Optional[str] = None, language: str = "zh", **metadata
+    ) -> SessionContext:
+        """创建新会话上下文"""
         with self._session_lock:
-            # 更新会话时间戳
-            self._session_timestamps[session_id] = time.time()
+            # 检查会话是否已存在
+            if session_id in self._sessions:
+                existing_session = self._sessions[session_id]
+                existing_session.update_activity()
+                return existing_session
 
-            if session_id not in self._sessions:
-                # 为每个会话创建独立的 AIForgeShutdownManager
-                session_shutdown = AIForgeShutdownManager()
-                self._session_shutdown_managers[session_id] = session_shutdown
+            # 检查会话数量限制
+            if len(self._sessions) >= self._max_sessions:
+                self._cleanup_expired_sessions()
+                if len(self._sessions) >= self._max_sessions:
+                    raise RuntimeError(f"会话数量超过限制: {self._max_sessions}")
 
-                # 创建引擎实例
-                engine = AIForgeEngine(**engine_kwargs)
+            # 创建新的会话上下文
+            context = SessionContext(
+                session_id=session_id, user_id=user_id, language=language, metadata=metadata
+            )
 
-                # 将 AIForgeShutdownManager 注入到引擎的组件中
-                if hasattr(engine, "component_manager") and hasattr(
-                    engine.component_manager, "components"
-                ):
-                    engine.component_manager.components["shutdown_manager"] = session_shutdown
+            self._sessions[session_id] = context
+            return context
 
-                self._sessions[session_id] = engine
+    def get_session(self, session_id: str) -> Optional[SessionContext]:
+        """获取会话上下文"""
+        with self._session_lock:
+            context = self._sessions.get(session_id)
+            if context and not context.is_expired(self._session_timeout):
+                context.update_activity()
+                return context
+            elif context:
+                # 会话已过期，清理
+                self._cleanup_session_internal(session_id)
+            return None
 
-            return self._sessions[session_id]
+    def update_session_activity(self, session_id: str) -> bool:
+        """更新会话活动时间"""
+        with self._session_lock:
+            context = self._sessions.get(session_id)
+            if context:
+                context.update_activity()
+                return True
+            return False
 
-    def get_session_shutdown_manager(self, session_id: str) -> Optional[AIForgeShutdownManager]:
-        """获取会话的 AIForgeShutdownManager"""
-        return self._session_shutdown_managers.get(session_id)
-
-    def initiate_session_shutdown(self, session_id: str):
-        """启动指定会话的关闭流程"""
-        shutdown_manager = self.get_session_shutdown_manager(session_id)
-        if shutdown_manager:
-            shutdown_manager.initiate_shutdown()
-
-    def cleanup_session(self, session_id: str):
+    def cleanup_session(self, session_id: str) -> bool:
         """清理指定会话"""
         with self._session_lock:
-            if session_id in self._sessions:
-                # 先触发关闭信号
-                self.initiate_session_shutdown(session_id)
+            return self._cleanup_session_internal(session_id)
 
-                # 清理引擎资源
-                engine = self._sessions[session_id]
-                if hasattr(engine, "cleanup"):
-                    engine.cleanup()
+    def _cleanup_session_internal(self, session_id: str) -> bool:
+        """内部会话清理方法（需要在锁内调用）"""
+        if session_id not in self._sessions:
+            return False
 
-                # 清理会话数据
-                del self._sessions[session_id]
-                self._session_timestamps.pop(session_id, None)
-                self._session_shutdown_managers.pop(session_id, None)
+        context = self._sessions[session_id]
 
-    def cleanup_expired_sessions(self):
-        """清理过期会话"""
-        current_time = time.time()
+        # 清理会话组件
+        for component_name, component in context.components.items():
+            if hasattr(component, "cleanup"):
+                try:
+                    component.cleanup()
+                except Exception as e:
+                    print(f"清理组件 {component_name} 失败: {e}")
+            elif hasattr(component, "shutdown"):
+                try:
+                    component.shutdown()
+                except Exception as e:
+                    print(f"关闭组件 {component_name} 失败: {e}")
+
+        # 从会话字典中移除
+        del self._sessions[session_id]
+        return True
+
+    def cleanup_expired_sessions(self) -> int:
+        """清理所有过期会话，返回清理的会话数量"""
         expired_sessions = []
 
         with self._session_lock:
-            for session_id, timestamp in self._session_timestamps.items():
-                if current_time - timestamp > self._session_timeout:
+            for session_id, context in self._sessions.items():
+                if context.is_expired(self._session_timeout):
                     expired_sessions.append(session_id)
 
+        # 清理过期会话
+        cleaned_count = 0
         for session_id in expired_sessions:
-            self.cleanup_session(session_id)
+            if self.cleanup_session(session_id):
+                cleaned_count += 1
+
+        return cleaned_count
 
     def get_active_sessions_count(self) -> int:
         """获取活跃会话数量"""
@@ -113,38 +138,47 @@ class UserSessionManager:
     def get_session_info(self, session_id: str) -> Optional[Dict]:
         """获取会话信息"""
         with self._session_lock:
-            if session_id in self._sessions:
+            context = self._sessions.get(session_id)
+            if context:
                 return {
-                    "session_id": session_id,
-                    "created_at": self._session_timestamps.get(session_id),
-                    "last_activity": self._session_timestamps.get(session_id),
-                    "has_shutdown_manager": session_id in self._session_shutdown_managers,
-                    "is_shutting_down": (
-                        self._session_shutdown_managers.get(session_id, {}).is_shutting_down()
-                        if session_id in self._session_shutdown_managers
-                        else False
-                    ),
+                    "session_id": context.session_id,
+                    "user_id": context.user_id,
+                    "created_at": context.created_at,
+                    "last_activity": context.last_activity,
+                    "language": context.language,
+                    "components_count": len(context.components),
+                    "is_expired": context.is_expired(self._session_timeout),
+                    "metadata": context.metadata,
                 }
-        return None
+            return None
 
     def list_active_sessions(self) -> List[Dict]:
-        """列出所有活跃会话"""
+        """列出所有活跃会话信息"""
         sessions = []
         with self._session_lock:
-            for session_id in self._sessions.keys():
+            for session_id in list(self._sessions.keys()):
                 session_info = self.get_session_info(session_id)
-                if session_info:
+                if session_info and not session_info["is_expired"]:
                     sessions.append(session_info)
         return sessions
 
-    def reset(self):
-        """重置所有会话（主要用于测试）"""
+    def shutdown_all_sessions(self):
+        """关闭所有会话"""
         with self._session_lock:
-            # 清理所有会话
-            for session_id in list(self._sessions.keys()):
-                self.cleanup_session(session_id)
+            session_ids = list(self._sessions.keys())
+            for session_id in session_ids:
+                self._cleanup_session_internal(session_id)
 
-            # 清空所有字典
-            self._sessions.clear()
-            self._session_timestamps.clear()
-            self._session_shutdown_managers.clear()
+    def _cleanup_expired_sessions(self):
+        """内部清理过期会话方法（需要在锁内调用）"""
+        current_time = time.time()
+        expired_sessions = []
+
+        for session_id, context in self._sessions.items():
+            if current_time - context.last_activity > self._session_timeout:
+                expired_sessions.append(session_id)
+
+        for session_id in expired_sessions:
+            self._cleanup_session_internal(session_id)
+
+        return len(expired_sessions)

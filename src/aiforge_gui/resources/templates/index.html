@@ -1,95 +1,195 @@
-<!DOCTYPE html>  
-<html lang="zh-CN">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>AIForge - 智能意图自适应执行引擎</title>  
-    <link rel="icon" type="image/x-icon" href="/icons/icon.ico">
-    <link rel="stylesheet" href="/static/css/aiforge.css">  
-</head>  
-<body class="dark">  
-    <div id="app">  
-        <header class="header">  
-            <h1>🚀 AIForge GUI</h1>  
-            <div class="connection-status" id="connectionStatus">  
-                <span class="status-indicator" id="statusIndicator"></span>  
+<!DOCTYPE html>    
+<html lang="zh-CN">    
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>AIForge - 智能意图自适应执行引擎</title>    
+    <link rel="icon" type="image/x-icon" href="/icons/icon.ico">  
+    <link rel="stylesheet" href="/static/css/aiforge.css">    
+</head>    
+<body class="dark">    
+    <div id="app">    
+        <header class="header">    
+            <h1>🚀 AIForge GUI</h1>    
+            <div class="connection-status" id="connectionStatus">    
+                <span class="status-indicator" id="statusIndicator"></span>    
                 <span id="statusText">连接中...</span>  
+                <span id="modeIndicator" class="mode-indicator"></span>  
             </div>  
-        </header>  
-          
-        <main class="main-content">  
-            <div class="input-section">  
-                <div class="task-selector">  
-                    <label for="taskType">任务类型:</label>  
-                    <select id="taskType">  
-                        <option value="auto">自动检测</option>  
-                        <option value="content_generation">内容生成</option>  
-                        <option value="data_fetch">数据获取</option>  
-                        <option value="search">搜索</option>  
-                        <option value="code_generation">代码生成</option>  
-                        <option value="direct_response">直接回答</option>  
-                    </select>  
-                </div>
-                <div class="instruction-input">  
-                    <textarea id="instructionInput"   
-                              placeholder="请输入您的指令..."   
-                              rows="4"></textarea>  
-                    <button id="executeBtn" class="execute-btn">执行</button>  
+            <!-- 快速配置区域 -->  
+            <div class="quick-config">  
+                <select id="providerSelect" class="config-select">  
+                    <option value="openrouter">OpenRouter</option>  
+                    <option value="deepseek">DeepSeek</option>  
+                    <option value="ollama">Ollama</option>  
+                    <option value="grok">Grok</option>  
+                    <option value="qwen">Qwen</option>  
+                    <option value="gemini">Gemini</option>  
+                    <option value="claude">Claude</option>  
+                </select>  
+                <select id="localeSelect" class="config-select">  
+                    <option value="zh">中文</option>  
+                    <option value="en">English</option>  
+                    <option value="ja">日本語</option>  
+                    <option value="ko">한국어</option>  
+                </select>  
+                <span id="configStatus" class="config-status">未配置</span>  
+            </div>  
+        </header>    
+            
+        <main class="main-content">    
+            <!-- 配置提醒区域 -->  
+            <div id="configAlert" class="config-alert hidden">  
+                <div class="alert-content">  
+                    <span class="alert-icon">⚠️</span>  
+                    <span class="alert-text">请先配置 API 密钥以使用 AIForge</span>  
+                    <button id="openConfigBtn" class="alert-btn">立即配置</button>  
                 </div>  
             </div>  
-              
-            <div class="output-section">  
-                <div class="progress-container" id="progressContainer">  
-                    <h3>执行进度</h3>  
-                    <div id="progressMessages"></div>  
+  
+            <div class="input-section">    
+                <div class="task-selector">    
+                    <label for="taskType">任务类型:</label>    
+                    <select id="taskType">    
+                        <option value="auto">自动检测</option>    
+                        <option value="content_generation">内容生成</option>    
+                        <option value="data_fetch">数据获取</option>    
+                        <option value="search">搜索</option>    
+                        <option value="code_generation">代码生成</option>    
+                        <option value="direct_response">直接回答</option>    
+                    </select>    
                 </div>  
-                  
-                <div class="result-container" id="resultContainer">  
-                    <h3>执行结果</h3>  
-                    <div id="resultContent">执行结果将在这里显示...</div>  
-                </div>  
+                <div class="instruction-input">    
+                    <textarea id="instructionInput"     
+                              placeholder="请输入您的指令..."     
+                              rows="4"></textarea>    
+                    <button id="executeBtn" class="execute-btn">执行</button>    
+                </div>    
+            </div>    
+                
+            <div class="output-section">    
+                <div class="progress-container" id="progressContainer">    
+                    <h3>执行进度</h3>    
+                    <div id="progressMessages"></div>    
+                </div>    
+                    
+                <div class="result-container" id="resultContainer">    
+                    <h3>执行结果</h3>    
+                    <div id="resultContent">执行结果将在这里显示...</div>    
+                </div>    
+            </div>    
+        </main>    
+            
+        <footer class="footer">    
+            <button id="settingsBtn" class="settings-btn">⚙️ 设置</button>    
+            <button id="configBtn" class="config-btn">🔧 配置</button>  
+            <span class="version">AIForge GUI v0.0.12</span>    
+        </footer>    
+    </div>    
+        
+    <!-- 配置模态框 -->    
+    <div id="configModal" class="modal hidden">    
+        <div class="modal-content config-modal">    
+            <div class="modal-header">  
+                <h2>🔧 系统配置</h2>  
+                <span id="closeConfigBtn" class="close">&times;</span>    
             </div>  
-        </main>  
-          
-        <footer class="footer">  
-            <button id="settingsBtn" class="settings-btn">⚙️ 设置</button>  
-            <span class="version">AIForge GUI v0.0.12</span>  
-        </footer>  
+            <form id="configForm" class="config-form">  
+                <div class="config-section">  
+                    <h3>🔑 API 配置</h3>  
+                    <div class="form-group">    
+                        <label for="apiKeyInput">API 密钥:</label>    
+                        <input type="password" id="apiKeyInput" placeholder="请输入 API 密钥">  
+                        <button type="button" id="checkApiKeyBtn" class="check-btn">检查状态</button>  
+                    </div>  
+                    <div class="form-group">    
+                        <label for="providerInput">提供商:</label>    
+                        <select id="providerInput">    
+                            <option value="openrouter">OpenRouter</option>    
+                            <option value="deepseek">DeepSeek</option>    
+                            <option value="ollama">Ollama</option>  
+                            <option value="grok">Grok</option>  
+                            <option value="qwen">Qwen</option>  
+                            <option value="gemini">Gemini</option>  
+                            <option value="claude">Claude</option>  
+                        </select>    
+                    </div>  
+                </div>  
+  
+                <div class="config-section">  
+                    <h3>🌐 界面配置</h3>  
+                    <div class="form-group">    
+                        <label for="localeInput">语言:</label>    
+                        <select id="localeInput">    
+                            <option value="zh">中文</option>    
+                            <option value="en">English</option>  
+                            <option value="ja">日本語</option>  
+                            <option value="ko">한국어</option>  
+                            <option value="fr">Français</option>  
+                            <option value="de">Deutsch</option>  
+                            <option value="es">Español</option>  
+                            <option value="pt">Português</option>  
+                            <option value="ru">Русский</option>  
+                            <option value="ar">العربية</option>  
+                            <option value="hi">हिन्दी</option>  
+                            <option value="vi">Tiếng Việt</option>  
+                        </select>    
+                    </div>  
+                </div>  
+  
+                <div class="config-section">  
+                    <h3>⚙️ 执行参数</h3>  
+                    <div class="form-group">    
+                        <label for="maxRoundsInput">最大执行轮数:</label>    
+                        <input type="number" id="maxRoundsInput" min="1" max="20" value="2">    
+                    </div>  
+                    <div class="form-group">    
+                        <label for="maxTokensInput">最大 Token 数:</label>    
+                        <input type="number" id="maxTokensInput" min="1024" max="32768" value="4096">    
+                    </div>  
+                </div>  
+  
+                <div class="form-actions">  
+                    <button type="button" id="cancelConfigBtn" class="cancel-btn">取消</button>  
+                    <button type="submit" id="saveConfigBtn" class="save-btn">保存配置</button>  
+                </div>  
+            </form>  
+        </div>    
     </div>  
-      
-    <!-- 设置模态框 -->  
-    <div id="settingsModal" class="modal">  
-        <div class="modal-content">  
-            <span class="close">&times;</span>  
-            <h2>设置</h2>  
-            <div class="settings-form">  
-                <div class="form-group">  
-                    <label for="themeSelect">主题:</label>  
-                    <select id="themeSelect">  
-                        <option value="dark">深色</option>  
-                        <option value="light">浅色</option>  
-                    </select>  
-                </div>  
-                <div class="form-group">  
-                    <label for="progressLevel">进度显示:</label>  
-                    <select id="progressLevel">  
-                        <option value="detailed">详细</option>  
-                        <option value="minimal">简化</option>  
-                        <option value="none">无</option>  
-                    </select>  
-                </div>  
-                <div class="form-group">  
-                    <label for="remoteUrl">远程服务器:</label>  
-                    <input type="text" id="remoteUrl" placeholder="http://localhost:8000">  
-                </div>  
-                <button id="saveSettings" class="save-btn">保存</button>  
-            </div>  
-        </div>  
-    </div>  
-      
-    <script src="/static/js/ui-adapters.js"></script>  
-    <script src="/static/js/streaming-client.js"></script>  
-    <script src="/static/js/config-manager.js"></script>  
-    <script src="/static/js/main.js"></script>  
-</body>  
+  
+    <!-- 原有设置模态框保持不变 -->  
+    <div id="settingsModal" class="modal">    
+        <div class="modal-content">    
+            <span class="close">&times;</span>    
+            <h2>设置</h2>    
+            <div class="settings-form">    
+                <div class="form-group">    
+                    <label for="themeSelect">主题:</label>    
+                    <select id="themeSelect">    
+                        <option value="dark">深色</option>    
+                        <option value="light">浅色</option>    
+                    </select>    
+                </div>    
+                <div class="form-group">    
+                    <label for="progressLevel">进度显示:</label>    
+                    <select id="progressLevel">    
+                        <option value="detailed">详细</option>    
+                        <option value="minimal">简化</option>    
+                        <option value="none">无</option>    
+                    </select>    
+                </div>    
+                <div class="form-group">    
+                    <label for="remoteUrl">远程服务器:</label>    
+                    <input type="text" id="remoteUrl" placeholder="http://localhost:8000">    
+                </div>    
+                <button id="saveSettings" class="save-btn">保存</button>    
+            </div>    
+        </div>    
+    </div>    
+        
+    <script src="/static/js/ui-adapters.js"></script>    
+    <script src="/static/js/streaming-client.js"></script>    
+    <script src="/static/js/config-manager.js"></script>    
+    <script src="/static/js/main.js"></script>    
+</body>    
 </html>

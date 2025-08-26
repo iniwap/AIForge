@@ -3,7 +3,7 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional
 from ..core.deployment_manager import BaseDeploymentProvider
-from aiforge import AIForgeI18nManager
+from aiforge import GlobalI18nManager
 
 
 class KubernetesDeploymentProvider(BaseDeploymentProvider):
@@ -14,7 +14,7 @@ class KubernetesDeploymentProvider(BaseDeploymentProvider):
         self.deployment_type = "kubernetes"
 
         # 获取i18n管理器
-        self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = GlobalI18nManager.get_instance()
 
         # 获取用户传递的K8s配置（可能为None）
         self.k8s_config = config_manager.get_kubernetes_config() or {}

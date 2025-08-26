@@ -122,7 +122,7 @@ class NetworkPolicyFactory:
     """网络策略工厂"""
 
     @staticmethod
-    def create_policy(policy_level: str, config: Dict[str, Any]) -> NetworkPolicy:
+    def create_policy(policy_level: str, config: Dict[str, Any], i18n_manager) -> NetworkPolicy:
         """根据策略级别创建相应的网络策略"""
         if policy_level == "unrestricted":
             return DisabledNetworkPolicy(config)
@@ -133,10 +133,6 @@ class NetworkPolicyFactory:
         elif policy_level == "permissive":
             return OpenNetworkPolicy(config)
         else:
-            # 使用单例获取 i18n 管理器
-            from ..i18n.manager import AIForgeI18nManager
-
-            i18n_manager = AIForgeI18nManager.get_instance()
             error_message = i18n_manager.t(
                 "network.unknown_policy_level", policy_level=policy_level
             )

@@ -14,13 +14,7 @@ class DataFlowAnalyzer(ast.NodeVisitor):
         self.hardcoded_values = {}
         self.api_calls = []
         self.parameter_conflicts = []
-
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = components.get("i18n_manager")
 
     def visit_Assign(self, node):
         """处理赋值语句"""

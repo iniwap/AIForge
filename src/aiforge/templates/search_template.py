@@ -19,24 +19,23 @@ from datetime import datetime, timedelta
 import concurrent.futures
 from ..utils import utils
 from ..strategies.search_template_strategy import StandardTemplateStrategy
-from ..utils.progress_indicator import ProgressIndicatorRegistry
-from ..i18n.manager import AIForgeI18nManager
 
 
 def get_template_guided_search_instruction(
     search_query,
     expected_output,
+    i18n_manager,
     max_results=10,
     min_abstract_len=300,
 ):
     # 动态生成返回格式
-    data_format = StandardTemplateStrategy().generate_format(expected_output, min_abstract_len)
-
-    # 获取本地化的搜索指令模板
-    search_instruction_template = AIForgeI18nManager.get_instance().t(
-        "search.guided_instruction_template"
+    data_format = StandardTemplateStrategy(i18n_manager).generate_format(
+        expected_output, min_abstract_len
     )
 
+    search_instruction_template = i18n_manager.t("search.guided_instruction_template")
+
+    # 获取本地化的搜索指令模板
     search_instruction = search_instruction_template.format(
         data_format=data_format, search_query=search_query, max_results=max_results
     )
@@ -47,19 +46,18 @@ def get_template_guided_search_instruction(
 def get_free_form_ai_search_instruction(
     search_query,
     expected_output,
+    i18n_manager,
     max_results=10,
     min_abstract_len=300,
 ):
     # 动态生成返回格式
-    data_format = StandardTemplateStrategy().generate_format(
+    data_format = StandardTemplateStrategy(i18n_manager).generate_format(
         expected_output, min_abstract_len, is_free_form=True
     )
 
-    # 获取本地化的自由形式搜索指令模板
-    search_instruction_template = AIForgeI18nManager.get_instance().t(
-        "search.free_form_instruction_template"
-    )
+    search_instruction_template = i18n_manager.t("search.free_form_instruction_template")
 
+    # 获取本地化的自由形式搜索指令模板
     search_instruction = search_instruction_template.format(
         data_format=data_format,
         search_query=search_query,
@@ -93,25 +91,27 @@ def search_web(
     min_abstract_len=300,
     max_abstract_len=1000,
     engine_override=None,
+    progress_indicator=None,
+    i18n_manager=None,
 ):
     """使用多个搜索引擎进行网络搜索，返回min_items有效结果"""
-    i18n_manager = AIForgeI18nManager.get_instance()
     # 如果指定了 engine_override 且为 SearXNG 相关
     if engine_override and engine_override.startswith("searxng"):
         [engine, url] = engine_override.split("#")
         ENGINE_CONFIGS[engine]["url"] = url
         if engine in ENGINE_CONFIGS:
             try:
-                ProgressIndicatorRegistry.get_current().show_search_process("SearXNG")
+                progress_indicator.show_search_process("SearXNG")
                 # 使用 SearXNG 专用的搜索逻辑
                 search_result = _search_searxng_template(
+                    i18n_manager,
                     search_query,
                     max_results,
                     ENGINE_CONFIGS[engine],
                     min_abstract_len,
                     max_abstract_len,
                 )
-                if validate_search_result(search_result, min_items):
+                if validate_search_result(i18n_manager, search_result, min_items):
                     return search_result
             except Exception:
                 pass
@@ -120,9 +120,10 @@ def search_web(
         for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
             try:
                 engine_name = i18n_manager.t(f"search.engine_{engine}")
-                ProgressIndicatorRegistry.get_current().show_search_process(engine_name)
+                progress_indicator.show_search_process(engine_name)
 
                 search_result = _search_template(
+                    i18n_manager,
                     search_query,
                     max_results,
                     ENGINE_CONFIGS[engine],
@@ -130,7 +131,7 @@ def search_web(
                     max_abstract_len,
                 )
                 # 验证搜索结果质量
-                if validate_search_result(search_result, min_items):
+                if validate_search_result(i18n_manager, search_result, min_items):
                     return search_result
                 else:
                     continue
@@ -142,7 +143,12 @@ def search_web(
 
 
 def _search_searxng_template(
-    search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=1000
+    i18n_manager,
+    search_query,
+    max_results,
+    engine_config,
+    min_abstract_len=300,
+    max_abstract_len=1000,
 ):
     """SearXNG JSON API 专用搜索模板"""
     try:
@@ -219,7 +225,7 @@ def _search_searxng_template(
 
                 # 如果 SearXNG 没有提供时间，从摘要中提取
                 if not pub_time and abstract:
-                    pub_time = _extract_time_from_abstract(abstract)
+                    pub_time = _extract_time_from_abstract(i18n_manager, abstract)
 
                 qualified_results.append(
                     {
@@ -227,7 +233,9 @@ def _search_searxng_template(
                         "url": url,
                         "abstract": abstract,
                         "pub_time": pub_time,
-                        "quality_score": _calculate_quality_score(title, abstract, pub_time),
+                        "quality_score": _calculate_quality_score(
+                            i18n_manager, title, abstract, pub_time
+                        ),
                     }
                 )
 
@@ -250,7 +258,7 @@ def _search_searxng_template(
         if tasks:
             with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(tasks), 3)) as executor:
                 future_to_url = {
-                    executor.submit(extract_page_content, url, headers): url
+                    executor.submit(extract_page_content, i18n_manager, url, headers): url
                     for url, headers in tasks
                 }
                 for future in concurrent.futures.as_completed(future_to_url):
@@ -265,7 +273,11 @@ def _search_searxng_template(
 
                                 # 增强摘要
                                 enhanced_abstract = enhance_abstract(
-                                    res["abstract"], page_soup, min_abstract_len, max_abstract_len
+                                    i18n_manager,
+                                    res["abstract"],
+                                    page_soup,
+                                    min_abstract_len,
+                                    max_abstract_len,
                                 )
                                 if enhanced_abstract:
                                     res["abstract"] = enhanced_abstract
@@ -285,16 +297,14 @@ def _search_searxng_template(
             if res["title"] and res["url"]
         ]
         # 应用现有的排序和过滤逻辑
-        results = sort_and_filter_results(results)
+        results = sort_and_filter_results(i18n_manager, results)
 
         return {
             "timestamp": time.time(),
             "search_query": search_query,
             "results": results,
             "success": bool(results),
-            "error": (
-                None if results else AIForgeI18nManager.get_instance().t("search.no_valid_results")
-            ),
+            "error": (None if results else i18n_manager.t("search.no_valid_results")),
         }
 
     except Exception as e:
@@ -310,7 +320,9 @@ def _search_searxng_template(
             session.close()
 
 
-def validate_search_result(result, min_items=1, search_type="local", min_abstract_len=300):
+def validate_search_result(
+    i18n_manager, result, min_items=1, search_type="local", min_abstract_len=300
+):
     """验证搜索结果质量，确保至少min_results条结果满足指定搜索类型的完整性条件，并返回转换后的日期格式"""
     if not isinstance(result, dict) or not result.get("success", False):
         return False
@@ -320,7 +332,6 @@ def validate_search_result(result, min_items=1, search_type="local", min_abstrac
         return False
 
     timestamp = result.get("timestamp", time.time())
-    i18n_manager = AIForgeI18nManager.get_instance()
     date_patterns = i18n_manager.t("datetime.date_patterns", default=[])
     for item in results:
         pub_time = item.get("pub_time", "")
@@ -349,7 +360,7 @@ def validate_search_result(result, min_items=1, search_type="local", min_abstrac
                         pass
             if timestamp:
                 try:
-                    actual_date = utils.calculate_actual_date(pub_time, timestamp)
+                    actual_date = utils.calculate_actual_date(i18n_manager, pub_time, timestamp)
                     if actual_date:
                         item["pub_time"] = actual_date.strftime("%Y-%m-%d")
                     else:
@@ -363,8 +374,10 @@ def validate_search_result(result, min_items=1, search_type="local", min_abstrac
                 match = re.search(pattern, abstract, re.IGNORECASE)
                 if match:
                     pub_time = match.group(0)
-                    if utils.is_valid_date(pub_time):
-                        pub_time_date = utils.calculate_actual_date(pub_time, timestamp)
+                    if utils.is_valid_date(i18n_manager, pub_time):
+                        pub_time_date = utils.calculate_actual_date(
+                            i18n_manager, pub_time, timestamp
+                        )
                         if pub_time_date:
                             item["pub_time"] = pub_time_date.strftime("%Y-%m-%d")
                             break
@@ -439,10 +452,9 @@ def get_common_headers():
     }
 
 
-def _extract_publish_time(page_soup):
+def _extract_publish_time(i18n_manager, page_soup):
     """统一的发布时间提取函数"""
     # Meta 标签提取 - 优先处理标准的发布时间标签
-    i18n_manager = AIForgeI18nManager.get_instance()
     meta_selectors = i18n_manager.t("datetime.meta_selectors")
     timezone_offset = i18n_manager.t("datetime.timezone_offset", default=8)
     for selector in meta_selectors:
@@ -491,9 +503,9 @@ def _extract_publish_time(page_soup):
                 pass
 
         # 如果 datetime 属性解析失败，尝试文本内容
-        text_content = utils.clean_date_text(time_tag.get_text())
-        if text_content and utils.is_valid_date(text_content):
-            time_date = utils.calculate_actual_date(text_content, time.time())
+        text_content = utils.clean_date_text(i18n_manager, time_tag.get_text())
+        if text_content and utils.is_valid_date(i18n_manager, text_content):
+            time_date = utils.calculate_actual_date(i18n_manager, text_content, time.time())
             if time_date:
                 return time_date.strftime("%Y-%m-%d")
 
@@ -519,28 +531,28 @@ def _extract_publish_time(page_soup):
     for selector in date_selectors:
         elements = page_soup.select(selector)
         for elem in elements:
-            text = utils.clean_date_text(elem.get_text())
-            if text and utils.is_valid_date(text):
-                elem_date = utils.calculate_actual_date(text, time.time())
+            text = utils.clean_date_text(i18n_manager, elem.get_text())
+            if text and utils.is_valid_date(i18n_manager, text):
+                elem_date = utils.calculate_actual_date(i18n_manager, text, time.time())
                 if elem_date:
                     return elem_date.strftime("%Y-%m-%d")
 
     # 兜底：全文搜索
-    text = utils.clean_date_text(page_soup.get_text())
+    text = utils.clean_date_text(i18n_manager, page_soup.get_text())
     fallback_patterns = i18n_manager.t("datetime.fallback_patterns", default=[])
     for pattern in fallback_patterns:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             pub_time = match.group(0)
-            if utils.is_valid_date(pub_time):
-                pub_time_date = utils.calculate_actual_date(pub_time, time.time())
+            if utils.is_valid_date(i18n_manager, pub_time):
+                pub_time_date = utils.calculate_actual_date(i18n_manager, pub_time, time.time())
                 if pub_time_date:
                     return pub_time_date.strftime("%Y-%m-%d")
 
     return ""
 
 
-def extract_page_content(url, headers=None):
+def extract_page_content(i18n_manager, url, headers=None):
     """从 URL 提取页面内容和发布日期"""
     try:
         time.sleep(1)
@@ -551,7 +563,7 @@ def extract_page_content(url, headers=None):
         page_soup = BeautifulSoup(content, "html.parser")
 
         # 直接调用统一的时间提取函数
-        pub_time = _extract_publish_time(page_soup)
+        pub_time = _extract_publish_time(i18n_manager, page_soup)
 
         return page_soup, pub_time
 
@@ -559,7 +571,9 @@ def extract_page_content(url, headers=None):
         return None, None
 
 
-def enhance_abstract(abstract, page_soup, min_abstract_len=300, max_abstract_len=1000):
+def enhance_abstract(
+    i18n_manager, abstract, page_soup, min_abstract_len=300, max_abstract_len=1000
+):
     """
     增强摘要内容，从原文提取。
     如果 _extract_full_article_content 的内容长度 >= min_abstract_len
@@ -569,7 +583,7 @@ def enhance_abstract(abstract, page_soup, min_abstract_len=300, max_abstract_len
         return abstract
 
     # 提取正文
-    article = extract_full_article_content(page_soup, min_abstract_len)
+    article = extract_full_article_content(i18n_manager, page_soup, min_abstract_len)
 
     if article:
         # 检查正文长度是否满足 min_abstract_len
@@ -584,20 +598,20 @@ def enhance_abstract(abstract, page_soup, min_abstract_len=300, max_abstract_len
     return abstract
 
 
-def sort_and_filter_results(results):
+def sort_and_filter_results(i18n_manager, results):
     if not results:
         return results
 
     recent_results = []
     for result in results:
         pub_time = result.get("pub_time")
-        if pub_time is None or utils.is_within_days(pub_time, 7):
+        if pub_time is None or utils.is_within_days(i18n_manager, pub_time, 7):
             recent_results.append(result)
 
     recent_results.sort(
         key=lambda x: (
             x.get("pub_time") is None,
-            -(utils.parse_date_to_timestamp(x.get("pub_time", "")) or 0),
+            -(utils.parse_date_to_timestamp(i18n_manager, x.get("pub_time", "")) or 0),
         )
     )
 
@@ -605,7 +619,12 @@ def sort_and_filter_results(results):
 
 
 def _search_template(
-    search_query, max_results, engine_config, min_abstract_len=300, max_abstract_len=1000
+    i18n_manager,
+    search_query,
+    max_results,
+    engine_config,
+    min_abstract_len=300,
+    max_abstract_len=1000,
 ):
     """通用搜索模板"""
 
@@ -633,7 +652,7 @@ def _search_template(
                 "search_query": search_query,
                 "results": [],
                 "success": False,
-                "error": AIForgeI18nManager.get_instance().t("search.no_valid_results"),
+                "error": i18n_manager.t("search.no_valid_results"),
             }
 
         # 第一阶段：预筛选所有结果，不限制数量
@@ -701,7 +720,7 @@ def _search_template(
                 # 从摘要中提取时间信息并直接赋值给pub_time
                 pub_time = ""
                 if abstract:
-                    pub_time = _extract_time_from_abstract(abstract)
+                    pub_time = _extract_time_from_abstract(i18n_manager, abstract)
 
                 qualified_results.append(
                     {
@@ -709,7 +728,9 @@ def _search_template(
                         "url": url,
                         "abstract": abstract,
                         "pub_time": pub_time,
-                        "quality_score": _calculate_quality_score(title, abstract, pub_time),
+                        "quality_score": _calculate_quality_score(
+                            i18n_manager, title, abstract, pub_time
+                        ),
                     }
                 )
 
@@ -725,7 +746,8 @@ def _search_template(
         # 并行获取页面内容
         with concurrent.futures.ThreadPoolExecutor(max_workers=min(max_results, 5)) as executor:
             future_to_url = {
-                executor.submit(extract_page_content, url, headers): url for url, headers in tasks
+                executor.submit(extract_page_content, i18n_manager, url, headers): url
+                for url, headers in tasks
             }
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
@@ -739,7 +761,11 @@ def _search_template(
 
                             res["abstract"] = (
                                 enhance_abstract(
-                                    res["abstract"], page_soup, min_abstract_len, max_abstract_len
+                                    i18n_manager,
+                                    res["abstract"],
+                                    page_soup,
+                                    min_abstract_len,
+                                    max_abstract_len,
                                 )
                                 or res["abstract"]
                             )
@@ -760,15 +786,13 @@ def _search_template(
         ]
 
         # 应用现有的排序和过滤逻辑
-        results = sort_and_filter_results(results)
+        results = sort_and_filter_results(i18n_manager, results)
         return {
             "timestamp": time.time(),
             "search_query": search_query,
             "results": results,
             "success": bool(results),
-            "error": (
-                None if results else AIForgeI18nManager.get_instance().t("search.no_valid_results")
-            ),
+            "error": (None if results else i18n_manager.t("search.no_valid_results")),
         }
 
     except Exception as e:
@@ -781,15 +805,12 @@ def _search_template(
         }
 
 
-def _extract_time_from_abstract(abstract):
+def _extract_time_from_abstract(i18n_manager, abstract):
     """从摘要中提取时间信息"""
     if not abstract:
         return ""
 
     import re
-    from ..i18n.manager import AIForgeI18nManager
-
-    i18n_manager = AIForgeI18nManager.get_instance()
 
     # 获取i18n配置的日期模式
     date_patterns = i18n_manager.t("datetime.date_patterns", default=[])
@@ -801,9 +822,11 @@ def _extract_time_from_abstract(abstract):
             if match:
                 extracted_time = match.group(0)
                 # 使用现有的时间验证和转换逻辑
-                if utils.is_valid_date(extracted_time):
+                if utils.is_valid_date(i18n_manager, extracted_time):
                     # 转换为标准格式
-                    actual_date = utils.calculate_actual_date(extracted_time, time.time())
+                    actual_date = utils.calculate_actual_date(
+                        i18n_manager, extracted_time, time.time()
+                    )
                     if actual_date:
                         date_format = i18n_manager.t("datetime.date_format", default="%Y-%m-%d")
                         return actual_date.strftime(date_format)
@@ -817,8 +840,10 @@ def _extract_time_from_abstract(abstract):
             match = re.search(pattern, abstract, re.IGNORECASE)
             if match:
                 extracted_time = match.group(0)
-                if utils.is_valid_date(extracted_time):
-                    actual_date = utils.calculate_actual_date(extracted_time, time.time())
+                if utils.is_valid_date(i18n_manager, extracted_time):
+                    actual_date = utils.calculate_actual_date(
+                        i18n_manager, extracted_time, time.time()
+                    )
                     if actual_date:
                         date_format = i18n_manager.t("datetime.date_format", default="%Y-%m-%d")
                         return actual_date.strftime(date_format)
@@ -828,7 +853,7 @@ def _extract_time_from_abstract(abstract):
     return ""
 
 
-def _calculate_quality_score(title, abstract, pub_time):
+def _calculate_quality_score(i18n_manager, title, abstract, pub_time):
     """计算结果质量分数"""
     score = 0
 
@@ -852,31 +877,29 @@ def _calculate_quality_score(title, abstract, pub_time):
     # 优先检查 pub_time 字段
     if pub_time:
         try:
-            if utils.is_valid_date(pub_time):
+            if utils.is_valid_date(i18n_manager, pub_time):
                 time_score = 20
             else:
                 # 使用i18n配置检查相对时间
-                time_score = _check_relative_time_in_text(pub_time)
+                time_score = _check_relative_time_in_text(i18n_manager, pub_time)
         except Exception:
             pass
 
     # 如果 pub_time 没有有效时间，从摘要中检查时间信息
     if time_score == 0 and abstract:
-        time_score = _extract_time_score_from_abstract(abstract)
+        time_score = _extract_time_score_from_abstract(i18n_manager, abstract)
 
     score += time_score
     return score
 
 
-def _check_relative_time_in_text(text):
+def _check_relative_time_in_text(i18n_manager, text):
     """使用i18n配置检查文本中的相对时间"""
     if not text:
         return 0
 
-    from ..i18n.manager import AIForgeI18nManager
     import re
 
-    i18n_manager = AIForgeI18nManager.get_instance()
     text_lower = text.lower()
 
     # 获取i18n配置的相对时间模式
@@ -899,18 +922,15 @@ def _check_relative_time_in_text(text):
     return 0
 
 
-def _extract_time_score_from_abstract(abstract):
+def _extract_time_score_from_abstract(i18n_manager, abstract):
     """从摘要中提取时间信息并计算时间分数"""
     if not abstract:
         return 0
 
     import re
-    from ..i18n.manager import AIForgeI18nManager
-
-    i18n_manager = AIForgeI18nManager.get_instance()
 
     # 1. 使用i18n配置的相对时间模式检查
-    relative_score = _check_relative_time_in_text(abstract)
+    relative_score = _check_relative_time_in_text(i18n_manager, abstract)
     if relative_score > 0:
         return relative_score
 
@@ -1406,11 +1426,11 @@ ENGINE_CONFIGS = {
 }
 
 
-def extract_full_article_content(page_soup, min_abstract_len=300):
+def extract_full_article_content(i18n_manager, page_soup, min_abstract_len=300):
     """提取完整文章内容，过滤无关信息"""
 
     # 获取本地化的噪声关键词列表
-    noise_keywords = AIForgeI18nManager.get_instance().t("search.noise_keywords", default=[])
+    noise_keywords = i18n_manager.t("search.noise_keywords", default=[])
     if isinstance(noise_keywords, str):
         noise_keywords = noise_keywords.split(",")
 

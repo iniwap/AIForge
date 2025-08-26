@@ -1,26 +1,241 @@
-class AIForgeGUIApp {
-    constructor() {
-        this.isLocal = false;
-        this.streamingClient = null;
-        this.configManager = new ConfigManager();
-        this.uiAdapter = new WebUIAdapter();
-        this.currentTaskType = 'auto';
-        this.isExecuting = false;
-        this.executionCompleted = false;
-        this.currentResult = null;
-
-        this.init();
-
-        // 设置全局引用以便在 onclick 中使用  
-        window.aiforgeApp = this;
-    }
-
-    async init() {
-        await this.checkConnectionMode();
-        this.initializeUI();
-        this.initializeStreamingClient();
-        this.loadSettings();
-    }
+class AIForgeGUIApp {  
+    constructor() {  
+        this.isLocal = false;  
+        this.streamingClient = null;  
+        this.configManager = new GUIConfigManager();  
+        this.uiAdapter = new WebUIAdapter();  
+        this.currentTaskType = 'auto';  
+        this.isExecuting = false;  
+        this.executionCompleted = false;  
+        this.currentResult = null;  
+        this.connectionInfo = null;  
+  
+        this.init();  
+        window.aiforgeApp = this;  
+    }  
+  
+    async init() {  
+        await this.checkConnectionMode();  
+        await this.loadCurrentConfig();  
+        this.initializeUI();  
+        this.initializeConfigUI();  
+        this.initializeStreamingClient();  
+        this.updateConfigUI();  
+    }  
+  
+    async loadCurrentConfig() {  
+        try {  
+            if (typeof pywebview !== 'undefined' && pywebview.api) {  
+                const response = await pywebview.api.get_config_info();  
+                const configInfo = JSON.parse(response);  
+                this.configManager.setCurrentConfig(configInfo.current_config);  
+                this.connectionInfo = configInfo;  
+            }  
+        } catch (error) {  
+            console.error('Failed to load current config:', error);  
+        }  
+    }  
+  
+    initializeConfigUI() {  
+        // 配置按钮事件  
+        const configBtn = document.getElementById('configBtn');  
+        const configModal = document.getElementById('configModal');  
+        const closeConfigBtn = document.getElementById('closeConfigBtn');  
+        const saveConfigBtn = document.getElementById('saveConfigBtn');  
+        const cancelConfigBtn = document.getElementById('cancelConfigBtn');  
+  
+        configBtn?.addEventListener('click', () => this.showConfigModal());  
+        closeConfigBtn?.addEventListener('click', () => this.hideConfigModal());  
+        cancelConfigBtn?.addEventListener('click', () => this.hideConfigModal());  
+        saveConfigBtn?.addEventListener('click', () => this.saveConfig());  
+  
+        // 快速配置选择器  
+        const providerSelect = document.getElementById('providerSelect');  
+        const localeSelect = document.getElementById('localeSelect');  
+  
+        providerSelect?.addEventListener('change', (e) => {  
+            this.updateQuickConfig('provider', e.target.value);  
+        });  
+  
+        localeSelect?.addEventListener('change', (e) => {  
+            this.updateQuickConfig('locale', e.target.value);  
+        });  
+  
+        // 模态框外点击关闭  
+        configModal?.addEventListener('click', (e) => {  
+            if (e.target === configModal) {  
+                this.hideConfigModal();  
+            }  
+        });  
+  
+        // API密钥状态检查按钮  
+        const checkApiKeyBtn = document.getElementById('checkApiKeyBtn');  
+        checkApiKeyBtn?.addEventListener('click', () => this.checkApiKeyStatus());  
+    }  
+  
+    updateConfigUI() {  
+        const config = this.configManager.getCurrentConfig();  
+        if (!config) return;  
+  
+        // 更新快速配置选择器  
+        const providerSelect = document.getElementById('providerSelect');  
+        const localeSelect = document.getElementById('localeSelect');  
+  
+        if (providerSelect) {  
+            providerSelect.value = config.provider || 'openrouter';  
+        }  
+  
+        if (localeSelect) {  
+            localeSelect.value = config.locale || 'zh';  
+        }  
+  
+        // 更新配置状态指示器  
+        this.updateConfigStatus();  
+    }  
+  
+    updateConfigStatus() {  
+        const config = this.configManager.getCurrentConfig();  
+        const statusIndicator = document.getElementById('configStatus');  
+        const modeIndicator = document.getElementById('modeIndicator');  
+    
+        if (statusIndicator) {  
+            const hasApiKey = config?.has_api_key;  
+            statusIndicator.className = hasApiKey ? 'status-ok' : 'status-warning';  
+            statusIndicator.textContent = hasApiKey ? '已配置' : '需要配置';  
+        }  
+    
+        if (modeIndicator && this.connectionInfo) {  
+            const mode = this.connectionInfo.mode;  
+            modeIndicator.textContent = mode === 'local' ? '本地模式' : '远程模式';  
+            modeIndicator.className = `mode-${mode}`;  
+        }  
+    }  
+    
+    showConfigModal() {  
+        const modal = document.getElementById('configModal');  
+        if (modal) {  
+            // 加载当前配置到表单  
+            this.loadConfigToForm();  
+            modal.classList.remove('hidden');  
+        }  
+    }  
+    
+    hideConfigModal() {  
+        const modal = document.getElementById('configModal');  
+        if (modal) {  
+            modal.classList.add('hidden');  
+        }  
+    }  
+    
+    loadConfigToForm() {  
+        if (!this.currentConfig) return;  
+    
+        const apiKeyInput = document.getElementById('apiKeyInput');  
+        const providerInput = document.getElementById('providerInput');  
+        const localeInput = document.getElementById('localeInput');  
+        const maxRoundsInput = document.getElementById('maxRoundsInput');  
+        const maxTokensInput = document.getElementById('maxTokensInput');  
+    
+        // 不显示API密钥值，只显示是否已设置  
+        if (apiKeyInput) {  
+            apiKeyInput.placeholder = this.currentConfig.has_api_key ? '已设置API密钥' : '请输入API密钥';  
+        }  
+    
+        if (providerInput) {  
+            providerInput.value = this.currentConfig.provider || 'openrouter';  
+        }  
+    
+        if (localeInput) {  
+            localeInput.value = this.currentConfig.locale || 'zh';  
+        }  
+    
+        if (maxRoundsInput) {  
+            maxRoundsInput.value = this.currentConfig.max_rounds || 2;  
+        }  
+    
+        if (maxTokensInput) {  
+            maxTokensInput.value = this.currentConfig.max_tokens || 4096;  
+        }  
+    }  
+    
+    async updateQuickConfig(key, value) {  
+        try {  
+            const config = { [key]: value };  
+            const response = await pywebview.api.update_config(JSON.stringify(config));  
+            const result = JSON.parse(response);  
+            
+            if (result.success) {  
+                // 更新本地配置状态  
+                await this.loadCurrentConfig();  
+                this.updateConfigUI();  
+                this.showToast(`${key === 'provider' ? '提供商' : '语言'}已更新为 ${value}`);  
+            } else {  
+                this.showToast(`配置更新失败: ${result.error}`, 'error');  
+            }  
+        } catch (error) {  
+            console.error('Failed to update quick config:', error);  
+            this.showToast('配置更新失败', 'error');  
+        }  
+    }  
+    
+    async saveConfig() {  
+        try {  
+            const apiKey = document.getElementById('apiKeyInput')?.value;  
+            const provider = document.getElementById('providerInput')?.value;  
+            const locale = document.getElementById('localeInput')?.value;  
+            const maxRounds = document.getElementById('maxRoundsInput')?.value;  
+            const maxTokens = document.getElementById('maxTokensInput')?.value;  
+    
+            const config = {  
+                provider: provider || 'openrouter',  
+                locale: locale || 'zh'  
+            };  
+    
+            if (apiKey) {  
+                config.api_key = apiKey;  
+            }  
+    
+            if (maxRounds) {  
+                config.max_rounds = parseInt(maxRounds);  
+            }  
+    
+            if (maxTokens) {  
+                config.max_tokens = parseInt(maxTokens);  
+            }  
+    
+            const response = await pywebview.api.update_config(JSON.stringify(config));  
+            const result = JSON.parse(response);  
+    
+            if (result.success) {  
+                await this.loadCurrentConfig();  
+                this.updateConfigUI();  
+                this.hideConfigModal();  
+                this.showToast('配置已保存');  
+                
+                if (result.requires_restart) {  
+                    this.showToast('配置已更新，引擎将重新初始化', 'info');  
+                }  
+            } else {  
+                this.showToast(`配置保存失败: ${result.error}`, 'error');  
+            }  
+        } catch (error) {  
+            console.error('Failed to save config:', error);  
+            this.showToast('配置保存失败', 'error');  
+        }  
+    }  
+    
+    async checkApiKeyStatus() {  
+        try {  
+            const response = await pywebview.api.check_api_key_status();  
+            const result = JSON.parse(response);  
+            
+            const statusText = result.has_api_key ? '✅ API密钥已配置' : '❌ 未配置API密钥';  
+            this.showToast(statusText, result.has_api_key ? 'success' : 'warning');  
+        } catch (error) {  
+            console.error('Failed to check API key status:', error);  
+            this.showToast('检查API密钥状态失败', 'error');  
+        }  
+    }  
 
     async checkConnectionMode() {
         const statusIndicator = document.getElementById('statusIndicator');

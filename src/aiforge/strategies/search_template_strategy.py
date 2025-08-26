@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 from .semantic_field_strategy import SemanticFieldStrategy
+from ..i18n.manager import AIForgeI18nManager
 
 
 class TemplateGenerationStrategy(ABC):
@@ -22,14 +23,9 @@ class TemplateGenerationStrategy(ABC):
 class StandardTemplateStrategy(TemplateGenerationStrategy):
     """标准模板生成策略"""
 
-    def __init__(self, components: Dict[str, Any] = None):
+    def __init__(self, i18n_manager: AIForgeI18nManager):
         self.field_processor = SemanticFieldStrategy()
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = i18n_manager
 
     def get_strategy_name(self) -> str:
         return "standard_template_strategy"

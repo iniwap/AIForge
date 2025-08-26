@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 
 from .api.routes import core, metadata, config, health
 from .api.middleware.cors import setup_cors
-from .core.session_manager import UserSessionManager
+from .api.dependencies import get_session_manager
 
 
 # 创建 FastAPI 应用
@@ -42,7 +42,8 @@ def cleanup_expired_sessions():
     """后台任务：定期清理过期会话"""
     while True:
         try:
-            UserSessionManager.get_instance().cleanup_expired_sessions()
+            # 使用依赖注入获取会话管理器
+            get_session_manager().cleanup_expired_sessions()
             time.sleep(3600)  # 每小时清理一次
         except Exception as e:
             print(f"会话清理错误: {e}")

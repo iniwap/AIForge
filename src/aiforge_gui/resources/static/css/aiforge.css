@@ -459,3 +459,331 @@ body.dark .text-red {
 .hidden {  
     display: none !important;  
 }
+/* 快速配置区域 */  
+.quick-config {  
+    display: flex;  
+    align-items: center;  
+    gap: 10px;  
+    margin-left: auto;  
+}  
+  
+.config-select {  
+    padding: 4px 8px;  
+    border: 1px solid #444;  
+    border-radius: 4px;  
+    background: #2a2a2a;  
+    color: #fff;  
+    font-size: 12px;  
+}  
+  
+.config-status {  
+    padding: 4px 8px;  
+    border-radius: 4px;  
+    font-size: 12px;  
+    font-weight: bold;  
+}  
+  
+.config-status.status-ok {  
+    background: #4ade80;  
+    color: #166534;  
+}  
+  
+.config-status.status-warning {  
+    background: #fbbf24;  
+    color: #92400e;  
+}  
+  
+.mode-indicator {  
+    padding: 2px 6px;  
+    border-radius: 3px;  
+    font-size: 11px;  
+    margin-left: 8px;  
+}  
+  
+.mode-local {  
+    background: #10b981;  
+    color: white;  
+}  
+  
+.mode-remote {  
+    background: #3b82f6;  
+    color: white;  
+}  
+  
+/* 配置提醒区域 */  
+.config-alert {  
+    background: #fef3c7;  
+    border: 1px solid #f59e0b;  
+    border-radius: 8px;  
+    padding: 12px;  
+    margin-bottom: 16px;  
+    display: flex;  
+    align-items: center;  
+    justify-content: center;  
+}  
+  
+.config-alert.hidden {  
+    display: none;  
+}  
+  
+.alert-content {  
+    display: flex;  
+    align-items: center;  
+    gap: 12px;  
+}  
+  
+.alert-icon {  
+    font-size: 18px;  
+}  
+  
+.alert-text {  
+    color: #92400e;  
+    font-weight: 500;  
+}  
+  
+.alert-btn {  
+    background: #f59e0b;  
+    color: white;  
+    border: none;  
+    padding: 6px 12px;  
+    border-radius: 4px;  
+    cursor: pointer;  
+    font-size: 12px;  
+}  
+  
+.alert-btn:hover {  
+    background: #d97706;  
+}  
+  
+/* 配置模态框样式 */  
+.config-modal {  
+    max-width: 600px;  
+    width: 90%;  
+}  
+  
+.modal-header {  
+    display: flex;  
+    justify-content: space-between;  
+    align-items: center;  
+    margin-bottom: 20px;  
+    padding-bottom: 10px;  
+    border-bottom: 1px solid #444;  
+}  
+  
+.config-form {  
+    display: flex;  
+    flex-direction: column;  
+    gap: 20px;  
+}  
+  
+.config-section {  
+    background: #2a2a2a;  
+    padding: 16px;  
+    border-radius: 8px;  
+    border: 1px solid #444;  
+}  
+  
+.config-section h3 {  
+    margin: 0 0 12px 0;  
+    color: #fff;  
+    font-size: 14px;  
+    font-weight: 600;  
+}  
+  
+.form-group {  
+    display: flex;  
+    flex-direction: column;  
+    gap: 6px;  
+    margin-bottom: 12px;  
+}  
+  
+.form-group:last-child {  
+    margin-bottom: 0;  
+}  
+  
+.form-group label {  
+    font-size: 12px;  
+    color: #ccc;  
+    font-weight: 500;  
+}  
+  
+.form-group input,  
+.form-group select {  
+    padding: 8px 12px;  
+    border: 1px solid #555;  
+    border-radius: 4px;  
+    background: #1a1a1a;  
+    color: #fff;  
+    font-size: 13px;  
+}  
+  
+.form-group input:focus,  
+.form-group select:focus {  
+    outline: none;  
+    border-color: #3b82f6;  
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);  
+}  
+  
+.check-btn {  
+    background: #6b7280;  
+    color: white;  
+    border: none;  
+    padding: 4px 8px;  
+    border-radius: 4px;  
+    cursor: pointer;  
+    font-size: 11px;  
+    margin-top: 4px;  
+    align-self: flex-start;  
+}  
+  
+.check-btn:hover {  
+    background: #4b5563;  
+}  
+  
+.form-actions {  
+    display: flex;  
+    justify-content: flex-end;  
+    gap: 12px;  
+    padding-top: 16px;  
+    border-top: 1px solid #444;  
+}  
+.cancel-btn {  
+    background: #6b7280;  
+    color: white;  
+    border: none;  
+    padding: 8px 16px;  
+    border-radius: 4px;  
+    cursor: pointer;  
+    font-size: 13px;  
+}  
+  
+.cancel-btn:hover {  
+    background: #4b5563;  
+}  
+  
+.save-btn {  
+    background: #2563eb;  
+    color: white;  
+    border: none;  
+    padding: 8px 16px;  
+    border-radius: 4px;  
+    cursor: pointer;  
+    font-size: 13px;  
+    font-weight: 500;  
+}  
+  
+.save-btn:hover {  
+    background: #1d4ed8;  
+}  
+  
+/* 配置按钮样式 */  
+.config-btn {  
+    padding: 0.5rem 1rem;  
+    border: 1px solid #d1d5db;  
+    border-radius: 4px;  
+    background: #fff;  
+    cursor: pointer;  
+    font-size: 14px;  
+}  
+  
+body.dark .config-btn {  
+    background: #4b5563;  
+    border-color: #6b7280;  
+    color: #e0e0e0;  
+}  
+  
+.config-btn:hover {  
+    background: #f3f4f6;  
+}  
+  
+body.dark .config-btn:hover {  
+    background: #6b7280;  
+}  
+  
+/* Toast 通知样式 */  
+.toast {  
+    position: fixed;  
+    top: 20px;  
+    right: 20px;  
+    padding: 12px 16px;  
+    border-radius: 6px;  
+    color: white;  
+    font-size: 14px;  
+    font-weight: 500;  
+    z-index: 1000;  
+    opacity: 0;  
+    transition: opacity 0.3s ease;  
+    max-width: 300px;  
+    word-wrap: break-word;  
+}  
+  
+.toast.success {  
+    background: #10b981;  
+}  
+  
+.toast.error {  
+    background: #ef4444;  
+}  
+  
+.toast.warning {  
+    background: #f59e0b;  
+}  
+  
+.toast.info {  
+    background: #3b82f6;  
+}  
+  
+.toast.show {  
+    opacity: 1;  
+}  
+  
+/* 响应式设计扩展 */  
+@media (max-width: 768px) {  
+    .quick-config {  
+        flex-direction: column;  
+        gap: 8px;  
+        margin-left: 0;  
+        margin-top: 10px;  
+    }  
+  
+    .config-select {  
+        width: 100%;  
+    }  
+  
+    .config-modal {  
+        width: 95%;  
+        max-width: none;  
+    }  
+  
+    .config-section {  
+        padding: 12px;  
+    }  
+  
+    .form-actions {  
+        flex-direction: column;  
+        gap: 8px;  
+    }  
+  
+    .cancel-btn,  
+    .save-btn {  
+        width: 100%;  
+    }  
+}  
+  
+/* 暗色主题下的配置提醒 */  
+body.dark .config-alert {  
+    background: #451a03;  
+    border-color: #92400e;  
+}  
+  
+body.dark .alert-text {  
+    color: #fbbf24;  
+}  
+  
+body.dark .alert-btn {  
+    background: #92400e;  
+}  
+  
+body.dark .alert-btn:hover {  
+    background: #78350f;  
+}

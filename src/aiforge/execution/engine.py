@@ -25,11 +25,11 @@ class AIForgeExecutionEngine:
         self.components["module_executors"] = [self.unified_executor]
 
         # 结果格式化器
-        self.result_formatter = AIForgeResultFormatter(self.console)
+        self.result_formatter = AIForgeResultFormatter(self.console, self.components)
         self.result_processor = AIForgeResultProcessor(self.console, self.components)
 
         # 安全中间件
-        self._security_middleware = SecurityMiddleware(self.components.get("config_manager"))
+        self._security_middleware = SecurityMiddleware(self.components)
 
         # 执行统计
         self.execution_stats = {
@@ -216,7 +216,7 @@ class AIForgeExecutionEngine:
         """独立的参数使用检查"""
         from .analyzer import DataFlowAnalyzer
 
-        analyzer = DataFlowAnalyzer(func_params)
+        analyzer = DataFlowAnalyzer(func_params, self.components)
         tree = ast.parse(code)
         analyzer.visit(tree)
 

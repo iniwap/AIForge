@@ -14,12 +14,7 @@ class AIForgeResultFormatter:
 
     def __init__(self, console: Console, components: Dict[str, Any] = None):
         self.console = console
-        if components:
-            self._i18n_manager = components.get("i18n_manager")
-        else:
-            from ..i18n.manager import AIForgeI18nManager
-
-            self._i18n_manager = AIForgeI18nManager.get_instance()
+        self._i18n_manager = components.get("i18n_manager")
 
     def format_execution_result(
         self,

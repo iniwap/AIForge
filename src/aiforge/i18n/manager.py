@@ -7,7 +7,9 @@ from .detector import LocaleDetector
 from ..config.config import AIForgeConfig
 
 
-class AIForgeI18nManager:
+class GlobalI18nManager:
+    """全局国际化管理器，用于部署和系统级功能"""
+
     _instance = None
     _lock = threading.RLock()
     _initialized = False
@@ -20,39 +22,52 @@ class AIForgeI18nManager:
         return cls._instance
 
     def __init__(self, config: AIForgeConfig = None):
-        # 防止重复初始化
         if self._initialized:
             return
 
         with self._lock:
             if not self._initialized:
-                self._config = config
-                self.console = Console()
-                self.locale, self.fallback_locale = self._detect_locale_from_config()
-                self.messages: Dict[str, Dict[str, Any]] = {}
-                self.formatter = ICUMessageFormatter()
-                self._load_all_messages()
-                AIForgeI18nManager._initialized = True
+                self._manager = AIForgeI18nManager(config, scope="global")
+                GlobalI18nManager._initialized = True
 
     @classmethod
     def get_instance(cls, config: AIForgeConfig = None):
-        """获取单例实例"""
+        """获取全局单例实例"""
         if cls._instance is None:
             cls._instance = cls(config)
         return cls._instance
 
-    @classmethod
-    def initialize(cls, config: AIForgeConfig = None, language: str = None):
-        """初始化或重新配置单例"""
-        instance = cls.get_instance(config)
+    def t(self, key: str, default=None, **params):
+        """代理到内部管理器"""
+        return self._manager.t(key, default, **params)
 
-        # 如果提供了新的语言设置，更新配置
-        if language:
-            instance._update_language(language)
-        elif config:
-            instance._update_config(config)
+    @property
+    def locale(self):
+        return self._manager.locale
 
-        return instance
+    @property
+    def config(self):
+        return self._manager.config
+
+
+class AIForgeI18nManager:
+    """国际化管理器"""
+
+    def __init__(self, config: AIForgeConfig = None, scope: str = "session"):
+        """
+        初始化国际化管理器实例
+
+        Args:
+            config: 配置对象
+            scope: 作用域，"global" 或 "session"
+        """
+        self._config = config
+        self.scope = scope
+        self.console = Console()
+        self.locale, self.fallback_locale = self._detect_locale_from_config()
+        self.messages: Dict[str, Dict[str, Any]] = {}
+        self.formatter = ICUMessageFormatter()
+        self._load_all_messages()
 
     def _update_language(self, language: str):
         """更新语言设置"""
