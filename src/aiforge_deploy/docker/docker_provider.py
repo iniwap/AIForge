@@ -782,6 +782,24 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 )
                 await process1.wait()
 
+                # 清理web profile的服务 - 修正：添加进程等待
+                process_web = await asyncio.create_subprocess_exec(
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "--profile",
+                    "web",
+                    "down",
+                    "-v",
+                    "--remove-orphans",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
+                await process_web.wait()
+
                 # 清理search profile的服务
                 cmd2 = [
                     "docker-compose",
@@ -840,9 +858,9 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                 os.chdir(work_dir)
                 env_vars, _ = self._get_base_env_vars()
 
-                # 1. 停止所有服务
+                # 1. 停止所有服务 - 修正：添加进程等待
                 print(self._i18n_manager.t("docker.stopping_all_services"))
-                await asyncio.create_subprocess_exec(
+                process_default = await asyncio.create_subprocess_exec(
                     "docker-compose",
                     "-p",
                     self.project_name,
@@ -855,8 +873,26 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     stderr=asyncio.subprocess.PIPE,
                     env=env_vars,
                 )
+                await process_default.wait()
 
-                await asyncio.create_subprocess_exec(
+                process_web = await asyncio.create_subprocess_exec(
+                    "docker-compose",
+                    "-p",
+                    self.project_name,
+                    "-f",
+                    self.compose_file,
+                    "--profile",
+                    "web",
+                    "down",
+                    "-v",
+                    "--remove-orphans",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env_vars,
+                )
+                await process_web.wait()
+
+                process_search = await asyncio.create_subprocess_exec(
                     "docker-compose",
                     "-p",
                     self.project_name,
@@ -871,6 +907,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     stderr=asyncio.subprocess.PIPE,
                     env=env_vars,
                 )
+                await process_search.wait()
 
                 # 2. 清理AIForge构建的镜像
                 print(self._i18n_manager.t("docker.cleaning_built_images"))
@@ -878,7 +915,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
 
                 # 3. 清理构建缓存
                 print(self._i18n_manager.t("docker.cleaning_build_cache"))
-                await asyncio.create_subprocess_exec(
+                process_builder = await asyncio.create_subprocess_exec(
                     "docker",
                     "builder",
                     "prune",
@@ -886,10 +923,11 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
+                await process_builder.wait()
 
                 # 4. 清理悬空资源
                 print(self._i18n_manager.t("docker.cleaning_dangling_resources"))
-                await asyncio.create_subprocess_exec(
+                process_image_prune = await asyncio.create_subprocess_exec(
                     "docker",
                     "image",
                     "prune",
@@ -897,7 +935,9 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
-                await asyncio.create_subprocess_exec(
+                await process_image_prune.wait()
+
+                process_volume_prune = await asyncio.create_subprocess_exec(
                     "docker",
                     "volume",
                     "prune",
@@ -905,6 +945,7 @@ class DockerDeploymentProvider(BaseDeploymentProvider):
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
+                await process_volume_prune.wait()
 
                 print(self._i18n_manager.t("docker.deep_cleanup_success"))
                 return True

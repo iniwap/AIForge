@@ -35,9 +35,7 @@ def main():
         help=i18n_manager.t("deploy_cli.global_options.verbose"),
     )
 
-    subparsers = parser.add_subparsers(
-        dest="command", help=i18n_manager.t("deploy_cli.commands.help"), required=True
-    )
+    subparsers = parser.add_subparsers(dest="command", help="", required=True)
 
     # Docker部署
     docker_parser = subparsers.add_parser(
