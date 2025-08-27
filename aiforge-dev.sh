@@ -169,24 +169,6 @@ if [ "$COMMAND" = "gui" ]; then
     else  
         python -m aiforge.cli.main gui $DEBUG_MODE $PROVIDER_ARG  
     fi  
-elif [ "$COMMAND" = "deploy" ]; then  
-    # 部署命令已经在参数解析中处理，这里不应该到达  
-    echo "错误: 部署命令处理异常"  
-    exit 1  
 else  
-    # 启动 Web 服务器  
-    echo "🚀 启动 AIForge Web 服务器"  
-    if [ "$HOST" = "0.0.0.0" ]; then  
-        echo "📡 本地访问: http://127.0.0.1:$PORT"  
-        echo "🌐 网络访问: http://$HOST:$PORT"  
-    else  
-        echo "🏠 访问地址: http://$HOST:$PORT"  
-    fi  
-      
-    # 如果没有 API 密钥，显示提示信息  
-    if [ -z "$API_KEY" ] && [ -z "$OPENROUTER_API_KEY" ] && [ -z "$AIFORGE_API_KEY" ]; then  
-        echo "⚠️  未检测到 API 密钥，请在 Web 界面中配置"  
-    fi  
-      
     python -m aiforge.cli.main web --host "$HOST" --port "$PORT" $RELOAD_FLAG $DEBUG_MODE $PROVIDER_ARG  
 fi

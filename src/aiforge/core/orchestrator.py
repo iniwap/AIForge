@@ -322,14 +322,14 @@ class AIForgeOrchestrator:
 
         return success
 
-    def cleanup_components(self):
-        """清理组件资源"""
+    def shutdown(self):
+        """统一的关闭方法"""
         for component_name, component in self.components.items():
-            if hasattr(component, "cleanup"):
+            if hasattr(component, "shutdown"):
                 try:
-                    component.cleanup()
+                    component.shutdown()
                 except Exception as e:
-                    print(f"[WARNING] 清理组件 {component_name} 时出错: {e}")
+                    print(f"[WARNING] 关闭组件 {component_name} 时出错: {e}")
 
         self.components.clear()
         self._initialized = False

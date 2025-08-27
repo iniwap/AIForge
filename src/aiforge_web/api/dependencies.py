@@ -1,6 +1,6 @@
 import os
 import uuid
-from fastapi import Request, Header, Depends
+from fastapi import Request, Header, Depends, HTTPException
 from ..core.session_manager import SessionManager
 from ..core.session_context import SessionContext
 from aiforge import AIForgeEngine
@@ -89,6 +89,9 @@ async def get_session_aware_engine(
         if env_api_key:
             user_params["api_key"] = env_api_key
             user_params["provider"] = os.environ.get("AIFORGE_PROVIDER", "openrouter")
+        else:
+            # 直接在这里抛出异常，不创建引擎
+            raise HTTPException(status_code=400, detail="API密钥未配置，请先配置API密钥")
 
     # 创建或获取引擎实例 - 让AIForgeEngine内部处理配置合并
     if "engine" not in context.components:
@@ -97,8 +100,18 @@ async def get_session_aware_engine(
         context.set_component("engine", engine)
 
         if hasattr(engine, "component_manager") and engine.component_manager:
-            shutdown_manager = engine.component_manager.components.get("shutdown_manager")
-            if shutdown_manager:
-                context.set_component("shutdown_manager", shutdown_manager)
+            # 只暴露部分接口
+            web_allowed_components = [
+                "i18n_manager",
+                "progress_indicator",
+                "shutdown_manager",
+                "ui_adapter",
+                "result_processor",
+            ]
+
+            for comp_name in web_allowed_components:
+                component = engine.component_manager.components.get(comp_name)
+                if component:
+                    context.set_component(comp_name, component)
 
     return context.get_component("engine")

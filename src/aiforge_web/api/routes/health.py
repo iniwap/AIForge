@@ -1,6 +1,6 @@
 import time
 from fastapi import APIRouter, Depends
-from ..dependencies import get_forge_engine
+from ..dependencies import get_session_aware_engine
 
 router = APIRouter(prefix="/api/v1/health", tags=["health"])
 
@@ -12,7 +12,7 @@ async def health_check():
 
 
 @router.get("/detailed")
-async def detailed_health_check(forge=Depends(get_forge_engine)):
+async def detailed_health_check(forge=Depends(get_session_aware_engine)):
     """详细健康检查"""
     try:
         # 检查引擎状态

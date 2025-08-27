@@ -55,7 +55,7 @@ class LocalAPIServer:
         except Exception:
             return False
 
-    def stop(self):
+    def shutdown(self):
         """停止服务器"""
         self.shutting_down = True
         if self.server:

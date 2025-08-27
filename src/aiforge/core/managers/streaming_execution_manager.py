@@ -64,6 +64,26 @@ class AIForgeStreamingExecutionManager:
         web_progress = StreamingProgressIndicator(self.components, progress_callback)
         self.components["progress_indicator"] = web_progress
 
+        # 更新所有组件中缓存的进度指示器引用
+        for _, component in self.components.items():
+            # 直接更新缓存的 _progress_indicator 属性
+            if hasattr(component, "_progress_indicator"):
+                component._progress_indicator = web_progress
+            # 更新其他可能的进度指示器属性
+            if hasattr(component, "progress_indicator"):
+                component.progress_indicator = web_progress
+
+        # 同时更新引擎级组件
+        if self.engine and hasattr(self.engine, "component_manager"):
+            engine_components = self.engine.component_manager.components
+            engine_components["progress_indicator"] = web_progress
+
+            for component in engine_components.values():
+                if hasattr(component, "_progress_indicator"):
+                    component._progress_indicator = web_progress
+                if hasattr(component, "progress_indicator"):
+                    component.progress_indicator = web_progress
+
         try:
             # 发送开始消息（根据进度级别决定是否发送）
             await progress_callback(

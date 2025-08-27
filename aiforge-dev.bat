@@ -179,31 +179,6 @@ if "%COMMAND%"=="gui" (
     ) else (  
         python -m aiforge.cli.main gui %DEBUG_MODE% %PROVIDER_ARG%  
     )  
-) else (  
-    REM 启动 Web 服务器  
-    echo 🚀 启动 AIForge Web 服务器  
-    if "%HOST%"=="0.0.0.0" (  
-        echo 📡 本地访问: http://127.0.0.1:%PORT%  
-        echo 🌐 网络访问: http://%HOST%:%PORT%  
-    ) else (  
-        echo 🏠 访问地址: http://%HOST%:%PORT%  
-    )  
-      
-    REM 如果没有 API 密钥，显示提示信息  
-    if "%API_KEY%"=="" (  
-        if "%OPENROUTER_API_KEY%"=="" (  
-            if "%AIFORGE_API_KEY%"=="" (  
-                echo ⚠️  未检测到 API 密钥，请在 Web 界面中配置  
-            )  
-        )  
-    )  
-      
-    if "%RELOAD_FLAG%"=="--reload" (  
-        echo 🔄 热重载模式已启用  
-    )  
-    if "%DEBUG_MODE%"=="--debug" (  
-        echo 🐛 调试模式已启用  
-    )  
-      
+) else (
     python -m aiforge.cli.main web --host %HOST% --port %PORT% %RELOAD_FLAG% %DEBUG_MODE% %PROVIDER_ARG%  
 )

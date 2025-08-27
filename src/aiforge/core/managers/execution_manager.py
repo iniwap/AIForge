@@ -15,6 +15,7 @@ class AIForgeExecutionManager:
         self._initialized = False
         self._i18n_manager = None
         self._ai_forgePrompt = None
+        self._progress_indicator = None
 
     def initialize(self, components: Dict[str, Any], config):
         """初始化执行管理器"""
@@ -23,10 +24,7 @@ class AIForgeExecutionManager:
         self._initialized = True
         self._i18n_manager = components.get("i18n_manager")
         self._ai_forgePrompt = AIForgePrompt(self.components)
-
-    @property
-    def _progress_indicator(self):
-        return self.components.get("progress_indicator")
+        self._progress_indicator = components.get("progress_indicator")
 
     def execute_instruction(self, instruction: str) -> Optional[Dict[str, Any]]:
         """统一执行入口"""

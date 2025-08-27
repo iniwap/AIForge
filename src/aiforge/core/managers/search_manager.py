@@ -12,10 +12,7 @@ class AIForgeSearchManager:
         self._i18n_manager = components.get("i18n_manager")
         self.processor_manager = FieldProcessorManager()
         self.parameter_mapping_service = components.get("parameter_mapping_service")
-
-    @property
-    def _progress_indicator(self):
-        return self.components.get("progress_indicator")
+        self._progress_indicator = components.get("progress_indicator")
 
     def is_search_task(self, standardized_instruction: Dict[str, Any]) -> bool:
         """判断是否为搜索类任务"""
@@ -105,6 +102,8 @@ class AIForgeSearchManager:
                     min_items=search_params["min_items"],
                     min_abstract_len=search_params["min_abstract_len"],
                     max_abstract_len=search_params["max_abstract_len"],
+                    i18n_manager=self._i18n_manager,
+                    progress_indicator=self._progress_indicator,
                 )
             else:
                 return None

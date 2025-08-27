@@ -709,7 +709,7 @@ class AIForgeRunner:
             f.write(code)
         return file_path
 
-    def cleanup(self):
+    def shutdown(self):
         try:
             for file in self.workdir.glob("*.tmp"):
                 file.unlink()

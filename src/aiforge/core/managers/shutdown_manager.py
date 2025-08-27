@@ -25,8 +25,8 @@ class AIForgeShutdownManager:
         """检查是否正在关闭"""
         return self._shutdown_event.is_set()
 
-    def initiate_shutdown(self):
-        """启动关闭流程"""
+    def shutdown(self):
+        """统一的关闭方法"""
         self._shutdown_event.set()
 
         # 执行所有清理回调

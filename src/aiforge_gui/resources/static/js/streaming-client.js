@@ -41,8 +41,24 @@ class StreamingClient {
                 timeout: 300000, // 5分钟超时
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {  
+                if (response.status === 400) {  
+                    // 尝试解析错误详情  
+                    try {  
+                        const errorData = await response.json();  
+                        if (errorData.detail && errorData.detail.includes('API密钥')) {  
+                            // 触发配置提示  
+                            if (callbacks.onConfigRequired) {  
+                                callbacks.onConfigRequired(errorData.detail);  
+                                callbacks.onComplete(false);
+                                return;  
+                            }  
+                        }  
+                    } catch (e) {  
+                        // 解析失败，继续抛出原始错误  
+                    }  
+                }  
+                throw new Error(`HTTP error! status: ${response.status}`);  
             }
 
             const reader = response.body.getReader();

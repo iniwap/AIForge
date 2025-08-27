@@ -16,12 +16,51 @@ from aiforge import AIForgeEngine
 router = APIRouter(prefix="/api/v1/core", tags=["core"])
 
 
+@router.get("/resources/stats")
+async def get_resource_stats():
+    """获取资源使用统计"""
+    from ...main import resource_monitor
+
+    if resource_monitor:
+        return resource_monitor.get_resource_stats()
+    return {"error": "资源监控器未启动"}
+
+
+@router.post("/resources/cleanup")
+async def trigger_manual_cleanup(session_manager=Depends(get_session_manager)):
+    """手动触发资源清理"""
+    from ...main import resource_monitor
+
+    if resource_monitor:
+        resource_monitor._trigger_aggressive_cleanup()
+        return {"success": True, "message": "手动清理已触发"}
+    return {"error": "资源监控器未启动"}
+
+
+@router.get("/resources/monitor/status")
+async def get_monitor_status():
+    """获取监控器状态"""
+    from ...main import resource_monitor
+
+    if resource_monitor:
+        return {
+            "monitoring": resource_monitor.monitoring,
+            "cleanup_callbacks": list(resource_monitor.cleanup_callbacks.keys()),
+            "thresholds": {
+                "memory": resource_monitor.memory_threshold,
+                "session": resource_monitor.session_threshold,
+                "cleanup_interval": resource_monitor.cleanup_interval,
+            },
+        }
+    return {"error": "资源监控器未启动"}
+
+
 @router.post("/stop/{session_id}")
 async def stop_session_execution(session_id: str, session_manager=Depends(get_session_manager)):
     """停止指定会话的执行"""
     context = session_manager.get_session(session_id)
     if context and "shutdown_manager" in context.components:
-        context.components["shutdown_manager"].initiate_shutdown()
+        context.components["shutdown_manager"].shutdown()
     return {"success": True, "message": f"会话 {session_id} 停止信号已发送"}
 
 
@@ -31,7 +70,7 @@ async def stop_current_execution(request: Request, session_manager=Depends(get_s
     session_id = get_session_id(request)
     context = session_manager.get_session(session_id)
     if context and "shutdown_manager" in context.components:
-        context.components["shutdown_manager"].initiate_shutdown()
+        context.components["shutdown_manager"].shutdown()
     return {"success": True, "message": "当前会话停止信号已发送"}
 
 
@@ -114,6 +153,7 @@ async def execute_instruction_stream(
         "user_id": session_context.user_id,
         "session_id": session_context.session_id,
         "task_type": data.get("task_type"),
+        "progress_level": data.get("progress_level", "detailed"),
         "device_info": {
             "browser": data.get("browser_info", {}),
             "viewport": data.get("viewport", {}),
@@ -133,7 +173,7 @@ async def execute_instruction_stream(
                 if await request.is_disconnected():
                     streaming_manager._client_disconnected = True
                     if shutdown_manager:
-                        shutdown_manager.initiate_shutdown()
+                        shutdown_manager.shutdown()
                     break
                 yield chunk
         except Exception as e:

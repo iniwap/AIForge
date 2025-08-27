@@ -6,7 +6,6 @@ class AIForgeGUIApp {
         this.uiAdapter = new WebUIAdapter();  
         this.currentTaskType = 'auto';  
         this.isExecuting = false;  
-        this.executionCompleted = false;  
         this.currentResult = null;  
         this.connectionInfo = null;  
   
@@ -352,13 +351,30 @@ class AIForgeGUIApp {
             alert('请输入指令');
             return;
         }
+        // 在执行前检查 API 密钥状态（如果有配置管理器）  
+        if (this.configManager) {  
+            try {  
+                const hasApiKey = await this.configManager.checkApiKeyStatus();  
+                if (!hasApiKey) {  
+                    this.showToast('请先配置 API 密钥', 'error');  
+                    // GUI 版本可能需要调用 pywebview API 来显示配置界面  
+                    if (typeof pywebview !== 'undefined' && pywebview.api.showConfigDialog) {  
+                        pywebview.api.showConfigDialog();  
+                    }  
+                    return;  
+                }  
+            } catch (error) {  
+                console.error('检查 API 密钥状态失败:', error);  
+                this.showToast('无法验证 API 密钥状态，请检查配置', 'error');  
+                return;  
+            }  
+        }  
 
         if (this.isExecuting) {
             return;
         }
 
         this.setExecuting(true);
-        this.executionCompleted = false;
 
         try {
             if (this.isLocal && typeof pywebview !== 'undefined') {
@@ -440,13 +456,19 @@ class AIForgeGUIApp {
                     onError: (error) => {
                         this.addProgressMessage(`❌ 错误: ${error.message}`, 'error');
                     },
-                    onComplete: () => {
-                        if (!this.executionCompleted) {
-                            this.addProgressMessage('✅ 执行完成', 'complete');
-                            this.executionCompleted = true;
+                    onComplete:(isSuccess = true) => {    
+                        if (isSuccess) {    
+                            this.addProgressMessage('✅ 执行完成', 'complete');    
+                        }else{
+                            this.addProgressMessage('❌ 执行失败', 'error');    
                         }
-                        this.setExecuting(false);
-                    }
+                        this.setExecutionState(false);    
+                    },
+                    onConfigRequired: (message) => {  
+                        this.showToast(message, 'error');  
+                        this.showConfigModal();
+                        this.setExecutionState(false);  
+                    }  
                 });
             } else {
                 await this.executeFallbackLocalInstruction(instruction);
@@ -556,12 +578,15 @@ class AIForgeGUIApp {
             onError: (error) => {
                 this.addProgressMessage(`❌ 错误: ${error.message}`, 'error');
             },
-            onComplete: () => {
-                if (!this.executionCompleted) {
-                    this.addProgressMessage('✅ 执行完成', 'complete');
-                    this.executionCompleted = true;
-                }
-                this.setExecution(false);
+            onComplete:(isSuccess = true) => {    
+                if (progressLevel !== 'none') {    
+                    if (isSuccess) {    
+                        this.addProgressMessage('✅ 执行完成', 'complete');    
+                    }else{
+                        this.addProgressMessage('❌ 执行失败', 'error');    
+                    }
+                }    
+                this.setExecutionState(false);    
             }
         });
     }
@@ -569,10 +594,10 @@ class AIForgeGUIApp {
     stopExecution() {
         this.streamingClient.disconnect();
         this.addProgressMessage('⏹️ 正在停止执行...', 'info');
-        this.setExecution(false);
+        this.setExecutionState(false);
     }
 
-    setExecution(isExecuting) {
+    setExecutionState(isExecuting) {
         this.isExecuting = isExecuting;
         const executeBtn = document.getElementById('executeBtn');
         const instructionInput = document.getElementById('instructionInput');

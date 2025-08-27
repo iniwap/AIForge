@@ -21,9 +21,15 @@ class OpenAIAdapter(LLMProviderAdapter):
         return f"{base_url}/chat/completions"
 
     def handle_error(self, status_code: int, response_data: Dict[str, Any]) -> Tuple[bool, str]:
-        if status_code >= 500:
-            return True, f"服务器错误: {status_code}"
-        elif status_code == 429:
-            return True, "请求频率限制"
-        else:
-            return False, f"客户端错误: {status_code}"
+        if status_code == 429:
+            # 从 OpenRouter 响应中提取实际错误消息
+            error_msg = "请求频率限制"
+            if "error" in response_data and "metadata" in response_data["error"]:
+                raw_msg = response_data["error"]["metadata"].get("raw", "")
+                if raw_msg:
+                    error_msg = raw_msg
+
+            return True, error_msg  # 返回表示允许重试的元组
+
+        # 处理其他错误情况并始终返回元组
+        return False, f"HTTP {status_code} error"

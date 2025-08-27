@@ -132,6 +132,6 @@ class AIForgeEngine:
         """支持直接调用"""
         return self.run(instruction)
 
-    def cleanup(self):
+    def shutdown(self):
         """清理资源"""
-        self.component_manager.cleanup_components()
+        self.component_manager.shutdown()

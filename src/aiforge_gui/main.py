@@ -259,7 +259,7 @@ class AIForgeGUIApp:
     def on_window_closed(self):
         """窗口关闭事件处理"""
         # 执行优雅关闭流程
-        self._cleanup()
+        self.shutdown()
 
         # 只有在窗口已经正常创建并且用户选择最小化到托盘时才隐藏
         if self.window_created and self.tray and self.config.get("minimize_to_tray", False):
@@ -424,18 +424,17 @@ class AIForgeGUIApp:
             traceback.print_exc()
             sys.exit(1)
         finally:
-            self._cleanup()
+            self.shutdown()
 
-    def _cleanup(self):
-        """完整的清理资源流程"""
-
-        # 1. 从引擎获取shutdown_manager，而不是使用全局单例
+    def shutdown(self):
+        """统一的关闭方法"""
+        # 1. 从引擎获取shutdown_manager
         shutdown_manager = None
         if self.engine_manager:
             shutdown_manager = self.engine_manager.get_shutdown_manager()
 
         if shutdown_manager:
-            shutdown_manager.initiate_shutdown()
+            shutdown_manager.shutdown()  # 使用统一的shutdown方法
 
         # 2. 等待当前任务完成或超时
         max_wait_time = 5.0
@@ -452,28 +451,23 @@ class AIForgeGUIApp:
         # 3. 强制停止所有组件
         if self.engine_manager and self.engine_manager.get_engine():
             engine = self.engine_manager.get_engine()
-            if hasattr(engine, "cleanup"):
+            if hasattr(engine, "shutdown"):
                 try:
-                    engine.cleanup()
-                except Exception:
-                    pass
-            elif hasattr(engine, "stop"):
-                try:
-                    engine.stop()
+                    engine.shutdown()
                 except Exception:
                     pass
             elif hasattr(engine, "component_manager") and hasattr(
-                engine.component_manager, "cleanup_components"
+                engine.component_manager, "shutdown"
             ):
                 try:
-                    engine.component_manager.cleanup_components()
+                    engine.component_manager.shutdown()
                 except Exception:
                     pass
 
         # 4. 停止API服务器
         if self.api_server:
             try:
-                self.api_server.stop()
+                self.api_server.shutdown()  # 使用统一的shutdown方法
             except Exception:
                 pass
 

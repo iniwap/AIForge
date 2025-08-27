@@ -28,7 +28,8 @@ class StreamingClient {
                 instruction: instruction,  
                 task_type: contextData.taskType,  
                 user_id: contextData.user_id,  
-                session_id: this.sessionManager ? this.sessionManager.sessionId : contextData.session_id  
+                session_id: this.sessionManager ? this.sessionManager.sessionId : contextData.session_id,
+                progress_level: contextData.progress_level
             };  
     
             const headers = this.sessionManager ?   
@@ -42,8 +43,24 @@ class StreamingClient {
                 signal: this.abortController.signal  
             });
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {  
+                if (response.status === 400) {  
+                    // 尝试解析错误详情  
+                    try {  
+                        const errorData = await response.json();  
+                        if (errorData.detail && errorData.detail.includes('API密钥')) {  
+                            // 触发配置提示  
+                            if (callbacks.onConfigRequired) {  
+                                callbacks.onConfigRequired(errorData.detail);  
+                                callbacks.onComplete(false);
+                                return;  
+                            }  
+                        }  
+                    } catch (e) {  
+                        // 解析失败，继续抛出原始错误  
+                    }  
+                }  
+                throw new Error(`HTTP error! status: ${response.status}`);  
             }
 
             const reader = response.body.getReader();
@@ -94,7 +111,7 @@ class StreamingClient {
                 onError(error);
             }
         } finally {
-            onComplete();
+            //onComplete();
             this.disconnect();
         }
     }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>  
 <html lang="zh-CN">  
+  
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
@@ -19,65 +20,91 @@
                     <span class="ml-2 text-sm text-gray-500">智能意图自适应执行引擎</span>  
                 </div>  
                 <div class="flex items-center space-x-4">  
-                    <!-- 快速配置区域 -->  
-                    <div class="flex items-center space-x-2">  
-                        <select id="providerSelect" class="border rounded px-3 py-1 text-sm">  
-                            <option value="openrouter">OpenRouter</option>  
-                            <option value="deepseek">DeepSeek</option>  
-                            <option value="ollama">Ollama</option>  
-                            <option value="grok">Grok</option>  
-                            <option value="qwen">Qwen</option>  
-                            <option value="gemini">Gemini</option>  
-                            <option value="claude">Claude</option>  
-                            <option value="cohere">Cohere</option>  
-                            <option value="mistral">Mistral</option>  
-                        </select>  
-                        <select id="localeSelect" class="border rounded px-3 py-1 text-sm">  
-                            <option value="zh">中文</option>  
-                            <option value="en">English</option>  
-                            <option value="ja">日本語</option>  
-                            <option value="ko">한국어</option>  
-                            <option value="fr">Français</option>  
-                            <option value="de">Deutsch</option>  
-                            <option value="es">Español</option>  
-                            <option value="pt">Português</option>  
-                            <option value="ru">Русский</option>  
-                            <option value="ar">العربية</option>  
-                            <option value="hi">हिन्दी</option>  
-                            <option value="vi">Tiếng Việt</option>  
-                        </select>  
-                    </div>  
                     <button id="settingsBtn" class="text-gray-500 hover:text-gray-700">⚙️</button>  
                 </div>  
             </div>  
         </div>  
     </nav>  
   
-    <!-- 主要内容区域 -->  
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">  
-        <!-- 配置状态提示 -->  
-        <div id="configAlert" class="hidden mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">  
-            <div class="flex">  
-                <div class="flex-shrink-0">  
-                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">  
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />  
-                    </svg>  
-                </div>  
-                <div class="ml-3">  
-                    <h3 class="text-sm font-medium text-yellow-800">需要配置API密钥</h3>  
-                    <div class="mt-2 text-sm text-yellow-700">  
-                        <p>请在设置中配置您的API密钥以开始使用AIForge。</p>  
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">  
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">  
+            <!-- 左侧：输入区域 -->  
+            <div class="lg:col-span-1">  
+                <div class="bg-white rounded-lg shadow p-6">  
+                    <h2 class="text-lg font-semibold mb-4">指令输入</h2>  
+  
+                    <!-- 任务类型快速选择 -->  
+                    <div class="mb-4">  
+                        <label class="block text-sm font-medium text-gray-700 mb-2">任务类型</label>  
+                        <div class="grid grid-cols-2 gap-2" id="taskTypeButtons">  
+                            <button class="task-type-btn" data-type="data_fetch">📊 数据获取</button>  
+                            <button class="task-type-btn" data-type="data_analysis">📈 数据分析</button>  
+                            <button class="task-type-btn" data-type="content_generation">✍️ 内容生成</button>  
+                            <button class="task-type-btn" data-type="code_generation">💻 代码生成</button>  
+                            <button class="task-type-btn" data-type="search">🔍 搜索查询</button>  
+                            <button class="task-type-btn" data-type="direct_response">💬 知识问答</button>  
+                        </div>  
                     </div>  
-                    <div class="mt-4">  
-                        <button id="openConfigBtn" class="bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-800 rounded hover:bg-yellow-200">  
-                            立即配置  
+  
+                    <!-- 指令输入框 -->  
+                    <div class="mb-4">  
+                        <label class="block text-sm font-medium text-gray-700 mb-2">自然语言指令</label>  
+                        <textarea id="instructionInput" rows="4"  
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"  
+                            placeholder="请输入您的指令，例如：搜索最新的AI技术趋势并生成分析报告"></textarea>  
+                    </div>  
+  
+                    <!-- 执行按钮 -->  
+                    <div class="flex space-x-2">  
+                        <button id="executeBtn"  
+                            class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">  
+                            <span id="executeText">🚀 执行指令</span>  
                         </button>  
+                        <button id="stopBtn"  
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"  
+                            disabled>  
+                            ⏹️ 停止  
+                        </button>  
+                    </div>  
+  
+                    <!-- 示例指令 -->  
+                    <div class="mt-4">  
+                        <details class="text-sm">  
+                            <summary class="cursor-pointer text-gray-600">💡 示例指令</summary>  
+                            <div class="mt-2 space-y-1 text-gray-500">  
+                                <div class="example-instruction cursor-pointer hover:text-blue-600"  
+                                    data-instruction="搜索最新的人工智能发展趋势">📊 搜索最新的人工智能发展趋势</div>  
+                                <div class="example-instruction cursor-pointer hover:text-blue-600"  
+                                    data-instruction="生成一份关于Python编程的学习计划">✍️ 生成一份关于Python编程的学习计划</div>  
+                                <div class="example-instruction cursor-pointer hover:text-blue-600"  
+                                    data-instruction="编写一个计算斐波那契数列的函数">💻 编写一个计算斐波那契数列的函数</div>  
+                            </div>  
+                        </details>  
+                    </div>  
+                </div>  
+            </div>  
+  
+            <!-- 右侧：执行进度和结果 -->  
+            <div class="lg:col-span-2">  
+                <!-- 执行进度 -->  
+                <div class="bg-white rounded-lg shadow p-6 mb-6">  
+                    <h2 class="text-lg font-semibold mb-4">执行进度</h2>  
+                    <div id="progressContainer" class="h-48 overflow-y-auto bg-gray-50 rounded p-4 font-mono text-sm">  
+                        <!-- JavaScript会直接在这里添加进度消息 -->  
+                    </div>  
+                </div>  
+  
+                <!-- 结果展示区域 -->  
+                <div class="bg-white rounded-lg shadow p-6">  
+                    <div class="flex justify-between items-center mb-4">  
+                        <h2 class="text-lg font-semibold">执行结果</h2>  
+                    </div>  
+                    <div id="resultContainer" class="min-h-64">  
+                        <div class="text-gray-500 text-center py-8">执行结果将在这里显示...</div>  
                     </div>  
                 </div>  
             </div>  
         </div>  
-  
-        <!-- 其他现有内容... -->  
     </div>  
   
     <!-- 设置模态框 -->  
@@ -168,6 +195,18 @@
                                        placeholder="4096">  
                             </div>  
                         </div>  
+  
+                        <!-- 进度显示级别 -->  
+                        <div class="mt-3">  
+                            <label for="progressLevelSelect" class="block text-xs text-gray-600 mb-1">  
+                                进度显示级别  
+                            </label>  
+                            <select id="progressLevelSelect" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">  
+                                <option value="detailed">详细模式 - 显示所有进度信息</option>  
+                                <option value="minimal">简化模式 - 只显示关键节点</option>  
+                                <option value="none">静默模式 - 不显示进度信息</option>  
+                            </select>  
+                        </div>  
                     </div>  
   
                     <!-- 按钮组 -->  
@@ -175,7 +214,7 @@
                         <button type="button" id="cancelSettings"   
                                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">  
                             取消  
-                        </button>  
+                        </button>
                         <button type="submit"   
                                 class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">  
                             保存配置  
@@ -186,11 +225,11 @@
         </div>  
     </div>  
   
-    <!-- 脚本文件 -->  
+    <script src="/static/js/session.js"></script>  
     <script src="/static/js/config-manager.js"></script>  
     <script src="/static/js/streaming-client.js"></script>  
-    <script src="/static/js/session.js"></script>  
     <script src="/static/js/ui-adapters.js"></script>  
     <script src="/static/js/main.js"></script>  
 </body>  
+  
 </html>
