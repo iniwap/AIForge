@@ -171,7 +171,7 @@ class TemplateManager:
                         "description": "覆盖默认搜索引擎",
                     },
                     "progress_indicator": {
-                        "type": "ProgressIndicator",
+                        "type": "ProgressEventBus",
                         "required": True,
                         "default": None,
                         "description": "进度实例",

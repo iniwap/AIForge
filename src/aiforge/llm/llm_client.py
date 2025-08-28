@@ -78,8 +78,7 @@ class AIForgeLLMClient:
         if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
             return None
 
-        self._progress_indicator.show_llm_request(self.name)
-
+        self._progress_indicator.emit("llm_request", provider=self.name)
         for attempt in range(max_retries):
             # 每次重试前检查取消状态
             if self._is_cancelled.is_set() or self._shutdown_manager.is_shutting_down():
@@ -87,7 +86,7 @@ class AIForgeLLMClient:
 
             try:
                 if attempt == 0:
-                    self._progress_indicator.show_llm_generating()
+                    self._progress_indicator.emit("llm_generating")
 
                 # 准备消息
                 messages = []
@@ -126,7 +125,7 @@ class AIForgeLLMClient:
                     return None
 
                 if response.status_code == 200:
-                    self._progress_indicator.show_llm_complete()
+                    self._progress_indicator.emit("llm_complete")
                     result = response.json()
 
                     # 使用适配器解析响应

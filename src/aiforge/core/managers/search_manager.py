@@ -70,8 +70,8 @@ class AIForgeSearchManager:
                 )
 
                 if search_result and search_result.get("success"):
-                    self._progress_indicator.show_search_complete(
-                        len(search_result.get("results", 0))
+                    self._progress_indicator.emit(
+                        "search_complete", count=len(search_result.get("results", 0))
                     )
                     return self._convert_search_result_to_aiforge_format(
                         search_result, standardized_instruction, "searxng_search"
@@ -109,7 +109,9 @@ class AIForgeSearchManager:
                 return None
 
             if search_result:
-                self._progress_indicator.show_search_complete(len(search_result.get("results", 0)))
+                self._progress_indicator.emit(
+                    "search_complete", count=len(search_result.get("results", 0))
+                )
                 # 转换为AIForge标准格式
                 return self._convert_search_result_to_aiforge_format(
                     search_result, standardized_instruction, "direct_search_web"
@@ -410,7 +412,7 @@ class AIForgeSearchManager:
         search_params = self.parameter_mapping_service.extract_search_parameters(
             standardized_instruction, original_instruction
         )
-        self._progress_indicator.show_search_start(search_params["search_query"])
+        self._progress_indicator.emit("search_start", query=search_params["search_query"])
 
         # 第0层：尝试 SearXNG（如果可用）
         searxng_result = self._try_searxng_search(
@@ -429,9 +431,10 @@ class AIForgeSearchManager:
                 return direct_result
 
         # 第二层：使用缓存中的搜索函数
-        self._progress_indicator.show_search_process(
-            self._i18n_manager.t("search.process_system_cache")
+        self._progress_indicator.emit(
+            "search_process", search_type=self._i18n_manager.t("search.process_system_cache")
         )
+
         cache_result = self._try_cached_search(standardized_instruction, original_instruction)
         if cache_result and self._validate_search_result_quality(
             cache_result, standardized_instruction
@@ -439,8 +442,8 @@ class AIForgeSearchManager:
             return cache_result
 
         # 第三层：使用 模板指导
-        self._progress_indicator.show_search_process(
-            self._i18n_manager.t("search.process_ai_template")
+        self._progress_indicator.emit(
+            "search_process", search_type=self._i18n_manager.t("search.process_ai_template")
         )
         template_result, success = self._try_template_guided_search(
             standardized_instruction, original_instruction, search_params
@@ -449,16 +452,19 @@ class AIForgeSearchManager:
             return template_result
 
         # 第四层：使用 get_free_form_ai_search_instruction
-        self._progress_indicator.show_search_process(self._i18n_manager.t("search.process_ai_free"))
+        self._progress_indicator.emit(
+            "search_process", search_type=self._i18n_manager.t("search.process_ai_free")
+        )
         freeform_result, success = self._try_free_form_search(
             standardized_instruction, original_instruction, search_params
         )
         if success:
             return freeform_result
 
-        self._progress_indicator.show_search_process(
-            self._i18n_manager.t("search.process_system_default")
+        self._progress_indicator.emit(
+            "search_process", search_type=self._i18n_manager.t("search.process_system_default")
         )
+
         # 所有层级都失败，系统搜索成功率较低
         return {
             "data": [],

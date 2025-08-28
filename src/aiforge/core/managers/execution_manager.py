@@ -91,7 +91,7 @@ class AIForgeExecutionManager:
         self, standardized_instruction: Dict[str, Any], original_instruction: str
     ) -> Optional[Dict[str, Any]]:
         """使用通用验证的缓存优先执行策略"""
-        self._progress_indicator.show_cache_lookup()
+        self._progress_indicator.emit("cache_lookup")
 
         code_cache = self.components["code_cache"]
         cached_modules = code_cache.get_cached_modules_by_standardized_instruction(
@@ -99,14 +99,14 @@ class AIForgeExecutionManager:
         )
 
         if cached_modules:
-            self._progress_indicator.show_cache_found(len(cached_modules))
+            self._progress_indicator.emit("cache_found", count=len(cached_modules))
 
             validated_modules = self._final_validation_before_execution(
                 cached_modules, standardized_instruction
             )
 
             if validated_modules:
-                self._progress_indicator.show_cache_execution()
+                self._progress_indicator.emit("cache_execution")
                 cache_result = self.try_execute_cached_modules(
                     validated_modules, standardized_instruction
                 )

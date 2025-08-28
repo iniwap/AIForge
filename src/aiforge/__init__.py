@@ -37,6 +37,9 @@ from .core.managers.streaming_execution_manager import AIForgeStreamingExecution
 from .core.result import AIForgeResult
 from .core.managers.shutdown_manager import AIForgeShutdownManager
 
+from .utils.progress_indicator import ProgressEventBus, StreamingProgressEventHandler
+
+
 __all__ = [
     # 核心组件
     "AIForgeEngine",
@@ -70,6 +73,9 @@ __all__ = [
     "AIForgeStreamingExecutionManager",
     "AIForgeResult",
     "AIForgeShutdownManager",
+    # 流式进度显示
+    "ProgressEventBus",
+    "StreamingProgressEventHandler",
 ]
 
 __version__ = "0.0.12"

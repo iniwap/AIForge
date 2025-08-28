@@ -6,9 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
     <title>AIForge - 智能意图自适应执行引擎</title>  
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">  
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">  
+      
+    <!-- 预加载并设置超时 -->  
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" onerror="loadLocalTailwind()">  
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"></noscript>  
+      
+    <!-- 本地备份样式 -->  
     <link href="/static/css/aiforge.css" rel="stylesheet">  
-</head>  
+      
+    <script>  
+    function loadLocalTailwind() {  
+        var link = document.createElement('link');  
+        link.rel = 'stylesheet';  
+        link.href = '/static/css/tailwind.min.css';  
+        document.head.appendChild(link);  
+    }  
+    </script>  
+</head>
   
 <body class="bg-gray-50">  
     <!-- 顶部导航 -->  
@@ -99,7 +113,7 @@
                     <div class="flex justify-between items-center mb-4">  
                         <h2 class="text-lg font-semibold">执行结果</h2>  
                     </div>  
-                    <div id="resultContainer" class="min-h-64">  
+                    <div id="resultContainer" class="min-h-80">  
                         <div class="text-gray-500 text-center py-8">执行结果将在这里显示...</div>  
                     </div>  
                 </div>  

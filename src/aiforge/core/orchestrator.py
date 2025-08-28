@@ -21,7 +21,7 @@ from ..strategies.parameter_mapping_service import ParameterMappingService
 from ..execution.engine import AIForgeExecutionEngine
 from .managers.content_generation_manager import AIForgeContentGenerationManager
 from ..i18n.manager import AIForgeI18nManager
-from ..utils.progress_indicator import ProgressIndicator
+from ..utils.progress_indicator import ProgressEventHandler, ProgressEventBus
 from .managers.shutdown_manager import AIForgeShutdownManager
 
 
@@ -80,8 +80,13 @@ class AIForgeOrchestrator:
         self.components["shutdown_manager"] = shutdown_manager
 
     def _init_progress_indicator(self):
-        progress_indicator = ProgressIndicator(self.components)
-        self.components["progress_indicator"] = progress_indicator
+        """初始化纯事件进度总线"""
+        # 创建事件总线
+        progress_bus = ProgressEventBus()
+        # 创建默认事件处理器并设置
+        progress_bus.set_handler(ProgressEventHandler(self.components))
+        # 注册事件总线
+        self.components["progress_indicator"] = progress_bus
 
     def _init_i18n_manager(self):
         """初始化国际化管理器"""

@@ -111,7 +111,7 @@ def start_web_server(
             and not os.environ.get("OPENROUTER_API_KEY")
             and not os.environ.get("AIFORGE_API_KEY")
         ):
-            print("⚠️  未检测到 API 密钥，请在 Web 界面中配置  ⚠️")
+            print("⚠️ ⚠️ ⚠️  未检测到 API 密钥，请在 Web 界面中配置")
 
         if reload:
             print("🔄 热重载模式已启用")

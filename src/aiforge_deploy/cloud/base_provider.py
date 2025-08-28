@@ -170,14 +170,14 @@ echo "Access your AIForge instance at: http://$(curl -s http://169.254.169.254/l
         # 检查必要条件
         checks = env_check["checks"]
         if not checks["cloud_cli_available"]:
-            print(f"\\n{self._i18n_manager.t('cloud.cli_not_installed')}")
+            print(f"\n{self._i18n_manager.t('cloud.cli_not_installed')}")
             return {"success": False, "message": "Cloud CLI not available"}
 
         if not checks["credentials_configured"]:
-            print(f"\\n{self._i18n_manager.t('cloud.credentials_not_configured')}")
+            print(f"\n{self._i18n_manager.t('cloud.credentials_not_configured')}")
             return {"success": False, "message": "Cloud credentials not configured"}
 
-        print("\\n" + "=" * 50)
+        print("\n" + "=" * 50)
 
         try:
             # 2. 获取云配置
@@ -203,7 +203,7 @@ echo "Access your AIForge instance at: http://$(curl -s http://169.254.169.254/l
             print(f"{self._i18n_manager.t('cloud.deploying_application')}")
             deploy_result = await self._deploy_application(instance_id)
 
-            print("\\n" + "=" * 50)
+            print("\n" + "=" * 50)
 
             # 6. 显示部署信息
             await self._show_deployment_info(instance_id, deploy_result)

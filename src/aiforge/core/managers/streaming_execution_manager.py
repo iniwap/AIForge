@@ -2,7 +2,7 @@ import asyncio
 import json
 import time
 from typing import Dict, Any, AsyncGenerator
-from ...utils.streaming_progres_indicator import StreamingProgressIndicator
+from ...utils.progress_indicator import StreamingProgressEventHandler
 from ..engine import AIForgeEngine
 
 
@@ -60,29 +60,12 @@ class AIForgeStreamingExecutionManager:
                 pass
 
         # 替换进度指示器为 Web 流式版本
-        original_progress = self.components.get("progress_indicator")
-        web_progress = StreamingProgressIndicator(self.components, progress_callback)
-        self.components["progress_indicator"] = web_progress
-
-        # 更新所有组件中缓存的进度指示器引用
-        for _, component in self.components.items():
-            # 直接更新缓存的 _progress_indicator 属性
-            if hasattr(component, "_progress_indicator"):
-                component._progress_indicator = web_progress
-            # 更新其他可能的进度指示器属性
-            if hasattr(component, "progress_indicator"):
-                component.progress_indicator = web_progress
-
-        # 同时更新引擎级组件
-        if self.engine and hasattr(self.engine, "component_manager"):
-            engine_components = self.engine.component_manager.components
-            engine_components["progress_indicator"] = web_progress
-
-            for component in engine_components.values():
-                if hasattr(component, "_progress_indicator"):
-                    component._progress_indicator = web_progress
-                if hasattr(component, "progress_indicator"):
-                    component.progress_indicator = web_progress
+        progress_bus = self.components.get("progress_indicator")
+        original_progress = progress_bus.get_handler()
+        streaming_handler = StreamingProgressEventHandler(self.components, progress_callback)
+        progress_bus.set_handler(streaming_handler)
+        # 根据前端设置的进度级别来控制是否显示进度
+        streaming_handler.set_show_progress(progress_level != "none")
 
         try:
             # 发送开始消息（根据进度级别决定是否发送）
@@ -199,4 +182,4 @@ class AIForgeStreamingExecutionManager:
         finally:
             # 恢复原始进度指示器
             if original_progress:
-                self.components["progress_indicator"] = original_progress
+                progress_bus.set_handler(original_progress)

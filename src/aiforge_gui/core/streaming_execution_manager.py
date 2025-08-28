@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 from typing import Dict, Any, AsyncGenerator
+from aiforge import StreamingProgressEventHandler
 
 
 class GUIStreamingExecutionManager:
@@ -51,6 +52,16 @@ class GUIStreamingExecutionManager:
                 pass
 
         try:
+            # 替换进度指示器为 Web 流式版本
+            progress_bus = self.engine.component_manager.components.get("progress_indicator")
+            original_progress = progress_bus.get_handler()
+            streaming_handler = StreamingProgressEventHandler(
+                self.engine.component_manager.components, progress_callback
+            )
+            progress_bus.set_handler(streaming_handler)
+            # 根据前端设置的进度级别来控制是否显示进度
+            streaming_handler.set_show_progress(progress_level != "none")
+
             # 发送开始消息
             await progress_callback(
                 {
@@ -164,3 +175,7 @@ class GUIStreamingExecutionManager:
         except Exception as e:
             error_message = f"流式执行错误: {str(e)}"
             yield f"data: {json.dumps({'type': 'error', 'message': error_message}, ensure_ascii=False)}\n\n"  # noqa 501
+        finally:
+            # 恢复原始进度指示器
+            if original_progress:
+                progress_bus.set_handler(original_progress)

@@ -30,7 +30,7 @@ AIForge 是一个**智能执行引擎**，它消除了自然语言指令与代�
 > **核心哲学**: *Thought → Code → Reality* - 让思维直接驱动现实世界  
 
 ![LOGO](https://raw.githubusercontent.com/iniwap/AIForge/main/logo.jpg)  
-
+![PREVIEW](preview.jpg)
 ## ✨ 核心功能  
   
 ### 🏗️ 多界面架构  

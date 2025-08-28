@@ -431,7 +431,11 @@ class AIForgeGUIApp:
         # 1. 从引擎获取shutdown_manager
         shutdown_manager = None
         if self.engine_manager:
-            shutdown_manager = self.engine_manager.get_shutdown_manager()
+            try:
+                shutdown_manager = self.engine_manager.get_shutdown_manager()
+            except RuntimeError:
+                # 如果引擎未初始化（如缺少API密钥），跳过引擎相关清理
+                pass
 
         if shutdown_manager:
             shutdown_manager.shutdown()  # 使用统一的shutdown方法
@@ -441,28 +445,38 @@ class AIForgeGUIApp:
         start_time = time.time()
 
         while time.time() - start_time < max_wait_time:
-            if self.engine_manager and self.engine_manager.get_engine():
-                engine = self.engine_manager.get_engine()
-                if hasattr(engine, "task_manager") and hasattr(engine.task_manager, "active_tasks"):
-                    if not engine.task_manager.active_tasks:
-                        break
+            try:
+                if self.engine_manager and self.engine_manager.get_engine():
+                    engine = self.engine_manager.get_engine()
+                    if hasattr(engine, "task_manager") and hasattr(
+                        engine.task_manager, "active_tasks"
+                    ):
+                        if not engine.task_manager.active_tasks:
+                            break
+            except RuntimeError:
+                # 引擎未初始化，跳出等待循环
+                break
             time.sleep(0.1)
 
         # 3. 强制停止所有组件
-        if self.engine_manager and self.engine_manager.get_engine():
-            engine = self.engine_manager.get_engine()
-            if hasattr(engine, "shutdown"):
-                try:
-                    engine.shutdown()
-                except Exception:
-                    pass
-            elif hasattr(engine, "component_manager") and hasattr(
-                engine.component_manager, "shutdown"
-            ):
-                try:
-                    engine.component_manager.shutdown()
-                except Exception:
-                    pass
+        try:
+            if self.engine_manager and self.engine_manager.get_engine():
+                engine = self.engine_manager.get_engine()
+                if hasattr(engine, "shutdown"):
+                    try:
+                        engine.shutdown()
+                    except Exception:
+                        pass
+                elif hasattr(engine, "component_manager") and hasattr(
+                    engine.component_manager, "shutdown"
+                ):
+                    try:
+                        engine.component_manager.shutdown()
+                    except Exception:
+                        pass
+        except RuntimeError:
+            # 引擎未初始化，跳过引擎清理
+            pass
 
         # 4. 停止API服务器
         if self.api_server:

@@ -137,14 +137,14 @@ class KubernetesDeploymentProvider(BaseDeploymentProvider):
         # 检查必要条件
         checks = env_check["checks"]
         if not checks["kubectl_available"]:
-            print(f"\\n{self._i18n_manager.t('k8s.kubectl_not_installed')}")
+            print(f"\n{self._i18n_manager.t('k8s.kubectl_not_installed')}")
             return {"success": False, "message": "kubectl not available"}
 
         if not checks["cluster_accessible"]:
-            print(f"\\n{self._i18n_manager.t('k8s.cluster_not_accessible')}")
+            print(f"\n{self._i18n_manager.t('k8s.cluster_not_accessible')}")
             return {"success": False, "message": "Kubernetes cluster not accessible"}
 
-        print("\\n" + "=" * 50)
+        print("\n" + "=" * 50)
 
         try:
             # 2. 创建命名空间
@@ -162,7 +162,7 @@ class KubernetesDeploymentProvider(BaseDeploymentProvider):
                 if not result["success"]:
                     return result
 
-            print("\\n" + "=" * 50)
+            print("\n" + "=" * 50)
 
             # 6. 等待部署就绪
             await self._wait_for_deployment_ready(namespace)

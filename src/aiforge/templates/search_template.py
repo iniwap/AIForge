@@ -101,7 +101,7 @@ def search_web(
         ENGINE_CONFIGS[engine]["url"] = url
         if engine in ENGINE_CONFIGS:
             try:
-                progress_indicator.show_search_process("SearXNG")
+                progress_indicator.emit("search_process", search_type="SearXNG")
                 # 使用 SearXNG 专用的搜索逻辑
                 search_result = _search_searxng_template(
                     i18n_manager,
@@ -120,8 +120,7 @@ def search_web(
         for engine in LOCALE_SEARCH_ENGINES.get(i18n_manager.locale, "zh"):
             try:
                 engine_name = i18n_manager.t(f"search.engine_{engine}")
-                progress_indicator.show_search_process(engine_name)
-
+                progress_indicator.emit("search_process", search_type=engine_name)
                 search_result = _search_template(
                     i18n_manager,
                     search_query,

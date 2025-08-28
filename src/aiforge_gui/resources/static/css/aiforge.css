@@ -1,5 +1,6 @@
-/* 样式文件 */
-/* AIForge GUI 样式 - 自包含版本 */  
+/* ========================================  
+   基础重置和全局样式  
+   ======================================== */  
 * {  
     margin: 0;  
     padding: 0;  
@@ -11,6 +12,7 @@ body {
     line-height: 1.6;  
     color: #333;  
     background-color: #f5f5f5;  
+    overflow: hidden;  
 }  
   
 body.dark {  
@@ -19,36 +21,38 @@ body.dark {
 }  
   
 #app {  
-    min-height: 100vh;  
+    height: 100vh;  
     display: flex;  
     flex-direction: column;  
+    position: relative;  
 }  
   
-/* 头部样式 */  
+/* ========================================  
+   头部导航区域  
+   ======================================== */  
 .header {  
-    background: #fff;  
-    border-bottom: 1px solid #e0e0e0;  
-    padding: 1rem 2rem;  
+    background: #2d2d2d;  
+    padding: 0.75rem 1.5rem;  
     display: flex;  
     justify-content: space-between;  
     align-items: center;  
+    flex-shrink: 0;  
 }  
   
-body.dark .header {  
-    background: #2d2d2d;  
-    border-bottom-color: #404040;  
-}  
-  
-.header h1 {  
-    font-size: 1.5rem;  
+.header-left h1 {  
+    font-size: 1.25rem;  
     font-weight: 600;  
-    color: #2563eb;  
-}  
-  
-body.dark .header h1 {  
     color: #60a5fa;  
+    line-height: 1.2;  
 }  
   
+.header-right {  
+    display: flex;  
+    align-items: center;  
+    gap: 1rem;  
+}  
+  
+/* 连接状态指示器 */  
 .connection-status {  
     display: flex;  
     align-items: center;  
@@ -70,87 +74,193 @@ body.dark .header h1 {
     background: #f59e0b;  
 }  
   
-/* 主内容区域 */  
+.mode-indicator {  
+    padding: 2px 6px;  
+    border-radius: 3px;  
+    font-size: 11px;  
+    margin-left: 8px;  
+}  
+  
+.mode-local {  
+    background: transparent;
+    color: white;  
+}  
+  
+.mode-remote {  
+    background: transparent;
+    color: white;  
+}  
+  
+/* 设置按钮 */  
+.settings-btn {  
+    display: inline-flex;  
+    align-items: center;  
+    justify-content: center;  
+    width: 2rem;  
+    height: 2rem;  
+    border: none;  
+    border-radius: 4px;  
+    background: transparent;  
+    color: #9ca3af;  
+    cursor: pointer;  
+    transition: all 0.2s ease;  
+    font-size: 1rem;  
+}  
+  
+.settings-btn:hover {  
+    color: #e0e0e0;  
+    background: rgba(255, 255, 255, 0.1);  
+}  
+  
+/* ========================================  
+   主内容区域布局  
+   ======================================== */  
 .main-content {  
     flex: 1;  
     display: grid;  
-    grid-template-columns: 1fr 2fr;  
-    gap: 2rem;  
-    padding: 2rem;  
+    grid-template-columns: 300px 1fr;  
+    gap: 1.5rem;  
+    padding: 1.5rem;  
     max-width: 1400px;  
     margin: 0 auto;  
     width: 100%;  
+    overflow: hidden;  
 }  
   
 .input-section, .output-section {  
-    background: #fff;  
-    border-radius: 8px;  
-    padding: 1.5rem;  
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);  
-}  
-  
-body.dark .input-section,  
-body.dark .output-section {  
     background: #2d2d2d;  
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);  
+    border-radius: 8px;  
+    padding: 1.25rem;  
+    overflow: hidden;  
+    display: flex;  
+    flex-direction: column;  
 }  
   
-/* 任务选择器 */  
-.task-selector {  
+/* ========================================  
+   任务类型展示区域  
+   ======================================== */  
+.task-types-section {  
+    margin-bottom: 1.5rem;  
+    flex-shrink: 0;  
+}  
+  
+.section-title {  
+    font-size: 0.875rem;  
+    font-weight: 600;  
+    color: #e0e0e0;  
+    margin-bottom: 0.75rem;  
+    padding-bottom: 0.375rem;  
+    border-bottom: 1px solid #404040;  
+}  
+  
+.task-types-grid {  
+    display: grid;  
+    grid-template-columns: 1fr 1fr;  
+    gap: 0.5rem;  
     margin-bottom: 1rem;  
 }  
   
-.task-selector label {  
-    display: block;  
-    margin-bottom: 0.5rem;  
-    font-weight: 500;  
-}  
-  
-.task-selector select {  
-    width: 100%;  
+.task-type-card {  
+    background: #2a2a2a;  
+    border: 1px solid #404040;  
+    border-radius: 6px;  
     padding: 0.5rem;  
-    border: 1px solid #d1d5db;  
+    display: flex;  
+    align-items: center;  
+    gap: 0.5rem;  
+    transition: all 0.2s ease;  
+    cursor: default;  
+}  
+  
+.task-type-card:hover {  
+    background: #333333;  
+    border-color: #555555;  
+}  
+  
+.task-icon {  
+    font-size: 1.25rem;  
+    width: 2rem;  
+    height: 2rem;  
+    display: flex;  
+    align-items: center;  
+    justify-content: center;  
+    background: #3a3a3a;  
     border-radius: 4px;  
-    background: #fff;  
+    flex-shrink: 0;  
 }  
   
-body.dark .task-selector select {  
-    background: #374151;  
-    border-color: #4b5563;  
+.task-info {  
+    flex: 1;  
+    min-width: 0;  
+}  
+  
+.task-name {  
+    font-weight: 600;  
     color: #e0e0e0;  
+    font-size: 0.75rem;  
+    margin-bottom: 0.125rem;  
+    line-height: 1.2;  
 }  
   
-/* 指令输入 */  
+.task-desc {  
+    font-size: 0.625rem;  
+    color: #9ca3af;  
+    line-height: 1.2;  
+}  
+  
+/* ========================================  
+   指令输入区域  
+   ======================================== */  
 .instruction-input {  
     display: flex;  
     flex-direction: column;  
-    gap: 1rem;  
+    gap: 0.75rem;  
+    flex: 1;  
+}  
+  
+.input-label {  
+    display: block;  
+    font-size: 0.875rem;  
+    font-weight: 500;  
+    color: #e0e0e0;  
+    margin-bottom: 0.375rem;  
 }  
   
 .instruction-input textarea {  
     width: 100%;  
     padding: 0.75rem;  
-    border: 1px solid #d1d5db;  
+    border: 1px solid #404040;  
     border-radius: 4px;  
-    resize: vertical;  
+    resize: none;  
     font-family: inherit;  
-}  
-  
-body.dark .instruction-input textarea {  
     background: #374151;  
-    border-color: #4b5563;  
     color: #e0e0e0;  
+    flex: 1;  
+    min-height: 80px;  
 }  
   
-.execute-btn {  
-    padding: 0.75rem 1.5rem;  
-    background: #2563eb;  
-    color: white;  
+/* 按钮组 */  
+.button-group {  
+    display: flex;  
+    gap: 0.5rem;  
+}  
+  
+.execute-btn, .stop-btn {  
+    display: inline-flex;  
+    align-items: center;  
+    justify-content: center;  
+    padding: 0.75rem 1rem;  
     border: none;  
     border-radius: 4px;  
     font-weight: 500;  
     cursor: pointer;  
     transition: background-color 0.2s;  
+    flex: 1;  
+}  
+  
+.execute-btn {  
+    background: #2563eb;  
+    color: white;  
 }  
   
 .execute-btn:hover {  
@@ -162,364 +272,139 @@ body.dark .instruction-input textarea {
     cursor: not-allowed;  
 }  
   
-/* 进度和结果容器 */  
-.progress-container, .result-container {  
-    margin-bottom: 2rem;  
+.stop-btn {  
+    background: #dc2626;  
+    color: white;  
+}  
+  
+.stop-btn:hover {  
+    background: #b91c1c;  
+}  
+  
+.stop-btn:disabled {  
+    background: #6b7280;  
+    cursor: not-allowed;  
+}  
+  
+.btn-icon {  
+    margin-right: 0.5rem;  
+}  
+  
+.btn-text {  
+    font-weight: 500;  
+}  
+  
+/* ========================================  
+   输出结果区域  
+   ======================================== */  
+.output-section {  
+    display: flex;  
+    flex-direction: column;  
+    gap: 1rem;  
+}  
+  
+.progress-container {  
+    flex: 1;  
+    display: flex;  
+    flex-direction: column;  
+    min-height: 0;  
+}  
+  
+.result-container {  
+    flex: 3;  
+    display: flex;  
+    flex-direction: column;  
+    min-height: 0;  
 }  
   
 .progress-container h3, .result-container h3 {  
-    margin-bottom: 1rem;  
-    font-size: 1.125rem;  
+    margin-bottom: 0.75rem;  
+    font-size: 1rem;  
     font-weight: 600;  
+    color: #e0e0e0;  
+    flex-shrink: 0;  
 }  
   
-#progressMessages {  
-    max-height: 200px;  
+/* 进度消息列表 */  
+.progress-messages-list {  
+    flex: 1;  
     overflow-y: auto;  
-    border: 1px solid #e5e7eb;  
+    border: 1px solid #404040;  
     border-radius: 4px;  
     padding: 0.5rem;  
-    background: #f9fafb;  
-}  
-  
-body.dark #progressMessages {  
-    background: #374151;  
-    border-color: #4b5563;  
+    background: #1a1a1a;  
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;  
+    font-size: 0.75rem;  
+    line-height: 1.4;  
+    min-height: 80px;  
 }  
   
 .progress-message {  
     padding: 0.25rem 0;  
-    font-size: 0.875rem;  
+    color: #d1d5db;  
+    border-bottom: 1px solid #2d2d2d;  
+}  
+  
+.progress-message:last-child {  
+    border-bottom: none;  
 }  
   
 .progress-message.error {  
-    color: #dc2626;  
+    color: #f87171;  
 }  
   
-.progress-message.complete {  
-    color: #059669;  
-}  
-  
-/* 结果卡片 */  
-.result-card {  
-    background: #fff;  
-    border: 1px solid #e5e7eb;  
-    border-radius: 8px;  
-    padding: 1.5rem;  
-    margin-bottom: 1rem;  
-}  
-  
-body.dark .result-card {  
-    background: #374151;  
-    border-color: #4b5563;  
-}  
-  
-.card-header {  
-    display: flex;  
-    justify-content: space-between;  
-    align-items: center;  
-    margin-bottom: 1rem;  
-}  
-  
-.card-header h3 {  
-    font-size: 1.125rem;  
-    font-weight: 600;  
-}  
-  
-.card-actions {  
-    display: flex;  
-    gap: 0.5rem;  
-}  
-  
-.action-btn {  
-    padding: 0.25rem 0.75rem;  
-    border: 1px solid #d1d5db;  
-    border-radius: 4px;  
-    background: #fff;  
-    cursor: pointer;  
-    font-size: 0.875rem;  
-}  
-  
-body.dark .action-btn {  
-    background: #4b5563;  
-    border-color: #6b7280;  
-    color: #e0e0e0;  
-}  
-  
-.action-btn:hover {  
-    background: #f3f4f6;  
-}  
-  
-body.dark .action-btn:hover {  
-    background: #6b7280;  
-}  
-  
-/* 表格样式 */  
-.result-table {  
-    width: 100%;  
-    border-collapse: collapse;  
-    margin-top: 1rem;  
-}  
-  
-.result-table th,  
-.result-table td {  
-    padding: 0.75rem;  
-    text-align: left;  
-    border-bottom: 1px solid #e5e7eb;  
-}  
-  
-body.dark .result-table th,  
-body.dark .result-table td {  
-    border-bottom-color: #4b5563;  
-}  
-  
-.result-table th {  
-    background: #f9fafb;  
-    font-weight: 600;  
-}  
-  
-body.dark .result-table th {  
-    background: #4b5563;  
-}  
-  
-/* 底部样式 */  
-.footer {  
-    background: #fff;  
-    border-top: 1px solid #e0e0e0;  
-    padding: 1rem 2rem;  
-    display: flex;  
-    justify-content: space-between;  
-    align-items: center;  
-}  
-  
-body.dark .footer {  
-    background: #2d2d2d;  
-    border-top-color: #404040;  
-}  
-  
-.settings-btn {  
-    padding: 0.5rem 1rem;  
-    border: 1px solid #d1d5db;  
-    border-radius: 4px;  
-    background: #fff;  
-    cursor: pointer;  
-}  
-  
-body.dark .settings-btn {  
-    background: #4b5563;  
-    border-color: #6b7280;  
-    color: #e0e0e0;  
-}  
-  
-.version {  
-    font-size: 0.875rem;  
-    color: #6b7280;  
-}  
-  
-/* 模态框样式 */  
-.modal {  
-    display: none;  
-    position: fixed;  
-    z-index: 1000;  
-    left: 0;  
-    top: 0;  
-    width: 100%;  
-    height: 100%;  
-    background-color: rgba(0, 0, 0, 0.5);  
-}
-.modal-content {  
-    background: #fff;  
-    margin: 15% auto;  
-    padding: 2rem;  
-    border-radius: 8px;  
-    width: 90%;  
-    max-width: 500px;  
-    position: relative;  
-}  
-  
-body.dark .modal-content {  
-    background: #2d2d2d;  
-    color: #e0e0e0;  
-}  
-  
-.close {  
-    position: absolute;  
-    top: 1rem;  
-    right: 1rem;  
-    font-size: 1.5rem;  
-    cursor: pointer;  
-    color: #6b7280;  
-}  
-  
-body.dark .close {  
-    color: #9ca3af;  
-}  
-  
-.close:hover {  
-    color: #374151;  
-}  
-  
-body.dark .close:hover {  
-    color: #d1d5db;  
-}  
-  
-.settings-form {  
-    margin-top: 1rem;  
-}  
-  
-.form-group {  
-    margin-bottom: 1rem;  
-}  
-  
-.form-group label {  
-    display: block;  
-    margin-bottom: 0.5rem;  
-    font-weight: 500;  
-}  
-  
-.form-group select,  
-.form-group input {  
-    width: 100%;  
-    padding: 0.5rem;  
-    border: 1px solid #d1d5db;  
-    border-radius: 4px;  
-    background: #fff;  
-}  
-  
-body.dark .form-group select,  
-body.dark .form-group input {  
-    background: #374151;  
-    border-color: #4b5563;  
-    color: #e0e0e0;  
-}  
-  
-.save-btn {  
-    padding: 0.75rem 1.5rem;  
-    background: #2563eb;  
-    color: white;  
-    border: none;  
-    border-radius: 4px;  
-    font-weight: 500;  
-    cursor: pointer;  
-    width: 100%;  
-    margin-top: 1rem;  
-}  
-  
-.save-btn:hover {  
-    background: #1d4ed8;  
-}  
-  
-/* 响应式设计 */  
-@media (max-width: 768px) {  
-    .main-content {  
-        grid-template-columns: 1fr;  
-        gap: 1rem;  
-        padding: 1rem;  
-    }  
-      
-    .header {  
-        padding: 1rem;  
-    }  
-      
-    .header h1 {  
-        font-size: 1.25rem;  
-    }  
-      
-    .modal-content {  
-        margin: 10% auto;  
-        width: 95%;  
-    }  
-}  
-  
-/* 工具类 */  
-.text-gray {  
-    color: #6b7280;  
-}  
-  
-.text-green {  
-    color: #059669;  
-}  
-  
-.text-red {  
-    color: #dc2626;  
-}  
-  
-body.dark .text-gray {  
-    color: #9ca3af;  
-}  
-  
-body.dark .text-green {  
+.progress-message.success {  
     color: #10b981;  
 }  
   
-body.dark .text-red {  
-    color: #f87171;  
-}
-
-.hidden {  
-    display: none !important;  
-}
-/* 快速配置区域 */  
-.quick-config {  
-    display: flex;  
-    align-items: center;  
-    gap: 10px;  
-    margin-left: auto;  
+.progress-message.warning {  
+    color: #fbbf24;  
 }  
   
-.config-select {  
-    padding: 4px 8px;  
-    border: 1px solid #444;  
+/* 结果内容区域 */  
+#resultContent {  
+    flex: 1;  
+    padding: 1rem;  
+    background: #1a1a1a;  
+    border: 1px solid #404040;  
     border-radius: 4px;  
-    background: #2a2a2a;  
-    color: #fff;  
-    font-size: 12px;  
+    color: #e0e0e0;  
+    overflow-y: auto;  
+    min-height: 240px;  
 }  
   
-.config-status {  
-    padding: 4px 8px;  
+/* ========================================  
+   版本号显示  
+   ======================================== */  
+.version-display {  
+    position: fixed;  
+    bottom: 1rem;  
+    right: 1rem;  
+    z-index: 100;  
+}  
+  
+.version {  
+    color: #6b7280;  
+    font-size: 0.75rem;  
+    background: rgba(45, 45, 45, 0.8);  
+    padding: 0.25rem 0.5rem;  
     border-radius: 4px;  
-    font-size: 12px;  
-    font-weight: bold;  
+    backdrop-filter: blur(4px);  
 }  
   
-.config-status.status-ok {  
-    background: #4ade80;  
-    color: #166534;  
-}  
-  
-.config-status.status-warning {  
-    background: #fbbf24;  
-    color: #92400e;  
-}  
-  
-.mode-indicator {  
-    padding: 2px 6px;  
-    border-radius: 3px;  
-    font-size: 11px;  
-    margin-left: 8px;  
-}  
-  
-.mode-local {  
-    background: #10b981;  
-    color: white;  
-}  
-  
-.mode-remote {  
-    background: #3b82f6;  
-    color: white;  
-}  
-  
-/* 配置提醒区域 */  
+/* ========================================  
+   配置提醒区域  
+   ======================================== */  
 .config-alert {  
-    background: #fef3c7;  
-    border: 1px solid #f59e0b;  
-    border-radius: 8px;  
-    padding: 12px;  
-    margin-bottom: 16px;  
+    background: #451a03;  
+    border: 1px solid #92400e;  
+    border-radius: 6px;  
+    padding: 0.75rem;  
+    margin-bottom: 1rem;  
     display: flex;  
     align-items: center;  
     justify-content: center;  
+    flex-shrink: 0;  
 }  
   
 .config-alert.hidden {  
@@ -529,92 +414,157 @@ body.dark .text-red {
 .alert-content {  
     display: flex;  
     align-items: center;  
-    gap: 12px;  
+    gap: 0.75rem;  
 }  
   
 .alert-icon {  
-    font-size: 18px;  
+    font-size: 1rem;  
 }  
   
 .alert-text {  
-    color: #92400e;  
+    color: #fbbf24;  
     font-weight: 500;  
+    font-size: 0.875rem;  
 }  
   
 .alert-btn {  
-    background: #f59e0b;  
+    background: #92400e;  
     color: white;  
     border: none;  
-    padding: 6px 12px;  
+    padding: 0.375rem 0.75rem;  
     border-radius: 4px;  
     cursor: pointer;  
-    font-size: 12px;  
+    font-size: 0.75rem;  
 }  
   
 .alert-btn:hover {  
-    background: #d97706;  
+    background: #78350f;  
 }  
   
-/* 配置模态框样式 */  
-.config-modal {  
-    max-width: 600px;  
+/* ========================================  
+   设置模态框  
+   ======================================== */  
+#settingsModal {  
+    display: none;  
+    position: fixed;  
+    z-index: 1000;  
+    left: 0;  
+    top: 0;  
+    width: 100%;  
+    height: 100%;  
+    background-color: rgba(0, 0, 0, 0.5);  
+}  
+  
+#settingsModal.hidden {  
+    display: none !important;  
+}  
+  
+#settingsModal .modal-content {  
+    background: #2d2d2d;  
+    margin: 5% auto;  
+    padding: 1.5rem;  
+    border-radius: 8px;  
     width: 90%;  
+    max-width: 700px;  
+    position: relative;  
+    color: #e0e0e0;  
 }  
   
-.modal-header {  
-    display: flex;  
-    justify-content: space-between;  
-    align-items: center;  
-    margin-bottom: 20px;  
-    padding-bottom: 10px;  
-    border-bottom: 1px solid #444;  
+.close {  
+    position: absolute;  
+    top: 1rem;  
+    right: 1rem;  
+    font-size: 1.5rem;  
+    cursor: pointer;  
+    color: #9ca3af;  
 }  
   
-.config-form {  
-    display: flex;  
-    flex-direction: column;  
-    gap: 20px;  
+.close:hover {  
+    color: #d1d5db;  
 }  
   
+/* ========================================  
+   设置表单样式  
+   ======================================== */  
+/* 配置区域 */  
 .config-section {  
     background: #2a2a2a;  
-    padding: 16px;  
+    padding: 1rem;  
     border-radius: 8px;  
-    border: 1px solid #444;  
+    border: 1px solid #404040;  
+    margin-bottom: 1rem;  
 }  
   
 .config-section h3 {  
-    margin: 0 0 12px 0;  
-    color: #fff;  
-    font-size: 14px;  
+    margin: 0 0 0.75rem 0;  
+    color: #e0e0e0;  
+    font-size: 0.9rem;  
     font-weight: 600;  
 }  
   
-.form-group {  
-    display: flex;  
-    flex-direction: column;  
-    gap: 6px;  
-    margin-bottom: 12px;  
+/* 表单行布局 */  
+.form-row {  
+    display: grid;  
+    grid-template-columns: 1fr 1fr;  
+    gap: 1rem;  
+    margin-bottom: 1rem;  
 }  
   
-.form-group:last-child {  
+.form-row:last-child {  
+    margin-bottom: 0;  
+}  
+  
+.form-row.single-column {  
+    grid-template-columns: 1fr;  
+}  
+  
+/* 特殊布局行 */  
+.api-config-row,  
+.interface-config-row {  
+    display: grid;  
+    grid-template-columns: 1fr 1fr;  
+    gap: 1rem;  
+    margin-bottom: 1rem;  
+}  
+  
+/* 成对的表单组 */  
+.form-group-pair {  
+    display: grid;  
+    grid-template-columns: 1fr 1fr;  
+    gap: 0.5rem;  
+}  
+  
+.form-group-pair .form-group {  
+    margin-bottom: 0;  
+}  
+  
+/* API密钥组和远程服务器组 */  
+.api-key-group,  
+.remote-url-group {  
+    margin-bottom: 0;  
+}  
+  
+/* 表单组样式 */  
+.form-group {  
     margin-bottom: 0;  
 }  
   
 .form-group label {  
-    font-size: 12px;  
-    color: #ccc;  
+    display: block;  
+    margin-bottom: 0.375rem;  
     font-weight: 500;  
-}  
-  
+    color: #e0e0e0;  
+    font-size: 0.8rem;  
+}
 .form-group input,  
 .form-group select {  
-    padding: 8px 12px;  
-    border: 1px solid #555;  
+    width: 100%;  
+    padding: 0.5rem;  
+    border: 1px solid #4b5563;  
     border-radius: 4px;  
-    background: #1a1a1a;  
-    color: #fff;  
-    font-size: 13px;  
+    background: #374151;  
+    color: #e0e0e0;  
+    font-size: 0.8rem;  
 }  
   
 .form-group input:focus,  
@@ -624,37 +574,23 @@ body.dark .text-red {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);  
 }  
   
-.check-btn {  
-    background: #6b7280;  
-    color: white;  
-    border: none;  
-    padding: 4px 8px;  
-    border-radius: 4px;  
-    cursor: pointer;  
-    font-size: 11px;  
-    margin-top: 4px;  
-    align-self: flex-start;  
-}  
-  
-.check-btn:hover {  
-    background: #4b5563;  
-}  
-  
+/* 表单操作按钮 */  
 .form-actions {  
     display: flex;  
     justify-content: flex-end;  
-    gap: 12px;  
-    padding-top: 16px;  
-    border-top: 1px solid #444;  
+    gap: 1rem;  
+    padding-top: 1.5rem;  
+    border-top: 1px solid #404040;  
 }  
+  
 .cancel-btn {  
     background: #6b7280;  
     color: white;  
     border: none;  
-    padding: 8px 16px;  
+    padding: 0.75rem 1.5rem;  
     border-radius: 4px;  
     cursor: pointer;  
-    font-size: 13px;  
+    font-size: 0.875rem;  
 }  
   
 .cancel-btn:hover {  
@@ -662,128 +598,242 @@ body.dark .text-red {
 }  
   
 .save-btn {  
-    background: #2563eb;  
+    padding: 0.75rem 1.5rem;  
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);  
     color: white;  
     border: none;  
-    padding: 8px 16px;  
-    border-radius: 4px;  
+    border-radius: 6px;  
+    font-weight: 600;  
+    font-size: 0.875rem;  
     cursor: pointer;  
-    font-size: 13px;  
-    font-weight: 500;  
+    transition: all 0.3s ease;  
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);  
+    position: relative;  
+    overflow: hidden;  
 }  
   
 .save-btn:hover {  
-    background: #1d4ed8;  
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);  
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);  
+    transform: translateY(-1px);  
 }  
   
-/* 配置按钮样式 */  
-.config-btn {  
-    padding: 0.5rem 1rem;  
-    border: 1px solid #d1d5db;  
-    border-radius: 4px;  
-    background: #fff;  
-    cursor: pointer;  
-    font-size: 14px;  
+.save-btn:active {  
+    transform: translateY(0);  
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);  
 }  
   
-body.dark .config-btn {  
-    background: #4b5563;  
-    border-color: #6b7280;  
-    color: #e0e0e0;  
+.save-btn:disabled {  
+    background: #9ca3af;  
+    cursor: not-allowed;  
+    transform: none;  
+    box-shadow: none;  
 }  
   
-.config-btn:hover {  
-    background: #f3f4f6;  
+/* 加载状态动画 */  
+.save-btn.loading {  
+    color: transparent;  
 }  
   
-body.dark .config-btn:hover {  
-    background: #6b7280;  
+.save-btn.loading::after {  
+    content: '';  
+    position: absolute;  
+    top: 50%;  
+    left: 50%;  
+    width: 16px;  
+    height: 16px;  
+    margin: -8px 0 0 -8px;  
+    border: 2px solid #ffffff;  
+    border-radius: 50%;  
+    border-top-color: transparent;  
+    animation: spin 1s linear infinite;  
 }  
   
-/* Toast 通知样式 */  
-.toast {  
-    position: fixed;  
-    top: 20px;  
-    right: 20px;  
-    padding: 12px 16px;  
-    border-radius: 6px;  
-    color: white;  
-    font-size: 14px;  
-    font-weight: 500;  
-    z-index: 1000;  
-    opacity: 0;  
-    transition: opacity 0.3s ease;  
-    max-width: 300px;  
-    word-wrap: break-word;  
+@keyframes spin {  
+    to {  
+        transform: rotate(360deg);  
+    }  
 }  
   
-.toast.success {  
-    background: #10b981;  
-}  
-  
-.toast.error {  
-    background: #ef4444;  
-}  
-  
-.toast.warning {  
-    background: #f59e0b;  
-}  
-  
-.toast.info {  
-    background: #3b82f6;  
-}  
-  
-.toast.show {  
-    opacity: 1;  
-}  
-  
-/* 响应式设计扩展 */  
+/* ========================================  
+   响应式设计  
+   ======================================== */  
 @media (max-width: 768px) {  
-    .quick-config {  
+    .main-content {  
+        grid-template-columns: 1fr;  
+        gap: 1rem;  
+        padding: 1rem;  
+    }  
+      
+    .task-types-grid {  
+        grid-template-columns: 1fr;  
+        gap: 0.375rem;  
+    }  
+      
+    .task-type-card {  
+        padding: 0.375rem;  
+    }  
+      
+    .task-icon {  
+        width: 1.75rem;  
+        height: 1.75rem;  
+        font-size: 1rem;  
+    }  
+      
+    .header {  
+        padding: 0.75rem 1rem;  
+    }  
+      
+    .header-left h1 {  
+        font-size: 1.125rem;  
+    }  
+      
+    .button-group {  
         flex-direction: column;  
-        gap: 8px;  
-        margin-left: 0;  
-        margin-top: 10px;  
     }  
-  
-    .config-select {  
-        width: 100%;  
+      
+    .version-display {  
+        bottom: 0.5rem;  
+        right: 0.5rem;  
     }  
-  
-    .config-modal {  
+      
+    #settingsModal .modal-content {  
+        margin: 2% auto;  
         width: 95%;  
         max-width: none;  
+        padding: 1rem;  
+        max-height: 95vh;  
+        overflow-y: auto;  
     }  
-  
-    .config-section {  
-        padding: 12px;  
-    }  
-  
+      
     .form-actions {  
         flex-direction: column;  
-        gap: 8px;  
     }  
-  
+      
     .cancel-btn,  
     .save-btn {  
         width: 100%;  
     }  
+      
+    .form-row {  
+        grid-template-columns: 1fr;  
+        gap: 0.5rem;  
+    }  
+      
+    .api-config-row,  
+    .interface-config-row {  
+        grid-template-columns: 1fr;  
+        gap: 0.5rem;  
+    }  
+      
+    .form-group-pair {  
+        grid-template-columns: 1fr;  
+        gap: 0.5rem;  
+    }  
 }  
   
-/* 暗色主题下的配置提醒 */  
-body.dark .config-alert {  
-    background: #451a03;  
-    border-color: #92400e;  
+/* 当内容超出视窗高度时才显示滚动条 */  
+@media (max-height: 600px) {  
+    #settingsModal .modal-content {  
+        max-height: 90vh;  
+        overflow-y: auto;  
+    }  
 }  
   
-body.dark .alert-text {  
-    color: #fbbf24;  
+/* ========================================  
+   工具类  
+   ======================================== */  
+.hidden {  
+    display: none !important;  
+}
+
+/* ========================================  
+   滚动条主题化样式  
+   ======================================== */  
+  
+/* 进度消息区域滚动条 */  
+#progressMessages::-webkit-scrollbar {  
+    width: 8px;  
 }  
   
-body.dark .alert-btn {  
-    background: #92400e;  
+#progressMessages::-webkit-scrollbar-track {  
+    background: #f1f1f1;  
+    border-radius: 4px;  
 }  
   
-body.dark .alert-btn:hover {  
-    background: #78350f;  
+#progressMessages::-webkit-scrollbar-thumb {  
+    background: #c1c1c1;  
+    border-radius: 4px;  
+}  
+  
+#progressMessages::-webkit-scrollbar-thumb:hover {  
+    background: #a8a8a8;  
+}  
+  
+/* 暗色模式下的滚动条样式 */  
+body.dark #progressMessages::-webkit-scrollbar-track {  
+    background: #2a2a2a;  
+}  
+  
+body.dark #progressMessages::-webkit-scrollbar-thumb {  
+    background: #555555;  
+}  
+  
+body.dark #progressMessages::-webkit-scrollbar-thumb:hover {  
+    background: #666666;  
+}  
+  
+/* 结果内容区域滚动条 */  
+#resultContent::-webkit-scrollbar {  
+    width: 8px;  
+}  
+  
+#resultContent::-webkit-scrollbar-track {  
+    background: #f1f1f1;  
+    border-radius: 4px;  
+}  
+  
+#resultContent::-webkit-scrollbar-thumb {  
+    background: #c1c1c1;  
+    border-radius: 4px;  
+}  
+  
+#resultContent::-webkit-scrollbar-thumb:hover {  
+    background: #a8a8a8;  
+}  
+  
+/* 暗色模式下的结果内容滚动条样式 */  
+body.dark #resultContent::-webkit-scrollbar-track {  
+    background: #2a2a2a;  
+}  
+  
+body.dark #resultContent::-webkit-scrollbar-thumb {  
+    background: #555555;  
+}  
+  
+body.dark #resultContent::-webkit-scrollbar-thumb:hover {  
+    background: #666666;  
+}  
+  
+/* 通用滚动条样式（适用于所有可滚动区域） */  
+body.dark *::-webkit-scrollbar {  
+    width: 8px;  
+    height: 8px;  
+}  
+  
+body.dark *::-webkit-scrollbar-track {  
+    background: #2a2a2a;  
+}  
+  
+body.dark *::-webkit-scrollbar-thumb {  
+    background: #555555;  
+    border-radius: 4px;  
+}  
+  
+body.dark *::-webkit-scrollbar-thumb:hover {  
+    background: #666666;  
+}  
+  
+body.dark *::-webkit-scrollbar-corner {  
+    background: #2a2a2a;  
 }
