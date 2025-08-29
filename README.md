@@ -91,14 +91,14 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市
 aiforge "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx
   
 # Web 服务
-aiforge web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
+aiforge web # --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
 
 # Web Docker
 export OPENROUTER_API_KEY="your-key-here"
 aiforge-deploy docker start --searxng
 
 # 桌面应用
-aiforge gui --api-key sk-or-v1-xxx
+aiforge gui # --api-key sk-or-v1-xxx
 
 ```  
 - 开发模式（源码模式）
@@ -108,17 +108,20 @@ from aiforge import AIForgeEngine
 print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市趋势并生成投资建议"))
 
 # CLI 模式
-./aiforge-dev.sh "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx # win:./aiforge-dev.bat
+./aiforge-dev.sh "获取全球最新股市趋势并生成投资建议" --api-key sk-or-v1-xxx # win : ./aiforge-dev.bat
   
 # Web 服务
-./aiforge-dev.sh web --api-key sk-or-v1-xxx  # 访问 http://localhost:8000  
+./aiforge-dev.sh web  # 访问 http://localhost:8000，填写API KEY
 
 # Web Docker
 export OPENROUTER_API_KEY="your-key-here"
 ./aiforge-dev.sh docker start --searxng --dev
 
 # 桌面应用
-./aiforge-dev.sh gui --api-key sk-or-v1-xxx --debug
+./aiforge-dev.sh gui # 填写API KEY，也可以带参数启动 --api-key sk-or-v1-xxx
+
+#桌面应用一体化启动，GUI本地连接后端WEB服务器模式
+./aiforge-dev.bat gui --auto-remote
 
 ```  
 

@@ -1,27 +1,27 @@
 <!DOCTYPE html>  
 <html lang="zh-CN">  
   
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>AIForge - 智能意图自适应执行引擎</title>  
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">  
-      
-    <!-- 预加载并设置超时 -->  
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" onerror="loadLocalTailwind()">  
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"></noscript>  
-      
-    <!-- 本地备份样式 -->  
-    <link href="/static/css/aiforge.css" rel="stylesheet">  
-      
-    <script>  
-    function loadLocalTailwind() {  
-        var link = document.createElement('link');  
-        link.rel = 'stylesheet';  
-        link.href = '/static/css/tailwind.min.css';  
-        document.head.appendChild(link);  
-    }  
-    </script>  
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>AIForge - 智能意图自适应执行引擎</title>    
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">    
+        
+    <!-- 1. 首先加载本地完整样式，确保页面立即可用 -->    
+    <link href="/static/css/tailwind.min.css" rel="stylesheet">    
+    <link href="/static/css/aiforge.css" rel="stylesheet">    
+        
+    <!-- 2. 同时异步加载远程CDN，成功后可能提供更新版本 -->    
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" as="style" onload="this.rel='stylesheet'">    
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"></noscript>    
+        
+    <script>    
+    // 可选：检测远程CSS加载状态的辅助函数    
+    function checkRemoteCSSLoaded() {    
+        // 这个函数可以用来检测远程CSS是否成功加载    
+        // 但由于本地CSS已经提供完整支持，这不是必需的    
+    }    
+    </script>    
 </head>
   
 <body class="bg-gray-50">  
@@ -204,7 +204,7 @@
                                 <label for="maxTokensInput" class="block text-xs text-gray-600 mb-1">  
                                     最大Token数  
                                 </label>  
-                                <input type="number" id="maxTokensInput" min="1000" max="32000" step="1000"  
+                                <input type="number" id="maxTokensInput" min="1024" max="32768" 
                                        class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"  
                                        placeholder="4096">  
                             </div>  
