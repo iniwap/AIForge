@@ -152,7 +152,6 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
             print(message)
 
     async def handle_llm_generating(self):
@@ -168,7 +167,6 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
             print(message)
 
     async def handle_llm_complete(self):
@@ -184,7 +182,6 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
             print(message)
 
     async def handle_cache_lookup(self):
@@ -200,7 +197,6 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
             print(message)
 
     async def handle_cache_found(self, count: int):
@@ -216,7 +212,6 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
             print(message)
 
     async def handle_cache_execution(self):
@@ -232,7 +227,6 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
             print(message)
 
     async def handle_code_execution(self, count: int = 1):
@@ -248,5 +242,95 @@ class StreamingProgressEventHandler:
                     "timestamp": time.time(),
                 }
             )
-            # 同时输出到终端
+            print(message)
+
+    async def handle_search_start(self, query: str):
+        truncated_query = query[:50] + ("..." if len(query) > 50 else "")
+        message = f"🔍 开始搜索: {truncated_query}"
+        if self._show_progress and self._i18n_manager:
+            message = self._i18n_manager.t("progress.searching", query=truncated_query)
+
+            await self.progress_callback(
+                {
+                    "type": "progress",
+                    "message": message,
+                    "progress_type": "search_start",
+                    "timestamp": time.time(),
+                }
+            )
+            print(message)
+
+    async def handle_search_process(self, search_type: str):
+        message = f"🔄 搜索进行中: {search_type}"
+        if self._show_progress and self._i18n_manager:
+            message = self._i18n_manager.t("progress.search_process", search_type=search_type)
+
+            await self.progress_callback(
+                {
+                    "type": "progress",
+                    "message": message,
+                    "progress_type": "search_process",
+                    "timestamp": time.time(),
+                }
+            )
+            print(message)
+
+    async def handle_search_complete(self, count: int):
+        message = f"✅ 搜索完成，找到 {count} 个结果"
+        if self._show_progress and self._i18n_manager:
+            message = self._i18n_manager.t("progress.search_complete", count=count)
+
+            await self.progress_callback(
+                {
+                    "type": "progress",
+                    "message": message,
+                    "progress_type": "search_complete",
+                    "timestamp": time.time(),
+                }
+            )
+            print(message)
+
+    async def handle_round_start(self, current: int, total: int):
+        message = f"🔄 开始第 {current}/{total} 轮处理"
+        if self._show_progress and self._i18n_manager:
+            message = self._i18n_manager.t("progress.round_start", current=current, total=total)
+
+            await self.progress_callback(
+                {
+                    "type": "progress",
+                    "message": message,
+                    "progress_type": "round_start",
+                    "timestamp": time.time(),
+                }
+            )
+            print(message)
+
+    async def handle_round_success(self, round_num: int):
+        message = f"✅ 第 {round_num} 轮处理成功"
+        if self._show_progress and self._i18n_manager:
+            message = self._i18n_manager.t("progress.round_success", round_num=round_num)
+
+            await self.progress_callback(
+                {
+                    "type": "progress",
+                    "message": message,
+                    "progress_type": "round_success",
+                    "timestamp": time.time(),
+                }
+            )
+            print(message)
+
+    async def handle_round_retry(self, round_num: int):
+        message = f"🔄 第 {round_num} 轮处理重试"
+        if self._show_progress and self._i18n_manager:
+            message = self._i18n_manager.t("progress.round_retry", round_num=round_num)
+
+            await self.progress_callback(
+                {
+                    "type": "progress",
+                    "message": message,
+                    "progress_type": "round_retry",
+                    "timestamp": time.time(),
+                }
+            )
             print(message)

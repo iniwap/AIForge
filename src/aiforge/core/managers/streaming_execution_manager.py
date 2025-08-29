@@ -172,6 +172,7 @@ class AIForgeStreamingExecutionManager:
                 yield f"data: {json.dumps({'type': 'error', 'message': execution_error}, ensure_ascii=False)}\n\n"  # noqa 501
 
             # 发送完成信号
+            print("🎉 任务执行完成，结果已发送...")
             yield f"data: {json.dumps({'type': 'complete', 'timestamp': time.time()})}\n\n"
 
         except Exception as e:

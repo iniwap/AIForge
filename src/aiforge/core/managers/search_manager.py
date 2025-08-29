@@ -422,13 +422,11 @@ class AIForgeSearchManager:
             return searxng_result
 
         # 第一层：直接调用 search_web
-        if self._i18n_manager.locale == "zh":
-            # 非中文环境，暂时无法支持本地直接搜素
-            direct_result = self._try_direct_search_web(
-                standardized_instruction, original_instruction, search_params
-            )
-            if direct_result:
-                return direct_result
+        direct_result = self._try_direct_search_web(
+            standardized_instruction, original_instruction, search_params
+        )
+        if direct_result:
+            return direct_result
 
         # 第二层：使用缓存中的搜索函数
         self._progress_indicator.emit(
