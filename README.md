@@ -120,7 +120,7 @@ export OPENROUTER_API_KEY="your-key-here"
 # 桌面应用
 ./aiforge-dev.sh gui # 填写API KEY，也可以带参数启动 --api-key sk-or-v1-xxx
 
-#桌面应用一体化启动，GUI本地连接后端WEB服务器模式
+# 桌面应用一体化启动，GUI本地连接后端WEB服务器模式
 ./aiforge-dev.bat gui --auto-remote
 
 ```  
