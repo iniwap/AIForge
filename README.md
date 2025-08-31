@@ -73,11 +73,11 @@ AIForge提供多层安全保障，确保AI代码安全执行：
 pip install aiforge-engine    
   
 # 包含可选依赖    
-pip install aiforge-engine[all]  # 所有功能    
-pip install aiforge-engine[gui]  # 终端GUI支持    
-pip install aiforge-engine[web]  # Web API支持    
-pip install aiforge-engine[deploy] # 部署支持
-pip install aiforge-engine[web,deploy] # 安装WEB和部署支持
+pip install "aiforge-engine[all]"  # 所有功能    
+pip install "aiforge-engine[gui]"  # 终端GUI支持    
+pip install "aiforge-engine[web]"  # Web API支持    
+pip install "aiforge-engine[deploy]" # 部署支持
+pip install "aiforge-engine[web,deploy]" # 安装WEB和部署支持
 ```
   
 ### 基础使用 

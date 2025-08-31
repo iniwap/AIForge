@@ -75,11 +75,11 @@ AIForge provides multi-layer security for safe AI code execution:
 pip install aiforge-engine    
   
 # With optional dependencies    
-pip install aiforge-engine[all]  # All features    
-pip install aiforge-engine[gui]  # Terminal GUI support    
-pip install aiforge-engine[web]  # Web API support  
-pip install aiforge-engine[deploy]  # Deploy support    
-pip install aiforge-engine[web,deploy] # Web + deploy
+pip install "aiforge-engine[all]"  # All features    
+pip install "aiforge-engine[gui]"  # Terminal GUI support    
+pip install "aiforge-engine[web]"  # Web API support  
+pip install "aiforge-engine[deploy]"  # Deploy support    
+pip install "aiforge-engine[web,deploy]" # Web + deploy
 ```  
   
 ### Basic Usage
