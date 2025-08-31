@@ -1,12 +1,14 @@
 import time
 import atexit
+import importlib.resources
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
-from .api.routes import core, metadata, config, health
+from .api.routers import core, metadata, config, health
 from .api.middleware.cors import setup_cors
 from .api.dependencies import get_session_manager
 from .core.resource_monitor import ResourceMonitor
@@ -78,8 +80,16 @@ app.include_router(config.router)
 app.include_router(health.router)
 
 # Web 前端路由
-app.mount("/static", StaticFiles(directory="src/aiforge_web/web/static"), name="static")
-templates = Jinja2Templates(directory="src/aiforge_web/web/templates")
+# 获取包资源路径
+try:
+    with importlib.resources.path("aiforge_web.web", "static") as static_path:
+        app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+    with importlib.resources.path("aiforge_web.web", "templates") as templates_path:
+        templates = Jinja2Templates(directory=str(templates_path))
+except ImportError:
+    # 回退到源码模式路径
+    app.mount("/static", StaticFiles(directory="src/aiforge_web/web/static"), name="static")
+    templates = Jinja2Templates(directory="src/aiforge_web/web/templates")
 
 
 @app.get("/", response_class=HTMLResponse)

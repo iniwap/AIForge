@@ -1,3 +1,3 @@
-from . import routes, middleware, dependencies
+from . import routers, middleware, dependencies
 
-__all__ = ["routes", "middleware", "dependencies"]
+__all__ = ["routers", "middleware", "dependencies"]

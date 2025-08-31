@@ -4,7 +4,7 @@
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![PyWebView](https://img.shields.io/badge/PyWebView-4.0.0+%20-purple)](https://pywebview.flowrl.com/)
  [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=12)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=12)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=13)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=13)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **将自然语言指令转化为可执行代码的AI驱动自动化引擎**  
@@ -68,18 +68,34 @@ AIForge提供多层安全保障，确保AI代码安全执行：
 ## 🚀 快速开始
     
 ### 安装部署
-    
+
+- 生产模式（安装包）    
 ```bash  
 pip install aiforge-engine    
   
 # 包含可选依赖    
-pip install "aiforge-engine[all]"  # 所有功能    
+pip install "aiforge-engine[all]"  # 所有功能（依赖）    
 pip install "aiforge-engine[gui]"  # 终端GUI支持    
 pip install "aiforge-engine[web]"  # Web API支持    
 pip install "aiforge-engine[deploy]" # 部署支持
 pip install "aiforge-engine[web,deploy]" # 安装WEB和部署支持
 ```
-  
+
+- 开发模式（源码模式）  
+```bash 
+# 下载源码
+git clone https://github.com/iniwap/AIForge.git  
+cd AIForge
+
+# 创建并激活虚拟环境
+uv venv --python 3.10  
+source .venv/bin/activate  # macOS/Linux  
+# 或 .venv\Scripts\activate  # Windows
+
+# 安装所有开发依赖
+uv sync --all-extras
+
+```
 ### 基础使用 
 - 生产模式（安装包）
 ```python
@@ -114,7 +130,7 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("获取全球最新股市
 ./aiforge-dev.sh web  # 访问 http://localhost:8000，填写API KEY
 
 # Web Docker
-export OPENROUTER_API_KEY="your-key-here"
+export OPENROUTER_API_KEY="your-key-here" # 也可以不带，打开web页面后配置
 ./aiforge-dev.sh docker start --searxng --dev
 
 # 桌面应用

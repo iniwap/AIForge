@@ -90,8 +90,12 @@ async def get_session_aware_engine(
             user_params["api_key"] = env_api_key
             user_params["provider"] = os.environ.get("AIFORGE_PROVIDER", "openrouter")
         else:
-            # 直接在这里抛出异常，不创建引擎
-            raise HTTPException(status_code=400, detail="API密钥未配置，请先配置API密钥")
+            # 对于配置相关的端点，允许无API密钥访问
+            if request.url.path.startswith("/api/v1/config") or request.url.path == "/":
+                # 创建一个临时引擎用于配置操作
+                user_params["api_key"] = "temp_key_for_config"
+            else:
+                raise HTTPException(status_code=400, detail="API密钥未配置，请先配置API密钥")
 
     # 创建或获取引擎实例 - 让AIForgeEngine内部处理配置合并
     if "engine" not in context.components:

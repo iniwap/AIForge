@@ -12,8 +12,9 @@ services:
       - AIFORGE_DEBUG=true
       - AIFORGE_RELOAD=true
       - AIFORGE_LOG_LEVEL=DEBUG
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # 不强制提供 API KEY 启动 
+      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      # - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
 
   aiforge-web:
@@ -29,8 +30,8 @@ services:
       - AIFORGE_DEBUG=true
       - AIFORGE_RELOAD=true
       - AIFORGE_LOG_LEVEL=DEBUG
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # 不强制提供 API KEY 启动 
+      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      # - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
-    command:
-      ["web", "--reload", "--debug", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "web", "--reload", "--debug", "--host", "0.0.0.0", "--port", "8000" ]

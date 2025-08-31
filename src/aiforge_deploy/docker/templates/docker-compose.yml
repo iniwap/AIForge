@@ -15,28 +15,16 @@ services:
     environment:
       - AIFORGE_DOCKER_MODE=true
       - AIFORGE_CONFIG_DIR=/app/config
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # 不强制提供 API KEY 启动 
+      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      # - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
     networks:
       - aiforge-network
     restart: unless-stopped
-    entrypoint: ["sleep", "infinity"]
+    entrypoint: [ "sleep", "infinity" ]
     healthcheck:
-      test:
-        [
-          "CMD",
-          "ps",
-          "aux",
-          "|",
-          "grep",
-          "-v",
-          "grep",
-          "|",
-          "grep",
-          "-q",
-          "sleep.*infinity",
-        ]
+      test: [ "CMD", "ps", "aux", "|", "grep", "-v", "grep", "|", "grep", "-q", "sleep.*infinity" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -60,20 +48,21 @@ services:
     environment:
       - AIFORGE_DOCKER_MODE=true
       - AIFORGE_CONFIG_DIR=/app/config
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # 不强制提供 API KEY 启动 
+      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      # - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - AIFORGE_LOCALE=${AIFORGE_LOCALE:-en}
     networks:
       - aiforge-network
     restart: unless-stopped
-    command: ["web", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "web", "--host", "0.0.0.0", "--port", "8000" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v1/health/" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    profiles: ["web"]
+    profiles: [ "web" ]
 
   # SearXNG搜索引擎
   searxng:
@@ -86,9 +75,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["search"]
+    profiles: [ "search" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,9 +95,9 @@ services:
     networks:
       - aiforge-network
     restart: unless-stopped
-    profiles: ["search"]
+    profiles: [ "search" ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: [ "CMD", "curl", "-f", "http://localhost:80" ]
       interval: 30s
       timeout: 10s
       retries: 3

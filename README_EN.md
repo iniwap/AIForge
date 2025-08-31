@@ -4,7 +4,7 @@
   
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/) [![PyWebView](https://img.shields.io/badge/PyWebView-4.0.0+%20-purple)](https://pywebview.flowrl.com/)
  [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1+%20-red)](https://fastapi.tiangolo.com/) [![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-5.0.0+%20-pink)](https://www.SBERT.net/)  
-[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=12)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=12)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
+[![PyPI version](https://badge.fury.io/py/aiforge-engine.svg?v=13)](https://badge.fury.io/py/aiforge-engine) [![Downloads](https://pepy.tech/badge/aiforge-engine?v=13)](https://pepy.tech/project/aiforge-engine) [![AI Powered](https://img.shields.io/badge/AI-Powered-ff69b4.svg)](#) [![License](https://img.shields.io/badge/license-Apache%202.0-yellow)](./LICENSE) [![Stars](https://img.shields.io/github/stars/iniwap/AIForge?style=social)](https://github.com/iniwap/AIForge)  
 [![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/iniwap/AIForge) [![Development Status](https://img.shields.io/badge/development-active-brightgreen.svg)](https://github.com/iniwap/AIForge)  
   
 **Transform natural language instructions into executable code with AI-powered automation**  
@@ -70,7 +70,8 @@ AIForge provides multi-layer security for safe AI code execution:
 ## 🚀 Quick Start
     
 ### Installation & Deployment
-    
+
+- Product(Package)
 ```bash  
 pip install aiforge-engine    
   
@@ -81,7 +82,18 @@ pip install "aiforge-engine[web]"  # Web API support
 pip install "aiforge-engine[deploy]"  # Deploy support    
 pip install "aiforge-engine[web,deploy]" # Web + deploy
 ```  
-  
+- Develop（Source Code） 
+```bash 
+git clone https://github.com/iniwap/AIForge.git  
+cd AIForge
+
+uv venv --python 3.10  
+source .venv/bin/activate  # macOS/Linux  
+# .venv\Scripts\activate  # Windows
+
+uv sync --all-extras
+```
+
 ### Basic Usage
 
 - Product(Package)
@@ -94,7 +106,7 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest gl
 aiforge "Search for the latest global stock market trends and write an investment analysis" --api-key sk-or-v1-xxx
   
 # Web 
-aiforge web --api-key sk-or-v1-xxx  # view http://localhost:8000  
+aiforge web --api-key sk-or-v1-xxx  # open http://localhost:8000  
 
 # Web Docker
 export OPENROUTER_API_KEY="your-key-here"
@@ -114,7 +126,7 @@ print(AIForgeEngine(api_key="your-openrouter-apikey").("Search for the latest gl
 ./aiforge-dev.sh "Search for the latest global stock market trends and write an investment analysis" --api-key sk-or-v1-xxx # win:./aiforge-dev.bat
   
 # Web 
-./aiforge-dev.sh web --api-key sk-or-v1-xxx  # view http://localhost:8000  
+./aiforge-dev.sh web --api-key sk-or-v1-xxx  # open http://localhost:8000  
 
 # Web Docker
 export OPENROUTER_API_KEY="your-key-here"
