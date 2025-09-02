@@ -3,6 +3,7 @@ import time
 import threading
 from pathlib import Path
 from typing import Dict, Any, Optional
+from aiforge import AIForgePathManager
 
 
 class WebViewBridge:
@@ -10,8 +11,8 @@ class WebViewBridge:
         self.execution_lock = threading.Lock()
         self.current_execution = None
         self.engine_manager = engine_manager
-        self.settings_file = str(Path.home() / ".aiforge" / "gui" / "settings.json")
-        Path(self.settings_file).parent.mkdir(parents=True, exist_ok=True)
+        self.settings_file = str(AIForgePathManager.get_config_dir() / "gui" / "settings.json")
+        AIForgePathManager.ensure_directory_exists(Path(self.settings_file).parent)
 
     def execute_instruction(self, instruction: str, options: str = "{}", *args, **kwargs) -> str:
         """执行指令，支持延迟初始化和API密钥检查"""

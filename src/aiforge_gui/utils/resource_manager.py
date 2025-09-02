@@ -3,6 +3,7 @@ import platform
 from pathlib import Path
 from typing import Dict, Any
 from PIL import Image, ImageDraw, ImageFont
+from aiforge import AIForgePathManager
 
 
 class ResourceManager:
@@ -41,8 +42,9 @@ class ResourceManager:
 
     def _setup_icons(self):
         """设置图标资源"""
-        # 确保图标目录存在
-        self.icons_dir.mkdir(parents=True, exist_ok=True)
+
+        # 使用安全的目录创建方法
+        self.icons_dir = AIForgePathManager.ensure_directory_exists(self.icons_dir)
 
         # 检查并创建平台特定的图标
         icon_files = {

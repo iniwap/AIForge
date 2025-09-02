@@ -36,6 +36,7 @@ from .i18n.manager import AIForgeI18nManager, GlobalI18nManager
 from .core.managers.streaming_execution_manager import AIForgeStreamingExecutionManager
 from .core.result import AIForgeResult
 from .core.managers.shutdown_manager import AIForgeShutdownManager
+from .core.path_manager import AIForgePathManager
 
 from .utils.progress_indicator import ProgressEventBus, StreamingProgressEventHandler
 
@@ -47,6 +48,7 @@ __all__ = [
     "AIForgeTask",
     "AIForgeResultProcessor",
     "AIForgeConfig",
+    "AIForgePathManager",
     # LLM组件
     "AIForgeLLMClient",
     "AIForgeOllamaClient",
@@ -78,4 +80,4 @@ __all__ = [
     "StreamingProgressEventHandler",
 ]
 
-__version__ = "0.0.13"
+__version__ = "0.0.14"

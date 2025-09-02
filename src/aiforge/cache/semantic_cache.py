@@ -10,6 +10,7 @@ from pathlib import Path
 from ..extensions.extension_manager import ExtensionManager
 from .code_cache import AiForgeCodeCache
 from .action_matcher import SemanticActionMatcher
+from ..core.path_manager import AIForgePathManager
 
 
 class EnhancedStandardizedCache(AiForgeCodeCache):
@@ -629,8 +630,9 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
 
         try:
             # 保存代码文件
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(code)
+            AIForgePathManager.safe_write_file(
+                Path(file_path), code, fallback_dir="appropriate_dir"
+            )
 
             # 生成语义特征
             semantic_hash = None

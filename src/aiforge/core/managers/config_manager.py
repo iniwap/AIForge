@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional
 from pathlib import Path
 import os
+from ..path_manager import AIForgePathManager
 import tomlkit
 from ...config.config import AIForgeConfig
 
@@ -12,32 +13,10 @@ class AIForgeConfigManager:
         self.config: Optional[AIForgeConfig] = None
         self._runtime_overrides: Dict[str, Any] = {}
 
-    def _is_docker_environment(self) -> bool:
-        """检测是否在 Docker 环境中运行"""
-        return os.path.exists("/.dockerenv") or os.environ.get("AIFORGE_DOCKER_MODE") == "true"
-
-    def _is_development_environment(self) -> bool:
-        """检测是否在开发环境"""
-        current_dir = Path.cwd()
-        return (
-            (current_dir / "src" / "aiforge").exists()
-            and (current_dir / "pyproject.toml").exists()
-            and (current_dir / ".git").exists()
-        )
-
-    def _get_config_directory(self) -> Path:
-        """获取配置目录"""
-        if self._is_docker_environment():
-            return Path(os.environ.get("AIFORGE_CONFIG_DIR", "/app/config"))
-        else:
-            # 非Docker环境，使用当前工作目录下的config目录
-            return Path.cwd() / "config"
-
     def _ensure_user_config_file(
         self, config_dir: Path, api_key: str = None, provider: str = "openrouter", **kwargs
     ) -> Path:
         """确保用户配置文件存在，如果不存在则从默认配置创建"""
-        config_dir.mkdir(parents=True, exist_ok=True)
         user_config_file = config_dir / "aiforge.toml"
 
         # 获取默认配置作为基础
@@ -72,7 +51,7 @@ class AIForgeConfigManager:
                     merged_config[key] = value
 
         # 在非Docker环境下，清空敏感信息（API keys由环境变量提供）
-        if not self._is_docker_environment():
+        if not AIForgePathManager.is_docker_environment():
             for provider_config in merged_config.get("llm", {}).values():
                 if isinstance(provider_config, dict):
                     provider_config["api_key"] = ""
@@ -120,7 +99,7 @@ class AIForgeConfigManager:
 
         # 优先级3：自动查找或创建配置文件
         else:
-            config_dir = self._get_config_directory()
+            config_dir = AIForgePathManager.get_config_dir()
             potential_config = config_dir / "aiforge.toml"
 
             if potential_config.exists():
@@ -143,7 +122,7 @@ class AIForgeConfigManager:
             return {"url": remote_url, "timeout": 10}
 
         # 检查是否在 Docker 环境中
-        if self._is_docker_environment():
+        if AIForgePathManager.is_docker_environment():
             return {"url": "http://aiforge-searxng:8080", "timeout": 10}
         else:
             return {"url": "http://localhost:55510", "timeout": 10}
@@ -180,7 +159,7 @@ class AIForgeConfigManager:
 
         if not file_path:
             # 使用默认配置文件路径
-            config_dir = self._get_config_directory()
+            config_dir = AIForgePathManager.get_config_dir()
             file_path = str(config_dir / "aiforge.toml")
 
         self.config.save_to_file(file_path)

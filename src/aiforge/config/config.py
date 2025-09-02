@@ -3,6 +3,7 @@ from pathlib import Path
 from rich.console import Console
 from typing import Dict, Any
 import importlib.resources
+from ..core.path_manager import AIForgePathManager
 
 
 class AIForgeConfig:
@@ -234,7 +235,8 @@ class AIForgeConfig:
 
     def get_workdir(self):
         """获取工作目录"""
-        return Path(self.config.get("workdir", "aiforge_work"))
+        workdir_config = self.config.get("workdir", "aiforge_work")
+        return AIForgePathManager.get_safe_workdir(workdir_config)
 
     def get_max_tokens(self):
         """获取最大token数"""
@@ -270,8 +272,11 @@ class AIForgeConfig:
 
     def save_to_file(self, file_path: str):
         """保存配置到文件"""
-        with open(file_path, "w", encoding="utf-8") as f:
-            tomlkit.dump(self.config, f)
+        # 将配置转换为TOML字符串
+        toml_content = tomlkit.dumps(self.config)
+
+        # 使用安全的文件写入方法
+        AIForgePathManager.safe_write_file(Path(file_path), toml_content, fallback_dir="config")
 
     def get_security_config(self):
         return self.config.get("security", {})

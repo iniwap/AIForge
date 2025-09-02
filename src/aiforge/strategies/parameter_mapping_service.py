@@ -6,6 +6,7 @@ from playhouse.sqlite_ext import SqliteExtDatabase
 import time
 import threading
 from pathlib import Path
+from ..core.path_manager import AIForgePathManager
 
 
 class ParameterMappingService:
@@ -495,8 +496,7 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
     """增强语义映射策略"""
 
     def __init__(self, cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or Path.cwd() / "cache"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_dir = cache_dir or AIForgePathManager.get_cache_dir()
         self.lock = threading.RLock()
 
         # 延迟加载语义模型

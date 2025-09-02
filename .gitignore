@@ -217,7 +217,7 @@ aiforge_work/
 aiforge_config/  
 logs/  
 searxng/  
-backups/
+backup/
 nginx/  
   
 # 配置文件  

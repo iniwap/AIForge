@@ -80,9 +80,6 @@ class DynamicTaskTypeManager:
     def _save_dynamic_types(self):
         """保存动态任务类型到文件"""
         try:
-            # 确保目录存在
-            self.cache_dir.mkdir(parents=True, exist_ok=True)
-
             with open(self.task_types_db, "w", encoding="utf-8") as f:
                 json.dump(self.dynamic_types, f, ensure_ascii=False, indent=2)
         except Exception:

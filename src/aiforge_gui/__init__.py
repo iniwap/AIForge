@@ -7,7 +7,7 @@ from .core.webview_bridge import WebViewBridge
 from .config.settings import GUISettings
 from .config.connection_config import ConnectionConfig
 
-__version__ = "0.0.13"
+__version__ = "0.0.14"
 __all__ = [
     "AIForgeGUIApp",
     "main",

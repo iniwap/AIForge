@@ -12,6 +12,7 @@ from pathlib import Path
 from rich.console import Console
 import traceback
 from ..security.security_constants import SecurityConstants
+from .path_manager import AIForgePathManager
 
 
 class SecureProcessRunner:
@@ -20,10 +21,8 @@ class SecureProcessRunner:
     def __init__(
         self, workdir: str = "aiforge_work", security_config=None, components: Dict[str, Any] = None
     ):
-        self.workdir = Path(workdir)
-        self.workdir.mkdir(exist_ok=True)
-        self.temp_dir = self.workdir / "tmp"
-        self.temp_dir.mkdir(exist_ok=True)
+        self.workdir = AIForgePathManager.get_safe_workdir(workdir)
+        self.temp_dir = AIForgePathManager.get_temp_dir()
         self.console = Console()
         self.security_config = security_config
         self.components = components or {}
@@ -595,8 +594,7 @@ class AIForgeRunner:
         security_config: dict = {},
         components: Dict[str, Any] = None,
     ):
-        self.workdir = Path(workdir)
-        self.workdir.mkdir(exist_ok=True)
+        self.workdir = AIForgePathManager.get_safe_workdir(workdir)
         self.console = Console()
         self.current_task = None
         self.components = components or {}
@@ -705,8 +703,8 @@ class AIForgeRunner:
 
     def save_code(self, code: str, filename: str = "generated_code.py") -> Path:
         file_path = self.workdir / filename
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(code)
+        AIForgePathManager.safe_write_file(Path(file_path), code, fallback_dir="appropriate_dir")
+
         return file_path
 
     def shutdown(self):

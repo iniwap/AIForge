@@ -110,7 +110,7 @@ class FileOperationTransactionManager:
             "status": "active",
             "start_time": time.time(),
             "operations": [],
-            "backups": [],
+            "backup": [],
             "risk_analysis": risk_analysis,
             "rollback_plan": [],
         }
@@ -123,7 +123,7 @@ class FileOperationTransactionManager:
     def register_backup(self, transaction_id: str, backup_id: str):
         """注册备份到事务"""
         if transaction_id in self.active_transactions:
-            self.active_transactions[transaction_id]["backups"].append(backup_id)
+            self.active_transactions[transaction_id]["backup"].append(backup_id)
 
     def commit_transaction(self, transaction_id: str) -> bool:
         """提交事务"""
@@ -169,7 +169,7 @@ class FileOperationTransactionManager:
                 self._execute_rollback_action(rollback_action)
 
             # 恢复备份
-            for backup_id in transaction["backups"]:
+            for backup_id in transaction["backup"]:
                 self.backup_manager.restore_from_backup(backup_id)
 
             # 标记事务为已回滚

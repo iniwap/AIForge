@@ -4,6 +4,7 @@ import time
 import sys
 import shutil
 import json
+from ...core.path_manager import AIForgePathManager
 
 
 class FileOperationConfirmationManager:
@@ -116,8 +117,7 @@ class FileOperationBackupManager:
     """文件操作备份管理器"""
 
     def __init__(self, backup_root: Optional[Path] = None):
-        self.backup_root = backup_root or Path.cwd() / "backups"
-        self.backup_root.mkdir(exist_ok=True)
+        self.backup_root = backup_root or AIForgePathManager.get_backup_dir()
         self.manifest_file = self.backup_root / "backup_manifest.json"
         self.backup_manifest = self._load_manifest()
 
@@ -143,7 +143,7 @@ class FileOperationBackupManager:
         """为即将操作的文件创建备份"""
         backup_id = f"backup_{int(time.time())}"
         backup_dir = self.backup_root / backup_id
-        backup_dir.mkdir(parents=True, exist_ok=True)
+        backup_dir = AIForgePathManager.ensure_directory_exists(backup_dir)
 
         backup_manifest = {
             "backup_id": backup_id,
@@ -162,7 +162,8 @@ class FileOperationBackupManager:
                     if not relative_path:  # 处理根目录等特殊情况
                         relative_path = f"file_{int(time.time())}"
                 backup_path = backup_dir / relative_path
-                backup_path.parent.mkdir(parents=True, exist_ok=True)
+
+                AIForgePathManager.ensure_directory_exists(backup_path.parent)
 
                 shutil.copy2(file_path, backup_path)
                 backup_manifest["original_files"].append(file_path)

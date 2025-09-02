@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from enum import Enum
 from pathlib import Path
 from .streaming_execution_manager import GUIStreamingExecutionManager
+from aiforge import AIForgePathManager
 
 
 class ConnectionMode(Enum):
@@ -147,8 +148,7 @@ class EngineManager:
 
     def _setup_gui_workdir(self):
         """设置GUI模式下的工作目录"""
-        gui_workdir = Path.home() / "aiforge_work"
-        gui_workdir.mkdir(exist_ok=True)
+        gui_workdir = AIForgePathManager.get_safe_workdir("aiforge_work")
         if "workdir" not in self.config:
             self.config["workdir"] = str(gui_workdir)
 

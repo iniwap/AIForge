@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 from peewee import CharField, DoubleField, IntegerField, Model, TextField, BooleanField
 from playhouse.sqlite_ext import SqliteExtDatabase
 from ..validation.code_validator import CodeValidator
+from ..core.path_manager import AIForgePathManager
 
 
 @dataclass
@@ -29,8 +30,7 @@ class AiForgeCodeCache:
     """基于Peewee ORM的AiForge代码缓存管理器"""
 
     def __init__(self, cache_dir: Path, config: dict | None = None):
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_dir = cache_dir or AIForgePathManager.get_cache_dir()
 
         # 缓存配置
         self.config = config or {
@@ -43,7 +43,7 @@ class AiForgeCodeCache:
         # 数据库和文件路径
         self.db_path = self.cache_dir / "code_cache.db"
         self.modules_dir = self.cache_dir / "modules"
-        self.modules_dir.mkdir(exist_ok=True)
+        AIForgePathManager.ensure_directory_exists(self.modules_dir)
 
         self._lock = threading.RLock()
         self._search_count = 0
@@ -153,8 +153,9 @@ class AiForgeCodeCache:
 
         try:
             # 保存代码文件
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(code)
+            AIForgePathManager.safe_write_file(
+                Path(file_path), code, fallback_dir="appropriate_dir"
+            )
 
             # 保存到数据库
             current_time = time.time()

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aiforge-engine"
-version = "0.0.13"
+version = "0.0.14"
 description = "Intelligent Intent Adaptive Execution Engine - 智能意图自适应执行引擎"
 readme = "README_EN.md"
 license = { text = "Apache 2.0" }

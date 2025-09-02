@@ -2,20 +2,29 @@
 import json
 from pathlib import Path
 from typing import Dict, Any
+from aiforge import AIForgePathManager
 
 
 class ConnectionConfig:
     """连接配置管理器"""
 
     def __init__(self):
-        self.config_dir = Path.home() / ".aiforge" / "gui"
+        # 使用标准的配置目录
+        self.config_dir = AIForgePathManager.get_config_dir() / "gui"
         self.connection_file = self.config_dir / "connections.json"
-        self.config_dir.mkdir(parents=True, exist_ok=True)
 
-        # 默认连接配置文件
-        self.default_connections_file = (
-            Path(__file__).parent.parent / "resources" / "config" / "default_connections.json"
-        )
+        # 确保目录存在
+        AIForgePathManager.ensure_directory_exists(self.config_dir)
+
+        # 默认连接配置文件 - 需要处理打包应用的资源访问
+        if AIForgePathManager.is_development_environment():
+            self.default_connections_file = (
+                Path(__file__).parent.parent / "resources" / "config" / "default_connections.json"
+            )
+        else:
+            # 打包应用中的资源文件处理
+            # 可能需要从用户配置目录复制默认配置
+            self.default_connections_file = self.config_dir / "default_connections.json"
 
     def load_connections(self) -> Dict[str, Any]:
         """加载连接配置"""

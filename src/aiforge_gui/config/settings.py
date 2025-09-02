@@ -2,20 +2,30 @@
 import json
 from pathlib import Path
 from typing import Dict, Any
+from aiforge import AIForgePathManager
 
 
 class GUISettings:
     """GUI 设置管理器"""
 
     def __init__(self):
-        self.config_dir = Path.home() / ".aiforge" / "gui"
-        self.config_file = self.config_dir / "settings.json"
-        self.config_dir.mkdir(parents=True, exist_ok=True)
 
-        # 默认设置文件路径
-        self.default_settings_file = (
-            Path(__file__).parent.parent / "resources" / "config" / "default_settings.json"
-        )
+        # 使用标准的配置目录
+        self.config_dir = AIForgePathManager.get_config_dir() / "gui"
+        self.config_file = self.config_dir / "settings.json"
+
+        # 确保目录存在
+        AIForgePathManager.ensure_directory_exists(self.config_dir)
+
+        # 默认设置文件 - 需要处理打包应用的资源访问
+        if AIForgePathManager.is_development_environment():
+            self.default_settings_file = (
+                Path(__file__).parent.parent / "resources" / "config" / "default_settings.json"
+            )
+        else:
+            # 打包应用中的资源文件处理
+            # 可能需要从用户配置目录复制默认设置
+            self.default_settings_file = self.config_dir / "default_settings.json"
 
     def load_settings(self) -> Dict[str, Any]:
         """加载设置"""
