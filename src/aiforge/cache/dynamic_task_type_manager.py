@@ -1,15 +1,15 @@
 from typing import Dict, Any, Set
 import json
 import time
-from pathlib import Path
+from ..core.path_manager import AIForgePathManager
 
 
 class DynamicTaskTypeManager:
     """动态任务类型管理器"""
 
-    def __init__(self, cache_dir: Path):
-        self.cache_dir = cache_dir
-        self.task_types_db = cache_dir / "task_types.json"
+    def __init__(self):
+        self.cache_dir = AIForgePathManager.get_cache_dir()
+        self.task_types_db = self.cache_dir / "task_types.json"
         self.builtin_types = {
             "data_fetch",
             "data_process",

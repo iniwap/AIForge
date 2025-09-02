@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 import re
-from pathlib import Path
 import os
+from ..core.path_manager import AIForgePathManager
 
 
 class FileSecurityController:
@@ -14,7 +14,7 @@ class FileSecurityController:
         self.file_config = self.config_manager.get_security_file_access_config()
 
         # 初始化工作目录和允许路径
-        self.workdir = Path(str(self.config_manager.get_workdir()))
+        self.workdir = AIForgePathManager.get_workdir()
         self.user_allowed_paths = self.file_config.get("default_allowed_paths", [])
 
         # 初始化文件操作检测模式

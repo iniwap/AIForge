@@ -116,8 +116,8 @@ class FileOperationConfirmationManager:
 class FileOperationBackupManager:
     """文件操作备份管理器"""
 
-    def __init__(self, backup_root: Optional[Path] = None):
-        self.backup_root = backup_root or AIForgePathManager.get_backup_dir()
+    def __init__(self):
+        self.backup_root = AIForgePathManager.get_backup_dir()
         self.manifest_file = self.backup_root / "backup_manifest.json"
         self.backup_manifest = self._load_manifest()
 

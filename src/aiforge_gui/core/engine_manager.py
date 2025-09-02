@@ -3,7 +3,6 @@ import json
 import threading
 from typing import Dict, Any, Optional
 from enum import Enum
-from pathlib import Path
 from .streaming_execution_manager import GUIStreamingExecutionManager
 from aiforge import AIForgePathManager
 
@@ -16,7 +15,6 @@ class ConnectionMode(Enum):
 class EngineManager:
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
-        self._setup_gui_workdir()
 
         # 加载持久化配置
         self._load_persistent_config()
@@ -31,7 +29,7 @@ class EngineManager:
 
     def _load_persistent_config(self):
         """加载持久化配置"""
-        settings_file = Path.home() / ".aiforge" / "gui" / "settings.json"
+        settings_file = AIForgePathManager.get_workdir() / ".aiforge" / "gui" / "settings.json"
         if settings_file.exists():
             try:
                 with open(settings_file, "r", encoding="utf-8") as f:
@@ -100,7 +98,7 @@ class EngineManager:
 
     def _config_requires_engine_restart(self, old_config: Dict, new_config: Dict) -> bool:
         """检查配置变化是否需要重启引擎"""
-        restart_keys = ["api_key", "provider", "max_rounds", "max_tokens", "workdir"]
+        restart_keys = ["api_key", "provider", "max_rounds", "max_tokens"]
         for key in restart_keys:
             if old_config.get(key) != new_config.get(key):
                 return True
@@ -125,7 +123,6 @@ class EngineManager:
             "local_engine_available": self._engine_initialized and self.engine is not None,
             "remote_url": self.get_remote_url(),
             "features": self._get_supported_features(),
-            "workdir": self.config.get("workdir"),
             "has_api_key": self.has_valid_api_key(),
         }
 
@@ -146,12 +143,6 @@ class EngineManager:
         """设置API服务器引用"""
         self._api_server = api_server
 
-    def _setup_gui_workdir(self):
-        """设置GUI模式下的工作目录"""
-        gui_workdir = AIForgePathManager.get_safe_workdir("aiforge_work")
-        if "workdir" not in self.config:
-            self.config["workdir"] = str(gui_workdir)
-
     def _determine_mode(self) -> ConnectionMode:
         """确定连接模式"""
         if self.config.get("remote_url"):
@@ -164,7 +155,7 @@ class EngineManager:
             from aiforge import AIForgeEngine
 
             # 构建引擎配置
-            engine_config = {"workdir": self.config.get("workdir")}
+            engine_config = {}
 
             # API Key 处理
             api_key = self._get_current_api_key()

@@ -37,7 +37,7 @@ class AIForgeConfig:
             default_config["default_llm_provider"] = provider
 
         # 应用所有核心参数
-        core_params = ["max_rounds", "max_tokens", "workdir", "max_optimization_attempts", "locale"]
+        core_params = ["max_rounds", "max_tokens", "max_optimization_attempts", "locale"]
 
         for key, value in kwargs.items():
             if key in core_params:
@@ -107,7 +107,6 @@ class AIForgeConfig:
                     AIForgeConfig._cached_default_config = tomlkit.load(f)
             except Exception:
                 AIForgeConfig._cached_default_config = {
-                    "workdir": "aiforge_work",
                     "max_tokens": 4096,
                     "max_rounds": 5,
                     "default_llm_provider": "openrouter",
@@ -232,11 +231,6 @@ class AIForgeConfig:
                 }
 
         return AIForgeConfig._cached_default_config.copy()  # 返回副本避免修改
-
-    def get_workdir(self):
-        """获取工作目录"""
-        workdir_config = self.config.get("workdir", "aiforge_work")
-        return AIForgePathManager.get_safe_workdir(workdir_config)
 
     def get_max_tokens(self):
         """获取最大token数"""

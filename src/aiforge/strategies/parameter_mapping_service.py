@@ -5,16 +5,15 @@ from peewee import CharField, DoubleField, IntegerField, Model
 from playhouse.sqlite_ext import SqliteExtDatabase
 import time
 import threading
-from pathlib import Path
 from ..core.path_manager import AIForgePathManager
 
 
 class ParameterMappingService:
     """统一参数映射服务"""
 
-    def __init__(self, cache_dir: Optional[Path] = None):
+    def __init__(self):
         self.strategies = []
-        self.cache_dir = cache_dir
+        self.cache_dir = AIForgePathManager.get_cache_dir()
         self.enhanced_semantic_strategy = None
         self.mapping_records = []  # 存储映射记录用于后续统计更新
         self._register_default_strategies()
@@ -44,7 +43,7 @@ class ParameterMappingService:
         self.register_strategy(FileOperationMappingStrategy())
 
         # 增强语义策略作为重要补充
-        self.enhanced_semantic_strategy = EnhancedSemanticMappingStrategy(self.cache_dir)
+        self.enhanced_semantic_strategy = EnhancedSemanticMappingStrategy()
         self.register_strategy(self.enhanced_semantic_strategy)
 
         # 通用相似度策略作为兜底
@@ -495,8 +494,8 @@ class GeneralParameterMappingStrategy(ParameterMappingStrategy):
 class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
     """增强语义映射策略"""
 
-    def __init__(self, cache_dir: Optional[Path] = None):
-        self.cache_dir = cache_dir or AIForgePathManager.get_cache_dir()
+    def __init__(self):
+        self.cache_dir = AIForgePathManager.get_cache_dir()
         self.lock = threading.RLock()
 
         # 延迟加载语义模型

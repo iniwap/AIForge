@@ -1,4 +1,3 @@
-workdir = "aiforge_work"
 max_tokens = 4096
 max_rounds = 2
 max_optimization_attempts = 3

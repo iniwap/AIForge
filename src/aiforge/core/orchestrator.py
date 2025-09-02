@@ -1,6 +1,5 @@
 import re
 from typing import Dict, Any, Optional
-from pathlib import Path
 import importlib
 
 from ..config.config import AIForgeConfig
@@ -117,13 +116,11 @@ class AIForgeOrchestrator:
 
     def _init_runner(self):
         """初始化代码执行器"""
-        workdir = str(self.config.get_workdir())
-
         # 获取完整的安全配置
         security_config = self.config.get("security", {})
 
         # 创建安全执行器并传入所有配置
-        runner = AIForgeRunner(workdir, security_config, self.components)
+        runner = AIForgeRunner(security_config, self.components)
         self.components["runner"] = runner
 
     def _init_instruction_analyzer(self):
@@ -137,11 +134,10 @@ class AIForgeOrchestrator:
         """初始化缓存系统"""
         cache_config = self.config.get_cache_config("code")
         if cache_config.get("enabled", True):
-            cache_dir = Path(self.config.get_workdir()) / "cache"
-            code_cache = EnhancedStandardizedCache(cache_dir, cache_config)
+            code_cache = EnhancedStandardizedCache(cache_config)
 
             # 初始化动态任务类型管理器
-            task_type_manager = DynamicTaskTypeManager(cache_dir)
+            task_type_manager = DynamicTaskTypeManager()
             code_cache.task_type_manager = task_type_manager
 
             # 将管理器传递给指令分析器
@@ -157,8 +153,7 @@ class AIForgeOrchestrator:
 
     def _init_parameter_mapping_service(self):
         """初始化参数映射服务"""
-        cache_dir = self.config.get_workdir() / "cache" if self.config else None
-        self.components["parameter_mapping_service"] = ParameterMappingService(cache_dir)
+        self.components["parameter_mapping_service"] = ParameterMappingService()
 
     def _init_execution_engine(self):
         """初始化执行引擎"""

@@ -1,6 +1,5 @@
 import threading
 import socket
-import os
 from pathlib import Path
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import json
@@ -69,10 +68,20 @@ class LocalAPIServer:
 
         class AIForgeHandler(SimpleHTTPRequestHandler):
             def __init__(self, *args, **kwargs):
-                # 设置静态文件目录为 resources
-                resources_dir = Path(__file__).parent.parent / "resources"
-                os.chdir(resources_dir)
+                self.resources_dir = Path(__file__).parent.parent / "resources"
                 super().__init__(*args, **kwargs)
+
+            def translate_path(self, path):
+                """重写路径转换，不改变全局工作目录"""
+                # 移除查询参数
+                path = path.split("?", 1)[0]
+                path = path.split("#", 1)[0]
+
+                # 如果是静态文件请求，使用 resources 目录
+                if not path.startswith("/api/"):
+                    return str(self.resources_dir / path.lstrip("/"))
+
+                return super().translate_path(path)
 
             def do_GET(self):
                 """处理 GET 请求"""

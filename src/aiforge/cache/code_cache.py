@@ -29,8 +29,8 @@ class CacheModuleInfo:
 class AiForgeCodeCache:
     """基于Peewee ORM的AiForge代码缓存管理器"""
 
-    def __init__(self, cache_dir: Path, config: dict | None = None):
-        self.cache_dir = cache_dir or AIForgePathManager.get_cache_dir()
+    def __init__(self, config: dict | None = None):
+        self.cache_dir = AIForgePathManager.get_cache_dir()
 
         # 缓存配置
         self.config = config or {

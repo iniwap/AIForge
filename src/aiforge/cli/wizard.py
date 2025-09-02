@@ -23,9 +23,8 @@ def create_config_wizard():
         kwargs = {}
 
         if advanced:
-            workdir = Prompt.ask("工作目录", default="aiforge_work")
             max_rounds = int(Prompt.ask("最大执行轮数", default="5"))
-            kwargs.update({"workdir": workdir, "max_rounds": max_rounds})
+            kwargs.update({"max_rounds": max_rounds})
 
         try:
             # 创建并测试配置
@@ -58,7 +57,6 @@ def create_full_config(console):
     console.print("\n[bold]创建完整配置文件[/bold]")
 
     # 基础配置
-    workdir = Prompt.ask("工作目录", default="aiforge_work")
     max_rounds = int(Prompt.ask("最大执行轮数", default="5"))
     max_tokens = int(Prompt.ask("最大Token数", default="4096"))
 
@@ -85,7 +83,6 @@ def create_full_config(console):
 
     # 构建配置字典
     config_dict = {
-        "workdir": workdir,
         "max_tokens": max_tokens,
         "max_rounds": max_rounds,
         "default_llm_provider": "openrouter",

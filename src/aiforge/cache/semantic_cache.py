@@ -16,7 +16,7 @@ from ..core.path_manager import AIForgePathManager
 class EnhancedStandardizedCache(AiForgeCodeCache):
     """增强的标准化缓存"""
 
-    def __init__(self, cache_dir: Path, config: dict | None = None):
+    def __init__(self, config: dict | None = None):
         # 扩展配置以支持语义匹配功能
         enhanced_config = config or {}
         enhanced_config.update(
@@ -30,7 +30,7 @@ class EnhancedStandardizedCache(AiForgeCodeCache):
         )
 
         # 调用父类初始化，复用基础缓存功能
-        super().__init__(cache_dir, enhanced_config)
+        super().__init__(enhanced_config)
 
         # 向量存储路径（增强功能特有）
         self.vector_store_path = self.cache_dir / "vector_store.pkl"

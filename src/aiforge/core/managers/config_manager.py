@@ -42,7 +42,6 @@ class AIForgeConfigManager:
             core_params = [
                 "max_rounds",
                 "max_tokens",
-                "workdir",
                 "max_optimization_attempts",
                 "locale",
             ]
@@ -182,10 +181,6 @@ class AIForgeConfigManager:
         self._runtime_overrides.update(updates)
         if self.config:
             self.config.update(updates)
-
-    def get_workdir(self) -> Path:
-        """获取工作目录"""
-        return self.config.get_workdir()
 
     def get_cache_config(self, cache_type: str) -> Dict[str, Any]:
         """获取缓存配置"""

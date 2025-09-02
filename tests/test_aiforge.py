@@ -29,7 +29,6 @@ def test_config_file(tmp_path):
     """方式3：配置文件方式"""
     # 创建临时配置文件
     config_content = """
-workdir = "aiforge_work"
 max_tokens = 4096
 max_rounds = 5
 default_llm_provider = "openrouter"

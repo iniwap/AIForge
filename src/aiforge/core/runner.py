@@ -18,10 +18,8 @@ from .path_manager import AIForgePathManager
 class SecureProcessRunner:
     """安全的进程隔离执行器"""
 
-    def __init__(
-        self, workdir: str = "aiforge_work", security_config=None, components: Dict[str, Any] = None
-    ):
-        self.workdir = AIForgePathManager.get_safe_workdir(workdir)
+    def __init__(self, security_config=None, components: Dict[str, Any] = None):
+        self.workdir = AIForgePathManager.get_workdir()
         self.temp_dir = AIForgePathManager.get_temp_dir()
         self.console = Console()
         self.security_config = security_config
@@ -590,16 +588,15 @@ class AIForgeRunner:
 
     def __init__(
         self,
-        workdir: str = "aiforge_work",
         security_config: dict = {},
         components: Dict[str, Any] = None,
     ):
-        self.workdir = AIForgePathManager.get_safe_workdir(workdir)
+        self.workdir = AIForgePathManager.get_workdir()
         self.console = Console()
         self.current_task = None
         self.components = components or {}
         self._i18n_manager = self.components.get("i18n_manager")
-        self.secure_runner = SecureProcessRunner(workdir, security_config, self.components)
+        self.secure_runner = SecureProcessRunner(security_config, self.components)
 
         self.default_timeout = security_config.get("execution_timeout", 30)
         self.default_memory_limit = security_config.get("memory_limit_mb", 512)
