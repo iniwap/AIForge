@@ -30,7 +30,7 @@ class SecureProcessRunner:
         """在隔离进程中执行代码"""
         execution_timeout = self.security_config.get("execution_timeout", 30)
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", dir=self.workdir, delete=False, encoding="utf-8"
+            mode="w", suffix=".py", dir=self.temp_dir, delete=False, encoding="utf-8"
         ) as f:
             execution_code = self._prepare_execution_code(
                 code,

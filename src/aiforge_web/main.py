@@ -1,6 +1,5 @@
 import time
 import atexit
-import importlib.resources
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -82,11 +81,15 @@ app.include_router(health.router)
 # Web 前端路由
 # 获取包资源路径
 try:
-    with importlib.resources.path("aiforge_web.web", "static") as static_path:
-        app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
-    with importlib.resources.path("aiforge_web.web", "templates") as templates_path:
-        templates = Jinja2Templates(directory=str(templates_path))
-except ImportError:
+    from aiforge import AIForgePathManager
+
+    # 使用统一的资源路径获取函数
+    static_path = AIForgePathManager.get_resource_path("aiforge_web.web", "static")
+    templates_path = AIForgePathManager.get_resource_path("aiforge_web.web", "templates")
+
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+    templates = Jinja2Templates(directory=str(templates_path))
+except Exception:
     # 回退到源码模式路径
     app.mount("/static", StaticFiles(directory="src/aiforge_web/web/static"), name="static")
     templates = Jinja2Templates(directory="src/aiforge_web/web/templates")

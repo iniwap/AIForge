@@ -2,7 +2,6 @@ import tomlkit
 from pathlib import Path
 from rich.console import Console
 from typing import Dict, Any
-import importlib.resources
 from ..core.path_manager import AIForgePathManager
 
 
@@ -99,11 +98,9 @@ class AIForgeConfig:
         """获取内置默认配置"""
         if not hasattr(AIForgeConfig, "_cached_default_config"):
             try:
-                with (
-                    importlib.resources.files("aiforge.config")
-                    .joinpath("default.toml")
-                    .open(mode="r", encoding="utf-8") as f
-                ):
+                config_path = AIForgePathManager.get_resource_path("aiforge.config", "default.toml")
+
+                with open(config_path, mode="r", encoding="utf-8") as f:
                     AIForgeConfig._cached_default_config = tomlkit.load(f)
             except Exception:
                 AIForgeConfig._cached_default_config = {

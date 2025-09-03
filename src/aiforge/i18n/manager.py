@@ -1,10 +1,10 @@
-import importlib.resources
 import threading
 from typing import Dict, Any, Optional, Union
 from rich.console import Console
 from .formatters.message_formatter import ICUMessageFormatter
 from .detector import LocaleDetector
 from ..config.config import AIForgeConfig
+from ..core.path_manager import AIForgePathManager
 
 
 class GlobalI18nManager:
@@ -162,9 +162,7 @@ class AIForgeI18nManager:
         """加载所有语言的消息文件"""
         try:
             # 获取 i18n 资源目录
-            i18n_package = importlib.resources.files("aiforge.i18n")
-            locales_dir = i18n_package / "locales"
-
+            locales_dir = AIForgePathManager.get_resource_path("aiforge.i18n", "locales")
             # 加载当前语言的消息
             self._load_locale_messages(locales_dir, self.locale)
 

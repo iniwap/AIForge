@@ -22,6 +22,27 @@ class AIForgePathManager:
         return os.path.exists("/.dockerenv") or os.environ.get("AIFORGE_DOCKER_MODE") == "true"
 
     @staticmethod
+    def get_resource_path(package: str, resource: str = None) -> Path:
+        """统一的资源路径获取函数，兼容开发和打包环境"""
+        if AIForgePathManager.is_development_environment():
+            # 开发环境使用importlib.resources
+            import importlib.resources
+
+            if resource:
+                return importlib.resources.files(package) / resource
+            else:
+                return importlib.resources.files(package)
+        else:
+            # 打包环境使用sys._MEIPASS
+            import sys
+
+            base_path = Path(sys._MEIPASS)
+            if resource:
+                return base_path / package.replace(".", "/") / resource
+            else:
+                return base_path / package.replace(".", "/")
+
+    @staticmethod
     def _detect_project_root() -> Path:
         """智能检测项目根目录"""
         current_file = Path(__file__).resolve()
