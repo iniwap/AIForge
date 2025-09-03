@@ -7,7 +7,7 @@ from .core.session_manager import SessionManager
 from .api.routers import core, metadata, config, health
 from .api.middleware.cors import setup_cors
 
-__version__ = "0.0.15"
+__version__ = "0.0.16"
 __all__ = [
     "app",
     "cleanup_on_exit",
