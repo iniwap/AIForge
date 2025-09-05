@@ -45,6 +45,11 @@ class SecureProcessRunner:
             temp_file = f.name
 
         try:
+            # 获取受限环境变量
+            env = self._get_restricted_env()
+            # 添加AIForge子进程标识，防止启动外部 GUI
+            env["AIFORGE_SANDBOX_SUBPROCESS"] = "1"
+
             result = subprocess.run(
                 [sys.executable, temp_file],
                 capture_output=True,
@@ -53,7 +58,7 @@ class SecureProcessRunner:
                 errors="replace",
                 timeout=execution_timeout + 5,
                 cwd=self.workdir,
-                env=self._get_restricted_env(),
+                env=env,
             )
 
             return self._parse_execution_result(result)
