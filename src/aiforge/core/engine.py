@@ -1,3 +1,5 @@
+import os
+import sys
 from typing import Dict, Any, Optional, List, Tuple
 
 from .orchestrator import AIForgeOrchestrator
@@ -135,3 +137,30 @@ class AIForgeEngine:
     def shutdown(self):
         """清理资源"""
         self.component_manager.shutdown()
+
+    @staticmethod
+    def handle_sandbox_subprocess():
+        # 检查是否为AIForge子进程
+        if os.environ.get("AIFORGE_SANDBOX_SUBPROCESS") == "1":
+            # 获取传入的临时文件路径
+            if len(sys.argv) > 1:
+                temp_file = sys.argv[1]
+                try:
+                    # 读取并执行沙盒代码
+                    with open(temp_file, "r", encoding="utf-8") as f:
+                        code = f.read()
+                    exec(code)  # 这里执行沙盒代码
+                except Exception:
+                    pass
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def map_result_to_format(
+        source_data: List[Dict] = None, expected_fields: List[str] = None
+    ) -> List[Dict]:
+        # 提供对外统一映射接口，外部只需要导入
+        from ..utils.field_mapper import map_result_to_format
+
+        return map_result_to_format(source_data, expected_fields)

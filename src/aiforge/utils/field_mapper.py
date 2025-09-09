@@ -1,7 +1,10 @@
+from typing import Dict, List
 from ..strategies.semantic_field_strategy import FieldProcessorManager
 
 
-def map_result_to_format(source_data, target_fields):
+def map_result_to_format(
+    source_data: List[Dict] = None, expected_fields: List[str] = None
+) -> List[Dict]:
     """
     通用字段映射接口
 
@@ -29,11 +32,11 @@ def map_result_to_format(source_data, target_fields):
 
     # 提取原始数据
 
-    if not source_data:
+    if not source_data or not expected_fields:
         return source_data
 
     # 执行字段映射
     try:
-        return processor_manager.process_field(source_data, target_fields)
+        return processor_manager.process_field(source_data, expected_fields)
     except Exception:
         return source_data

@@ -146,6 +146,48 @@ class SecureProcessRunner:
         network_env = network_policy.get_environment_variables()
         restricted_env.update(network_env)
 
+        # 网络代理相关环境变量
+        network_access_vars = [
+            # 代理设置
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "NO_PROXY",
+            "http_proxy",
+            "https_proxy",
+            "no_proxy",
+            # SSL/TLS 证书
+            "SSL_CERT_FILE",
+            "SSL_CERT_DIR",
+            "REQUESTS_CA_BUNDLE",
+            "CURL_CA_BUNDLE",
+            "PYTHONHTTPSVERIFY",
+            # DNS 配置
+            "RESOLV_CONF",
+            "DNS_SERVER",
+            "HOSTALIASES",
+            # 网络超时
+            "REQUESTS_TIMEOUT",
+            "URLLIB_TIMEOUT",
+            "SOCKET_TIMEOUT",
+            # 用户代理
+            "USER_AGENT",
+            "HTTP_USER_AGENT",
+            "REQUESTS_USER_AGENT",
+            # 网络接口
+            "BIND_INTERFACE",
+            "SOURCE_ADDRESS",
+            "LOCAL_ADDRESS",
+            # 认证
+            "NETRC",
+            "HTTP_AUTH",
+            "PROXY_AUTH",
+        ]
+
+        for var in network_access_vars:
+            # 策略优先，已经设置过的不再设置
+            if var not in restricted_env and var in os.environ:
+                restricted_env[var] = os.environ[var]
+
         return restricted_env
 
     def _prepare_execution_code(
