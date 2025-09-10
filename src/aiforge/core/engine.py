@@ -139,22 +139,33 @@ class AIForgeEngine:
         self.component_manager.shutdown()
 
     @staticmethod
-    def handle_sandbox_subprocess():
-        # 检查是否为AIForge子进程
+    def handle_sandbox_subprocess(globals_dict=None, sys_path=None):
         if os.environ.get("AIFORGE_SANDBOX_SUBPROCESS") == "1":
-            # 获取传入的临时文件路径
             if len(sys.argv) > 1:
                 temp_file = sys.argv[1]
                 try:
-                    # 读取并执行沙盒代码
                     with open(temp_file, "r", encoding="utf-8") as f:
                         code = f.read()
-                    exec(code)  # 这里执行沙盒代码
+
+                    # 使用传入的执行环境
+                    if globals_dict is None:
+                        globals_dict = {}
+
+                    # 设置系统路径
+                    if sys_path:
+                        original_path = sys.path.copy()
+                        sys.path = sys_path
+                        try:
+                            exec(code, globals_dict)
+                        finally:
+                            sys.path = original_path
+                    else:
+                        exec(code, globals_dict)
+
                 except Exception:
                     pass
             return True
-        else:
-            return False
+        return False
 
     @staticmethod
     def map_result_to_format(
