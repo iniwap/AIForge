@@ -5,8 +5,7 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
-from peewee import CharField, DoubleField, IntegerField, Model, TextField, BooleanField
-from playhouse.sqlite_ext import SqliteExtDatabase
+from peewee import CharField, DoubleField, IntegerField, Model, TextField, BooleanField, SqliteDatabase
 from ..validation.code_validator import CodeValidator
 from ..core.path_manager import AIForgePathManager
 
@@ -54,7 +53,7 @@ class AiForgeCodeCache:
     def _init_database(self):
         """初始化Peewee数据库和模型"""
         # 创建数据库连接
-        self.db = SqliteExtDatabase(
+        self.db = SqliteDatabase(
             str(self.db_path),
             pragmas={
                 "journal_mode": "wal",

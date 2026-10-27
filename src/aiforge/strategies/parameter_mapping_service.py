@@ -1,8 +1,7 @@
 from typing import Dict, Any, Optional
 import inspect
 from abc import ABC, abstractmethod
-from peewee import CharField, DoubleField, IntegerField, Model
-from playhouse.sqlite_ext import SqliteExtDatabase
+from peewee import CharField, DoubleField, IntegerField, Model, SqliteDatabase
 import time
 import threading
 from ..core.path_manager import AIForgePathManager
@@ -538,7 +537,7 @@ class EnhancedSemanticMappingStrategy(ParameterMappingStrategy):
         """初始化Peewee数据库和模型（复用code_cache模式）"""
         # 复用相同的数据库配置
         self.db_path = self.cache_dir / "parameter_mapping.db"
-        self.db = SqliteExtDatabase(
+        self.db = SqliteDatabase(
             str(self.db_path),
             pragmas={
                 "journal_mode": "wal",
